@@ -1,6 +1,10 @@
-import sys, os
-sys.path.append(os.getcwd()) # convenience: load implementations from cwd
-import argparse, yaml
+#!/usr/bin/env python3
+
+import sys
+import os
+sys.path.append(os.getcwd())  # convenience: load implementations from cwd
+import argparse
+import yaml
 import multiprocessing as mp
 
 import tensorflow as tf
@@ -23,7 +27,7 @@ def main(opt):
             code_root = path[0]
         else:
             code_root = "."
-        P = init_project('logs', code_root = code_root)
+        P = init_project('logs', code_root=code_root)
 
     # Logger
     logger = get_logger('main')

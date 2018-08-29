@@ -26,7 +26,7 @@ def train(config, root, checkpoint = None, retrain = False):
 
     Model = impl.TrainModel(config)
     Trainer = impl.Trainer(config, root, Model, hook_freq=config["hook_freq"])
-    dataset = impl.TrainDataset(config = config)
+    dataset = impl.TrainDataset(config=config)
 
     logger.info("Number of training samples: {}".format(len(dataset)))
     batches = make_batches(dataset, batch_size = config["batch_size"], shuffle = True)

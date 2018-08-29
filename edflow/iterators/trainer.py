@@ -1,10 +1,10 @@
 import tensorflow as tf
 
-import edflow.model.nn as nn
 from edflow.iterators.model_iterator import HookedModelIterator
 from edflow.hooks import LoggingHook, CheckpointHook, RetrainHook
 from edflow.hooks import match_frequency
 from edflow.project_manager import ProjectManager
+from edflow.util import make_linear_var
 
 
 P = ProjectManager()
@@ -23,7 +23,7 @@ class BaseTrainer(HookedModelIterator):
         define the make_loss_ops method which has to set the attributes
         log_ops, img_ops and return a per submodule loss tensor.
         Args:
-            trainer_config (str): Some config file. (TODO: make this into kwargs)
+            trainer_config (str): Some config file.
             root_path (str): Root directory to store all training outputs.
             model (Model): :class:`Model` to train.
             hooks (list): List of :class:'`Hook`s
@@ -85,11 +85,10 @@ class BaseTrainer(HookedModelIterator):
     def create_train_op(self):
         '''Default optimizer + optimize each submodule'''
         # Optimizer
-        self.lr = lr = nn.make_linear_var(
-                self.global_step,
-                self.lr_decay_begin, self.lr_decay_end,
-                self.initial_lr, 0.0,
-                0.0, self.initial_lr)
+        self.lr = lr = make_linear_var(self.global_step,
+                                       self.lr_decay_begin, self.lr_decay_end,
+                                       self.initial_lr, 0.0,
+                                       0.0, self.initial_lr)
         self.optimizer = tf.train.AdamOptimizer(learning_rate=lr,
                                                 beta1=0.5,
                                                 beta2=0.9)
@@ -100,7 +99,7 @@ class BaseTrainer(HookedModelIterator):
         for k in losses:
             variables = self.get_trainable_variables(k)
             opt_op = self.optimizer.minimize(losses[k],
-                                             var_list = variables)
+                                             var_list=variables)
             opt_ops[k] = opt_op
         opt_op = tf.group(*opt_ops.values())
         with tf.control_dependencies([opt_op]):
@@ -148,8 +147,9 @@ class BaseTrainer(HookedModelIterator):
         return self.init_op
 
     def get_trainable_variables(self, submodule):
-        trainable_variables = [v for v in tf.trainable_variables() if v in self.model.variables]
+        trainable_variables = [v for v in tf.trainable_variables()
+                               if v in self.model.variables]
         return [v for v in trainable_variables if submodule in v.name]
 
     def get_init_variables(self):
-        return [v for v in tf.global_variables() if not "__noinit__" in v.name]
+        return [v for v in tf.global_variables() if "__noinit__" not in v.name]

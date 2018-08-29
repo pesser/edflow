@@ -23,4 +23,4 @@ setup(name='edflow',
           'scikit-image'
           ],
       zip_safe=False,
-      scripts = ["edflow/edflow.py"])
+      scripts = ["edflow/edflow"])
