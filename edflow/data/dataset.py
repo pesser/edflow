@@ -43,12 +43,15 @@ class CachedDataset(DatasetMixin):
         name = dataset.name
 
         self.store_path = os.path.join(root, 'cached', name)
+        self.label_path = os.path.join(root, 'cached', name + '_labels.p')
 
         leading_zeroes = len(str(len(self)))
         self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
 
         os.makedirs(self.store_path, exist_ok=True)
         self.cache_dataset()
+
+        self.tar = tarfile.open(self.store_path, 'r')
 
     def cache_dataset(self):
         '''Checks if a dataset is stored. If not iterates over all possible
@@ -67,18 +70,25 @@ class CachedDataset(DatasetMixin):
 
                     tar.add(store_name, arcname=pickle_name)
 
+            with open(self.label_path, 'wb') as labels_file:
+                pickle.dump(self.base_dataset.labels, labels_file)
+
     def __len__(self):
         '''Number of examples in this Dataset.'''
-
         return len(self.base_dataset)
+
+    @property
+    def labels(self):
+        with open(self.label_path, 'r') as labels_file:
+            labels = pickle.load(labels_file)
+        return labels
 
     def get_example(self, i):
         '''Given an index i, returns a example.'''
 
-        with open(self.store_path + '.tar', 'r') as tar:
-            example_name = self.naming_template.format(i)
-            example_file = tar.extractfile(example_name)
+        example_name = self.naming_template.format(i)
+        example_file = self.tar.extractfile(example_name)
 
-            example = pickle.load(example_file)
+        example = pickle.load(example_file)
 
         return example
