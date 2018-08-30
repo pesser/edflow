@@ -2,9 +2,12 @@
 
 import os
 import pickle
-import tarfile
+from tqdm import trange
+from zipfile import ZipFile, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 
 from chainer.dataset import DatasetMixin
+
+from edflow.custom_logging import get_logger
 
 
 class CachedDataset(DatasetMixin):
@@ -42,34 +45,36 @@ class CachedDataset(DatasetMixin):
         root = dataset.root
         name = dataset.name
 
-        self.store_path = os.path.join(root, 'cached', name)
+        self.store_dir = os.path.join(root, 'cached')
+        self.store_path = os.path.join(self.store_dir, name + '.zip')
         self.label_path = os.path.join(root, 'cached', name + '_labels.p')
 
-        leading_zeroes = len(str(len(self)))
+        leading_zeroes = str(len(str(len(self))))
         self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
 
-        os.makedirs(self.store_path, exist_ok=True)
+        os.makedirs(self.store_dir, exist_ok=True)
         self.cache_dataset()
 
-        self.tar = tarfile.open(self.store_path, 'r')
+        self.zip = ZipFile(self.store_path, 'r')
 
     def cache_dataset(self):
         '''Checks if a dataset is stored. If not iterates over all possible
         indeces and stores the examples in a file, as well as the labels.'''
 
-        if not os.path.isfile(self.base_dataset) or self.force_cache:
-            with tarfile.open(self.store_path + '.tar', 'w') as tar:
-                for idx in range(len(self.base_dataset)):
+        if not os.path.isfile(self.store_path) or self.force_cache:
+            print('Caching dataset. This might take a while.')
+            with ZipFile(self.store_path, 'w', ZIP_LZMA) as zip_f:
+                for idx in trange(len(self.base_dataset), desc='Example'):
+                    if idx > 100:
+                        break
                     example = self.base_dataset[idx]
 
                     pickle_name = self.naming_template.format(idx)
-                    store_name = os.path.join(self.store_path, pickle_name)
+                    pickle_bytes = pickle.dumps(example)
 
-                    with open(store_name, 'wb') as pickle_file:
-                        pickle.dump(example, pickle_file)
+                    zip_f.writestr(pickle_name, pickle_bytes)
 
-                    tar.add(store_name, arcname=pickle_name)
-
+            print('Caching Labels.')
             with open(self.label_path, 'wb') as labels_file:
                 pickle.dump(self.base_dataset.labels, labels_file)
 
@@ -87,8 +92,8 @@ class CachedDataset(DatasetMixin):
         '''Given an index i, returns a example.'''
 
         example_name = self.naming_template.format(i)
-        example_file = self.tar.extractfile(example_name)
+        example_file = self.zip.read(example_name)
 
-        example = pickle.load(example_file)
+        example = pickle.loads(example_file)
 
         return example
