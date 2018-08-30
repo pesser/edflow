@@ -82,9 +82,9 @@ def get_default_logger():
     default_log_dir, default_logger = LogSingleton('logs').get('default')
     return default_log_dir, default_logger
 
-def init_project(base_dir, code_root = "."):
+def init_project(base_dir, code_root = ".", postfix = None):
     '''Must be called at the very beginning of a script.'''
-    P = ProjectManager(base_dir, code_root = code_root)
+    P = ProjectManager(base_dir, code_root = code_root, postfix = postfix)
     LogSingleton(P.root)
     return P
 
