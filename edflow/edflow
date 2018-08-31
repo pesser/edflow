@@ -27,7 +27,7 @@ def main(opt):
             code_root = path[0]
         else:
             code_root = "."
-        P = init_project('logs', code_root=code_root)
+        P = init_project('logs', code_root=code_root, postfix = opt.name)
 
     # Logger
     logger = get_logger('main')
@@ -87,6 +87,8 @@ if __name__ == "__main__":
     default_log_dir = os.path.join(os.getcwd(), "log")
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("-n", "--name",
+            metavar = "description", help="postfix of log directory.")
     parser.add_argument("-t", "--train",
             metavar = "config.yaml", help="path to training config")
     parser.add_argument("-e", "--eval", nargs = "*",

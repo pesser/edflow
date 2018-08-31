@@ -8,6 +8,7 @@ import os
 import random
 
 from chainer.iterators import MultiprocessIterator
+from chainer.dataset import DatasetMixin
 
 
 def load_image(path):

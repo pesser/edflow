@@ -9,7 +9,7 @@ class ProjectManager(object):
 
     exists = False
 
-    def __init__(self, base=None, given_directory=None, code_root='.'):
+    def __init__(self, base=None, given_directory=None, code_root='.', postfix = None):
         '''Args:
             base (str): Top level directory, where all experiments live.
             given_directory (str): If not None, this will be used to get all
@@ -21,7 +21,11 @@ class ProjectManager(object):
         if not self.exists and has_info:
             ProjectManager.now = now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
             if given_directory is None:
-                ProjectManager.root = os.path.join(base, now)
+                if postfix is not None:
+                    name = now + "_" + postfix
+                else:
+                    name = now
+                ProjectManager.root = os.path.join(base, name)
                 ProjectManager.code_root = code_root
                 ProjectManager.super_root = base
             else:
