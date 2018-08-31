@@ -1,11 +1,36 @@
 '''All handy dataset classes we use.'''
 
+import numpy as np
 import os
 import pickle
-from tqdm import trange
+from tqdm import tqdm
 from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
 
 from chainer.dataset import DatasetMixin
+from multiprocessing import Process, Queue
+
+
+def pickle_and_queue(dataset, indeces, queue, naming_template='example_{}.p'):
+    '''Parallelizable function to retrieve and queue examples from a Dataset.
+
+    Args:
+        dataset (chainer.DatasetMixin): A dataset, with methods described in
+            :class:`CachedDataset`.
+        indeces (list): List of indeces, used to retrieve samples from dataset.
+        queue (mp.Queue): Queue to put the samples in.
+        naming_template (str): Formatable string, which defines the name of
+            the stored file given its index.
+    '''
+
+    for idx in indeces:
+        example = dataset[idx]
+
+        pickle_name = naming_template.format(idx)
+        pickle_bytes = pickle.dumps(example)
+
+        queue.put([pickle_name, pickle_bytes])
+    queue.put(['Done', None])
+
 
 
 class CachedDataset(DatasetMixin):
@@ -21,7 +46,7 @@ class CachedDataset(DatasetMixin):
     The cached dataset will be stored in the root directory of the base dataset
     in the subfolder `cached`."""
 
-    def __init__(self, dataset, force_cache=False):
+    def __init__(self, dataset, force_cache=False, n_workers=2):
         '''Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
@@ -35,9 +60,11 @@ class CachedDataset(DatasetMixin):
                     - `labels`: returns all labels per datum.
             force_cache (bool): If True the dataset is cached even if an
                 existing, cached version is overwritten.
+                n_workers (int): Number of workers to use during caching.
         '''
 
         self.force_cache = force_cache
+        self.n_workers = n_workers
 
         self.base_dataset = dataset
         root = dataset.root
@@ -60,17 +87,44 @@ class CachedDataset(DatasetMixin):
         indeces and stores the examples in a file, as well as the labels.'''
 
         if not os.path.isfile(self.store_path) or self.force_cache:
-            print('Caching dataset. This might take a while.')
+            Q = Queue()
+
+            N_examples = len(self.base_dataset)
+            indeces = np.arange(N_examples)
+            index_lists = np.array_split(indeces, self.n_workers)
+
+            pbar = tqdm(total=N_examples)
+
+            print('Caching dataset using {} workers. '.format(self.n_workers),
+                  'This might take a while.')
             with ZipFile(self.store_path, 'w', ZIP_DEFLATED) as zip_f:
-                for idx in trange(len(self.base_dataset), desc='Example'):
-                    if idx > 100:
+                processes = list()
+                for n in range(self.n_workers):
+                    p_args = (self.base_dataset,
+                              index_lists[n],
+                              Q,
+                              self.naming_template)
+                    p = Process(target=pickle_and_queue, args=p_args)
+                    processes.append(p)
+
+                for p in processes:
+                    p.start()
+
+                done_count = 0
+                while True:
+                    pickle_name, pickle_bytes = Q.get()
+
+                    if not pickle_name == 'Done':
+                        zip_f.writestr(pickle_name, pickle_bytes)
+                        pbar.update(1)
+                    else:
+                        done_count += 1
+
+                    if done_count == self.n_workers:
                         break
-                    example = self.base_dataset[idx]
 
-                    pickle_name = self.naming_template.format(idx)
-                    pickle_bytes = pickle.dumps(example)
-
-                    zip_f.writestr(pickle_name, pickle_bytes)
+                for p in processes:
+                    p.join()
 
             print('Caching Labels.')
             with open(self.label_path, 'wb') as labels_file:
