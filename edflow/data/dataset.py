@@ -3,11 +3,9 @@
 import os
 import pickle
 from tqdm import trange
-from zipfile import ZipFile, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
+from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
 
 from chainer.dataset import DatasetMixin
-
-from edflow.custom_logging import get_logger
 
 
 class CachedDataset(DatasetMixin):
@@ -63,7 +61,7 @@ class CachedDataset(DatasetMixin):
 
         if not os.path.isfile(self.store_path) or self.force_cache:
             print('Caching dataset. This might take a while.')
-            with ZipFile(self.store_path, 'w', ZIP_LZMA) as zip_f:
+            with ZipFile(self.store_path, 'w', ZIP_DEFLATED) as zip_f:
                 for idx in trange(len(self.base_dataset), desc='Example'):
                     if idx > 100:
                         break
