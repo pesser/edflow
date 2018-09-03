@@ -10,7 +10,11 @@ from tqdm import tqdm
 from chainer.dataset import DatasetMixin
 
 
-def pickle_and_queue(dataset, indeces, queue, naming_template='example_{}.p'):
+def pickle_and_queue(dataset,
+                     indeces,
+                     queue,
+                     naming_template='example_{}.p',
+                     store_keys=[]):
     '''Parallelizable function to retrieve and queue examples from a Dataset.
 
     Args:
@@ -20,6 +24,7 @@ def pickle_and_queue(dataset, indeces, queue, naming_template='example_{}.p'):
         queue (mp.Queue): Queue to put the samples in.
         naming_template (str): Formatable string, which defines the name of
             the stored file given its index.
+        store_keys (list): Keys or indeces of values to be stored extra.
     '''
 
     for idx in indeces:
@@ -28,8 +33,11 @@ def pickle_and_queue(dataset, indeces, queue, naming_template='example_{}.p'):
         pickle_name = naming_template.format(idx)
         pickle_bytes = pickle.dumps(example)
 
-        queue.put([pickle_name, pickle_bytes])
-    queue.put(['Done', None])
+        extra_vals = [example[k] for k in store_keys]
+
+        queue.put([pickle_name, pickle_bytes, extra_vals])
+
+    queue.put(['Done', None, None])
 
 
 class CachedDataset(DatasetMixin):
@@ -56,10 +64,13 @@ class CachedDataset(DatasetMixin):
                     - `name`: returns the name of the dataset -> best be unique
                     - `__len__`: number of examples in the dataset
                     - `__getitem__`: returns a sindle datum
-                    - `labels`: returns all labels per datum.
+                    - `in_memory_keys`: returns all keys, that are stored
+                        alongside the dataset, in a `labels.p` file. This
+                        allows to retrive labels more quickly and can be used
+                        to filter the data more easily.
             force_cache (bool): If True the dataset is cached even if an
                 existing, cached version is overwritten.
-                n_workers (int): Number of workers to use during caching.
+            n_workers (int): Number of workers to use during caching.
         '''
 
         self.force_cache = force_cache
@@ -92,6 +103,13 @@ class CachedDataset(DatasetMixin):
             indeces = np.arange(N_examples)
             index_lists = np.array_split(indeces, self.n_workers)
 
+            memory_keys = list()
+            memory_dict = dict()
+            if hasattr(self.base_dataset, 'in_memory_keys'):
+                memory_keys = self.base_dataset.in_memory_keys
+                for key in memory_keys:
+                    memory_dict[key] = list()
+
             pbar = tqdm(total=N_examples)
 
             print('Caching dataset using {} workers. '.format(self.n_workers),
@@ -102,7 +120,8 @@ class CachedDataset(DatasetMixin):
                     p_args = (self.base_dataset,
                               index_lists[n],
                               Q,
-                              self.naming_template)
+                              self.naming_template,
+                              memory_keys)
                     p = Process(target=pickle_and_queue, args=p_args)
                     processes.append(p)
 
@@ -110,8 +129,12 @@ class CachedDataset(DatasetMixin):
                     p.start()
 
                 done_count = 0
+                di = 0
                 while True:
-                    pickle_name, pickle_bytes = Q.get()
+                    pickle_name, pickle_bytes, extra_vals = Q.get()
+
+                    for key in memory_keys:
+                        memory_dict[key] += [extra_vals[key]]
 
                     if not pickle_name == 'Done':
                         zip_f.writestr(pickle_name, pickle_bytes)
@@ -122,12 +145,16 @@ class CachedDataset(DatasetMixin):
                     if done_count == self.n_workers:
                         break
 
+                    if di >= 20:
+                        break
+                    di += 1
+
                 for p in processes:
                     p.join()
 
             print('Caching Labels.')
             with open(self.label_path, 'wb') as labels_file:
-                pickle.dump(self.base_dataset.labels, labels_file)
+                pickle.dump(memory_dict, labels_file)
 
     def __len__(self):
         '''Number of examples in this Dataset.'''
@@ -135,7 +162,7 @@ class CachedDataset(DatasetMixin):
 
     @property
     def labels(self):
-        '''Returns the labels asociated with the base dataset, but from the 
+        '''Returns the labels asociated with the base dataset, but from the
         cached source.'''
         with open(self.label_path, 'r') as labels_file:
             labels = pickle.load(labels_file)
