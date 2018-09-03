@@ -1,13 +1,13 @@
 '''All handy dataset classes we use.'''
 
-import numpy as np
 import os
 import pickle
-from tqdm import tqdm
 from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
-
-from chainer.dataset import DatasetMixin
 from multiprocessing import Process, Queue
+
+import numpy as np
+from tqdm import tqdm
+from chainer.dataset import DatasetMixin
 
 
 def pickle_and_queue(dataset, indeces, queue, naming_template='example_{}.p'):
@@ -30,7 +30,6 @@ def pickle_and_queue(dataset, indeces, queue, naming_template='example_{}.p'):
 
         queue.put([pickle_name, pickle_bytes])
     queue.put(['Done', None])
-
 
 
 class CachedDataset(DatasetMixin):
@@ -67,7 +66,7 @@ class CachedDataset(DatasetMixin):
         self.n_workers = n_workers
 
         self.base_dataset = dataset
-        root = dataset.root
+        self._root = root = dataset.root
         name = dataset.name
 
         self.store_dir = os.path.join(root, 'cached')
@@ -136,9 +135,16 @@ class CachedDataset(DatasetMixin):
 
     @property
     def labels(self):
+        '''Returns the labels asociated with the base dataset, but from the 
+        cached source.'''
         with open(self.label_path, 'r') as labels_file:
             labels = pickle.load(labels_file)
         return labels
+
+    @property
+    def root(self):
+        '''Returns the root to the base dataset.'''
+        return self._root
 
     def get_example(self, i):
         '''Given an index i, returns a example.'''
