@@ -33,7 +33,7 @@ def pickle_and_queue(dataset,
         pickle_name = naming_template.format(idx)
         pickle_bytes = pickle.dumps(example)
 
-        extra_vals = [example[k] for k in store_keys]
+        extra_vals = dict((k,example[k]) for k in store_keys)
 
         queue.put([pickle_name, pickle_bytes, extra_vals])
 
