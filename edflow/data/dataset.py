@@ -129,7 +129,6 @@ class CachedDataset(DatasetMixin):
                     p.start()
 
                 done_count = 0
-                di = 0
                 while True:
                     pickle_name, pickle_bytes, extra_vals = Q.get()
 
@@ -144,10 +143,6 @@ class CachedDataset(DatasetMixin):
 
                     if done_count == self.n_workers:
                         break
-
-                    if di >= 20:
-                        break
-                    di += 1
 
                 for p in processes:
                     p.join()
