@@ -9,32 +9,61 @@ import numpy as np
 from tqdm import tqdm
 from chainer.dataset import DatasetMixin
 
+from multiprocessing.managers import BaseManager
+import queue
 
-def pickle_and_queue(dataset,
-                     indeces,
-                     queue,
+
+def make_server_manager(port = 63127, authkey = b"edcache"):
+    inqueue = queue.Queue()
+    outqueue = queue.Queue()
+    class InOutManager(BaseManager):
+        pass
+    InOutManager.register("get_inqueue", lambda: inqueue)
+    InOutManager.register("get_outqueue", lambda: outqueue)
+    manager = InOutManager(address=("", port), authkey = authkey)
+    manager.start()
+    print("Started manager server at {}".format(manager.address))
+    return manager
+
+
+def make_client_manager(ip, port = 63127, authkey = b"edcache"):
+    class InOutManager(BaseManager):
+        pass
+    InOutManager.register("get_inqueue")
+    InOutManager.register("get_outqueue")
+    manager = InOutManager(address=(ip, port), authkey = authkey)
+    manager.connect()
+    print("Connected to server at {}".format(manager.address))
+    return manager
+
+
+def pickle_and_queue(dataset_factory,
+                     inqueue,
+                     outqueue,
                      naming_template='example_{}.p'):
     '''Parallelizable function to retrieve and queue examples from a Dataset.
 
     Args:
-        dataset (chainer.DatasetMixin): A dataset, with methods described in
+        dataset_factory (() -> chainer.DatasetMixin): A dataset factory, with methods described in
             :class:`CachedDataset`.
         indeces (list): List of indeces, used to retrieve samples from dataset.
         queue (mp.Queue): Queue to put the samples in.
         naming_template (str): Formatable string, which defines the name of
             the stored file given its index.
-        store_keys (list): Keys or indeces of values to be stored extra.
     '''
+    dataset = dataset_factory()
+    while True:
+        try:
+            indices = inqueue.get_nowait()
+        except queue.Empty:
+            return
 
-    for idx in indeces:
-        example = dataset[idx]
+        for idx in indices:
+            example = dataset[idx]
+            pickle_name = naming_template.format(idx)
+            pickle_bytes = pickle.dumps(example)
 
-        pickle_name = naming_template.format(idx)
-        pickle_bytes = pickle.dumps(example)
-
-        queue.put([pickle_name, pickle_bytes])
-
-    queue.put(['Done', None])
+            outqueue.put([pickle_name, pickle_bytes])
 
 
 class CachedDataset(DatasetMixin):
@@ -99,7 +128,9 @@ class CachedDataset(DatasetMixin):
         indeces and stores the examples in a file, as well as the labels.'''
 
         if not os.path.isfile(self.store_path) or self.force_cache:
-            Q = Queue()
+            manager = make_server_manager()
+            inqueue = manager.get_inqueue()
+            outqueue = manager.get_outqueue()
 
             N_examples = len(self.base_dataset)
             indeces = np.arange(N_examples)
@@ -110,42 +141,26 @@ class CachedDataset(DatasetMixin):
                         not self.naming_template.format(i) in zipfilenames]
                 print("Keeping {} cached examples.".format(N_examples - len(indeces)))
                 N_examples = len(indeces)
-            index_lists = np.array_split(indeces, self.n_workers)
+            chunk_size = 64
+            index_chunks = [indeces[i:i+chunk_size]
+                    for i in range(0, len(indeces), chunk_size)]
+            for chunk in index_chunks:
+                inqueue.put(chunk)
+            print("Waiting for results.")
 
             pbar = tqdm(total=N_examples)
-
-            print('Caching dataset using {} workers. '.format(self.n_workers),
-                  'This might take a while.')
             mode = "a" if self.keep_existing else "w"
             with ZipFile(self.store_path, mode, ZIP_DEFLATED) as zip_f:
-                processes = list()
-                for n in range(self.n_workers):
-                    p_args = (self.base_dataset,
-                              index_lists[n],
-                              Q,
-                              self.naming_template)
-                    p = Process(target=pickle_and_queue, args=p_args)
-                    processes.append(p)
-
-                for p in processes:
-                    p.start()
-
                 done_count = 0
                 while True:
-                    pickle_name, pickle_bytes = Q.get()
-
-                    if not pickle_name == 'Done':
-                        zip_f.writestr(pickle_name, pickle_bytes)
-                        pbar.update(1)
-                    else:
-                        done_count += 1
-
-                    if done_count == self.n_workers:
+                    pickle_name, pickle_bytes = outqueue.get()
+                    zip_f.writestr(pickle_name, pickle_bytes)
+                    pbar.update(1)
+                    done_count += 1
+                    if done_count == N_examples:
                         break
 
-                for p in processes:
-                    p.join()
-
+            self.zip = ZipFile(self.store_path, 'r')
             # after everything is done, we store memory keys seperately for
             # more efficient access
             memory_dict = dict()
@@ -163,6 +178,7 @@ class CachedDataset(DatasetMixin):
             with open(self.label_path, 'wb') as labels_file:
                 pickle.dump(memory_dict, labels_file)
             print("Finished caching.")
+            self.zip.close()
 
     def __len__(self):
         '''Number of examples in this Dataset.'''

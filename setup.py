@@ -11,7 +11,6 @@ setup(name='edflow',
       packages=['edflow'],
       install_requires=[
           'pyyaml',
-          'tensorflow-gpu==1.4.1',
           'opencv-python',
           'tqdm',
           'Pillow',
@@ -23,4 +22,4 @@ setup(name='edflow',
           'scikit-image'
           ],
       zip_safe=False,
-      scripts = ["edflow/edflow"])
+      scripts = ["edflow/edflow", "edflow/edcache"])
