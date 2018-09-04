@@ -106,7 +106,7 @@ class CachedDataset(DatasetMixin):
 
             N_examples = len(self.base_dataset)
             indeces = np.arange(N_examples)
-            if self.keep_existing:
+            if self.keep_existing and os.path.isfile(self.store_path):
                 with ZipFile(self.store_path, 'r') as zip_f:
                     zipfilenames = zip_f.namelist()
                 indeces = [i for i in indeces if
