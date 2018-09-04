@@ -53,7 +53,8 @@ class CachedDataset(DatasetMixin):
     The cached dataset will be stored in the root directory of the base dataset
     in the subfolder `cached`."""
 
-    def __init__(self, dataset, force_cache=False, n_workers=2):
+    def __init__(self, dataset, force_cache=False, n_workers=2,
+            keep_existing = True):
         '''Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
@@ -71,10 +72,14 @@ class CachedDataset(DatasetMixin):
             force_cache (bool): If True the dataset is cached even if an
                 existing, cached version is overwritten.
             n_workers (int): Number of workers to use during caching.
+            keep_existing (bool): If True, existing entries in cache will
+                not be recomputed and only non existing examples are
+                appended to the cache. Useful if caching was interrupted.
         '''
 
         self.force_cache = force_cache
         self.n_workers = n_workers
+        self.keep_existing = keep_existing
 
         self.base_dataset = dataset
         self._root = root = dataset.root
@@ -101,6 +106,13 @@ class CachedDataset(DatasetMixin):
 
             N_examples = len(self.base_dataset)
             indeces = np.arange(N_examples)
+            if self.keep_existing:
+                with ZipFile(self.store_path, 'r') as zip_f:
+                    zipfilenames = zip_f.namelist()
+                indeces = [i for i in indeces if
+                        not self.naming_template.format(i) in zipfilenames]
+                print("Keeping {} cached examples.".format(N_examples - len(indeces)))
+                N_examples = len(indeces)
             index_lists = np.array_split(indeces, self.n_workers)
 
             memory_keys = list()
@@ -114,7 +126,8 @@ class CachedDataset(DatasetMixin):
 
             print('Caching dataset using {} workers. '.format(self.n_workers),
                   'This might take a while.')
-            with ZipFile(self.store_path, 'w', ZIP_DEFLATED) as zip_f:
+            mode = "a" if self.keep_existing else "w"
+            with ZipFile(self.store_path, mode, ZIP_DEFLATED) as zip_f:
                 processes = list()
                 for n in range(self.n_workers):
                     p_args = (self.base_dataset,
