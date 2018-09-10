@@ -51,6 +51,7 @@ def pickle_and_queue(dataset_factory,
         naming_template (str): Formatable string, which defines the name of
             the stored file given its index.
     '''
+    pbar = tqdm()
     dataset = dataset_factory()
     while True:
         try:
@@ -64,6 +65,7 @@ def pickle_and_queue(dataset_factory,
             pickle_bytes = pickle.dumps(example)
 
             outqueue.put([pickle_name, pickle_bytes])
+            pbar.update(1)
 
 
 class CachedDataset(DatasetMixin):
@@ -115,8 +117,11 @@ class CachedDataset(DatasetMixin):
         self.store_path = os.path.join(self.store_dir, name + '.zip')
         self.label_path = os.path.join(root, 'cached', name + '_labels.p')
 
-        leading_zeroes = str(len(str(len(self))))
-        self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
+        #leading_zeroes = str(len(str(len(self))))
+        #self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
+        # above might be better, but for compatibility we need this right
+        # now, because pickle_and_queue did not receive the updated template
+        self.naming_template = 'example_{}.p'
 
         os.makedirs(self.store_dir, exist_ok=True)
         self.cache_dataset()
@@ -128,6 +133,7 @@ class CachedDataset(DatasetMixin):
         indeces and stores the examples in a file, as well as the labels.'''
 
         if not os.path.isfile(self.store_path) or self.force_cache:
+            print("Caching {}".format(self.base_dataset.name))
             manager = make_server_manager()
             inqueue = manager.get_inqueue()
             outqueue = manager.get_outqueue()
