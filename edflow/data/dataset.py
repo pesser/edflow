@@ -81,7 +81,8 @@ class CachedDataset(DatasetMixin):
     The cached dataset will be stored in the root directory of the base dataset
     in the subfolder `cached`."""
 
-    def __init__(self, dataset, force_cache=False, n_workers=2,
+    def __init__(self, dataset,
+            force_cache=False,
             keep_existing = True):
         '''Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
@@ -99,14 +100,12 @@ class CachedDataset(DatasetMixin):
                         to filter the data more easily.
             force_cache (bool): If True the dataset is cached even if an
                 existing, cached version is overwritten.
-            n_workers (int): Number of workers to use during caching.
             keep_existing (bool): If True, existing entries in cache will
                 not be recomputed and only non existing examples are
                 appended to the cache. Useful if caching was interrupted.
         '''
 
         self.force_cache = force_cache
-        self.n_workers = n_workers
         self.keep_existing = keep_existing
 
         self.base_dataset = dataset
@@ -115,16 +114,17 @@ class CachedDataset(DatasetMixin):
 
         self.store_dir = os.path.join(root, 'cached')
         self.store_path = os.path.join(self.store_dir, name + '.zip')
-        self.label_path = os.path.join(root, 'cached', name + '_labels.p')
 
         #leading_zeroes = str(len(str(len(self))))
         #self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
         # above might be better, but for compatibility we need this right
         # now, because pickle_and_queue did not receive the updated template
         self.naming_template = 'example_{}.p'
+        self._labels_name = 'labels.p'
 
         os.makedirs(self.store_dir, exist_ok=True)
-        self.cache_dataset()
+        if self.force_cache:
+            self.cache_dataset()
 
         self.zip = ZipFile(self.store_path, 'r')
 
@@ -156,35 +156,33 @@ class CachedDataset(DatasetMixin):
 
             pbar = tqdm(total=N_examples)
             mode = "a" if self.keep_existing else "w"
-            with ZipFile(self.store_path, mode, ZIP_DEFLATED) as zip_f:
+            with ZipFile(self.store_path, mode, ZIP_DEFLATED) as self.zip:
                 done_count = 0
                 while True:
                     if done_count == N_examples:
                         break
                     pickle_name, pickle_bytes = outqueue.get()
-                    zip_f.writestr(pickle_name, pickle_bytes)
+                    self.zip.writestr(pickle_name, pickle_bytes)
                     pbar.update(1)
                     done_count += 1
 
-            self.zip = ZipFile(self.store_path, 'r')
-            # after everything is done, we store memory keys seperately for
-            # more efficient access
-            memory_dict = dict()
-            if hasattr(self.base_dataset, 'in_memory_keys'):
-                print('Caching Labels.')
-                memory_keys = self.base_dataset.in_memory_keys
-                for key in memory_keys:
-                    memory_dict[key] = list()
-                for idx in trange(len(self.base_dataset)):
-                    example = self[idx] # load cached version
-                    # extract keys
+                # after everything is done, we store memory keys seperately for
+                # more efficient access
+                memory_dict = dict()
+                if hasattr(self.base_dataset, 'in_memory_keys'):
+                    print('Caching Labels.')
+                    memory_keys = self.base_dataset.in_memory_keys
                     for key in memory_keys:
-                        memory_dict[key].append(example[key])
-            # dump to disk
-            with open(self.label_path, 'wb') as labels_file:
-                pickle.dump(memory_dict, labels_file)
+                        memory_dict[key] = list()
+                    for idx in trange(len(self.base_dataset)):
+                        example = self[idx] # load cached version
+                        # extract keys
+                        for key in memory_keys:
+                            memory_dict[key].append(example[key])
+
+                self.zip.writestr(self._labels_name,
+                        pickle.dumps(memory_dict))
             print("Finished caching.")
-            self.zip.close()
 
     def __len__(self):
         '''Number of examples in this Dataset.'''
@@ -194,9 +192,11 @@ class CachedDataset(DatasetMixin):
     def labels(self):
         '''Returns the labels asociated with the base dataset, but from the
         cached source.'''
-        with open(self.label_path, 'r') as labels_file:
-            labels = pickle.load(labels_file)
-        return labels
+        if not hasattr(self, "_labels"):
+            labels = self.zip.read(self._labels_name)
+            labels = pickle.loads(labels)
+            self._labels = labels
+        return self._labels
 
     @property
     def root(self):
