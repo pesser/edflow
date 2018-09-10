@@ -6,7 +6,7 @@ from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
 from multiprocessing import Process, Queue
 
 import numpy as np
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from chainer.dataset import DatasetMixin
 
 from multiprocessing.managers import BaseManager
@@ -159,12 +159,12 @@ class CachedDataset(DatasetMixin):
             with ZipFile(self.store_path, mode, ZIP_DEFLATED) as zip_f:
                 done_count = 0
                 while True:
+                    if done_count == N_examples:
+                        break
                     pickle_name, pickle_bytes = outqueue.get()
                     zip_f.writestr(pickle_name, pickle_bytes)
                     pbar.update(1)
                     done_count += 1
-                    if done_count == N_examples:
-                        break
 
             self.zip = ZipFile(self.store_path, 'r')
             # after everything is done, we store memory keys seperately for
@@ -175,7 +175,7 @@ class CachedDataset(DatasetMixin):
                 memory_keys = self.base_dataset.in_memory_keys
                 for key in memory_keys:
                     memory_dict[key] = list()
-                for idx in range(len(self.base_dataset)):
+                for idx in trange(len(self.base_dataset)):
                     example = self[idx] # load cached version
                     # extract keys
                     for key in memory_keys:
