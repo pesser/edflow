@@ -77,6 +77,6 @@ def make_batches(dataset, batch_size, shuffle):
     batches = Iterator(dataset,
                        repeat=True,
                        batch_size=batch_size,
-                       n_processes=16,
+                       n_processes=4,
                        shuffle=shuffle)
     return batches

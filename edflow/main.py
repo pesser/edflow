@@ -24,12 +24,16 @@ def train(config, root, checkpoint = None, retrain = False):
     implementation = config["implementation"]
     impl = importlib.import_module(implementation, package=None)
 
-    Model = impl.TrainModel(config)
-    Trainer = impl.Trainer(config, root, Model, hook_freq=config["hook_freq"])
+    # fork early to avoid taking all the crap into forked processes
     dataset = impl.TrainDataset(config=config)
-
     logger.info("Number of training samples: {}".format(len(dataset)))
     batches = make_batches(dataset, batch_size = config["batch_size"], shuffle = True)
+    # get them going
+    next(batches)
+    batches.reset()
+
+    Model = impl.TrainModel(config)
+    Trainer = impl.Trainer(config, root, Model, hook_freq=config["hook_freq"])
 
     if checkpoint is not None:
         Trainer.initialize(checkpoint_path=checkpoint)
