@@ -8,6 +8,11 @@ from multiprocessing import Process, Queue
 import numpy as np
 from tqdm import tqdm, trange
 from chainer.dataset import DatasetMixin
+# TODO maybe just pull
+# https://github.com/chainer/chainer/blob/v4.4.0/chainer/dataset/dataset_mixin.py
+# into the rep to avoid dependency on chainer for this one mixin - it doesnt
+# even do that much and it would provide better documentation as this is
+# actually our base class for datasets
 
 from multiprocessing.managers import BaseManager
 import queue
@@ -79,7 +84,42 @@ class CachedDataset(DatasetMixin):
     the cached dataset to reduce the preprocessing overhead.
 
     The cached dataset will be stored in the root directory of the base dataset
-    in the subfolder `cached`."""
+    in the subfolder `cached` with name `name.zip`.
+
+    Besides the usual DatasetMixin interface, datasets to be cached must
+    also implement
+
+        root        # (str) root folder to cache into
+        name        # (str) unqiue name
+
+    Optionally but highly recommended, they should provide
+
+        in_memory_keys  # list(str) keys which will be collected from examples
+
+    The collected values are stored in a dict of list, mapping an
+    in_memory_key to a list containing the i-ths value at the i-ths place.
+    This data structure is then exposed via the attribute `labels` and
+    enables rapid iteration over useful labels without loading each example
+    seperately. That way, downstream datasets can filter the indices of the
+    cached dataset efficiently, e.g. filtering based on train/eval splits.
+
+    Caching proceeds as follows:
+    Expose a method which returns the dataset to be cached, e.g.
+
+        def DataToCache():
+          path = "/path/to/data"
+          return MyCachableDataset(path)
+
+    Start caching server on host <server_ip_or_hostname>:
+
+        edcache --server --dataset import.path.to.DataToCache
+
+    Wake up a worker bee on same or different hosts:
+
+        edcache --address <server_ip_or_hostname> --dataset import.path.to.DataCache
+
+    Start a cacherhive!
+    """
 
     def __init__(self, dataset,
             force_cache=False,
