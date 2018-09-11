@@ -1,11 +1,11 @@
 import numpy as np
 import PIL.Image
 import numpy as np
-import scipy.ndimage
 import math
 import pickle
 import os
 import random
+from edflow.iterators.resize import resize_image, resize_uint8, resize_float32, resize_hfloat32
 
 from chainer.iterators import MultiprocessIterator
 from chainer.dataset import DatasetMixin
@@ -26,19 +26,6 @@ def save_image(x, path):
     x = np.clip(255 * x, 0, 255)
     x = np.array(x, dtype = "uint8")
     PIL.Image.fromarray(x).save(path)
-
-
-def resize(x, size):
-    try:
-        zoom = [size[0] / x.shape[0],
-                size[1] / x.shape[1]]
-    except TypeError:
-        zoom = [size / x.shape[0],
-                size / x.shape[1]]
-    for _ in range(len(x.shape)-2):
-        zoom.append(1.0)
-    x = scipy.ndimage.zoom(x, zoom)
-    return x
 
 
 def tile(X, rows, cols):
