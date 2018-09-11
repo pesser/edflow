@@ -166,7 +166,15 @@ class CachedDataset(DatasetMixin):
         if self.force_cache:
             self.cache_dataset()
 
-        self.zip = ZipFile(self.store_path, 'r')
+
+    @property
+    def fork_safe_zip(self):
+        currentpid = os.getpid()
+        if getattr(self, "_initpid", None) != currentpid:
+            self._initpid = currentpid
+            self.zip = ZipFile(self.store_path, 'r')
+        return self.zip
+
 
     def cache_dataset(self):
         '''Checks if a dataset is stored. If not iterates over all possible
@@ -233,7 +241,7 @@ class CachedDataset(DatasetMixin):
         '''Returns the labels asociated with the base dataset, but from the
         cached source.'''
         if not hasattr(self, "_labels"):
-            labels = self.zip.read(self._labels_name)
+            labels = self.fork_safe_zip.read(self._labels_name)
             labels = pickle.loads(labels)
             self._labels = labels
         return self._labels
@@ -247,7 +255,7 @@ class CachedDataset(DatasetMixin):
         '''Given an index i, returns a example.'''
 
         example_name = self.naming_template.format(i)
-        example_file = self.zip.read(example_name)
+        example_file = self.fork_safe_zip.read(example_name)
 
         example = pickle.loads(example_file)
 
