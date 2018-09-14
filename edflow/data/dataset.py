@@ -263,3 +263,90 @@ class CachedDataset(DatasetMixin):
         example = pickle.loads(example_file)
 
         return example
+
+
+class SubDataset(DatasetMixin):
+    """A subset of a given dataset."""
+    def __init__(self, data, subindices):
+        self.data = data
+        self.subindices = subindices
+
+    def get_example(self, i):
+        """Get example and process. Wrapped to make sure stacktrace is
+        printed in case something goes wrong and we are in a
+        MultiprocessIterator."""
+        return self.data[self.subindices[i]]
+
+    def __len__(self):
+        return len(self.subindices)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        if not hasattr(self, "_labels"):
+            self._labels = dict()
+            labels = self.data.labels
+            for k in labels:
+                self._labels[k] = [labels[k][i] for i in self.subindices]
+        return self._labels
+
+
+class ProcessedDataset(DatasetMixin):
+    """A dataset with data processing applied."""
+    def __init__(self, data, process):
+        self.data = data
+        self.process = process
+
+    def get_example(self, i):
+        """Get example and process. Wrapped to make sure stacktrace is
+        printed in case something goes wrong and we are in a
+        MultiprocessIterator."""
+        try:
+            d = self.data.get_example(i)
+            d.update(self.process(**d))
+        except:
+            traceback.print_exc()
+            raise
+        return d
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        return self.data.labels
+
+
+class ConcatenatedDataset(DatasetMixin):
+    """A dataset which concatenates given datasets."""
+    def __init__(self, *datasets):
+        self.datasets = datasets
+        self.lengths = [len(d) for d in self.datasets]
+        self.boundaries = np.cumsum(self.lengths)
+
+    def get_example(self, i):
+        """Get example and add dataset index to it."""
+        did = np.where(i < self.boundaries)[0][0]
+        if did > 0:
+            local_i = i - self.boundaries[did-1]
+        else:
+            local_i = i
+        example = self.datasets[did][local_i]
+        example["did"] = did
+        return example
+
+    def __len__(self):
+        return sum(self.lengths)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        if not hasattr(self, "_labels"):
+            labels = self.datasets[0].labels
+            for i in range(1, len(self.datasets)):
+                new_labels = self.datasets[i].labels
+                for k in labels:
+                    labels[k] += new_labels[k]
+            self._labels = labels
+        return self._labels
