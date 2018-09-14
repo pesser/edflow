@@ -191,10 +191,12 @@ class CachedDataset(DatasetMixin):
             if self.keep_existing and os.path.isfile(self.store_path):
                 with ZipFile(self.store_path, 'r') as zip_f:
                     zipfilenames = zip_f.namelist()
+                zipfilenames = set(zipfilenames)
                 indeces = [i for i in indeces if
                         not self.naming_template.format(i) in zipfilenames]
                 print("Keeping {} cached examples.".format(N_examples - len(indeces)))
                 N_examples = len(indeces)
+            print("Caching {} examples.".format(N_examples))
             chunk_size = 64
             index_chunks = [indeces[i:i+chunk_size]
                     for i in range(0, len(indeces), chunk_size)]
