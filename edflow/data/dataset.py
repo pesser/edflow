@@ -216,21 +216,22 @@ class CachedDataset(DatasetMixin):
                     pbar.update(1)
                     done_count += 1
 
-                # after everything is done, we store memory keys seperately for
-                # more efficient access
-                memory_dict = dict()
-                if hasattr(self.base_dataset, 'in_memory_keys'):
-                    print('Caching Labels.')
-                    memory_keys = self.base_dataset.in_memory_keys
+            # after everything is done, we store memory keys seperately for
+            # more efficient access
+            memory_dict = dict()
+            if hasattr(self.base_dataset, 'in_memory_keys'):
+                print('Caching Labels.')
+                memory_keys = self.base_dataset.in_memory_keys
+                for key in memory_keys:
+                    memory_dict[key] = list()
+                for idx in trange(len(self.base_dataset)):
+                    example = self[idx] # load cached version
+                    # extract keys
                     for key in memory_keys:
-                        memory_dict[key] = list()
-                    for idx in trange(len(self.base_dataset)):
-                        example = self[idx] # load cached version
-                        # extract keys
-                        for key in memory_keys:
-                            memory_dict[key].append(example[key])
+                        memory_dict[key].append(example[key])
 
-                self.zip.writestr(self._labels_name,
+            with ZipFile(self.store_path, "a", ZIP_DEFLATED) as zipfile:
+                zipfile.writestr(self._labels_name,
                         pickle.dumps(memory_dict))
             print("Finished caching.")
 
