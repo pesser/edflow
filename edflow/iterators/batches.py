@@ -45,6 +45,20 @@ def tile(X, rows, cols):
 
 def plot_batch(X, out_path):
     """Save batch of images tiled."""
+    if len(X.shape) == 5:
+        # tile
+        oldX = np.array(X)
+        n_tiles = X.shape[3]
+        side = math.ceil(math.sqrt(n_tiles))
+        X = np.zeros(
+                (oldX.shape[0],oldX.shape[1]*side,oldX.shape[2]*side,oldX.shape[4]),
+                dtype = oldX.dtype)
+        # cropped images
+        for i in range(oldX.shape[0]):
+            inx = oldX[i]
+            inx = np.transpose(inx, [2,0,1,3])
+            X[i] = tile(inx, side, side)
+
     n_channels = X.shape[3]
     if n_channels > 4:
         X = X[:, :, :, :3]
