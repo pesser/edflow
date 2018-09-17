@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import traceback
 from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
 from multiprocessing import Process, Queue
 
