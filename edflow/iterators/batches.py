@@ -1,11 +1,11 @@
 import numpy as np
 import PIL.Image
 import numpy as np
-import scipy.ndimage
 import math
 import pickle
 import os
 import random
+from edflow.iterators.resize import resize_image, resize_uint8, resize_float32, resize_hfloat32
 
 from chainer.iterators import MultiprocessIterator
 from chainer.dataset import DatasetMixin
@@ -28,19 +28,6 @@ def save_image(x, path):
     PIL.Image.fromarray(x).save(path)
 
 
-def resize(x, size):
-    try:
-        zoom = [size[0] / x.shape[0],
-                size[1] / x.shape[1]]
-    except TypeError:
-        zoom = [size / x.shape[0],
-                size / x.shape[1]]
-    for _ in range(len(x.shape)-2):
-        zoom.append(1.0)
-    x = scipy.ndimage.zoom(x, zoom)
-    return x
-
-
 def tile(X, rows, cols):
     """Tile images for display."""
     tiling = np.zeros((rows * X.shape[1], cols * X.shape[2], X.shape[3]), dtype = X.dtype)
@@ -58,6 +45,20 @@ def tile(X, rows, cols):
 
 def plot_batch(X, out_path):
     """Save batch of images tiled."""
+    if len(X.shape) == 5:
+        # tile
+        oldX = np.array(X)
+        n_tiles = X.shape[3]
+        side = math.ceil(math.sqrt(n_tiles))
+        X = np.zeros(
+                (oldX.shape[0],oldX.shape[1]*side,oldX.shape[2]*side,oldX.shape[4]),
+                dtype = oldX.dtype)
+        # cropped images
+        for i in range(oldX.shape[0]):
+            inx = oldX[i]
+            inx = np.transpose(inx, [2,0,1,3])
+            X[i] = tile(inx, side, side)
+
     n_channels = X.shape[3]
     if n_channels > 4:
         X = X[:, :, :, :3]
@@ -90,6 +91,6 @@ def make_batches(dataset, batch_size, shuffle):
     batches = Iterator(dataset,
                        repeat=True,
                        batch_size=batch_size,
-                       n_processes=16,
+                       n_processes=4,
                        shuffle=shuffle)
     return batches

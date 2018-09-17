@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+sys.path.append(os.getcwd())  # convenience: load implementations from cwd
+import argparse
+import yaml
+import multiprocessing as mp
+import importlib
+
+from edflow.data.dataset import CachedDataset, pickle_and_queue
+
+
+def get_factory(path):
+    module, cls = path.rsplit(".", 1)
+    impl = importlib.import_module(module, package=None)
+    data_factory = getattr(impl, cls)
+    return data_factory
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dataset",
+            metavar = "dataset", help="cachable dataset import path")
+    parser.add_argument("-s", "--server",
+            action = "store_true", help="start cache server")
+    parser.add_argument("-a", "--address",
+            metavar = "address", help="start working for address")
+    opt = parser.parse_args()
+
+    if opt.server:
+        print("Starting server")
+        data_factory = get_factory(opt.dataset)
+        data = data_factory()
+        cacher = CachedDataset(data, force_cache = True, keep_existing = True)
+    elif opt.address:
+        print("Starting worker")
+        from edflow.data.dataset import make_client_manager
+        manager = make_client_manager(ip = opt.address)
+        inqueue = manager.get_inqueue()
+        outqueue = manager.get_outqueue()
+        factory = get_factory(opt.dataset)
+        pickle_and_queue(factory, inqueue, outqueue)
