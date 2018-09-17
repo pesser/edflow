@@ -49,8 +49,8 @@ def pickle_and_queue(dataset_factory,
     '''Parallelizable function to retrieve and queue examples from a Dataset.
 
     Args:
-        dataset_factory (() -> chainer.DatasetMixin): A dataset factory, with methods described in
-            :class:`CachedDataset`.
+        dataset_factory (() -> chainer.DatasetMixin): A dataset factory, with
+            methods described in :class:`CachedDataset`.
         indeces (list): List of indeces, used to retrieve samples from dataset.
         queue (mp.Queue): Queue to put the samples in.
         naming_template (str): Formatable string, which defines the name of
@@ -121,9 +121,10 @@ class CachedDataset(DatasetMixin):
     Start a cacherhive!
     """
 
-    def __init__(self, dataset,
-            force_cache=False,
-            keep_existing = True):
+    def __init__(self,
+                 dataset,
+                 force_cache=False,
+                 keep_existing=True):
         '''Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
@@ -166,7 +167,6 @@ class CachedDataset(DatasetMixin):
         if self.force_cache:
             self.cache_dataset()
 
-
     @property
     def fork_safe_zip(self):
         currentpid = os.getpid()
@@ -174,7 +174,6 @@ class CachedDataset(DatasetMixin):
             self._initpid = currentpid
             self.zip = ZipFile(self.store_path, 'r')
         return self.zip
-
 
     def cache_dataset(self):
         '''Checks if a dataset is stored. If not iterates over all possible
@@ -214,7 +213,7 @@ class CachedDataset(DatasetMixin):
                     pbar.update(1)
                     done_count += 1
 
-                # after everything is done, we store memory keys seperately for
+                # after everything is done, we store memory keys separately for
                 # more efficient access
                 memory_dict = dict()
                 if hasattr(self.base_dataset, 'in_memory_keys'):
@@ -238,7 +237,7 @@ class CachedDataset(DatasetMixin):
 
     @property
     def labels(self):
-        '''Returns the labels asociated with the base dataset, but from the
+        '''Returns the labels associated with the base dataset, but from the
         cached source.'''
         if not hasattr(self, "_labels"):
             labels = self.fork_safe_zip.read(self._labels_name)
