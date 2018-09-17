@@ -65,7 +65,11 @@ def pickle_and_queue(dataset_factory,
             return
 
         for idx in indices:
-            example = dataset[idx]
+            try:
+                example = dataset[idx]
+            except:
+                print("Error getting example {}".format(idx))
+                raise
             pickle_name = naming_template.format(idx)
             pickle_bytes = pickle.dumps(example)
 
