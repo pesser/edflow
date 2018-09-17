@@ -27,6 +27,9 @@ def pickle_and_queue(dataset,
         store_keys (list): Keys or indeces of values to be stored extra.
     '''
 
+    if hasattr(dataset, 'maybe_init'):
+        dataset.maybe_init()
+
     for idx in indeces:
         example = dataset[idx]
 
@@ -129,20 +132,26 @@ class CachedDataset(DatasetMixin):
                     p.start()
 
                 done_count = 0
-                while True:
-                    pickle_name, pickle_bytes, extra_vals = Q.get()
+                try:
+                    while True:
+                        pickle_name, pickle_bytes, extra_vals = Q.get()
 
-                    for key in memory_keys:
-                        memory_dict[key] += [extra_vals[key]]
+                        for key in memory_keys:
+                            memory_dict[key] += [extra_vals[key]]
 
-                    if not pickle_name == 'Done':
-                        zip_f.writestr(pickle_name, pickle_bytes)
-                        pbar.update(1)
-                    else:
-                        done_count += 1
+                        if not pickle_name == 'Done':
+                            zip_f.writestr(pickle_name, pickle_bytes)
+                            pbar.update(1)
+                        else:
+                            done_count += 1
 
-                    if done_count == self.n_workers:
-                        break
+                        if done_count == self.n_workers:
+                            break
+                except Exception as e:
+                    print(e)
+                    print('Terminating')
+                    for p in processes:
+                        p.terminate()
 
                 for p in processes:
                     p.join()
