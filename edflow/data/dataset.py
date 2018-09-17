@@ -78,6 +78,26 @@ def pickle_and_queue(dataset_factory,
             pbar.update(1)
 
 
+class _CacheDataset(DatasetMixin):
+    """Only used to avoid initializing the original dataset."""
+    def __init__(self, root, name):
+        self.root = root
+        self.name = name
+
+        zippath = os.path.join(root, "cached", name+".zip")
+        naming_template = 'example_{}.p'
+        with ZipFile(zippath, 'r') as zip_f:
+            zipfilenames = zip_f.namelist()
+        def is_example(name):
+            return name.startswith("example_") and name.endswith(".p")
+        examplefilenames = [n for n in zipfilenames if is_example(n)]
+        self.n = len(examplefilenames)
+
+
+    def __len__(self):
+        return self.n
+
+
 class CachedDataset(DatasetMixin):
     """Using a Dataset of single examples creates a cached (saved to memory)
     version, which can be accessed way faster at runtime.
@@ -170,6 +190,15 @@ class CachedDataset(DatasetMixin):
         os.makedirs(self.store_dir, exist_ok=True)
         if self.force_cache:
             self.cache_dataset()
+
+
+    @classmethod
+    def from_cache(cls, root, name):
+        """Use this constructor to avoid initialization of original dataset
+        which can be useful if only the cached zip file is available or to
+        avoid expensive constructors of datasets."""
+        dataset = _CacheDataset(root, name)
+        return cls(dataset)
 
 
     @property
