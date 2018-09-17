@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import traceback
 from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
 from multiprocessing import Process, Queue
 
@@ -65,12 +66,36 @@ def pickle_and_queue(dataset_factory,
             return
 
         for idx in indices:
-            example = dataset[idx]
+            try:
+                example = dataset[idx]
+            except:
+                print("Error getting example {}".format(idx))
+                raise
             pickle_name = naming_template.format(idx)
             pickle_bytes = pickle.dumps(example)
 
             outqueue.put([pickle_name, pickle_bytes])
             pbar.update(1)
+
+
+class _CacheDataset(DatasetMixin):
+    """Only used to avoid initializing the original dataset."""
+    def __init__(self, root, name):
+        self.root = root
+        self.name = name
+
+        zippath = os.path.join(root, "cached", name+".zip")
+        naming_template = 'example_{}.p'
+        with ZipFile(zippath, 'r') as zip_f:
+            zipfilenames = zip_f.namelist()
+        def is_example(name):
+            return name.startswith("example_") and name.endswith(".p")
+        examplefilenames = [n for n in zipfilenames if is_example(n)]
+        self.n = len(examplefilenames)
+
+
+    def __len__(self):
+        return self.n
 
 
 class CachedDataset(DatasetMixin):
@@ -167,6 +192,14 @@ class CachedDataset(DatasetMixin):
         if self.force_cache:
             self.cache_dataset()
 
+    @classmethod
+    def from_cache(cls, root, name):
+        """Use this constructor to avoid initialization of original dataset
+        which can be useful if only the cached zip file is available or to
+        avoid expensive constructors of datasets."""
+        dataset = _CacheDataset(root, name)
+        return cls(dataset)
+
     @property
     def fork_safe_zip(self):
         currentpid = os.getpid()
@@ -190,10 +223,12 @@ class CachedDataset(DatasetMixin):
             if self.keep_existing and os.path.isfile(self.store_path):
                 with ZipFile(self.store_path, 'r') as zip_f:
                     zipfilenames = zip_f.namelist()
+                zipfilenames = set(zipfilenames)
                 indeces = [i for i in indeces if
                         not self.naming_template.format(i) in zipfilenames]
                 print("Keeping {} cached examples.".format(N_examples - len(indeces)))
                 N_examples = len(indeces)
+            print("Caching {} examples.".format(N_examples))
             chunk_size = 64
             index_chunks = [indeces[i:i+chunk_size]
                     for i in range(0, len(indeces), chunk_size)]
@@ -213,21 +248,22 @@ class CachedDataset(DatasetMixin):
                     pbar.update(1)
                     done_count += 1
 
-                # after everything is done, we store memory keys separately for
-                # more efficient access
-                memory_dict = dict()
-                if hasattr(self.base_dataset, 'in_memory_keys'):
-                    print('Caching Labels.')
-                    memory_keys = self.base_dataset.in_memory_keys
+            # after everything is done, we store memory keys seperately for
+            # more efficient access
+            memory_dict = dict()
+            if hasattr(self.base_dataset, 'in_memory_keys'):
+                print('Caching Labels.')
+                memory_keys = self.base_dataset.in_memory_keys
+                for key in memory_keys:
+                    memory_dict[key] = list()
+                for idx in trange(len(self.base_dataset)):
+                    example = self[idx] # load cached version
+                    # extract keys
                     for key in memory_keys:
-                        memory_dict[key] = list()
-                    for idx in trange(len(self.base_dataset)):
-                        example = self[idx] # load cached version
-                        # extract keys
-                        for key in memory_keys:
-                            memory_dict[key].append(example[key])
+                        memory_dict[key].append(example[key])
 
-                self.zip.writestr(self._labels_name,
+            with ZipFile(self.store_path, "a", ZIP_DEFLATED) as zipfile:
+                zipfile.writestr(self._labels_name,
                         pickle.dumps(memory_dict))
             print("Finished caching.")
 
@@ -259,3 +295,90 @@ class CachedDataset(DatasetMixin):
         example = pickle.loads(example_file)
 
         return example
+
+
+class SubDataset(DatasetMixin):
+    """A subset of a given dataset."""
+    def __init__(self, data, subindices):
+        self.data = data
+        self.subindices = subindices
+
+    def get_example(self, i):
+        """Get example and process. Wrapped to make sure stacktrace is
+        printed in case something goes wrong and we are in a
+        MultiprocessIterator."""
+        return self.data[self.subindices[i]]
+
+    def __len__(self):
+        return len(self.subindices)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        if not hasattr(self, "_labels"):
+            self._labels = dict()
+            labels = self.data.labels
+            for k in labels:
+                self._labels[k] = [labels[k][i] for i in self.subindices]
+        return self._labels
+
+
+class ProcessedDataset(DatasetMixin):
+    """A dataset with data processing applied."""
+    def __init__(self, data, process):
+        self.data = data
+        self.process = process
+
+    def get_example(self, i):
+        """Get example and process. Wrapped to make sure stacktrace is
+        printed in case something goes wrong and we are in a
+        MultiprocessIterator."""
+        try:
+            d = self.data.get_example(i)
+            d.update(self.process(**d))
+        except:
+            traceback.print_exc()
+            raise
+        return d
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        return self.data.labels
+
+
+class ConcatenatedDataset(DatasetMixin):
+    """A dataset which concatenates given datasets."""
+    def __init__(self, *datasets):
+        self.datasets = datasets
+        self.lengths = [len(d) for d in self.datasets]
+        self.boundaries = np.cumsum(self.lengths)
+
+    def get_example(self, i):
+        """Get example and add dataset index to it."""
+        did = np.where(i < self.boundaries)[0][0]
+        if did > 0:
+            local_i = i - self.boundaries[did-1]
+        else:
+            local_i = i
+        example = self.datasets[did][local_i]
+        example["did"] = did
+        return example
+
+    def __len__(self):
+        return sum(self.lengths)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        if not hasattr(self, "_labels"):
+            labels = self.datasets[0].labels
+            for i in range(1, len(self.datasets)):
+                new_labels = self.datasets[i].labels
+                for k in labels:
+                    labels[k] += new_labels[k]
+            self._labels = labels
+        return self._labels
