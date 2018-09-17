@@ -15,25 +15,34 @@ from edflow.custom_logging import init_project, get_logger
 from edflow.project_manager import ProjectManager
 
 
+def get_implementations_from_config(config, names):
+    def get_impl(config, name):
+        impl = config[name]
+        module, cls = impl.rsplit(".", 1)
+        return getattr(importlib.import_module(module, package=None), cls)
+    implementations = dict((name, get_impl(config, name)) for name in names)
+    return implementations
+
+
 def train(config, root, checkpoint = None, retrain = False):
-    '''Run training. Implementation should provide TrainDataset, TrainModel and Trainer.'''
+    '''Run training. Loads model, iterator and dataset according to config.'''
 
     logger = get_logger('train')
     logger.info('Starting Training')
 
-    implementation = config["implementation"]
-    impl = importlib.import_module(implementation, package=None)
+    implementations = get_implementations_from_config(
+            config, ["model", "iterator", "dataset"])
 
     # fork early to avoid taking all the crap into forked processes
-    dataset = impl.TrainDataset(config=config)
+    dataset = implementations["dataset"](config=config)
     logger.info("Number of training samples: {}".format(len(dataset)))
     batches = make_batches(dataset, batch_size = config["batch_size"], shuffle = True)
     # get them going
     next(batches)
     batches.reset()
 
-    Model = impl.TrainModel(config)
-    Trainer = impl.Trainer(config, root, Model, hook_freq=config["hook_freq"])
+    Model = implementations["model"](config)
+    Trainer = implementations["iterator"](config, root, Model, hook_freq=config["hook_freq"])
 
     if checkpoint is not None:
         Trainer.initialize(checkpoint_path=checkpoint)
@@ -47,26 +56,31 @@ def train(config, root, checkpoint = None, retrain = False):
 
 
 def test(config, root, nogpu = False, bar_position = 0):
-    '''Run tests. Implementation should provide EvalDataset, EvalModel and Evaluator.'''
+    '''Run tests. Loads model, iterator and dataset from config.'''
 
     logger = get_logger('test', 'latest_eval')
     if "test_batch_size" in config:
         config['batch_size'] = config['test_batch_size']
 
-    implementation = config["implementation"]
-    impl = importlib.import_module(implementation, package=None)
+    implementations = get_implementations_from_config(
+            config, ["model", "iterator", "dataset"])
 
-    Model = impl.EvalModel(config)
-    HBU_Evaluator = impl.Evaluator(config,
-                                   root,
-                                   Model,
-                                   hook_freq=1,
-                                   bar_position=bar_position,
-                                   nogpu = nogpu)
-    dataset = impl.EvalDataset(config = config)
-
+    dataset = implementations["dataset"](config = config)
     logger.info("Number of testing samples: {}".format(len(dataset)))
     batches = make_batches(dataset, batch_size = config["batch_size"], shuffle = False)
+    # get going
+    next(batches)
+    batches.reset()
+
+    Model = implementations["model"](config)
+
+    HBU_Evaluator = implementations["iterator"](
+        config,
+        root,
+        Model,
+        hook_freq=1,
+        bar_position=bar_position,
+        nogpu = nogpu)
 
     while True:
         HBU_Evaluator.iterate(batches)

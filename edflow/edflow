@@ -19,7 +19,7 @@ def main(opt):
     else:
         # get path to implementation
         with open(opt.train) as f:
-            impl = yaml.load(f)["implementation"]
+            impl = yaml.load(f)["model"]
         # if it looks like a package path, take its root as the code dir
         # otherwise take cwd
         path = impl.split(".")
