@@ -352,10 +352,22 @@ class ProcessedDataset(DatasetMixin):
 
 class ConcatenatedDataset(DatasetMixin):
     """A dataset which concatenates given datasets."""
-    def __init__(self, *datasets):
-        self.datasets = datasets
+    def __init__(self, *datasets, balanced = False):
+        self.datasets = list(datasets)
         self.lengths = [len(d) for d in self.datasets]
         self.boundaries = np.cumsum(self.lengths)
+        self.balanced = balanced
+        if self.balanced:
+            max_length = np.max(self.lengths)
+            for data_idx in range(len(self.datasets)):
+                data_length = len(self.datasets[data_idx])
+                if data_length != max_length:
+                    cycle_indices = [i % data_length for i in range(max_length)]
+                    self.datasets[data_idx] = SubDataset(
+                            self.datasets[data_idx], cycle_indices)
+        self.lengths = [len(d) for d in self.datasets]
+        self.boundaries = np.cumsum(self.lengths)
+
 
     def get_example(self, i):
         """Get example and add dataset index to it."""
