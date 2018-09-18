@@ -6,6 +6,7 @@ import numpy as np
 import glob
 import os
 import yaml
+import math
 from tqdm import tqdm, trange
 
 import multiprocessing as mp
@@ -40,6 +41,12 @@ def train(config, root, checkpoint = None, retrain = False):
     # get them going
     next(batches)
     batches.reset()
+
+    if "num_steps" in config:
+        # set number of epochs to perform at least num_steps steps
+        steps_per_epoch = len(dataset) / config["batch_size"]
+        num_epochs = config["num_steps"] / steps_per_epoch
+        config["num_epochs"] = math.ceil(num_epochs)
 
     Model = implementations["model"](config)
     Trainer = implementations["iterator"](config, root, Model, hook_freq=config["hook_freq"])
