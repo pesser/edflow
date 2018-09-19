@@ -39,7 +39,9 @@ def main(opt):
 
     # Training
     if opt.train:
-        if opt.project is not None:
+        if opt.checkpoint is not None:
+            checkpoint = opt.checkpoint
+        elif opt.project is not None:
             checkpoint = tf.train.latest_checkpoint(P.checkpoints)
         else:
             checkpoint = None
@@ -50,7 +52,8 @@ def main(opt):
         train_process = mp.Process(target=train,
                                    args=(config,
                                          P.train,
-                                         checkpoint))
+                                         checkpoint,
+                                         opt.retrain))
         processes.append(train_process)
 
     # Evaluation
@@ -94,5 +97,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--eval", nargs = "*",
             metavar = "config.yaml", help="path to evaluation configs")
     parser.add_argument("-p", "--project", help="path to existing project")
+    parser.add_argument("-c", "--checkpoint", help="path to existing checkpoint")
+    parser.add_argument("-r", "--retrain", action = "store_true", help="reset global step")
     opt = parser.parse_args()
     main(opt)

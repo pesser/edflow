@@ -68,6 +68,8 @@ def test(config, root, nogpu = False, bar_position = 0):
     logger = get_logger('test', 'latest_eval')
     if "test_batch_size" in config:
         config['batch_size'] = config['test_batch_size']
+    if not "test_mode" in config:
+        config["test_mode"] = True
 
     implementations = get_implementations_from_config(
             config, ["model", "iterator", "dataset"])
