@@ -74,7 +74,18 @@ class Iterator(MultiprocessIterator):
     """Iterator that converts a list of dicts into a dict of lists."""
 
     def _lod2dol(self, lod):
-        return {k: np.stack([d[k] for d in lod], 0) for k in lod[0]}
+        try:
+            return {k: np.stack([d[k] for d in lod], 0) for k in lod[0]}
+        except ValueError:
+            # debug which key is causing trouble
+            for k in lod[0]:
+                try:
+                    np.stack([d[k] for d in lod])
+                except:
+                    print(k)
+                    for d in lod:
+                        print(d[k])
+            raise
 
     def __next__(self):
         return self._lod2dol(super(Iterator, self).__next__())

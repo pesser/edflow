@@ -17,6 +17,7 @@ class ProjectManager(object):
             code_root (str): Path to where the code lives.
         '''
 
+        self.postfix = postfix
         has_info = base is not None or given_directory is not None
         if not self.exists and has_info:
             ProjectManager.now = now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -74,7 +75,10 @@ class ProjectManager(object):
     def setup_new_eval(self):
         """Always create subfolder in eval to avoid clashes between
         evaluations."""
-        ProjectManager.latest_eval = os.path.join(ProjectManager.eval, ProjectManager.now)
+        name = ProjectManager.now
+        if self.postfix is not None:
+            name = name + "_" + self.postfix
+        ProjectManager.latest_eval = os.path.join(ProjectManager.eval, name)
         os.makedirs(ProjectManager.latest_eval)
 
 

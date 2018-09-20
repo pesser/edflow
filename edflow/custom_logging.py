@@ -88,9 +88,9 @@ def init_project(base_dir, code_root = ".", postfix = None):
     LogSingleton(P.root)
     return P
 
-def use_project(project_dir):
+def use_project(project_dir, postfix = None):
     '''Must be called at the very beginning of a script.'''
-    P = ProjectManager(given_directory=project_dir)
+    P = ProjectManager(given_directory=project_dir, postfix = postfix)
     LogSingleton(P.root)
     return P
 

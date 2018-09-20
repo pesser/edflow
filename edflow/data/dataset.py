@@ -50,8 +50,8 @@ def pickle_and_queue(dataset_factory,
     '''Parallelizable function to retrieve and queue examples from a Dataset.
 
     Args:
-        dataset_factory (() -> chainer.DatasetMixin): A dataset factory, with methods described in
-            :class:`CachedDataset`.
+        dataset_factory (() -> chainer.DatasetMixin): A dataset factory, with
+            methods described in :class:`CachedDataset`.
         indeces (list): List of indeces, used to retrieve samples from dataset.
         queue (mp.Queue): Queue to put the samples in.
         naming_template (str): Formatable string, which defines the name of
@@ -145,9 +145,10 @@ class CachedDataset(DatasetMixin):
     Start a cacherhive!
     """
 
-    def __init__(self, dataset,
-            force_cache=False,
-            keep_existing = True):
+    def __init__(self,
+                 dataset,
+                 force_cache=False,
+                 keep_existing=True):
         '''Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
@@ -190,7 +191,6 @@ class CachedDataset(DatasetMixin):
         if self.force_cache:
             self.cache_dataset()
 
-
     @classmethod
     def from_cache(cls, root, name):
         """Use this constructor to avoid initialization of original dataset
@@ -199,7 +199,6 @@ class CachedDataset(DatasetMixin):
         dataset = _CacheDataset(root, name)
         return cls(dataset)
 
-
     @property
     def fork_safe_zip(self):
         currentpid = os.getpid()
@@ -207,7 +206,6 @@ class CachedDataset(DatasetMixin):
             self._initpid = currentpid
             self.zip = ZipFile(self.store_path, 'r')
         return self.zip
-
 
     def cache_dataset(self):
         '''Checks if a dataset is stored. If not iterates over all possible
@@ -275,7 +273,7 @@ class CachedDataset(DatasetMixin):
 
     @property
     def labels(self):
-        '''Returns the labels asociated with the base dataset, but from the
+        '''Returns the labels associated with the base dataset, but from the
         cached source.'''
         if not hasattr(self, "_labels"):
             labels = self.fork_safe_zip.read(self._labels_name)
@@ -354,10 +352,22 @@ class ProcessedDataset(DatasetMixin):
 
 class ConcatenatedDataset(DatasetMixin):
     """A dataset which concatenates given datasets."""
-    def __init__(self, *datasets):
-        self.datasets = datasets
+    def __init__(self, *datasets, balanced = False):
+        self.datasets = list(datasets)
         self.lengths = [len(d) for d in self.datasets]
         self.boundaries = np.cumsum(self.lengths)
+        self.balanced = balanced
+        if self.balanced:
+            max_length = np.max(self.lengths)
+            for data_idx in range(len(self.datasets)):
+                data_length = len(self.datasets[data_idx])
+                if data_length != max_length:
+                    cycle_indices = [i % data_length for i in range(max_length)]
+                    self.datasets[data_idx] = SubDataset(
+                            self.datasets[data_idx], cycle_indices)
+        self.lengths = [len(d) for d in self.datasets]
+        self.boundaries = np.cumsum(self.lengths)
+
 
     def get_example(self, i):
         """Get example and add dataset index to it."""
