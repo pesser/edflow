@@ -40,7 +40,7 @@ def resize_uint8(x, size):
 def resize_float32(x, size):
     dtype = x.dtype
     assert dtype in [np.float32, np.float64], dtype
-    assert -1.0 <= np.min(x) and np.max(x) <= 1.0
+    assert -1.0 <= np.min(x) and np.max(x) <= 1.0, (np.min(x), np.max(x))
     x = (x + 1.0) * 127.5
     x = np.asarray(x, dtype = np.uint8)
     x = resize_uint8(x, size)
