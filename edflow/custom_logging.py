@@ -106,7 +106,8 @@ def get_logger(name, which='train'):
     L = LogSingleton()
 
     if not L.exists:
-        raise ValueError('LogSingleton not initialized. Please run '
-                         'init_project.')
+        print('Warning: LogSingleton not initialized.')
+        logger = logging.getLogger(name)
+        return logger
 
     return L.get(name, which)
