@@ -27,7 +27,7 @@ def resize_uint8(x, size):
     if len(oshape) == 3 and oshape[-1] > 3:
         xs = [x[:,:,i] for i in range(oshape[-1])]
         xs = [resize_uint8(y, size) for y in xs]
-        return np.concatenate(xs, -1)
+        return np.stack(xs, -1)
 
     try:
         x = Image.fromarray(x)
@@ -40,7 +40,7 @@ def resize_uint8(x, size):
 def resize_float32(x, size):
     dtype = x.dtype
     assert dtype in [np.float32, np.float64], dtype
-    assert -1.0 <= np.min(x) and np.max(x) <= 1.0
+    assert -1.0 <= np.min(x) and np.max(x) <= 1.0, (np.min(x), np.max(x))
     x = (x + 1.0) * 127.5
     x = np.asarray(x, dtype = np.uint8)
     x = resize_uint8(x, size)
