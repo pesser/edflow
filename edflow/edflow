@@ -63,7 +63,7 @@ def main(opt):
             config = yaml.load(f)
         logger.info("Evaluation config: {}".format(eval_config))
         logger.info(yaml.dump(config))
-        nogpu = len(processes) > 0
+        nogpu = len(processes) > 0 or opt.nogpu
         bar_position = len(processes) + eval_idx
         test_process = mp.Process(target=test, args=(config, P.latest_eval, nogpu, bar_position))
         processes.append(test_process)
@@ -99,5 +99,6 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--project", help="path to existing project")
     parser.add_argument("-c", "--checkpoint", help="path to existing checkpoint")
     parser.add_argument("-r", "--retrain", action = "store_true", help="reset global step")
+    parser.add_argument("--nogpu", action = "store_true", help="disable gpu for tensorflow")
     opt = parser.parse_args()
     main(opt)
