@@ -4,8 +4,6 @@ import os
 import yaml
 import traceback
 
-import multiprocessing as mp
-
 from edflow.iterators.batches import make_batches
 from edflow.custom_logging import init_project, get_logger
 
@@ -23,7 +21,12 @@ def traceable_process(fn, args, job_queue, idx):
     try:
         fn(*args)
     except Exception as e:
-        job_queue.put([idx, e, traceback.format_exc()])
+        trace = traceback.format_exc()
+        if job_queue is not None:
+            job_queue.put([idx, e, trace])
+        else:
+            print(trace)
+            raise e
 
     job_queue.put([idx, 'Done', None])
 

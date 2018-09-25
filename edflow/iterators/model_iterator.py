@@ -224,11 +224,7 @@ class PyHookedModelIterator(object):
                 fetches = {'global_step': self.get_and_increment_global_step,
                            'step_ops': step_ops}
 
-                self.logger.info('made fetches')
-
                 feeds = walk(batch, lambda val: val)  # make a deep(?) copy
-
-                self.logger.info('made feeds')
 
                 self.run_hooks(bi,
                                fetches,
@@ -236,13 +232,9 @@ class PyHookedModelIterator(object):
                                batch,
                                before=True)
 
-                self.logger.info('ran hooks')
-
                 results = self.run(fetches, feed_dict=feeds)
 
                 self.run_hooks(bi, results=results, before=False)
-
-                self.global_step += 1
 
                 if batch_iterator.is_new_epoch:
                     batch_iterator.reset()
@@ -261,7 +253,6 @@ class PyHookedModelIterator(object):
         '''
 
         def fn(fetch_fn):
-            self.logger.info('Running Fetch Fn')
             return fetch_fn(self.model, **feed_dict)
 
         results = walk(fetches, fn)
@@ -296,8 +287,11 @@ class PyHookedModelIterator(object):
         is_step = fetches is not None and feeds is not None
         is_step = is_step or results is not None
 
-        if index % self.hook_freq == 0 or not is_step:
+        condition = index % self.hook_freq == 0 or not is_step
+
+        if condition:
             for hook in self.hooks:
+                print(hook)
                 if before:
                     if is_step:
                         hook.before_step(index, fetches, feeds, batch)
