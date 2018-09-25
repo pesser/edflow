@@ -84,7 +84,7 @@ def main(opt):
         test_process = mp.Process(target=test,
                                   args=((config, P.latest_eval,
                                          nogpu, bar_position),
-                                        JQ. pidx))
+                                        JQ, pidx))
         processes.append(test_process)
         pidx += 1
 
