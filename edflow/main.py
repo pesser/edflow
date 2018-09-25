@@ -6,6 +6,7 @@ import numpy as np
 import glob
 import os
 import yaml
+import traceback
 from tqdm import tqdm, trange
 
 import multiprocessing as mp
@@ -24,7 +25,24 @@ def get_implementations_from_config(config, names):
     return implementations
 
 
-def train(config, root, checkpoint = None, retrain = False):
+def traceable_process(fn, args, job_queue, idx):
+    try:
+        fn(*args)
+    except Exception as e:
+        job_queue.put([idx, e])
+
+    job_queue.put([idx, 'Done'])
+
+
+def train(args, job_queue, idx):
+    traceable_process(_train, args, job_queue, idx)
+
+
+def test(args, job_queue, idx):
+    traceable_process(_test, args, job_queue, idx)
+
+
+def _train(config, root, checkpoint=None, retrain=False):
     '''Run training. Loads model, iterator and dataset according to config.'''
 
     logger = get_logger('train')
@@ -36,7 +54,9 @@ def train(config, root, checkpoint = None, retrain = False):
     # fork early to avoid taking all the crap into forked processes
     dataset = implementations["dataset"](config=config)
     logger.info("Number of training samples: {}".format(len(dataset)))
-    batches = make_batches(dataset, batch_size = config["batch_size"], shuffle = True)
+    batches = make_batches(dataset,
+                           batch_size=config["batch_size"],
+                           shuffle=True)
     # get them going
     next(batches)
     batches.reset()
@@ -55,7 +75,7 @@ def train(config, root, checkpoint = None, retrain = False):
     Trainer.fit(batches)
 
 
-def test(config, root, nogpu = False, bar_position = 0):
+def _test(config, root, nogpu=False, bar_position=0):
     '''Run tests. Loads model, iterator and dataset from config.'''
 
     logger = get_logger('test', 'latest_eval')

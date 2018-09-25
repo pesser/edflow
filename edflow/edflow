@@ -37,6 +37,9 @@ def main(opt):
     # Processes
     processes = list()
 
+    # Error Communication between processes
+    JQ = mp.Queue()
+
     # Training
     if opt.train:
         if opt.project is not None:
@@ -45,15 +48,18 @@ def main(opt):
             checkpoint = None
         with open(opt.train) as f:
             config = yaml.load(f)
+
         logger.info("Training config: {}".format(opt.train))
         logger.info(yaml.dump(config))
         train_process = mp.Process(target=train,
-                                   args=(config,
+                                   args=((config,
                                          P.train,
-                                         checkpoint))
+                                         checkpoint),
+                                         JQ, 0))
         processes.append(train_process)
 
     # Evaluation
+    pidx = 1
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
         with open(eval_config) as f:
@@ -62,13 +68,24 @@ def main(opt):
         logger.info(yaml.dump(config))
         nogpu = len(processes) > 0
         bar_position = len(processes) + eval_idx
-        test_process = mp.Process(target=test, args=(config, P.latest_eval, nogpu, bar_position))
+        test_process = mp.Process(target=test,
+                                  args=((config, P.latest_eval,
+                                         nogpu, bar_position),
+                                        JQ. pidx))
         processes.append(test_process)
+        pidx += 1
 
     # Take off
     try:
         for p in processes:
             p.start()
+
+        while True:
+            pidx, val = JQ.get()
+            if isinstance(val, Exception):
+                raise val
+            elif val == 'Done':
+                logger.info('Process {} is done'.format(pidx))
 
     # Landing
         for p in processes:
