@@ -2,6 +2,7 @@ import tensorflow as tf
 from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
+from edflow.util import walk
 
 
 class HookedModelIterator(object):
@@ -15,7 +16,7 @@ class HookedModelIterator(object):
                  bar_position=0,
                  gpu_mem_growth=False,
                  gpu_mem_fraction=None,
-                 nogpu = False):
+                 nogpu=False):
         '''Constructor.
 
         Args:
@@ -161,3 +162,150 @@ class HookedModelIterator(object):
         self.logger.warning('Used default initialization from '
                             'tf.global_variables_initializer()')
         return tf.global_variables_initializer()
+
+
+class PyHookedModelIterator(object):
+    '''Implements a similar interface as the :class:`HookedModelIterator` to
+    train PyTorch models.'''
+
+    def __init__(self,
+                 config,
+                 root,
+                 model,
+                 hook_freq=100,
+                 num_epochs=100,
+                 hooks=[],
+                 bar_position=0):
+        '''Constructor.
+
+        Args:
+            model (object): Model class. Must have an attribute ``inputs`` for
+                placeholders and an attribute ``outputs`` for output tensors.
+            num_epochs (int): Number of times to iterate over the data.
+            hooks (list): List containing :class:`Hook` instances.
+            hook_freq (int): Frequency at which hooks are evaluated.
+            bar_position (int): Used by tqdm to place bars at the right
+                position when using multiple Iterators in parallel.
+        '''
+
+        self.model = model
+        self.num_epochs = num_epochs
+
+        self.hooks = hooks
+        self.hook_freq = hook_freq
+
+        self.bar_pos = bar_position * 2
+
+        self.logger = get_logger(type(self).__name__)
+
+        self._global_step = 0
+
+    def get_and_increment_global_step(self, *args, **kwargs):
+        step = self._global_step
+        self._global_step += 1
+        return step
+
+    def iterate(self, batch_iterator):
+        '''Iterates over the data supplied and feeds it to the model.
+
+        Args:
+            batch_iterator (Iterable): Iterable returning training data.
+        '''
+
+        step_ops = self.step_ops()
+
+        pos = self.bar_pos
+        for ep in trange(self.num_epochs, desc='Epoch', position=pos):
+            self.run_hooks(ep, before=True)
+
+            pos = self.bar_pos + 1
+            iterator = tqdm(batch_iterator, desc='Batch', position=pos)
+            for bi, batch in enumerate(iterator):
+                fetches = {'global_step': self.get_and_increment_global_step,
+                           'step_ops': step_ops}
+
+                feeds = walk(batch, lambda val: val)  # make a deep(?) copy
+
+                self.run_hooks(bi,
+                               fetches,
+                               feeds,
+                               batch,
+                               before=True)
+
+                results = self.run(fetches, feed_dict=feeds)
+
+                self.run_hooks(bi, results=results, before=False)
+
+                if batch_iterator.is_new_epoch:
+                    batch_iterator.reset()
+                    break
+            self.run_hooks(ep, before=False)
+
+    def run(self, fetches, feed_dict):
+        '''Runs all fetch ops and stores the results.
+
+        Args:
+            fetches (dict): name: Callable pairs.
+            feed_dict (dict): Passed as kwargs to all fetch ops
+
+        Returns:
+            dict: name: results pairs.
+        '''
+
+        def fn(fetch_fn):
+            return fetch_fn(self.model, **feed_dict)
+
+        results = walk(fetches, fn)
+
+        return results
+
+    def run_hooks(self,
+                  index,
+                  fetches=None,
+                  feeds=None,
+                  batch=None,
+                  results=None,
+                  before=True):
+        '''Run all hooks and manage their stuff. The passed arguments determine
+        which method of the hooks is called.
+
+        Args:
+            index (int): Current epoch or batch index. This is not necessarily
+                the global training step.
+            fetches (list or dict): Fetches for the next session.run call.
+            feeds (dict): Feeds for the next session.run call.
+            results (same as fetches): Results from the last session.run call.
+            before (bool): If not obvious determines if the before_ or after_
+                methods of the hooks should be called.
+
+        Return:
+            If before:
+            same as fetches: Updated fetches.
+            dict: Updated feeds
+        '''
+
+        is_step = fetches is not None and feeds is not None
+        is_step = is_step or results is not None
+
+        condition = index % self.hook_freq == 0 or not is_step
+
+        if condition:
+            for hook in self.hooks:
+                if before:
+                    if is_step:
+                        hook.before_step(index, fetches, feeds, batch)
+                    else:
+                        hook.before_epoch(index)
+                else:
+                    if is_step:
+                        hook.after_step(index, results)
+                    else:
+                        hook.after_epoch(index)
+
+    def step_ops(self):
+        '''Defines ops that are called at each step.
+
+        Returns:
+            The operation run at each step.'''
+
+        raise NotImplementedError()

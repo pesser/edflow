@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
 
-import sys
 import os
-sys.path.append(os.getcwd())  # convenience: load implementations from cwd
-import argparse
-import yaml
-import multiprocessing as mp
 
-import tensorflow as tf
-from edflow.main import train, test
-from edflow.custom_logging import init_project, use_project, get_logger
+pytorch_mp = os.environ.get('USE_PYTORCH_MP', 'False') == 'True'
+if not pytorch_mp:
+    import multiprocessing as mp
+    # mp = _mp.set_start_method('spawn')
+else:
+    print('Using pytorch mp')
+    import torch.multiprocessing as mp
+
+import sys  # noqa
+import argparse  # noqa
+import yaml  # noqa
+
+# import tensorflow as tf
+from edflow.main import train, test  # noqa
+from edflow.custom_logging import init_project, use_project, get_logger  # noqa
+
+sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
 
 def main(opt):
@@ -27,7 +36,7 @@ def main(opt):
             code_root = path[0]
         else:
             code_root = "."
-        P = init_project('logs', code_root=code_root, postfix = opt.name)
+        P = init_project('logs', code_root=code_root, postfix=opt.name)
 
     # Logger
     logger = get_logger('main')
@@ -36,6 +45,9 @@ def main(opt):
 
     # Processes
     processes = list()
+
+    # Error Communication between processes
+    JQ = mp.Queue()
 
     # Training
     if opt.train:
@@ -47,16 +59,20 @@ def main(opt):
             checkpoint = None
         with open(opt.train) as f:
             config = yaml.load(f)
+
         logger.info("Training config: {}".format(opt.train))
         logger.info(yaml.dump(config))
+
         train_process = mp.Process(target=train,
-                                   args=(config,
+                                   args=((config,
                                          P.train,
                                          checkpoint,
-                                         opt.retrain))
+                                         opt.retrain),
+                                         JQ, 0))
         processes.append(train_process)
 
     # Evaluation
+    pidx = 1
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
         with open(eval_config) as f:
@@ -65,19 +81,36 @@ def main(opt):
         logger.info(yaml.dump(config))
         nogpu = len(processes) > 0 or opt.nogpu
         bar_position = len(processes) + eval_idx
-        test_process = mp.Process(target=test, args=(config, P.latest_eval, nogpu, bar_position))
+        test_process = mp.Process(target=test,
+                                  args=((config, P.latest_eval,
+                                         nogpu, bar_position),
+                                        JQ. pidx))
         processes.append(test_process)
+        pidx += 1
 
     # Take off
     try:
         for p in processes:
             p.start()
 
+        done_count = 0
+        while True:
+            pidx, exc_or_done, trace = JQ.get()
+            if isinstance(exc_or_done, Exception):
+                print(trace)
+                raise exc_or_done
+            elif exc_or_done == 'Done':
+                logger.info('Process {} is done'.format(pidx))
+                done_count += 1
+
+            if done_count >= len(processes):
+                break
+
     # Landing
         for p in processes:
             p.join()
 
-    except KeyboardInterrupt:
+    except Exception:
         logger.info('Terminating all processes')
         for p in processes:
             p.terminate()

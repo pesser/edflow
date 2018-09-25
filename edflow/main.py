@@ -1,20 +1,14 @@
-import tensorflow as tf
-
 import argparse
 import importlib
-import numpy as np
-import glob
 import os
 import yaml
 import math
-from tqdm import tqdm, trange
 
 import multiprocessing as mp
 import traceback
 
 from edflow.iterators.batches import make_batches
 from edflow.custom_logging import init_project, get_logger
-from edflow.project_manager import ProjectManager
 
 
 def get_implementations_from_config(config, names):
@@ -26,87 +20,107 @@ def get_implementations_from_config(config, names):
     return implementations
 
 
-def train(config, root, checkpoint = None, retrain = False):
-    '''Run training. Loads model, iterator and dataset according to config.'''
+def traceable_process(fn, args, job_queue, idx):
     try:
-
-        logger = get_logger('train')
-        logger.info('Starting Training')
-
-        implementations = get_implementations_from_config(
-                config, ["model", "iterator", "dataset"])
-
-        # fork early to avoid taking all the crap into forked processes
-        dataset = implementations["dataset"](config=config)
-        logger.info("Number of training samples: {}".format(len(dataset)))
-        n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
-        batches = make_batches(dataset, batch_size = config["batch_size"],
-                shuffle = True, n_processes = n_processes)
-        # get them going
-        next(batches)
-        batches.reset()
-
-        if "num_steps" in config:
-            # set number of epochs to perform at least num_steps steps
-            steps_per_epoch = len(dataset) / config["batch_size"]
-            num_epochs = config["num_steps"] / steps_per_epoch
-            config["num_epochs"] = math.ceil(num_epochs)
-
-        Model = implementations["model"](config)
-        Trainer = implementations["iterator"](config, root, Model, hook_freq=config["hook_freq"])
-
-        if checkpoint is not None:
-            Trainer.initialize(checkpoint_path=checkpoint)
+        fn(*args)
+    except Exception as e:
+        trace = traceback.format_exc()
+        if job_queue is not None:
+            job_queue.put([idx, e, trace])
         else:
-            Trainer.initialize()
+            print(trace)
+            raise e
 
-        if retrain:
-            Trainer.reset_global_step()
-
-        Trainer.fit(batches)
-    except:
-        traceback.print_exc()
-        logger.error("Training failed.")
+    job_queue.put([idx, 'Done', None])
 
 
+def train(args, job_queue, idx):
+    traceable_process(_train, args, job_queue, idx)
 
-def test(config, root, nogpu = False, bar_position = 0):
+
+def test(args, job_queue, idx):
+    traceable_process(_test, args, job_queue, idx)
+
+
+def _train(config, root, checkpoint=None, retrain=False):
+    '''Run training. Loads model, iterator and dataset according to config.'''
+
+    logger = get_logger('train')
+    logger.info('Starting Training')
+
+    implementations = get_implementations_from_config(
+            config, ["model", "iterator", "dataset"])
+
+    # fork early to avoid taking all the crap into forked processes
+    dataset = implementations["dataset"](config=config)
+    logger.info("Number of training samples: {}".format(len(dataset)))
+    n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
+    batches = make_batches(dataset,
+                           batch_size=config["batch_size"],
+                           shuffle=True,
+                           n_processes=n_processes)
+    # get them going
+    next(batches)
+    batches.reset()
+
+    if "num_steps" in config:
+        # set number of epochs to perform at least num_steps steps
+        steps_per_epoch = len(dataset) / config["batch_size"]
+        num_epochs = config["num_steps"] / steps_per_epoch
+        config["num_epochs"] = math.ceil(num_epochs)
+
+    Model = implementations["model"](config)
+    Trainer = implementations["iterator"](config,
+                                          root,
+                                          Model,
+                                          hook_freq=config["hook_freq"])
+
+    if checkpoint is not None:
+        Trainer.initialize(checkpoint_path=checkpoint)
+    else:
+        Trainer.initialize()
+
+    if retrain:
+        Trainer.reset_global_step()
+
+    Trainer.fit(batches)
+
+
+def _test(config, root, nogpu=False, bar_position=0):
     '''Run tests. Loads model, iterator and dataset from config.'''
-    try:
 
-        logger = get_logger('test', 'latest_eval')
-        if "test_batch_size" in config:
-            config['batch_size'] = config['test_batch_size']
-        if not "test_mode" in config:
-            config["test_mode"] = True
+    logger = get_logger('test', 'latest_eval')
+    if "test_batch_size" in config:
+        config['batch_size'] = config['test_batch_size']
+    if "test_mode" not in config:
+        config["test_mode"] = True
 
-        implementations = get_implementations_from_config(
-                config, ["model", "iterator", "dataset"])
+    implementations = get_implementations_from_config(
+            config, ["model", "iterator", "dataset"])
 
-        dataset = implementations["dataset"](config = config)
-        logger.info("Number of testing samples: {}".format(len(dataset)))
-        n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
-        batches = make_batches(dataset, batch_size = config["batch_size"],
-                shuffle = False, n_processes = n_processes)
-        # get going
-        next(batches)
-        batches.reset()
+    dataset = implementations["dataset"](config=config)
+    logger.info("Number of testing samples: {}".format(len(dataset)))
+    n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
+    batches = make_batches(dataset,
+                           batch_size=config["batch_size"],
+                           shuffle=False,
+                           n_processes=n_processes)
+    # get going
+    next(batches)
+    batches.reset()
 
-        Model = implementations["model"](config)
+    Model = implementations["model"](config)
 
-        HBU_Evaluator = implementations["iterator"](
-            config,
-            root,
-            Model,
-            hook_freq=1,
-            bar_position=bar_position,
-            nogpu = nogpu)
+    HBU_Evaluator = implementations["iterator"](
+        config,
+        root,
+        Model,
+        hook_freq=1,
+        bar_position=bar_position,
+        nogpu=nogpu)
 
-        while True:
-            HBU_Evaluator.iterate(batches)
-    except:
-        traceback.print_exc()
-        logger.error("Training failed.")
+    while True:
+        HBU_Evaluator.iterate(batches)
 
 
 def main(opt):
@@ -127,7 +141,8 @@ def main(opt):
                                          P.train,
                                          opt.checkpoint,
                                          opt.retrain))
-        test_process = mp.Process(target=test, args=(config, P.latest_eval, True))
+        test_process = mp.Process(target=test,
+                                  args=(config, P.latest_eval, True))
 
         processes = [train_process, test_process]
 
