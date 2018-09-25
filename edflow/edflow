@@ -2,7 +2,6 @@
 
 import sys
 import os
-sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 import argparse
 import yaml
 import multiprocessing as mp
@@ -10,6 +9,8 @@ import multiprocessing as mp
 import tensorflow as tf
 from edflow.main import train, test
 from edflow.custom_logging import init_project, use_project, get_logger
+
+sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
 
 def main(opt):
@@ -27,7 +28,7 @@ def main(opt):
             code_root = path[0]
         else:
             code_root = "."
-        P = init_project('logs', code_root=code_root, postfix = opt.name)
+        P = init_project('logs', code_root=code_root, postfix=opt.name)
 
     # Logger
     logger = get_logger('main')
@@ -80,12 +81,18 @@ def main(opt):
         for p in processes:
             p.start()
 
+        done_count = 0
         while True:
-            pidx, val = JQ.get()
-            if isinstance(val, Exception):
-                raise val
-            elif val == 'Done':
+            pidx, exc_or_done, trace = JQ.get()
+            if isinstance(exc_or_done, Exception):
+                print(trace)
+                raise exc_or_done
+            elif exc_or_done == 'Done':
                 logger.info('Process {} is done'.format(pidx))
+                done_count += 1
+
+            if done_count >= len(processes):
+                break
 
     # Landing
         for p in processes:

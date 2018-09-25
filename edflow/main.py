@@ -1,19 +1,13 @@
-import tensorflow as tf
-
 import argparse
 import importlib
-import numpy as np
-import glob
 import os
 import yaml
 import traceback
-from tqdm import tqdm, trange
 
 import multiprocessing as mp
 
 from edflow.iterators.batches import make_batches
 from edflow.custom_logging import init_project, get_logger
-from edflow.project_manager import ProjectManager
 
 
 def get_implementations_from_config(config, names):
@@ -29,9 +23,9 @@ def traceable_process(fn, args, job_queue, idx):
     try:
         fn(*args)
     except Exception as e:
-        job_queue.put([idx, e])
+        job_queue.put([idx, e, traceback.format_exc()])
 
-    job_queue.put([idx, 'Done'])
+    job_queue.put([idx, 'Done', None])
 
 
 def train(args, job_queue, idx):
@@ -62,7 +56,10 @@ def _train(config, root, checkpoint=None, retrain=False):
     batches.reset()
 
     Model = implementations["model"](config)
-    Trainer = implementations["iterator"](config, root, Model, hook_freq=config["hook_freq"])
+    Trainer = implementations["iterator"](config,
+                                          root,
+                                          Model,
+                                          hook_freq=config["hook_freq"])
 
     if checkpoint is not None:
         Trainer.initialize(checkpoint_path=checkpoint)
@@ -85,9 +82,11 @@ def _test(config, root, nogpu=False, bar_position=0):
     implementations = get_implementations_from_config(
             config, ["model", "iterator", "dataset"])
 
-    dataset = implementations["dataset"](config = config)
+    dataset = implementations["dataset"](config=config)
     logger.info("Number of testing samples: {}".format(len(dataset)))
-    batches = make_batches(dataset, batch_size = config["batch_size"], shuffle = False)
+    batches = make_batches(dataset,
+                           batch_size=config["batch_size"],
+                           shuffle=False)
     # get going
     next(batches)
     batches.reset()
@@ -100,7 +99,7 @@ def _test(config, root, nogpu=False, bar_position=0):
         Model,
         hook_freq=1,
         bar_position=bar_position,
-        nogpu = nogpu)
+        nogpu=nogpu)
 
     while True:
         HBU_Evaluator.iterate(batches)
@@ -124,7 +123,8 @@ def main(opt):
                                          P.train,
                                          opt.checkpoint,
                                          opt.retrain))
-        test_process = mp.Process(target=test, args=(config, P.latest_eval, True))
+        test_process = mp.Process(target=test,
+                                  args=(config, P.latest_eval, True))
 
         processes = [train_process, test_process]
 
