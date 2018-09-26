@@ -27,6 +27,7 @@ def traceable_process(fn, args, job_queue, idx):
         trace = traceback.format_exc()
         if job_queue is not None:
             job_queue.put([idx, e, trace])
+            job_queue.close()
         else:
             print(trace)
             raise e
