@@ -199,6 +199,13 @@ class CachedDataset(DatasetMixin):
         dataset = _CacheDataset(root, name)
         return cls(dataset)
 
+    def __getstate__(self):
+        """Close file before pickling."""
+        self.zip.close()
+        self.zip = None
+        self.currentpid = None
+        return self.__dict__
+
     @property
     def fork_safe_zip(self):
         currentpid = os.getpid()

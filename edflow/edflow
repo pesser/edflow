@@ -26,9 +26,12 @@ def main(opt):
     if opt.project is not None:
         P = use_project(opt.project, postfix = opt.name)
     else:
+        assert opt.train is not None
         # get path to implementation
         with open(opt.train) as f:
-            impl = yaml.load(f)["model"]
+            config = yaml.load(f)
+            impl = config["model"]
+            name = config.get("experiment_name", None)
         # if it looks like a package path, take its root as the code dir
         # otherwise take cwd
         path = impl.split(".")
@@ -36,7 +39,11 @@ def main(opt):
             code_root = path[0]
         else:
             code_root = "."
-        P = init_project('logs', code_root=code_root, postfix=opt.name)
+        if opt.name is not None:
+            # command line takes precedence over "experiment_name" from
+            # config
+            name = opt.name
+        P = init_project('logs', code_root=code_root, postfix=name)
 
     # Logger
     logger = get_logger('main')
@@ -54,6 +61,7 @@ def main(opt):
         if opt.checkpoint is not None:
             checkpoint = opt.checkpoint
         elif opt.project is not None:
+            # TODO remove tf dependency here
             checkpoint = tf.train.latest_checkpoint(P.checkpoints)
         else:
             checkpoint = None
@@ -68,11 +76,10 @@ def main(opt):
                                          P.train,
                                          checkpoint,
                                          opt.retrain),
-                                         JQ, 0))
+                                         JQ, len(processes)))
         processes.append(train_process)
 
     # Evaluation
-    pidx = 1
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
         with open(eval_config) as f:
@@ -84,14 +91,14 @@ def main(opt):
         test_process = mp.Process(target=test,
                                   args=((config, P.latest_eval,
                                          nogpu, bar_position),
-                                        JQ, pidx))
+                                        JQ, len(processes)))
         processes.append(test_process)
-        pidx += 1
 
     # Take off
     try:
         for p in processes:
             p.start()
+        logger.info("Started {} process(es).".format(len(processes)))
 
         done_count = 0
         while True:
@@ -102,6 +109,8 @@ def main(opt):
             elif exc_or_done == 'Done':
                 logger.info('Process {} is done'.format(pidx))
                 done_count += 1
+            else:
+                raise Exception("Unknown element on queue.")
 
             if done_count >= len(processes):
                 break
