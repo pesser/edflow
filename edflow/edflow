@@ -26,6 +26,7 @@ def main(opt):
     if opt.project is not None:
         P = use_project(opt.project, postfix = opt.name)
     else:
+        assert opt.train is not None
         # get path to implementation
         with open(opt.train) as f:
             impl = yaml.load(f)["model"]
@@ -54,6 +55,7 @@ def main(opt):
         if opt.checkpoint is not None:
             checkpoint = opt.checkpoint
         elif opt.project is not None:
+            # TODO remove tf dependency here
             checkpoint = tf.train.latest_checkpoint(P.checkpoints)
         else:
             checkpoint = None
