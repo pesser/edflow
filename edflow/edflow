@@ -94,6 +94,7 @@ def main(opt):
     try:
         for p in processes:
             p.start()
+        logger.info("Started {} process(es).".format(len(processes)))
 
         done_count = 0
         while True:

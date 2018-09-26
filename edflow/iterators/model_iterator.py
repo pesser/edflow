@@ -200,10 +200,12 @@ class PyHookedModelIterator(object):
 
         self._global_step = 0
 
-    def get_and_increment_global_step(self, *args, **kwargs):
-        step = self._global_step
+    def get_global_step(self, *args, **kwargs):
+        return self._global_step
+
+    def increment_global_step(self, *args, **kwargs):
         self._global_step += 1
-        return step
+        return self._global_step
 
     def iterate(self, batch_iterator):
         '''Iterates over the data supplied and feeds it to the model.
@@ -221,7 +223,7 @@ class PyHookedModelIterator(object):
             pos = self.bar_pos + 1
             iterator = tqdm(batch_iterator, desc='Batch', position=pos)
             for bi, batch in enumerate(iterator):
-                fetches = {'global_step': self.get_and_increment_global_step,
+                fetches = {'global_step': self.get_global_step,
                            'step_ops': step_ops}
 
                 feeds = walk(batch, lambda val: val)  # make a deep(?) copy

@@ -90,6 +90,8 @@ def _test(config, root, nogpu=False, bar_position=0):
     '''Run tests. Loads model, iterator and dataset from config.'''
 
     logger = get_logger('test', 'latest_eval')
+    logger.info('Starting Evaluation')
+
     if "test_batch_size" in config:
         config['batch_size'] = config['test_batch_size']
     if "test_mode" not in config:
@@ -119,6 +121,7 @@ def _test(config, root, nogpu=False, bar_position=0):
         bar_position=bar_position,
         nogpu=nogpu)
 
+    logger.info('Iterating')
     while True:
         HBU_Evaluator.iterate(batches)
 
