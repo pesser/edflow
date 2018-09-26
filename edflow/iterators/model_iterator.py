@@ -175,7 +175,9 @@ class PyHookedModelIterator(object):
                  hook_freq=100,
                  num_epochs=100,
                  hooks=[],
-                 bar_position=0):
+                 bar_position=0,
+                 nogpu=False,
+                 desc=''):
         '''Constructor.
 
         Args:
@@ -195,6 +197,7 @@ class PyHookedModelIterator(object):
         self.hook_freq = hook_freq
 
         self.bar_pos = bar_position * 2
+        self.desc = desc
 
         self.logger = get_logger(type(self).__name__)
 
@@ -215,11 +218,15 @@ class PyHookedModelIterator(object):
         step_ops = self.step_ops()
 
         pos = self.bar_pos
-        for ep in trange(self.num_epochs, desc='Epoch', position=pos):
+        base = self.desc + ' - ' if self.desc != '' else ''
+        desc_e = base + 'Epoch'
+        desc_b = base + 'Batch'
+
+        for ep in trange(self.num_epochs, desc=desc_e, position=pos):
             self.run_hooks(ep, before=True)
 
             pos = self.bar_pos + 1
-            iterator = tqdm(batch_iterator, desc='Batch', position=pos)
+            iterator = tqdm(batch_iterator, desc=desc_b, position=pos)
             for bi, batch in enumerate(iterator):
                 fetches = {'global_step': self.get_and_increment_global_step,
                            'step_ops': step_ops}
