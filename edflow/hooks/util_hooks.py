@@ -33,17 +33,18 @@ class IntervalHook(Hook):
 
         self.base_interval = interval
 
-        self.start = start
-        self.stop = stop
-        self.modival = modify_each
+        inf = float('inf')
+        self.start = start if start is not None else -1
+        self.stop = stop if stop is not None else inf
+        self.modival = modify_each if modify_each is not None else inf
         self.modifier = modifier
-        self.max_interval = max_interval
+        self.max_interval = max_interval if max_interval is not None else inf
 
         self.counter = 0
 
     def run_condition(self, step):
         if step > self.start and step <= self.stop:
-            if step % self.base_interval:
+            if step % self.base_interval == 0:
                 self.counter += 1
                 return True
         return False
@@ -71,7 +72,7 @@ class IntervalHook(Hook):
 
         if self.run_condition(step):
             for hook in self.hooks:
-                hook.before_step(step, *args, **kwargs)
+                hook.after_step(step, *args, **kwargs)
 
             self.maybe_modify(step)
 
