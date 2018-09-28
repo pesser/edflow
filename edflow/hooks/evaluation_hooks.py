@@ -77,7 +77,11 @@ def get_latest_checkpoint(checkpoint_root):
     for p in os.listdir(ckpt_root):
         p = os.path.join(ckpt_root, p)
         if '.ckpt' in p:
-            mt = os.path.getmtime(p)
+            try:
+                mt = os.path.getmtime(p)
+            except FileNotFoundError:
+                # checkpoint was deleted, make it infinitely old
+                mt = -float("inf")
             name, ext = os.path.splitext(p)
             if not ext == ".ckpt":
                 p = name
