@@ -1,4 +1,5 @@
 import tensorflow as tf
+import torch
 import time
 import os
 import numpy as np
@@ -7,8 +8,7 @@ from collections import OrderedDict, namedtuple
 from edflow.hooks.hook import Hook
 from edflow.custom_logging import get_logger
 from edflow.project_manager import ProjectManager
-from edflow.iterators.batches import plot_batch
-# TODO(jhaux) put in some plot module
+from edflow.util import retrieve
 
 
 # Values storable as npz
@@ -21,18 +21,23 @@ class WaitForCheckpointHook(Hook):
     '''Waits until a new checkpoint is created, then lets the Iterator
     continue.'''
 
-    def __init__(self, checkpoint_root, base_name, interval=5):
+    # TODO: Is basename needed? -> Remove
+    def __init__(self, checkpoint_root, base_name, interval=5, add_sec=5):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
             base_name (str): Base name of the checkpoints as passed to the
                 corresponding saver.
             interval (float): Number of seconds after which to check for a new
                 checkpoint again.
+            add_sec (float): Number of seconds to wait, after a checkpoint is
+                found, to avoid race conditions, if the checkpoint is still
+                being written at the time it's meant to be read.
         '''
 
         self.root = checkpoint_root
         self.base_name = base_name
         self.sleep_interval = interval
+        self.additional_wait = add_sec
 
         self.logger = get_logger(self, 'latest_eval')
 
@@ -44,17 +49,41 @@ class WaitForCheckpointHook(Hook):
         while True:
             time.sleep(self.sleep_interval)
 
-            latest_checkpoint = self.get_latest_checkpoint()
+            latest_checkpoint = get_latest_checkpoint(self.root)
             if latest_checkpoint != self.latest_checkpoint:
                 self.latest_checkpoint = latest_checkpoint
+                time.sleep(self.additional_wait)
                 break
-
-    def get_latest_checkpoint(self):
-        '''Return path to latest checkpoint in root dir.'''
-        return tf.train.latest_checkpoint(self.root)
 
     def before_epoch(self, ep):
         self.look()
+
+
+def get_latest_checkpoint(checkpoint_root):
+    '''Return path to latest checkpoint (file ending in .ckpt) in
+    checkpoint_root dir.
+
+    Args:
+        checkpoint_root (str): Path to where the checkpoints live.
+
+    Returns:
+        str: path of the latest checkpoint.
+    '''
+    ckpt_root = checkpoint_root
+    checkpoints = []
+    for p in os.listdir(ckpt_root):
+        p = os.path.join(ckpt_root, p)
+        if p[-5:] == '.ckpt':
+            mt = os.path.getmtime(p)
+            checkpoints += [[p, mt]]
+
+    if len(checkpoints) > 0:
+        checkpoints = sorted(checkpoints, key=lambda pt: -pt[1])
+        latest = checkpoints[0][0]
+    else:
+        latest = None
+
+    return latest
 
 
 class RestoreModelHook(Hook):
@@ -63,7 +92,7 @@ class RestoreModelHook(Hook):
     def __init__(self, variables, checkpoint_path):
         '''Args:
             variables (list): tf.Variables to be loaded from the checkpoint.
-            checkpoint_path (str): Directory in which the checkpoints are 
+            checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint.
         '''
         self.root = checkpoint_path
@@ -83,9 +112,48 @@ class RestoreModelHook(Hook):
         self.logger.info("Global step: {}".format(global_step))
 
 
-def strenumerate(iterable, start=0):
+# Simple renaming for consistency
+# Todo: Make the Restore op part of the model (issue #2)
+# https://bitbucket.org/jhaux/edflow/issues/2/make-a-general-model-restore-hook
+RestoreTFModelHook = RestoreModelHook
+
+
+class RestorePytorchModelHook(Hook):
+    '''Restores from a checkpoint at each epoch.'''
+
+    def __init__(self, model, checkpoint_path, global_step=None):
+        '''Args:
+            model (torch.nn.Module): Model to initialize
+            checkpoint_path (str): Directory in which the checkpoints are
+                stored or explicit checkpoint.
+        '''
+        self.root = checkpoint_path
+
+        self.logger = get_logger(self, 'latest_eval')
+
+        self.model = model
+        self.global_step = global_step
+
+    def before_epoch(self, ep):
+        checkpoint = get_latest_checkpoint(self.root)
+
+        self.model.load_state_dict(torch.load(checkpoint))
+        self.logger.info("Restored model from {}".format(checkpoint))
+
+        e_s = os.path.basename(checkpoint).split('.')[0].split('-')
+        epoch = e_s[0]
+        step = e_s[1].split('_')[0]
+        global_step = step
+        self.logger.info("Epoch: {}, Step: {}, Global step: {}"
+                         .format(epoch, step, global_step))
+
+        if self.global_step is not None:
+            self.global_step = global_step
+
+
+def strenumerate(*args, **kwargs):
     '''Same as enumerate, but yields str(index).'''
-    for i, v in enumerate(iterable, start=start):
+    for i, v in enumerate(*args, **kwargs):
         yield str(i), v
 
 
@@ -134,9 +202,9 @@ class CollectorHook(Hook):
         self.stack_results(results, self.collected_data)
 
     def stack_results(self, new_data, all_data):
-        '''Given the current collected data append the new results along the 
+        '''Given the current collected data append the new results along the
         batch dimension.
-        
+
         Args:
             new_data (list or dict): data to append.
             all_data (list or dict): data to append to.
@@ -158,6 +226,7 @@ class CollectorHook(Hook):
                     all_data[key] = {}
 
                 self.stack_results(value, all_data[key])
+
 
 class StoreArraysHook(CollectorHook):
     '''Collects lots of data, stacks them and then stores them.'''
@@ -184,7 +253,7 @@ class StoreArraysHook(CollectorHook):
 
     def flatten_results(self, results, prefix, store_dict):
         '''Recursively walk over the results dictionary and stack the data.
-        
+
         Args:
             results (dict or list): Containing results.
             prefix (str): Prepended to name when storing.
@@ -237,19 +306,19 @@ class MetricHook(Hook):
     def __init__(self, metrics, save_root, consider_only_first=None):
         '''Args:
             metrics (list): List of ``MetricTuple``s of the form
-                ``(input names, output names, metric, name)``. 
+                ``(input names, output names, metric, name)``.
                 - ``input names`` are the keys corresponding to the feeds of
                     interest, e.g. an original image.
                 - ``output names`` are the keys corresponding to the values
                     in the results dict.
                 - ``metric`` is a ``Callable`` that accepts all inputs and
                     outputs keys as keyword arguments
-                - ``name`` is a 
+                - ``name`` is a
                 If nested feeds or results are expected the names can be
                 passed as "path" like ``'key1_key2'`` returning
                 ``dict[key1][key2]``.
             save_root (str): Path to where the results are stored.
-            consider_only_first (int): Metric is only evaluated on the first 
+            consider_only_first (int): Metric is only evaluated on the first
                 `consider_only_first` examples.
         '''
 
@@ -279,7 +348,7 @@ class MetricHook(Hook):
         for in_names, out_names, metric, m_name in self.metrics:
             self.storage_dict[m_name] = {}
             for kwargs_name, name in in_names.items():
-                val = self.retrieve(name, batch)
+                val = retrieve(name, batch)
                 self.storage_dict[m_name][kwargs_name] = val
 
     def after_step(self, step, results):
@@ -288,7 +357,7 @@ class MetricHook(Hook):
 
         for in_names, out_names, metric, m_name in self.metrics:
             for kwargs_name, name in out_names.items():
-                val = self.retrieve(name, results)
+                val = retrieve(name, results)
                 self.storage_dict[m_name][kwargs_name] = val
             m_res = metric(**self.storage_dict[m_name])
             self.metric_results[m_name] += [m_res]
@@ -318,16 +387,3 @@ class MetricHook(Hook):
         name = '{:0>6d}_metrics'.format(self.global_step)
         name = os.path.join(self.root, name)
         np.savez_compressed(name, **mean_results)
-
-    def retrieve(self, key, list_or_dict, splitval='/'):
-        '''Given a nested list or dict return the desired value at key.'''
-
-        keys = key.split(splitval)
-
-        for key in keys:
-            if isinstance(list_or_dict, dict):
-                list_or_dict = list_or_dict[key]
-            else:
-                list_or_dict = list_or_dict[int(key)]
-
-        return list_or_dict

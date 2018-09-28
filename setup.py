@@ -19,7 +19,8 @@ setup(name='edflow',
           'scipy',
           'h5py',
           'scikit-learn',
-          'scikit-image'
+          'scikit-image',
+          'tensorboardX'
           ],
       zip_safe=False,
-      scripts = ["edflow/edflow", "edflow/edcache"])
+      scripts=["edflow/edflow", "edflow/edcache"])
