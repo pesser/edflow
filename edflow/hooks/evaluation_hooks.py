@@ -1,5 +1,8 @@
 import tensorflow as tf
-import torch
+try:
+    import torch
+except ModuleNotFoundError:
+    print("Warning: Could not import torch.")
 import time
 import os
 import numpy as np
@@ -73,8 +76,11 @@ def get_latest_checkpoint(checkpoint_root):
     checkpoints = []
     for p in os.listdir(ckpt_root):
         p = os.path.join(ckpt_root, p)
-        if p[-5:] == '.ckpt':
+        if '.ckpt' in p:
             mt = os.path.getmtime(p)
+            name, ext = os.path.splitext(p)
+            if not ext == ".ckpt":
+                p = name
             checkpoints += [[p, mt]]
 
     if len(checkpoints) > 0:
