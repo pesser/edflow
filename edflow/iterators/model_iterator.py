@@ -189,6 +189,8 @@ class PyHookedModelIterator(object):
             bar_position (int): Used by tqdm to place bars at the right
                 position when using multiple Iterators in parallel.
         '''
+        self.config = config
+        self.root = root
 
         self.model = model
         self.num_epochs = num_epochs

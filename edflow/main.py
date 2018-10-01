@@ -125,6 +125,8 @@ def _test(config, root, nogpu=False, bar_position=0):
     logger.info('Iterating')
     while True:
         HBU_Evaluator.iterate(batches)
+        if not config.get("eval_forever", False):
+            break
 
 
 def main(opt):
