@@ -402,3 +402,147 @@ class ConcatenatedDataset(DatasetMixin):
                     labels[k] += new_labels[k]
             self._labels = labels
         return self._labels
+
+
+class ExampleConcatenatedDataset(DatasetMixin):
+    '''Concatenates a list of datasets along the example axis.
+    E.g.:
+        dset1 = [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}, ...]
+        dset2 = [{'a': 6, 'b': 7}, {'a': 8, 'b': 9}, ...]
+
+        dset_conc = ExampleConcatenatedDataset(dset1, dset2)
+        print(dset_conc[0])
+        # {'a_0': 1, 'a_1': 6,
+        #  'b_0': 2, 'b_1': 7,
+        #  'a': ['a_0', 'a_1'],
+        #  'b': ['b_0', 'b_1']}
+
+    The new keys (e.g. `a_0, a_1`) are numbered in the order they are taken
+    from datasets. Additionally, the original, shared key is preserved and
+    returns the list of newly generated keys in correct order.
+    '''
+
+    def __init__(self, *datasets):
+        '''Args:
+            *datasets (DatasetMixin): All the datasets to concatenate. Each
+                dataset must return a dict as example!
+        '''
+        assert np.all(np.equal(len(datasets[0]), [len(d) for d in datasets]))
+        self.datasets = datasets
+
+    def set_example_pars(self, start=None, stop=None, step=None):
+        '''Allows to manipulate the length and step of the returned example
+        lists.'''
+
+        self.example_slice = slice(start, stop, step)
+
+    def __len__(self):
+        return len(self.datasets[0])
+
+    @property
+    def labels(self):
+        '''Now each index corresponds to a sequence of labels.'''
+        if not hasattr(self, '_labels'):
+            self._labels = dict()
+            for idx, dataset in self.datasets:
+                for k in dataset.labels:
+                    if k in self._labels:
+                        self._labels[k] += [dataset.labels[k]]
+                    else:
+                        self._labels[k] = [dataset.labels[k]]
+        return self._labels
+
+    def get_example(self, i):
+        examples = [d[i] for d in self.datasets[self.example_slice]]
+
+        new_examples = {}
+        for idx, ex in enumerate(examples):
+            for key, value in ex.items():
+                new_key = '{}_{}'.format(key, idx)
+                if key in new_examples:
+                    new_examples[key] += [new_key]
+                else:
+                    new_examples[key] = [new_key]
+                new_examples[new_key] = value
+
+        return new_examples
+
+
+class SequenceDataset(DatasetMixin):
+    '''Wraps around a dataset and returns sequences of examples.
+    Given the length of those sequences the number of available examples
+    is reduced by this length times the step taken. Additionally each
+    example must have a frame id `fid`, by which it can be filtered. This is to
+    ensure that each frame is taken from the same video.'''
+
+    def __init__(self, dataset, length, step=1):
+        '''Args:
+            dataset (DatasetMixin): Dataset from which single frame examles
+                are taken.
+            length (int): Length of the returned sequences in frames.
+            step (int): Step between returned frames. Must be `>= 1`.
+
+        This dataset will have `len(dataset) - length * step` examples.
+        '''
+
+        self.step = step
+        self.length = length
+
+        frame_ids = dataset.labels['fid']
+        top_indeces = np.where(np.array(frame_ids) >= length * step - 1)[0]
+
+        all_subdatasets = []
+        for i in range(length * step):
+            indeces = top_indeces - i
+            subdset = SubDataset(dataset, indeces)
+            all_subdatasets += [subdset]
+
+        all_subdatasets = all_subdatasets[::-1]
+
+        self.dset = ExampleConcatenatedDataset(*all_subdatasets)
+        self.dset.set_example_pars(step=self.step)
+
+    @property
+    def labels(self):
+        return self.dset.labels
+
+    def __len__(self):
+        return len(self.dset)
+
+    def get_example(self, i):
+        '''Retreives a list of examples starting at i.'''
+
+        return self.dset[i]
+
+
+if __name__ == '__main__':
+    from hbu_journal.data.prjoti import CachedPrjoti
+
+    prjoti = CachedPrjoti()
+    s_prjoti = SequenceDataset(prjoti, 5, 1)
+
+    example = s_prjoti[10]
+    keys = [k for k in example]
+
+    def key(k):
+        kk = k.split('_')
+        if len(kk) > 1:
+            idx = int(kk[1])
+            kk = kk[0]
+        else:
+            idx = -1
+            kk = kk[0]
+        return kk, idx
+
+    keys = sorted(keys, key=key)
+    print(keys)
+
+    l = 4
+    for s in range(1, 4):
+        s_prjoti = SequenceDataset(prjoti, l, s)
+        for i in range(0, 4):
+            example = s_prjoti[i]
+            print('Start index: {}, Length: {}, Step: {}'.format(i, l, s))
+            print([example[k] for k in example['fid']])
+
+    print([sorted(k.keys(), key=key) for k in s_prjoti[:3]])
