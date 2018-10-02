@@ -83,10 +83,11 @@ def _train(config, root, checkpoint=None, retrain=False):
         config["num_epochs"] = math.ceil(num_epochs)
 
     Model = implementations["model"](config)
+    compat_kwargs = dict(hook_freq = config["hook_freq"])
     Trainer = implementations["iterator"](config,
                                           root,
                                           Model,
-                                          hook_freq=config["hook_freq"])
+                                          **compat_kwargs)
 
     if checkpoint is not None:
         Trainer.initialize(checkpoint_path=checkpoint)
@@ -126,13 +127,17 @@ def _test(config, root, nogpu=False, bar_position=0):
 
     Model = implementations["model"](config)
 
+    config["hook_freq"] = 1
+    config["nogpu"] = nogpu
+    compat_kwargs = dict(
+            hook_freq = config["hook_freq"],
+            bar_position = bar_position,
+            nogpu = config["nogpu"])
     HBU_Evaluator = implementations["iterator"](
         config,
         root,
         Model,
-        hook_freq=1,
-        bar_position=bar_position,
-        nogpu=nogpu)
+        **compat_kwargs)
 
     logger.info('Iterating')
     while True:

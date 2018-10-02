@@ -2,6 +2,7 @@
 better catorgory than util.'''
 
 import tensorflow as tf
+import os, pickle
 
 
 def make_linear_var(step,
@@ -116,6 +117,36 @@ def retrieve(key, list_or_dict, splitval='/'):
             list_or_dict = list_or_dict[int(key)]
 
     return list_or_dict
+
+
+def cached_function(fn):
+    """a very rough cache for function calls. Highly experimental. Only
+    active if activated with environment variable."""
+    if not os.environ.get("EDFLOW_CACHED_FUNC", 0) == "42": # secret activation code
+        return fn
+    cache_dir = os.path.join(os.environ.get("HOME"), "var", "edflow_cached_func")
+    os.makedirs(cache_dir, exist_ok = True)
+    def wrapped(*args, **kwargs):
+        fnhash = fn.__name__
+        callargs = (args, kwargs)
+        callhash = str(len(pickle.dumps(callargs)))
+        fullhash = fnhash + callhash
+        pfname = fullhash + ".p"
+        ppath = os.path.join(cache_dir, pfname)
+        if not os.path.exists(ppath):
+            # compute
+            print("Computing {}".format(ppath))
+            result = fn(*args, **kwargs)
+            # and cache
+            with open(ppath, "wb") as f:
+                pickle.dump(result, f)
+            print("Cached {}".format(ppath))
+        else:
+            # load from cache
+            with open(ppath, "rb") as f:
+                result = pickle.load(f)
+        return result
+    return wrapped
 
 
 if __name__ == '__main__':
