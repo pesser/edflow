@@ -310,6 +310,11 @@ class SubDataset(DatasetMixin):
     def __init__(self, data, subindices):
         self.data = data
         self.subindices = subindices
+        try:
+            len(self.subindices)
+        except TypeError:
+            print("Expected a list of subindices.")
+            raise
 
     def get_example(self, i):
         """Get example and process. Wrapped to make sure stacktrace is
@@ -429,6 +434,7 @@ class ExampleConcatenatedDataset(DatasetMixin):
         '''
         assert np.all(np.equal(len(datasets[0]), [len(d) for d in datasets]))
         self.datasets = datasets
+        self.set_example_pars()
 
     def set_example_pars(self, start=None, stop=None, step=None):
         '''Allows to manipulate the length and step of the returned example
@@ -513,6 +519,26 @@ class SequenceDataset(DatasetMixin):
         '''Retreives a list of examples starting at i.'''
 
         return self.dset[i]
+
+
+def JoinedDataset(dataset, key, n_joins):
+    """Concat n_joins random samples based on the condition that
+    example_i[key] == example_j[key] for all i,j. Key must be in labels of
+    dataset."""
+    labels = np.asarray(dataset.labels[key])
+    unique_labels = np.unique(labels)
+    index_map = dict()
+    for value in unique_labels:
+        index_map[value] = np.nonzero(labels == value)[0]
+    join_indices = [list(range(len(dataset)))] # example_0 is original example
+    prng = np.random.RandomState(1)
+    for k in range(n_joins - 1):
+        indices = [prng.choice(index_map[value]) for value in labels]
+        join_indices.append(indices)
+    datasets = [SubDataset(dataset, indices) for indices in join_indices]
+    dataset = ExampleConcatenatedDataset(*datasets)
+
+    return dataset
 
 
 if __name__ == '__main__':
