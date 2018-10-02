@@ -429,6 +429,12 @@ class ExampleConcatenatedDataset(DatasetMixin):
         assert np.all(np.equal(len(datasets[0]), [len(d) for d in datasets]))
         self.datasets = datasets
 
+    def set_example_pars(self, start=None, stop=None, step=None):
+        '''Allows to manipulate the length and step of the returned example
+        lists.'''
+
+        self.example_slice = slice(start, stop, step)
+
     def __len__(self):
         return len(self.datasets[0])
 
@@ -446,7 +452,7 @@ class ExampleConcatenatedDataset(DatasetMixin):
         return self._labels
 
     def get_example(self, i):
-        examples = [d[i] for d in self.datasets[::self.step]]
+        examples = [d[i] for d in self.datasets[self.example_slice]]
 
         new_examples = {}
         for idx, ex in enumerate(examples):
@@ -459,20 +465,6 @@ class ExampleConcatenatedDataset(DatasetMixin):
                 new_examples[new_key] = value
 
         return new_examples
-
-    def __getitem__(self, i):
-        if isinstance(i, slice):
-            start = i.start
-            step = i.step
-        else:
-            start = i
-            step = 1
-
-        # Wow, this is horrible, but apparently chainer does not easily allow
-        # me to pass a slice.
-        self.step = step
-
-        return super().__getitem__(start)
 
 
 class SequenceDataset(DatasetMixin):
@@ -507,6 +499,7 @@ class SequenceDataset(DatasetMixin):
         all_subdatasets = all_subdatasets[::-1]
 
         self.dset = ExampleConcatenatedDataset(*all_subdatasets)
+        self.dset.set_example_pars(step=self.step)
 
     @property
     def labels(self):
@@ -518,10 +511,7 @@ class SequenceDataset(DatasetMixin):
     def get_example(self, i):
         '''Retreives a list of examples starting at i.'''
 
-        if isinstance(i, slice):
-            i = i.start
-
-        return self.dset[i::self.step]
+        return self.dset[i]
 
 
 if __name__ == '__main__':
