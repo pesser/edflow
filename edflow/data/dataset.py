@@ -1,4 +1,33 @@
-'''All handy dataset classes we use.'''
+'''All handy dataset classes we use.
+Our Datasets (TODO usually) inherit from the `chainer.dataset.DatasetMixin`.
+Please note that we overwrite two methods here: The `__getitem__` and the
+`get_example` method. These do not change their functionallty and there is
+not problem in not using our version of `DatasetMixin`.
+
+Here is what we did:
+
+:codeblock: python
+
+DatasetMixin(DatasetMixin):
+    def __getitem__(self, index):
+        \'\'\'Don't raise BrokenPipeError as those usually occur during some
+        other Exception.\'\'\'
+        try:
+            return super().__getitem__(index)
+        except Exception as e:
+            if not isinstance(e, BrokenPipeError):
+                traceback.print_exc()
+                raise e
+
+    def get_example(self, i):
+        \'\'\'Add the index `i` to the returned datum. This assumes that you
+        always return a dictionary.\'\'\'
+
+        result = super().get_example(i)
+        result['_index'] = i
+
+        return result
+'''
 
 import os
 import pickle
@@ -17,6 +46,23 @@ from chainer.dataset import DatasetMixin
 
 from multiprocessing.managers import BaseManager
 import queue
+
+from edflow.main import traceable_method, get_implementations_from_config
+
+
+DatasetMixin.__getitem__ = traceable_method(DatasetMixin.__getitem__,
+                                            ignores=(BrokenPipeError))
+
+
+def indexed_method(method, key='_index'):
+    def imethod(index, *args, **kwargs):
+        result = method(*args, **kwargs)
+        result[key] = index
+        return result
+    return imethod
+
+
+DatasetMixin.get_examples = indexed_method(DatasetMixin.get_example, '_index')
 
 
 def make_server_manager(port = 63127, authkey = b"edcache"):
@@ -346,12 +392,8 @@ class ProcessedDataset(DatasetMixin):
         """Get example and process. Wrapped to make sure stacktrace is
         printed in case something goes wrong and we are in a
         MultiprocessIterator."""
-        try:
-            d = self.data.get_example(i)
-            d.update(self.process(**d))
-        except:
-            traceback.print_exc()
-            raise
+        d = self.data.get_example(i)
+        d.update(self.process(**d))
         return d
 
     def __len__(self):
@@ -519,6 +561,47 @@ class SequenceDataset(DatasetMixin):
         '''Retreives a list of examples starting at i.'''
 
         return self.dset[i]
+
+
+def getSeqDataset(config):
+    '''This allows to not define a dataset class, but use a baseclass and a
+    `length` and `step` parameter in the supplied `config` to load and
+    sequentialize a dataset.
+
+    A config passed to edflow would the look like this:
+
+    .. codeblock:: yaml
+
+        dataset: edflow.data.dataset.getSeqDataSet
+        model: Some Model
+        iterator: Some Iterator
+
+        seqdataset:
+                dataset: import.path.to.your.basedataset,
+                length: 3,
+                step: 1}
+
+    ``getSeqDataSet`` will import the base ``dataset`` and pass it to
+    :class:`SequenceDataset` together with ``length`` and ``step`` to
+    make the actually used dataset.
+
+    Args:
+        config (dict): An edflow config, with at least the keys
+            ``seqdataset`` and nested inside it ``dataset``, ``seq_length`` and
+            ``seq_step``.
+
+    Returns:
+        :class:`SequenceDataset`: A Sequence Dataset based on the basedataset.
+    '''
+
+    ks = 'seqdataset'
+    base_dset = get_implementations_from_config(config[ks],
+                                                ['dataset'])['dataset']
+    base_dset = base_dset(config=config)
+
+    return SequenceDataset(base_dset,
+                           config[ks]['seq_length'],
+                           config[ks]['seq_step'])
 
 
 def JoinedDataset(dataset, key, n_joins):

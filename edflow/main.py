@@ -35,6 +35,18 @@ def traceable_process(fn, args, job_queue, idx):
     job_queue.put([idx, 'Done', None])
 
 
+def traceable_method(method, ignores=None):
+    def tmethod(*args, **kwargs):
+        try:
+            return method(*args, **kwargs)
+        except Exception as e:
+            if ignores is not None:
+                if not isinstance(e, tuple(ignores)):
+                    traceback.print_exc()
+                    raise e
+    return tmethod
+
+
 def train(args, job_queue, idx):
     traceable_process(_train, args, job_queue, idx)
 
