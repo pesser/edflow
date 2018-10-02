@@ -104,7 +104,8 @@ def main(opt):
         while True:
             pidx, exc_or_done, trace = JQ.get()
             if isinstance(exc_or_done, Exception):
-                print(trace)
+                logger.warn("Exception in process {}:".format(pidx))
+                logger.warn(trace)
                 raise exc_or_done
             elif exc_or_done == 'Done':
                 logger.info('Process {} is done'.format(pidx))
