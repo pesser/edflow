@@ -18,6 +18,12 @@ from chainer.dataset import DatasetMixin
 from multiprocessing.managers import BaseManager
 import queue
 
+from edflow.main import traceable_method
+
+
+DatasetMixin.__getitem__ = traceable_method(DatasetMixin.__getitem__,
+                                            ignores=(BrokenPipeError))
+
 
 def make_server_manager(port = 63127, authkey = b"edcache"):
     inqueue = queue.Queue()
@@ -340,12 +346,8 @@ class ProcessedDataset(DatasetMixin):
         """Get example and process. Wrapped to make sure stacktrace is
         printed in case something goes wrong and we are in a
         MultiprocessIterator."""
-        try:
-            d = self.data.get_example(i)
-            d.update(self.process(**d))
-        except:
-            traceback.print_exc()
-            raise
+        d = self.data.get_example(i)
+        d.update(self.process(**d))
         return d
 
     def __len__(self):
