@@ -25,12 +25,12 @@ def traceable_process(fn, args, job_queue, idx):
         fn(*args)
     except Exception as e:
         trace = traceback.format_exc()
+        exc = Exception(trace)
         if job_queue is not None:
-            job_queue.put([idx, e, trace])
+            job_queue.put([idx, exc, trace])
             job_queue.close()
         else:
-            print(trace)
-            raise e
+            raise exc
 
     job_queue.put([idx, 'Done', None])
 
@@ -53,16 +53,21 @@ def _train(config, root, checkpoint=None, retrain=False):
             config, ["model", "iterator", "dataset"])
 
     # fork early to avoid taking all the crap into forked processes
+    logger.info("Instantiating dataset.")
     dataset = implementations["dataset"](config=config)
     logger.info("Number of training samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
+    n_prefetch = config.get("n_prefetch", 1)
     batches = make_batches(dataset,
                            batch_size=config["batch_size"],
                            shuffle=True,
-                           n_processes=n_processes)
+                           n_processes=n_processes,
+                           n_prefetch=n_prefetch)
     # get them going
+    logger.info("Warm up batches.")
     next(batches)
     batches.reset()
+    logger.info("Reset batches.")
 
     if "num_steps" in config:
         # set number of epochs to perform at least num_steps steps
@@ -70,13 +75,16 @@ def _train(config, root, checkpoint=None, retrain=False):
         num_epochs = config["num_steps"] / steps_per_epoch
         config["num_epochs"] = math.ceil(num_epochs)
 
+    logger.info("Instantiating model.")
     Model = implementations["model"](config)
     compat_kwargs = dict(hook_freq = config["hook_freq"])
+    logger.info("Instantiating iterator.")
     Trainer = implementations["iterator"](config,
                                           root,
                                           Model,
                                           **compat_kwargs)
 
+    logger.info("Initializing model.")
     if checkpoint is not None:
         Trainer.initialize(checkpoint_path=checkpoint)
     else:
@@ -85,7 +93,8 @@ def _train(config, root, checkpoint=None, retrain=False):
     if retrain:
         Trainer.reset_global_step()
 
-    Trainer.fit(batches)
+    logger.info("Iterating.")
+    Trainer.iterate(batches)
 
 
 def _test(config, root, nogpu=False, bar_position=0):
@@ -105,10 +114,12 @@ def _test(config, root, nogpu=False, bar_position=0):
     dataset = implementations["dataset"](config=config)
     logger.info("Number of testing samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
+    n_prefetch = config.get("n_prefetch", 1)
     batches = make_batches(dataset,
                            batch_size=config["batch_size"],
                            shuffle=False,
-                           n_processes=n_processes)
+                           n_processes=n_processes,
+                           n_prefetch=n_prefetch)
     # get going
     next(batches)
     batches.reset()
