@@ -201,7 +201,8 @@ class CachedDataset(DatasetMixin):
 
     def __getstate__(self):
         """Close file before pickling."""
-        self.zip.close()
+        if hasattr(self, "zip"):
+            self.zip.close()
         self.zip = None
         self.currentpid = None
         return self.__dict__
