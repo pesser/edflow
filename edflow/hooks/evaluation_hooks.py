@@ -25,11 +25,18 @@ class WaitForCheckpointHook(Hook):
     continue.'''
 
     # TODO: Is basename needed? -> Remove
-    def __init__(self, checkpoint_root, base_name, interval=5, add_sec=5):
+    def __init__(self,
+                 checkpoint_root,
+                 base_name,
+                 filter_cond: lambda c: True,
+                 interval=5,
+                 add_sec=5):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
             base_name (str): Base name of the checkpoints as passed to the
                 corresponding saver.
+            filter_cond (Callable): A function used to filter files, to only
+                get the checkpoints that are wanted.
             interval (float): Number of seconds after which to check for a new
                 checkpoint again.
             add_sec (float): Number of seconds to wait, after a checkpoint is
@@ -39,6 +46,7 @@ class WaitForCheckpointHook(Hook):
 
         self.root = checkpoint_root
         self.base_name = base_name
+        self.fcond = filter_cond
         self.sleep_interval = interval
         self.additional_wait = add_sec
 
@@ -52,7 +60,7 @@ class WaitForCheckpointHook(Hook):
         while True:
             time.sleep(self.sleep_interval)
 
-            latest_checkpoint = get_latest_checkpoint(self.root)
+            latest_checkpoint = get_latest_checkpoint(self.root, self.fcond)
             if latest_checkpoint != self.latest_checkpoint:
                 self.latest_checkpoint = latest_checkpoint
                 time.sleep(self.additional_wait)
@@ -62,19 +70,23 @@ class WaitForCheckpointHook(Hook):
         self.look()
 
 
-def get_latest_checkpoint(checkpoint_root):
+def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
     '''Return path to latest checkpoint (file ending in .ckpt) in
     checkpoint_root dir.
 
     Args:
         checkpoint_root (str): Path to where the checkpoints live.
+        filter_cond (Callable): A function used to filter files, to only
+            get the checkpoints that are wanted.
 
     Returns:
         str: path of the latest checkpoint.
     '''
     ckpt_root = checkpoint_root
     checkpoints = []
-    for p in os.listdir(ckpt_root):
+    all_files = os.listdir(ckpt_root)
+    filtered_files = filter(all_files, filter_cond)
+    for p in filtered_files:
         p = os.path.join(ckpt_root, p)
         if '.ckpt' in p:
             try:
@@ -128,16 +140,23 @@ class RestoreModelHook(Hook):
 RestoreTFModelHook = RestoreModelHook
 
 
+# TODO Test filtering for multiple models
+# TODO Set Global Step
 class RestorePytorchModelHook(Hook):
     '''Restores from a checkpoint at each epoch.'''
 
-    def __init__(self, model, checkpoint_path, global_step=None):
+    def __init__(self,
+                 model,
+                 checkpoint_path,
+                 filter_cond=lambda c: True,
+                 global_step=None):
         '''Args:
             model (torch.nn.Module): Model to initialize
             checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint.
         '''
         self.root = checkpoint_path
+        self.fcond = filter_cond
 
         self.logger = get_logger(self, 'latest_eval')
 
@@ -145,7 +164,7 @@ class RestorePytorchModelHook(Hook):
         self.global_step = global_step
 
     def before_epoch(self, ep):
-        checkpoint = get_latest_checkpoint(self.root)
+        checkpoint = get_latest_checkpoint(self.root, self.fcond)
 
         self.model.load_state_dict(torch.load(checkpoint))
         self.logger.info("Restored model from {}".format(checkpoint))
