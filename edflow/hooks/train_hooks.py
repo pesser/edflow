@@ -5,6 +5,8 @@ from edflow.hooks.hook import Hook
 from edflow.custom_logging import get_logger
 from edflow.iterators.batches import plot_batch
 
+"""TensorFlow hooks useful during training."""
+
 
 class CheckpointHook(Hook):
     '''Does that checkpoint thingy where it stores everything in a
@@ -16,22 +18,27 @@ class CheckpointHook(Hook):
                  modelname='model',
                  session=None,
                  step=None,
-                 interval=None):
+                 interval=None,
+                 max_to_keep=5):
         '''Args:
             root_path (str): Path to where the checkpoints are stored.
             variables (list): List of all variables to keep track of.
             session (tf.Session): Session instance for saver.
             modelname (str): Used to name the checkpoint.
-            step (tf.Tensor): Step op, that can be evaluated.
+            step (tf.Tensor or callable): Step op, that can be evaluated
+                (i,.e. a tf.Tensor or a python callable returning the step as an
+                integer).
             interval (int): Number of iterations after which a checkpoint is
                 saved. If None, a checkpoint is saved after each epoch.
+            max_to_keep (int): Maximum number of checkpoints to keep on
+                disk. Use 0 or None to never delete any checkpoints.
         '''
 
         self.root = root_path
         self.interval = interval
         self.step = step if step is not None else tf.train.get_global_step()
 
-        self.saver = tf.train.Saver(variables)
+        self.saver = tf.train.Saver(variables, max_to_keep = max_to_keep)
         self.logger = get_logger(self)
 
         os.makedirs(root_path, exist_ok=True)
@@ -53,7 +60,11 @@ class CheckpointHook(Hook):
             self.save()
 
     def save(self):
-        self.saver.save(self.session, self.savename, global_step=self.step)
+        if isinstance(self.step, tf.Tensor):
+            global_step = self.step
+        else:
+            global_step = self.step()
+        self.saver.save(self.session, self.savename, global_step=global_step)
         self.logger.info("Saved model to {}".format(self.savename))
 
 

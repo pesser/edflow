@@ -9,6 +9,9 @@ from edflow.iterators.batches import plot_batch
 from edflow.util import retrieve
 
 
+"""PyTorch hooks useful during training."""
+
+
 class PyCheckpointHook(Hook):
     '''Does that checkpoint thingy where it stores everything in a
     checkpoint.'''
@@ -17,15 +20,11 @@ class PyCheckpointHook(Hook):
                  root_path,
                  model,
                  modelname='model',
-                 step=None,
                  interval=None):
-        # TODO: This docu
         '''Args:
             root_path (str): Path to where the checkpoints are stored.
-            variables (list): List of all variables to keep track of.
-            session (tf.Session): Session instance for saver.
-            modelname (str): Used to name the checkpoint.
-            step (tf.Tensor): Step op, that can be evaluated.
+            model (nn.Module): Model to checkpoint.
+            modelname (str): Prefix for checkpoint files.
             interval (int): Number of iterations after which a checkpoint is
                 saved. If None, a checkpoint is saved after each epoch.
         '''
@@ -124,26 +123,3 @@ class PyLoggingHook(Hook):
             for key in self.log_keys:
                 value = retrieve(key, last_results)
                 self.logger.info('{}: {}'.format(key, value))
-
-
-class RetrainHook(Hook):
-    '''Restes the global step at the beginning of training.'''
-
-    def __init__(self, global_step=None):
-        '''Args:
-            global_step (tf.Variable): Variable tracking the training step.
-        '''
-
-        self.global_step = global_step
-        self.logger = get_logger(self)
-
-    def before_epoch(self, epoch):
-        self.epoch = epoch
-
-    def before_step(self, batch_index, fetches, feeds, batch):
-        if self.epoch == 0 and batch_index == 0:
-            fetches['reset_step'] = tf.assign(self.global_step, 0)
-
-    def after_step(self, step, *args, **kwargs):
-        if step == 0 and self.epoch == 0:
-            self.logger.info("Reset global_step")
