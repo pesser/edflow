@@ -98,10 +98,11 @@ class Iterator(MultiprocessIterator):
         return math.ceil(self.n / self.batch_size)
 
 
-def make_batches(dataset, batch_size, shuffle, n_processes = 8):
+def make_batches(dataset, batch_size, shuffle, n_processes = 8, n_prefetch = 1):
     batches = Iterator(dataset,
                        repeat=True,
                        batch_size=batch_size,
                        n_processes=n_processes,
+                       n_prefetch=n_prefetch,
                        shuffle=shuffle)
     return batches

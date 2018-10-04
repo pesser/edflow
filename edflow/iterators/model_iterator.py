@@ -6,7 +6,8 @@ from edflow.util import walk
 
 
 class HookedModelIterator(object):
-    '''Base Trainer class containing useful methods to inherit.'''
+    '''DEPRECATED: use PyHookedModelIterator or TFHookedModelIterator!
+    Base Trainer class containing useful methods to inherit.'''
 
     def __init__(self,
                  model,
@@ -166,7 +167,7 @@ class HookedModelIterator(object):
 
 class PyHookedModelIterator(object):
     '''Implements a similar interface as the :class:`HookedModelIterator` to
-    train PyTorch models.'''
+    train framework independent models.'''
 
     def __init__(self,
                  config,
@@ -212,6 +213,11 @@ class PyHookedModelIterator(object):
         self._global_step += 1
         return self._global_step
 
+    def make_feeds(self, batch):
+        # copy of batches
+        feeds = walk(batch, lambda val: val)
+        return feeds
+
     def iterate(self, batch_iterator):
         '''Iterates over the data supplied and feeds it to the model.
 
@@ -235,7 +241,7 @@ class PyHookedModelIterator(object):
                 fetches = {'global_step': self.get_global_step,
                            'step_ops': step_ops}
 
-                feeds = walk(batch, lambda val: val)  # make a deep(?) copy
+                feeds = self.make_feeds(batch)
 
                 self.run_hooks(bi,
                                fetches,
@@ -246,6 +252,8 @@ class PyHookedModelIterator(object):
                 results = self.run(fetches, feed_dict=feeds)
 
                 self.run_hooks(bi, results=results, before=False)
+
+                self.increment_global_step()
 
                 if batch_iterator.is_new_epoch:
                     batch_iterator.reset()
@@ -298,7 +306,7 @@ class PyHookedModelIterator(object):
         is_step = fetches is not None and feeds is not None
         is_step = is_step or results is not None
 
-        condition = index % self.hook_freq == 0 or not is_step
+        condition = self._global_step % self.hook_freq == 0 or not is_step
 
         if condition:
             for hook in self.hooks:
@@ -320,3 +328,35 @@ class PyHookedModelIterator(object):
             The operation run at each step.'''
 
         raise NotImplementedError()
+
+
+class TFHookedModelIterator(PyHookedModelIterator):
+    def make_feeds(self, batch):
+        feeds = {pl: batch[name] for name, pl in self.model.inputs.items()}
+        return feeds
+
+    def run(self, fetches, feed_dict):
+        get_global_step = fetches.pop("global_step")
+        results = self.session.run(fetches, feed_dict = feed_dict)
+        results["global_step"] = get_global_step()
+        return results
+
+    def iterate(self, batch_iterator):
+        with self.session.as_default():
+            super().iterate(batch_iterator)
+
+    @property
+    def session(self):
+        # session that is initialized the first time it is needed
+        if hasattr(self, "_session"):
+            return self._session
+        sess_config = tf.ConfigProto()
+        if self.config.get("nogpu", False):
+            self.logger.info("Hiding GPUs.")
+            sess_config.device_count["GPU"] = 0
+        sess_config.gpu_options.allow_growth = self.config.get("gpu_mem_growth", False)
+        gpu_mem_fraction = self.config.get("gpu_mem_fraction", None)
+        if gpu_mem_fraction is not None:
+            sess_config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_fraction
+        self._session = tf.Session(config=sess_config)
+        return self._session

@@ -83,7 +83,11 @@ class LoggingHook(Hook):
         histograms = [tf.summary.histogram(n, h)
                            for n, h in histograms.items()]
 
-        summary_op = tf.summary.merge(scalars + histograms)
+        self._has_summary = len(scalars + histograms) > 0
+        if self._has_summary:
+            summary_op = tf.summary.merge(scalars + histograms)
+        else:
+            summary_op = tf.no_op()
 
         self.fetch_dict = {'summaries': summary_op,
                            'logs': logs,
@@ -110,8 +114,9 @@ class LoggingHook(Hook):
         if batch_index % self.interval == 0:
             step = last_results['global_step']
             last_results = last_results['logging']
-            summary = last_results['summaries']
-            self.writer.add_summary(summary, step)
+            if self._has_summary:
+                summary = last_results['summaries']
+                self.writer.add_summary(summary, step)
 
             logs = last_results['logs']
             for name in sorted(logs.keys()):
