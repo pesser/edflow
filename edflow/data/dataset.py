@@ -6,7 +6,7 @@ not problem in not using our version of `DatasetMixin`.
 
 Here is what we did:
 
-:codeblock: python
+.. codeblock:: python
 
 DatasetMixin(DatasetMixin):
     def __getitem__(self, index):
@@ -537,7 +537,7 @@ class SequenceDataset(DatasetMixin):
         self.length = length
 
         frame_ids = dataset.labels['fid']
-        top_indeces = np.where(np.array(frame_ids) >= length * step - 1)[0]
+        top_indeces = np.where(np.array(frame_ids) >= (length * step - 1))[0]
 
         all_subdatasets = []
         for i in range(length * step):
@@ -655,3 +655,5 @@ if __name__ == '__main__':
             print([example[k] for k in example['fid']])
 
     print([sorted(k.keys(), key=key) for k in s_prjoti[:3]])
+
+    print('len base: {}\nlen seqd: {}'.format(len(prjoti), len(s_prjoti)))
