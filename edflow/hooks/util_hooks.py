@@ -44,8 +44,8 @@ class IntervalHook(Hook):
 
     def run_condition(self, step, is_before=False):
         if step > self.start and step <= self.stop:
-            if step % self.base_interval == 0 and is_before:
-                self.counter += 1
+            if step % self.base_interval == 0:
+                self.counter += 1 if is_before else 0
                 return True
         return False
 
