@@ -1,32 +1,8 @@
 '''All handy dataset classes we use.
 Our Datasets (TODO usually) inherit from the `chainer.dataset.DatasetMixin`.
-Please note that we overwrite two methods here: The `__getitem__` and the
-`get_example` method. These do not change their functionallty and there is
-not problem in not using our version of `DatasetMixin`.
-
-Here is what we did:
-
-.. codeblock:: python
-
-DatasetMixin(DatasetMixin):
-    def __getitem__(self, index):
-        \'\'\'Don't raise BrokenPipeError as those usually occur during some
-        other Exception.\'\'\'
-        try:
-            return super().__getitem__(index)
-        except Exception as e:
-            if not isinstance(e, BrokenPipeError):
-                traceback.print_exc()
-                raise e
-
-    def get_example(self, i):
-        \'\'\'Add the index `i` to the returned datum. This assumes that you
-        always return a dictionary.\'\'\'
-
-        result = super().get_example(i)
-        result['_index'] = i
-
-        return result
+Please note that we overwrite the `__getitem__` method.
+This does not change its functionality and there is not problem in not using
+our version of `DatasetMixin`.
 '''
 
 import os
