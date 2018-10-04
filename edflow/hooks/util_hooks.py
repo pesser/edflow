@@ -42,9 +42,9 @@ class IntervalHook(Hook):
 
         self.counter = 0
 
-    def run_condition(self, step):
+    def run_condition(self, step, is_before=False):
         if step > self.start and step <= self.stop:
-            if step % self.base_interval == 0:
+            if step % self.base_interval == 0 and is_before:
                 self.counter += 1
                 return True
         return False
@@ -63,14 +63,14 @@ class IntervalHook(Hook):
     def before_step(self, step, *args, **kwargs):
         '''Called before each step. Can update any feeds and fetches.'''
 
-        if self.run_condition(step):
+        if self.run_condition(step, True):
             for hook in self.hooks:
                 hook.before_step(step, *args, **kwargs)
 
     def after_step(self, step, *args, **kwargs):
         '''Called after each step.'''
 
-        if self.run_condition(step):
+        if self.run_condition(step, False):
             for hook in self.hooks:
                 hook.after_step(step, *args, **kwargs)
 
