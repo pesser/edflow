@@ -503,12 +503,10 @@ class ExampleConcatenatedDataset(DatasetMixin):
         new_examples = {}
         for idx, ex in enumerate(examples):
             for key, value in ex.items():
-                new_key = '{}_{}'.format(key, idx)
                 if key in new_examples:
-                    new_examples[key] += [new_key]
+                    new_examples[key] += [value]
                 else:
-                    new_examples[key] = [new_key]
-                new_examples[new_key] = value
+                    new_examples[key] = [value]
 
         return new_examples
 
@@ -630,17 +628,7 @@ if __name__ == '__main__':
     example = s_prjoti[10]
     keys = [k for k in example]
 
-    def key(k):
-        kk = k.split('_')
-        if len(kk) > 1:
-            idx = -1 if kk[1] == '' else int(kk[1])
-            kk = kk[0]
-        else:
-            idx = -1
-            kk = kk[0]
-        return kk, idx
-
-    keys = sorted(keys, key=key)
+    keys = sorted(keys)
     print(keys)
 
     l = 4
@@ -649,9 +637,9 @@ if __name__ == '__main__':
         for i in range(0, 4):
             example = s_prjoti[i]
             print('Start index: {}, Length: {}, Step: {}'.format(i, l, s))
-            print([example[k] for k in example['fid']])
+            print(example['fid'])
 
-    print([sorted(k.keys(), key=key) for k in s_prjoti[:3]])
-    print([sorted(k.keys(), key=key) for k in s_prjoti[[0, 2]]])
+    print([sorted(k.keys()) for k in s_prjoti[:3]])
+    print([sorted(k.keys()) for k in s_prjoti[[0, 2]]])
 
     print('len base: {}\nlen seqd: {}'.format(len(prjoti), len(s_prjoti)))
