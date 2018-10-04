@@ -37,7 +37,7 @@ from multiprocessing import Process, Queue
 
 import numpy as np
 from tqdm import tqdm, trange
-from chainer.dataset import DatasetMixin
+from chainer.dataset import DatasetMixin as DatasetMixin_
 # TODO maybe just pull
 # https://github.com/chainer/chainer/blob/v4.4.0/chainer/dataset/dataset_mixin.py
 # into the rep to avoid dependency on chainer for this one mixin - it doesnt
@@ -50,19 +50,40 @@ import queue
 from edflow.main import traceable_method, get_implementations_from_config
 
 
-DatasetMixin.__getitem__ = traceable_method(DatasetMixin.__getitem__,
-                                            ignores=(BrokenPipeError))
+class DatasetMixin(DatasetMixin_):
+    def d_msg(self, val):
+        '''Informs the user that val should be a dict.'''
 
+        return 'The edflow version of DatasetMixin requires the ' \
+               '`get_example` method to return a `dict`. Yours returned a ' \
+               '{}'.format(type(val))
 
-def indexed_method(method, key='_index'):
-    def imethod(index, *args, **kwargs):
-        result = method(*args, **kwargs)
-        result[key] = index
-        return result
-    return imethod
+    @traceable_method(ignores=[BrokenPipeError])
+    def __getitem__(self, i):
+        ret_dict = super().__getitem__(i)
 
+        if isinstance(i, slice):
+            start = i.start or 0
+            stop = i.stop
+            step = i.step or 1
+            for idx, d in zip(range(start, stop, step), ret_dict):
+                if not isinstance(d, dict):
+                    raise ValueError(self.d_msg(d))
+                d['index_'] = idx
 
-DatasetMixin.get_examples = indexed_method(DatasetMixin.get_example, '_index')
+        elif isinstance(i, list) or isinstance(i, np.ndarray):
+            for idx, d in zip(i, ret_dict):
+                if not isinstance(d, dict):
+                    raise ValueError(self.d_msg(d))
+                d['index_'] = idx
+
+        else:
+            if not isinstance(ret_dict, dict):
+                raise ValueError(self.d_msg(ret_dict))
+
+            ret_dict['index_'] = i
+
+        return ret_dict
 
 
 def make_server_manager(port = 63127, authkey = b"edcache"):
@@ -636,7 +657,7 @@ if __name__ == '__main__':
     def key(k):
         kk = k.split('_')
         if len(kk) > 1:
-            idx = int(kk[1])
+            idx = -1 if kk[1] == '' else int(kk[1])
             kk = kk[0]
         else:
             idx = -1
@@ -655,5 +676,6 @@ if __name__ == '__main__':
             print([example[k] for k in example['fid']])
 
     print([sorted(k.keys(), key=key) for k in s_prjoti[:3]])
+    print([sorted(k.keys(), key=key) for k in s_prjoti[[0, 2]]])
 
     print('len base: {}\nlen seqd: {}'.format(len(prjoti), len(s_prjoti)))

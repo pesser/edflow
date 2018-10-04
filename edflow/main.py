@@ -35,7 +35,7 @@ def traceable_process(fn, args, job_queue, idx):
     job_queue.put([idx, 'Done', None])
 
 
-def traceable_method(method, ignores=None):
+def traceable_function(method, ignores=None):
     def tmethod(*args, **kwargs):
         try:
             return method(*args, **kwargs)
@@ -45,6 +45,12 @@ def traceable_method(method, ignores=None):
                     traceback.print_exc()
                     raise e
     return tmethod
+
+
+def traceable_method(ignores=None):
+    def decorator(method):
+        return traceable_function(method, ignores=ignores)
+    return decorator
 
 
 def train(args, job_queue, idx):
