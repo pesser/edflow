@@ -99,6 +99,8 @@ class Iterator(MultiprocessIterator):
 
 
 def make_batches(dataset, batch_size, shuffle, n_processes = 8, n_prefetch = 1):
+    # the first n_processes / batch_size batches will be quite slow for some
+    # reason
     batches = Iterator(dataset,
                        repeat=True,
                        batch_size=batch_size,
