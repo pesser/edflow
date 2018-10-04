@@ -429,7 +429,7 @@ class ConcatenatedDataset(DatasetMixin):
         else:
             local_i = i
         example = self.datasets[did][local_i]
-        example["did"] = did
+        example["dataset_index_"] = did
         return example
 
     def __len__(self):
