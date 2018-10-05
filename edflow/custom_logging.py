@@ -48,6 +48,7 @@ def _get_logger(name, out_dir, pos=4):
 
 class LogSingleton(object):
     exists = False
+    default = "root" # default directory of ProjectManager to log into
     def __init__(self, out_base_dir=None, level=logging.DEBUG, write_pos=4):
         if self.exists or out_base_dir is None:
             pass
@@ -58,7 +59,10 @@ class LogSingleton(object):
             LogSingleton._write_pos = write_pos
             LogSingleton.exists = True
 
-    def get(self, name, which='train'):
+    def set_default(self, which):
+        LogSingleton.default = which
+
+    def get(self, name, which=None):
         '''Create logger, set level.
         
         Args:
@@ -66,6 +70,7 @@ class LogSingleton(object):
                 of the given object class is used.
             which (str): subdirectory in the project folder.
         '''
+        which = which or LogSingleton.default
 
         if not isinstance(name, str):
             name = type(name).__name__
@@ -94,7 +99,7 @@ def use_project(project_dir, postfix = None):
     LogSingleton(P.root)
     return P
 
-def get_logger(name, which='train'):
+def get_logger(name, which=None):
     '''Creates a logger, which shares its output directory with all other
     loggers.
     
