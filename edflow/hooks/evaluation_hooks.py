@@ -87,8 +87,7 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
     ckpt_root = checkpoint_root
     checkpoints = []
     all_files = os.listdir(ckpt_root)
-    filtered_files = filter(filter_cond, all_files)
-    for p in filtered_files:
+    for p in all_files:
         p = os.path.join(ckpt_root, p)
         if '.ckpt' in p:
             try:
@@ -100,6 +99,7 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
             if not ext == ".ckpt":
                 p = name
             checkpoints += [[p, mt]]
+    checkpoints = [ckpt for ckpt in checkpoints if filter_cond(ckpt[0])]
 
     if len(checkpoints) > 0:
         checkpoints = sorted(checkpoints, key=lambda pt: -pt[1])
@@ -150,10 +150,15 @@ class RestoreModelHook(Hook):
     def __call__(self, checkpoint):
         self.saver.restore(self.session, checkpoint)
         self.logger.info("Restored model from {}".format(checkpoint))
-        global_step = int(checkpoint.rsplit("-", 1)[1])
+        global_step = self.parse_global_step(checkpoint)
         self.logger.info("Global step: {}".format(global_step))
         if self.setstep is not None:
             self.setstep(global_step)
+
+    def parse_global_step(self, checkpoint):
+        global_step = int(checkpoint.rsplit("-", 1)[1])
+        return global_step
+
 
 
 # Simple renaming for consistency
@@ -199,6 +204,17 @@ class RestorePytorchModelHook(Hook):
         self.model.load_state_dict(torch.load(checkpoint))
         self.logger.info("Restored model from {}".format(checkpoint))
 
+        epoch, step = self.parse_checkpoint(checkpoint)
+
+        if self.global_step_setter is not None:
+            self.global_step_setter(step)
+        self.logger.info("Epoch: {}, Global step: {}"
+                         .format(epoch, step))
+
+    def parse_global_step(self, checkpoint):
+        return parse_checkpoint(checkpoint)[0]
+
+    def parse_checkpoint(self, checkpoint):
         e_s = os.path.basename(checkpoint).split('.')[0].split('-')
         if len(e_s) > 1:
             epoch = e_s[0]
@@ -206,11 +222,7 @@ class RestorePytorchModelHook(Hook):
         else:
             epoch = 0
             step = e_s[0].split('_')[0]
-
-        if self.global_step_setter is not None:
-            self.global_step_setter(step)
-        self.logger.info("Epoch: {}, Global step: {}"
-                         .format(epoch, step))
+        return epoch, step
 
 
 def strenumerate(*args, **kwargs):
