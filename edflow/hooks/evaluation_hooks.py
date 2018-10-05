@@ -155,7 +155,8 @@ class RestoreModelHook(Hook):
         if self.setstep is not None:
             self.setstep(global_step)
 
-    def parse_global_step(self, checkpoint):
+    @staticmethod
+    def parse_global_step(checkpoint):
         global_step = int(checkpoint.rsplit("-", 1)[1])
         return global_step
 
@@ -214,7 +215,8 @@ class RestorePytorchModelHook(Hook):
     def parse_global_step(self, checkpoint):
         return self.parse_checkpoint(checkpoint)[0]
 
-    def parse_checkpoint(self, checkpoint):
+    @staticmethod
+    def parse_checkpoint(checkpoint):
         e_s = os.path.basename(checkpoint).split('.')[0].split('-')
         if len(e_s) > 1:
             epoch = e_s[0]
@@ -462,3 +464,86 @@ class MetricHook(Hook):
         name = '{:0>6d}_metrics'.format(self.global_step)
         name = os.path.join(self.root, name)
         np.savez_compressed(name, **mean_results)
+
+
+def get_checkpoint_files(checkpoint_root):
+    '''Return {global_step: [files,...]}.
+
+    Args:
+        checkpoint_root (str): Path to where the checkpoints live.
+    '''
+    ckpt_root = checkpoint_root
+    files = []
+    checkpoints = []
+    global_steps = []
+    all_files = os.listdir(ckpt_root)
+    for p in all_files:
+        p = os.path.join(ckpt_root, p)
+        if '.ckpt' in p:
+            name, ext = os.path.splitext(p)
+            if not ext == ".ckpt":
+                normalized = name
+                global_step = RestoreTFModelHook.parse_global_step(normalized)
+            else:
+                normalized = p
+                global_step = RestorePytorchModelHook.parse_global_step(normalized)
+            files.append(p)
+            checkpoints.append(normalized)
+            global_steps.append(global_step)
+    stepmap = dict()
+    for step in np.unique(global_steps):
+        stepmap[step] = list()
+    for step, file_ in zip(global_steps, files):
+        stepmap[step].append(file_)
+
+    return stepmap
+
+
+class KeepBestCheckpoints(Hook):
+    '''Waits until a new checkpoint is created, then lets the Iterator
+    continue.'''
+
+    def __init__(self,
+                 checkpoint_root,
+                 metric_template,
+                 metric_key,
+                 n_keep = 5):
+        '''Args:
+            checkpoint_root (str): Path to look for checkpoints.
+            metric_template (str): Format string to find metric file.
+            metric_key (str): Key to use from metric file.
+            n_keep (int): Maximum number of checkpoints to keep.
+        '''
+
+        self.root = checkpoint_root
+        self.metric_template = metric_template
+        self.metric_key = metric_key
+        self.n_keep = n_keep
+
+        self.logger = get_logger(self)
+
+    def get_loss(self, step):
+        try:
+            loss = np.load(self.metric_template.format(step))[self.metric_key][0]
+        except FileNotFoundError:
+            loss = None
+        return loss
+
+    def after_epoch(self, ep):
+        checkpoint_files = get_checkpoint_files(self.root)
+        steps = sorted(checkpoint_files.keys())
+        losses = [self.get_loss(step) for step in steps]
+        valid = [i for i in range(len(steps)) if losses[i] is not None]
+        steps = [steps[i] for i in valid]
+        losses = [losses[i] for i in valid]
+
+        steps = [s for _, s in sorted(zip(losses, steps), key = lambda x: x[0])]
+        remove_steps = steps[self.n_keep:]
+        remove_files = list()
+        for step in remove_steps:
+            remove_files += checkpoint_files[step]
+        
+        self.logger.info("Removing files:")
+        self.logger.info(remove_files)
+        for file_ in remove_files:
+            os.remove(file_)
