@@ -24,17 +24,14 @@ class WaitForCheckpointHook(Hook):
     '''Waits until a new checkpoint is created, then lets the Iterator
     continue.'''
 
-    # TODO: Is basename needed? -> Remove
     def __init__(self,
                  checkpoint_root,
-                 base_name,
                  filter_cond=lambda c: True,
                  interval=5,
-                 add_sec=5):
+                 add_sec=5,
+                 callback=None):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
-            base_name (str): Base name of the checkpoints as passed to the
-                corresponding saver.
             filter_cond (Callable): A function used to filter files, to only
                 get the checkpoints that are wanted.
             interval (float): Number of seconds after which to check for a new
@@ -42,15 +39,17 @@ class WaitForCheckpointHook(Hook):
             add_sec (float): Number of seconds to wait, after a checkpoint is
                 found, to avoid race conditions, if the checkpoint is still
                 being written at the time it's meant to be read.
+            callback (Callable): Callback called with path of found
+                checkpoint.
         '''
 
         self.root = checkpoint_root
-        self.base_name = base_name
         self.fcond = filter_cond
         self.sleep_interval = interval
         self.additional_wait = add_sec
+        self.callback = callback
 
-        self.logger = get_logger(self, 'latest_eval')
+        self.logger = get_logger(self)
 
         self.latest_checkpoint = None
 
@@ -64,6 +63,9 @@ class WaitForCheckpointHook(Hook):
             if latest_checkpoint != self.latest_checkpoint:
                 self.latest_checkpoint = latest_checkpoint
                 time.sleep(self.additional_wait)
+                self.logger.info("Found new checkpoint: {}".format(latest_checkpoint))
+                if self.callback is not None:
+                    self.callback(latest_checkpoint)
                 break
 
     def before_epoch(self, ep):
@@ -85,8 +87,7 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
     ckpt_root = checkpoint_root
     checkpoints = []
     all_files = os.listdir(ckpt_root)
-    filtered_files = filter(filter_cond, all_files)
-    for p in filtered_files:
+    for p in all_files:
         p = os.path.join(ckpt_root, p)
         if '.ckpt' in p:
             try:
@@ -98,6 +99,7 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
             if not ext == ".ckpt":
                 p = name
             checkpoints += [[p, mt]]
+    checkpoints = [ckpt for ckpt in checkpoints if filter_cond(ckpt[0])]
 
     if len(checkpoints) > 0:
         checkpoints = sorted(checkpoints, key=lambda pt: -pt[1])
@@ -105,35 +107,58 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
     else:
         latest = None
 
-    print('latest', latest)
-
     return latest
 
 
 class RestoreModelHook(Hook):
-    '''Restores from a checkpoint at each epoch.'''
+    '''Restores a TensorFlow model from a checkpoint at each epoch. Can also
+    be used as a functor.'''
 
-    def __init__(self, variables, checkpoint_path):
+    def __init__(self,
+                 variables,
+                 checkpoint_path,
+                 filter_cond=lambda c: True,
+                 global_step_setter=None):
         '''Args:
             variables (list): tf.Variable to be loaded from the checkpoint.
             checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint.
+                stored or explicit checkpoint. Ignored if used as functor.
+            filter_cond (Callable): A function used to filter files, to only
+                get the checkpoints that are wanted. Ignored if used as
+                functor.
+            global_step_setter (Callable): Callback to set global_step.
         '''
         self.root = checkpoint_path
+        self.fcond = filter_cond
+        self.setstep = global_step_setter
 
-        self.logger = get_logger(self, 'latest_eval')
+        self.logger = get_logger(self)
 
         self.saver = tf.train.Saver(variables)
 
-    def before_epoch(self, ep):
-        if ep == 0:
-            self.session = tf.get_default_session()
+    @property
+    def session(self):
+        if not hasattr(self, "_session"):
+            self._session = tf.get_default_session()
+        return self._session
 
-        checkpoint = tf.train.latest_checkpoint(self.root)
+    def before_epoch(self, ep):
+        #checkpoint = tf.train.latest_checkpoint(self.root)
+        checkpoint = get_latest_checkpoint(self.root, self.fcond)
+        self(checkpoint)
+
+    def __call__(self, checkpoint):
         self.saver.restore(self.session, checkpoint)
         self.logger.info("Restored model from {}".format(checkpoint))
-        global_step = self.session.run(tf.train.get_or_create_global_step())
+        global_step = self.parse_global_step(checkpoint)
         self.logger.info("Global step: {}".format(global_step))
+        if self.setstep is not None:
+            self.setstep(global_step)
+
+    def parse_global_step(self, checkpoint):
+        global_step = int(checkpoint.rsplit("-", 1)[1])
+        return global_step
+
 
 
 # Simple renaming for consistency
@@ -145,7 +170,8 @@ RestoreTFModelHook = RestoreModelHook
 # TODO Test filtering for multiple models
 # TODO Set Global Step
 class RestorePytorchModelHook(Hook):
-    '''Restores from a checkpoint at each epoch.'''
+    '''Restores a PyTorch model from a checkpoint at each epoch. Can also be
+    used as a functor.'''
 
     def __init__(self,
                  model,
@@ -155,26 +181,40 @@ class RestorePytorchModelHook(Hook):
         '''Args:
             model (torch.nn.Module): Model to initialize
             checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint.
+                stored or explicit checkpoint. Ignored if used as functor.
             filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted.
+                get the checkpoints that are wanted. Ignored if used as
+                functor.
             global_step_setter (Callable): Function, that the retrieved global
                 step can be passed to.
         '''
         self.root = checkpoint_path
         self.fcond = filter_cond
 
-        self.logger = get_logger(self, 'latest_eval')
+        self.logger = get_logger(self)
 
         self.model = model
         self.global_step_setter = global_step_setter
 
     def before_epoch(self, ep):
         checkpoint = get_latest_checkpoint(self.root, self.fcond)
+        self(checkpoint)
 
+    def __call__(self, checkpoint):
         self.model.load_state_dict(torch.load(checkpoint))
         self.logger.info("Restored model from {}".format(checkpoint))
 
+        epoch, step = self.parse_checkpoint(checkpoint)
+
+        if self.global_step_setter is not None:
+            self.global_step_setter(step)
+        self.logger.info("Epoch: {}, Global step: {}"
+                         .format(epoch, step))
+
+    def parse_global_step(self, checkpoint):
+        return self.parse_checkpoint(checkpoint)[0]
+
+    def parse_checkpoint(self, checkpoint):
         e_s = os.path.basename(checkpoint).split('.')[0].split('-')
         if len(e_s) > 1:
             epoch = e_s[0]
@@ -183,10 +223,7 @@ class RestorePytorchModelHook(Hook):
             epoch = 0
             step = e_s[0].split('_')[0]
 
-        if self.global_step_setter is not None:
-            self.global_step_setter(int(step))
-        self.logger.info("Epoch: {}, Global step: {}"
-                         .format(epoch, step))
+        return epoch, step
 
 
 def strenumerate(*args, **kwargs):
