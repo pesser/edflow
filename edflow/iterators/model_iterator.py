@@ -209,6 +209,9 @@ class PyHookedModelIterator(object):
     def get_global_step(self, *args, **kwargs):
         return self._global_step
 
+    def set_global_step(self, step):
+        self._global_step = step
+
     def increment_global_step(self, *args, **kwargs):
         self._global_step += 1
         return self._global_step
