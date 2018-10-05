@@ -213,7 +213,8 @@ class PyHookedModelIterator(object):
         self._global_step = step
 
     def increment_global_step(self, *args, **kwargs):
-        self._global_step += 1
+        if not self.config.get("test_mode", False):
+            self._global_step += 1
         return self._global_step
 
     def make_feeds(self, batch):
