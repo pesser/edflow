@@ -107,13 +107,14 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
 class RestoreModelHook(Hook):
     '''Restores from a checkpoint at each epoch.'''
 
-    def __init__(self, variables, checkpoint_path):
+    def __init__(self, variables, checkpoint_path, global_step_setter):
         '''Args:
             variables (list): tf.Variable to be loaded from the checkpoint.
             checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint.
         '''
         self.root = checkpoint_path
+        self.setstep = global_step_setter
 
         self.logger = get_logger(self, 'latest_eval')
 
@@ -126,8 +127,10 @@ class RestoreModelHook(Hook):
         checkpoint = tf.train.latest_checkpoint(self.root)
         self.saver.restore(self.session, checkpoint)
         self.logger.info("Restored model from {}".format(checkpoint))
-        global_step = self.session.run(tf.train.get_or_create_global_step())
+        #global_step = self.session.run(tf.train.get_or_create_global_step())
+        global_step = int(checkpoint.rsplit("-", 1)[1])
         self.logger.info("Global step: {}".format(global_step))
+        self.setstep(global_step)
 
 
 # Simple renaming for consistency
