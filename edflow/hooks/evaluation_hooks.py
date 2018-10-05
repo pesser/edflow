@@ -28,7 +28,7 @@ class WaitForCheckpointHook(Hook):
     def __init__(self,
                  checkpoint_root,
                  base_name,
-                 filter_cond: lambda c: True,
+                 filter_cond=lambda c: True,
                  interval=5,
                  add_sec=5):
         '''Args:
@@ -85,7 +85,7 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
     ckpt_root = checkpoint_root
     checkpoints = []
     all_files = os.listdir(ckpt_root)
-    filtered_files = filter(all_files, filter_cond)
+    filtered_files = filter(filter_cond, all_files)
     for p in filtered_files:
         p = os.path.join(ckpt_root, p)
         if '.ckpt' in p:
@@ -105,6 +105,8 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
     else:
         latest = None
 
+    print('latest', latest)
+
     return latest
 
 
@@ -113,7 +115,7 @@ class RestoreModelHook(Hook):
 
     def __init__(self, variables, checkpoint_path):
         '''Args:
-            variables (list): tf.Variables to be loaded from the checkpoint.
+            variables (list): tf.Variable to be loaded from the checkpoint.
             checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint.
         '''
