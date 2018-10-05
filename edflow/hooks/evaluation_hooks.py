@@ -223,7 +223,7 @@ class RestorePytorchModelHook(Hook):
             epoch = 0
             step = e_s[0].split('_')[0]
 
-        return epoch, step
+        return int(epoch), int(step)
 
 
 def strenumerate(*args, **kwargs):
