@@ -20,6 +20,10 @@ from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 
 sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
+def update_config(config, options):
+    if options is not None:
+        for option in options:
+            config.update(yaml.load(option))
 
 def main(opt):
     # Project manager
@@ -30,6 +34,7 @@ def main(opt):
         # get path to implementation
         with open(opt.train) as f:
             config = yaml.load(f)
+            update_config(config, opt.option)
             impl = config["model"]
             name = config.get("experiment_name", None)
         # if it looks like a package path, take its root as the code dir
@@ -67,6 +72,7 @@ def main(opt):
             checkpoint = None
         with open(opt.train) as f:
             config = yaml.load(f)
+            update_config(config, opt.option)
 
         logger.info("Training config: {}".format(opt.train))
         logger.info(yaml.dump(config))
@@ -84,6 +90,7 @@ def main(opt):
     for eval_idx, eval_config in enumerate(opt.eval):
         with open(eval_config) as f:
             config = yaml.load(f)
+            update_config(config, opt.option)
         logger.info("Evaluation config: {}".format(eval_config))
         logger.info(yaml.dump(config))
         nogpu = len(processes) > 0 or opt.nogpu
@@ -143,5 +150,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--checkpoint", help="path to existing checkpoint")
     parser.add_argument("-r", "--retrain", action = "store_true", help="reset global step")
     parser.add_argument("--nogpu", action = "store_true", help="disable gpu for tensorflow")
+    parser.add_argument("--option", "-o", action = "append",
+            help="additional key: value options to update all config with")
     opt = parser.parse_args()
     main(opt)
