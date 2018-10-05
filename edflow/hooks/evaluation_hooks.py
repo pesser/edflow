@@ -184,7 +184,7 @@ class RestorePytorchModelHook(Hook):
             step = e_s[0].split('_')[0]
 
         if self.global_step_setter is not None:
-            self.global_step_setter(step)
+            self.global_step_setter(int(step))
         self.logger.info("Epoch: {}, Global step: {}"
                          .format(epoch, step))
 
