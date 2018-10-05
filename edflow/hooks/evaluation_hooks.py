@@ -212,7 +212,7 @@ class RestorePytorchModelHook(Hook):
                          .format(epoch, step))
 
     def parse_global_step(self, checkpoint):
-        return parse_checkpoint(checkpoint)[0]
+        return self.parse_checkpoint(checkpoint)[0]
 
     def parse_checkpoint(self, checkpoint):
         e_s = os.path.basename(checkpoint).split('.')[0].split('-')
@@ -222,7 +222,8 @@ class RestorePytorchModelHook(Hook):
         else:
             epoch = 0
             step = e_s[0].split('_')[0]
-        return epoch, step
+
+        return int(epoch), int(step)
 
 
 def strenumerate(*args, **kwargs):

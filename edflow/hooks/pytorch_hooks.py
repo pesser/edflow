@@ -47,7 +47,7 @@ class PyCheckpointHook(Hook):
             self.save()
 
     def after_step(self, step, last_results):
-        self.step = retrieve(last_results, 'global_step')
+        self.step = retrieve('global_step', last_results)
         if self.interval is not None \
                 and step % self.interval == 0:
             self.save()
@@ -123,3 +123,22 @@ class PyLoggingHook(Hook):
             for key in self.log_keys:
                 value = retrieve(key, last_results)
                 self.logger.info('{}: {}'.format(key, value))
+
+
+class ToNumpyHook(Hook):
+    '''Converts all pytorch Variables and Tensors in the results to numpy
+    arrays and leaves the rest as is.'''
+
+    def after_step(self, step, results):
+        def convert(var_or_tens):
+            if hasattr(var_or_tens, 'cpu'):
+                var_or_tens = var_or_tens.cpu()
+
+            if isinstance(var_or_tens, torch.autograd.Variable):
+                return var_or_tens.data.numpy()
+            elif isinstance(var_or_tens, torch.Tensor):
+                return var_or_tens.numpy()
+            else:
+                return var_or_tens
+
+        walk(results, convert, inplace=True)
