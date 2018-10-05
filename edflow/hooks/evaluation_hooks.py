@@ -59,6 +59,7 @@ class WaitForCheckpointHook(Hook):
             if latest_checkpoint != self.latest_checkpoint:
                 self.latest_checkpoint = latest_checkpoint
                 time.sleep(self.additional_wait)
+                self.logger.info("Found new checkpoint: {}".format(latest_checkpoint))
                 break
 
     def before_epoch(self, ep):
@@ -99,8 +100,6 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
         latest = checkpoints[0][0]
     else:
         latest = None
-
-    print('latest', latest)
 
     return latest
 
