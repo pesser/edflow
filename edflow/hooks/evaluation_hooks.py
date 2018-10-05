@@ -149,11 +149,15 @@ class RestorePytorchModelHook(Hook):
                  model,
                  checkpoint_path,
                  filter_cond=lambda c: True,
-                 global_step=None):
+                 global_step_setter=None):
         '''Args:
             model (torch.nn.Module): Model to initialize
             checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint.
+            filter_cond (Callable): A function used to filter files, to only
+                get the checkpoints that are wanted.
+            global_step_setter (Callable): Function, that the retrieved global
+                step can be passed to.
         '''
         self.root = checkpoint_path
         self.fcond = filter_cond
@@ -161,7 +165,7 @@ class RestorePytorchModelHook(Hook):
         self.logger = get_logger(self, 'latest_eval')
 
         self.model = model
-        self.global_step = global_step
+        self.global_step_setter = global_step_setter
 
     def before_epoch(self, ep):
         checkpoint = get_latest_checkpoint(self.root, self.fcond)
@@ -170,14 +174,17 @@ class RestorePytorchModelHook(Hook):
         self.logger.info("Restored model from {}".format(checkpoint))
 
         e_s = os.path.basename(checkpoint).split('.')[0].split('-')
-        epoch = e_s[0]
-        step = e_s[1].split('_')[0]
-        global_step = step
-        self.logger.info("Epoch: {}, Step: {}, Global step: {}"
-                         .format(epoch, step, global_step))
+        if len(e_s) > 1:
+            epoch = e_s[0]
+            step = e_s[1].split('_')[0]
+        else:
+            epoch = 0
+            step = e_s[0].split('_')[0]
 
-        if self.global_step is not None:
-            self.global_step = global_step
+        if self.global_step_setter is not None:
+            self.global_step_setter(step)
+        self.logger.info("Epoch: {}, Global step: {}"
+                         .format(epoch, step))
 
 
 def strenumerate(*args, **kwargs):
