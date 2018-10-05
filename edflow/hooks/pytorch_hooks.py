@@ -47,7 +47,7 @@ class PyCheckpointHook(Hook):
             self.save()
 
     def after_step(self, step, last_results):
-        self.step = step
+        self.step = retrieve(last_results, 'global_step')
         if self.interval is not None \
                 and step % self.interval == 0:
             self.save()
