@@ -24,17 +24,13 @@ class WaitForCheckpointHook(Hook):
     '''Waits until a new checkpoint is created, then lets the Iterator
     continue.'''
 
-    # TODO: Is basename needed? -> Remove
     def __init__(self,
                  checkpoint_root,
-                 base_name,
                  filter_cond=lambda c: True,
                  interval=5,
                  add_sec=5):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
-            base_name (str): Base name of the checkpoints as passed to the
-                corresponding saver.
             filter_cond (Callable): A function used to filter files, to only
                 get the checkpoints that are wanted.
             interval (float): Number of seconds after which to check for a new
@@ -45,7 +41,6 @@ class WaitForCheckpointHook(Hook):
         '''
 
         self.root = checkpoint_root
-        self.base_name = base_name
         self.fcond = filter_cond
         self.sleep_interval = interval
         self.additional_wait = add_sec
