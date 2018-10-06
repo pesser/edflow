@@ -4,7 +4,7 @@ try:
 except ModuleNotFoundError:
     print("Warning: Could not import torch.")
 import time
-import os
+import os, re
 import numpy as np
 from collections import OrderedDict, namedtuple
 
@@ -73,8 +73,7 @@ class WaitForCheckpointHook(Hook):
 
 
 def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
-    '''Return path to latest checkpoint (file ending in .ckpt) in
-    checkpoint_root dir.
+    '''Return path to name of latest checkpoint in checkpoint_root dir.
 
     Args:
         checkpoint_root (str): Path to where the checkpoints live.
@@ -82,23 +81,41 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
             get the checkpoints that are wanted.
 
     Returns:
-        str: path of the latest checkpoint.
+        str: path of the latest checkpoint. Note that for tensorflow
+            checkpoints this is not an existing file, but
+            path{.index,.meta,data*} should be
     '''
     ckpt_root = checkpoint_root
+
+    all_files = sorted(os.listdir(ckpt_root))
+
+    # get actual files belonging to checkpoint as well as normalized name as
+    # used by tf.Saver.restore
+    checkpoint_files = list()
+    checkpoint_names = list()
+    for f in all_files:
+        if f.endswith(".ckpt"):
+            checkpoint_files.append(f)
+            checkpoint_names.append(f)
+        else:
+            # check if filename matches tensorflow checkpoint of form
+            # name.ckpt-300.index and continue with name.ckpt-300
+            match = re.match(r"(.+\.ckpt-[0-9]+)\.index$", f)
+            if match:
+                checkpoint_files.append(f)
+                checkpoint_names.append(match.group(1))
+
+    # convert to list of pairs [name, timestamp of file] to retrieve latest
     checkpoints = []
-    all_files = os.listdir(ckpt_root)
-    for p in all_files:
-        p = os.path.join(ckpt_root, p)
-        if '.ckpt' in p:
-            try:
-                mt = os.path.getmtime(p)
-            except FileNotFoundError:
-                # checkpoint was deleted, make it infinitely old
-                mt = -float("inf")
-            name, ext = os.path.splitext(p)
-            if not ext == ".ckpt":
-                p = name
-            checkpoints += [[p, mt]]
+    for file_, name in zip(checkpoint_files, checkpoint_names):
+        file_ = os.path.join(ckpt_root, file_)
+        name = os.path.join(ckpt_root, name)
+        try:
+            mt = os.path.getmtime(file_)
+        except FileNotFoundError:
+            # checkpoint was deleted, make it infinitely old
+            mt = -float("inf")
+        checkpoints += [[name, mt]]
     checkpoints = [ckpt for ckpt in checkpoints if filter_cond(ckpt[0])]
 
     if len(checkpoints) > 0:
@@ -537,7 +554,8 @@ class KeepBestCheckpoints(Hook):
         steps = [steps[i] for i in valid]
         losses = [losses[i] for i in valid]
 
-        steps = [s for _, s in sorted(zip(losses, steps), key = lambda x: x[0])]
+        loss_steps = sorted(zip(losses, steps), key = lambda x: x[0])
+        steps = [s for _, s in loss_steps]
         remove_steps = steps[self.n_keep:]
         remove_files = list()
         for step in remove_steps:
@@ -547,3 +565,7 @@ class KeepBestCheckpoints(Hook):
         self.logger.info(remove_files)
         for file_ in remove_files:
             os.remove(file_)
+
+        best_ls = loss_steps[0]
+        self.logger.info("Current best: {} = {} @ global step {}".format(
+            self.metric_key, best_ls[0], best_ls[1]))
