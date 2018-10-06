@@ -517,8 +517,8 @@ def get_checkpoint_files(checkpoint_root):
 
 
 class KeepBestCheckpoints(Hook):
-    '''Waits until a new checkpoint is created, then lets the Iterator
-    continue.'''
+    '''Tries to find a metric for all checkpoints and keeps the n_keep best
+    checkpoints and the latest checkpoint.'''
 
     def __init__(self,
                  checkpoint_root,
@@ -554,9 +554,12 @@ class KeepBestCheckpoints(Hook):
         steps = [steps[i] for i in valid]
         losses = [losses[i] for i in valid]
 
+        latest_step = max(steps)
+
         loss_steps = sorted(zip(losses, steps), key = lambda x: x[0])
         steps = [s for _, s in loss_steps]
         remove_steps = steps[self.n_keep:]
+        remove_steps = [step for step in remove_steps if not step == latest_step]
         remove_files = list()
         for step in remove_steps:
             remove_files += checkpoint_files[step]
