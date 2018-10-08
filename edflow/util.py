@@ -78,7 +78,6 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):
     else:
         def call(key, value):
             key = os.path.join(prev_key, key)
-            print(key)
             if isinstance(value, (list, dict)):
                 return walk(value, fn, inplace, pass_key=True, prev_key=key)
             else:
@@ -133,11 +132,17 @@ def retrieve(key, list_or_dict, splitval='/'):
 
     keys = key.split(splitval)
 
-    for key in keys:
-        if isinstance(list_or_dict, dict):
-            list_or_dict = list_or_dict[key]
-        else:
-            list_or_dict = list_or_dict[int(key)]
+    try:
+        visited = []
+        for key in keys:
+            if isinstance(list_or_dict, dict):
+                list_or_dict = list_or_dict[key]
+            else:
+                list_or_dict = list_or_dict[int(key)]
+            visited += [key]
+    except Exception as e:
+        print('Key not found: {}, seen: {}'.format(keys, visited))
+        raise e
 
     return list_or_dict
 
