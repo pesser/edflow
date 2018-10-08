@@ -135,10 +135,8 @@ def retrieve(key, list_or_dict, splitval='/'):
 
     for key in keys:
         if isinstance(list_or_dict, dict):
-            print(key, 'in', list_or_dict.keys())
             list_or_dict = list_or_dict[key]
         else:
-            print(key, 'in', (list_or_dict))
             list_or_dict = list_or_dict[int(key)]
 
     return list_or_dict
