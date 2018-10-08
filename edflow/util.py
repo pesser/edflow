@@ -31,13 +31,13 @@ def make_linear_var(step,
     return tf.clip_by_value(linear, clip_min, clip_max)
 
 
-def walk(dict_or_list, fn, inplace=False):
+def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):
     '''Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
     Example:
 
-    :codeblock: python
+    ..codeblock:: python
 
     dol = {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
 
@@ -59,35 +59,58 @@ def walk(dict_or_list, fn, inplace=False):
         inplace (bool): If False, a new object with the same structure
             and the results of fn at the leaves is created. If True the leaves
             are replaced by the results of fn.
+        pass_key (bool): Also passes the key or index of the leave element to
+            ``fn``.
+        prev_key (str): If ``pass_key == True`` keys of parent nodes are passed
+            to calls of ``walk`` on child nodes to accumulate the keys.
 
     Returns:
         dict or list: The resulting nested list-dict-object with the results of
             fn at its leaves.
     '''
 
-    def call(value):
-        if isinstance(value, (list, dict)):
-            return walk(value, fn)
-        else:
-            return fn(value)
-
-    if not inplace:
-        if isinstance(dict_or_list, list):
-            results = [call(val) for val in dict_or_list]
-        elif isinstance(dict_or_list, dict):
-            results = {k: call(val) for k, val in dict_or_list.items()}
-        else:
-            results = fn(dict_or_list)
+    if not pass_key:
+        def call(value):
+            if isinstance(value, (list, dict)):
+                return walk(value, fn, inplace)
+            else:
+                return fn(value)
     else:
-        if isinstance(dict_or_list, list):
-            for i, val in enumerate(dict_or_list):
-                dict_or_list[i] = call(val)
-        elif isinstance(dict_or_list, dict):
-            for k, val in dict_or_list.items():
-                dict_or_list[k] = call(val)
-        else:
-            dict_or_list = fn(dict_or_list)
+        def call(key, value):
+            key = os.path.join(prev_key, key)
+            print(key)
+            if isinstance(value, (list, dict)):
+                return walk(value, fn, inplace, pass_key=True, prev_key=key)
+            else:
+                return fn(key, value)
 
+    if isinstance(dict_or_list, list):
+        results = []
+        for i, val in strenumerate(dict_or_list):
+            result = call(i, val) if pass_key else call(val)
+            results += [result]
+            if inplace:
+                dict_or_list[int(i)] = result
+    elif isinstance(dict_or_list, dict):
+        results = {}
+        for key, val in dict_or_list.items():
+            result = call(key, val) if pass_key else call(val)
+            results[key] = result
+            if inplace:
+                dict_or_list[key] = result
+    else:
+        if not inplace:
+            if not pass_key:
+                results = fn(dict_or_list)
+            else:
+                results = fn(prev_key, dict_or_list)
+        else:
+            if not pass_key:
+                dict_or_list = fn(dict_or_list)
+            else:
+                dict_or_list = fn(prev_key, dict_or_list)
+
+    if inplace:
         results = dict_or_list
 
     return results
@@ -112,11 +135,34 @@ def retrieve(key, list_or_dict, splitval='/'):
 
     for key in keys:
         if isinstance(list_or_dict, dict):
+            print(key, 'in', list_or_dict.keys())
             list_or_dict = list_or_dict[key]
         else:
+            print(key, 'in', (list_or_dict))
             list_or_dict = list_or_dict[int(key)]
 
     return list_or_dict
+
+
+def contains_key(nested_thing, key, splitval='/'):
+    '''Tests if the path like key can find an object in the nested_thing.
+    Has the same signature as :function:`retrieve`.'''
+    try:
+        retrieve(nested_thing, key, splitval)
+        return True
+    except:
+        return False
+
+
+def strenumerate(iterable):
+    '''Works just as enumerate, but the returned index is a string.
+
+    Args:
+        iterable (Iterable): An (guess what) iterable object.
+    '''
+
+    for i, val in enumerate(iterable):
+        yield str(i), val
 
 
 def cached_function(fn):
