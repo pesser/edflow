@@ -1,9 +1,5 @@
-import datetime
-import glob
 import logging
 import os
-import shutil
-import sys
 from tqdm import tqdm
 
 from edflow.project_manager import ProjectManager
@@ -25,6 +21,7 @@ def _init_project(out_base_dir):
     P = ProjectManager(out_base_dir)
 
     return P.root
+
 
 def _get_logger(name, out_dir, pos=4):
     '''Creates a logger the way it's meant to be.'''
@@ -48,7 +45,8 @@ def _get_logger(name, out_dir, pos=4):
 
 class LogSingleton(object):
     exists = False
-    default = "root" # default directory of ProjectManager to log into
+    default = "root"  # default directory of ProjectManager to log into
+
     def __init__(self, out_base_dir=None, level=logging.DEBUG, write_pos=4):
         if self.exists or out_base_dir is None:
             pass
@@ -64,7 +62,7 @@ class LogSingleton(object):
 
     def get(self, name, which=None):
         '''Create logger, set level.
-        
+
         Args:
             name (str or object): Name of the logger. If not a string, the name
                 of the given object class is used.
@@ -87,22 +85,25 @@ def get_default_logger():
     default_log_dir, default_logger = LogSingleton('logs').get('default')
     return default_log_dir, default_logger
 
-def init_project(base_dir, code_root = ".", postfix = None):
+
+def init_project(base_dir, code_root=".", postfix=None):
     '''Must be called at the very beginning of a script.'''
-    P = ProjectManager(base_dir, code_root = code_root, postfix = postfix)
+    P = ProjectManager(base_dir, code_root=code_root, postfix=postfix)
     LogSingleton(P.root)
     return P
 
-def use_project(project_dir, postfix = None):
+
+def use_project(project_dir, postfix=None):
     '''Must be called at the very beginning of a script.'''
-    P = ProjectManager(given_directory=project_dir, postfix = postfix)
+    P = ProjectManager(given_directory=project_dir, postfix=postfix)
     LogSingleton(P.root)
     return P
+
 
 def get_logger(name, which=None):
     '''Creates a logger, which shares its output directory with all other
     loggers.
-    
+
     Args:
         name (str): Name of the logger.
         which (str): Any subdirectory of the project.
