@@ -14,10 +14,10 @@ import sys  # noqa
 import argparse  # noqa
 import yaml  # noqa
 
-# import tensorflow as tf
 from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
+from edflow.hooks.evaluation_hooks import get_latest_checkpoint  # noqa
 
 sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
@@ -72,8 +72,7 @@ def main(opt):
         if opt.checkpoint is not None:
             checkpoint = opt.checkpoint
         elif opt.project is not None:
-            # TODO remove tf dependency here
-            checkpoint = tf.train.latest_checkpoint(P.checkpoints)
+            checkpoint = get_latest_checkpoint(P.checkpoints)
         else:
             checkpoint = None
         with open(opt.train) as f:

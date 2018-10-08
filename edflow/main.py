@@ -146,6 +146,9 @@ def _test(config, root, nogpu=False, bar_position=0):
     next(batches)
     batches.reset()
 
+    logger.info("Initializing model.")
+    # currently initialize is not called here because we assume that checkpoint
+    # restoring is handled by RestoreCheckpointHook
     Model = implementations["model"](config)
 
     config["hook_freq"] = 1

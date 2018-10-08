@@ -402,6 +402,37 @@ class ProcessedDataset(DatasetMixin):
         return self.data.labels
 
 
+class ExtraLabelsDataset(DatasetMixin):
+    """A dataset with extra labels added."""
+    def __init__(self, data, labeler):
+        self.data = data
+        self._labeler = labeler
+        self._new_keys = sorted(self._labeler(self.data, 0).keys())
+        self._new_labels = dict()
+        for k in self._new_keys:
+            self._new_labels[k] = [None for _ in range(len(self.data))]
+        for i in range(len(self.data)):
+            new_labels = self._labeler(self.data, i)
+            for k in self._new_keys:
+                self._new_labels[k][i] = new_labels[k]
+        self._labels = dict(self.data.labels)
+        self._labels.update(self._new_labels)
+
+    def get_example(self, i):
+        """Get example and add new labels."""
+        d = self.data.get_example(i)
+        new_labels = dict((k, self._new_labels[k][i]) for k in self._new_labels)
+        d.update(new_labels)
+        return d
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def labels(self):
+        return self._labels
+
+
 class ConcatenatedDataset(DatasetMixin):
     """A dataset which concatenates given datasets."""
     def __init__(self, *datasets, balanced = False):
@@ -641,6 +672,66 @@ def getDebugDataset(config):
     indices = np.arange(config[ks]['debug_length'])
 
     return SubDataset(base_dset, indices)
+
+
+class RandomlyJoinedDataset(DatasetMixin):
+    '''Joins similiar JoinedDataset but randomly selects from possible joins.
+    '''
+    def __init__(self, dataset, key, n_joins):
+        '''Args:
+            dataset: Dataset to join in.
+            key: Key to join on. Must be in dataset labels.
+            n_joins: Number of examples to join.
+        '''
+        self.dataset = dataset
+        self.key = key
+        self.n_joins = n_joins
+
+        labels = np.asarray(dataset.labels[key])
+        unique_labels = np.unique(labels)
+        self.index_map = dict()
+        for value in unique_labels:
+            self.index_map[value] = np.nonzero(labels == value)[0]
+
+
+    def __len__(self):
+        return len(self.dataset)
+
+
+    @property
+    def labels(self):
+        '''Careful this can only give labels of the original item, not the
+        joined ones.'''
+        return self.dataset.labels
+
+
+    def get_example(self, i):
+        example = self.dataset[i]
+        join_value = example[self.key]
+
+        choices = [idx for idx in self.index_map[join_value] if not idx == i]
+        join_indices = self.prng.choice(choices, self.n_joins - 1, replace = False)
+
+        examples = [example] + [self.dataset[idx] for idx in join_indices]
+
+        new_examples = {}
+        for ex in examples:
+            for key, value in ex.items():
+                if key in new_examples:
+                    new_examples[key] += [value]
+                else:
+                    new_examples[key] = [value]
+
+        return new_examples
+
+
+    @property
+    def prng(self):
+        currentpid = os.getpid()
+        if getattr(self, "_initpid", None) != currentpid:
+            self._initpid = currentpid
+            self._prng = np.random.RandomState()
+        return self._prng
 
 
 if __name__ == '__main__':

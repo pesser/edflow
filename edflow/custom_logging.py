@@ -126,6 +126,9 @@ def get_logger(name, which=None, level='info'):
 
     if not L.exists:
         print('Warning: LogSingleton not initialized.')
+        if not isinstance(name, str):
+            name = type(name).__name__
+        logging.basicConfig(level=logging.INFO)
         logger = logging.getLogger(name)
         return logger
 
