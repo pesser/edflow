@@ -85,12 +85,11 @@ class LogSingleton(object):
 
 
 def set_global_stdout_level(level='info'):
-    L = LogSingleton
+    L = LogSingleton()
     level = getattr(logging, level.upper())
 
     L._level = level
     for logger in L.loggers:
-        print(logger)
         logger.handlers[0].setLevel(level)
 
 

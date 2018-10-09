@@ -21,15 +21,17 @@ from edflow.hooks.evaluation_hooks import get_latest_checkpoint  # noqa
 
 sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
+
 def update_config(config, options):
     if options is not None:
         for option in options:
             config.update(yaml.load(option))
 
+
 def main(opt):
     # Project manager
     if opt.project is not None:
-        P = use_project(opt.project, postfix = opt.name)
+        P = use_project(opt.project, postfix=opt.name)
     else:
         assert opt.train is not None
         # get path to implementation
