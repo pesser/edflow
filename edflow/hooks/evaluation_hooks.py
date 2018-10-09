@@ -227,8 +227,9 @@ class RestorePytorchModelHook(Hook):
         self.logger.info("Epoch: {}, Global step: {}"
                          .format(epoch, step))
 
-    def parse_global_step(self, checkpoint):
-        return self.parse_checkpoint(checkpoint)[0]
+    @staticmethod
+    def parse_global_step(checkpoint):
+        return RestorePytorchModelHook.parse_checkpoint(checkpoint)[0]
 
     @staticmethod
     def parse_checkpoint(checkpoint):
@@ -499,8 +500,7 @@ def get_checkpoint_files(checkpoint_root):
                 global_step = RestoreTFModelHook.parse_global_step(normalized)
             else:
                 normalized = p
-                RPM = RestorePytorchModelHook
-                global_step = RPM.parse_global_step(RPM, normalized)
+                global_step = RestorePytorchModelHook.parse_global_step(normalized)
             files.append(p)
             checkpoints.append(normalized)
             global_steps.append(global_step)
