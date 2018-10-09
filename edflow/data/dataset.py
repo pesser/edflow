@@ -300,6 +300,14 @@ class CachedDataset(DatasetMixin):
 
             # after everything is done, we store memory keys seperately for
             # more efficient access
+            # Note that this is always called, in case one wants to add labels
+            # after caching has finished. This will add a new file with the
+            # same name to the zip and it is currently not possible to delete
+            # the old one. Preliminary tests have shown that the read method
+            # returns the newest file if multiple ones are available but this
+            # is _not_ documented or guaranteed in the API. If you experience
+            # problems, try to write a new zip file with desired contents or
+            # delete cached zip and cache again.
             memory_dict = dict()
             if hasattr(self.base_dataset, 'in_memory_keys'):
                 print('Caching Labels.')
