@@ -18,19 +18,20 @@ import yaml  # noqa
 from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
-from edflow.custom_logging import listen_for_key_process  # noqa
 
 sys.path.append(os.getcwd())  # convenience: load implementations from cwd
+
 
 def update_config(config, options):
     if options is not None:
         for option in options:
             config.update(yaml.load(option))
 
+
 def main(opt):
     # Project manager
     if opt.project is not None:
-        P = use_project(opt.project, postfix = opt.name)
+        P = use_project(opt.project, postfix=opt.name)
     else:
         assert opt.train is not None
         # get path to implementation
@@ -107,10 +108,6 @@ def main(opt):
                                          nogpu, bar_position),
                                         JQ, len(processes)))
         processes.append(test_process)
-
-    # # Dynamic change of log level -> Not yet working
-    # log_listener = mp.Process(target=listen_for_key_process)
-    # processes.append(log_listener)
 
     # Take off
     try:

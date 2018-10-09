@@ -85,12 +85,11 @@ class LogSingleton(object):
 
 
 def set_global_stdout_level(level='info'):
-    L = LogSingleton
+    L = LogSingleton()
     level = getattr(logging, level.upper())
 
     L._level = level
     for logger in L.loggers:
-        print(logger)
         logger.handlers[0].setLevel(level)
 
 
@@ -130,45 +129,3 @@ def get_logger(name, which=None, level='info'):
         return logger
 
     return L.get(name, which)
-
-
-def listen_for_key_process():
-    import sys
-    import tty
-    import termios
-
-    def get_ch():
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-    while True:
-        while(True):
-            k = get_ch()
-            if k != '':
-                break
-
-        if k == '\x1b[A':
-            # up
-            LogSingleton._level += 10
-            print('UP')
-        elif k == '\x1b[B':
-            # down
-            LogSingleton._level -= 10
-            print('DOWN')
-        elif k == '\x1b[C':
-            # right
-            pass
-        elif k == '\x1b[D':
-            # left
-            pass
-        else:
-            # not an arrow key!
-            pass
-
-        set_global_stdout_level(LogSingleton._level)
