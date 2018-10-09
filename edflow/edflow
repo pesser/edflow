@@ -25,6 +25,10 @@ def update_config(config, options):
     if options is not None:
         for option in options:
             config.update(yaml.load(option))
+    # single format substitution, does not support nested structures
+    for k, v in config.items():
+        if isinstance(v, str):
+            config[k] = v.format(**config)
 
 def main(opt):
     # Project manager
@@ -56,10 +60,6 @@ def main(opt):
     logger = get_logger('main')
     logger.info(opt)
     logger.info(P)
-
-    logger.info('This is an info statement')
-    logger.debug('This is a debug statement')
-    logger.warn('This is a warn statement')
 
     # Processes
     processes = list()
