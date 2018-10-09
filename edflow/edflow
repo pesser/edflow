@@ -16,6 +16,7 @@ import yaml  # noqa
 
 from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
+from edflow.custom_logging import set_global_stdout_level  # noqa
 from edflow.hooks.evaluation_hooks import get_latest_checkpoint  # noqa
 
 sys.path.append(os.getcwd())  # convenience: load implementations from cwd
@@ -51,9 +52,14 @@ def main(opt):
         P = init_project('logs', code_root=code_root, postfix=name)
 
     # Logger
+    set_global_stdout_level(opt.log_level)
     logger = get_logger('main')
     logger.info(opt)
     logger.info(P)
+
+    logger.info('This is an info statement')
+    logger.debug('This is a debug statement')
+    logger.warn('This is a warn statement')
 
     # Processes
     processes = list()
@@ -151,5 +157,11 @@ if __name__ == "__main__":
     parser.add_argument("--nogpu", action = "store_true", help="disable gpu for tensorflow")
     parser.add_argument("--option", "-o", action = "append",
             help="additional key: value options to update all config with")
+    parser.add_argument('-log', '--log-level',
+                        metavar='LEVEL',
+                        type=str,
+                        choices=['info', 'debug', 'critical'],
+                        default='info',
+                        help='Set the std-out logging level.')
     opt = parser.parse_args()
     main(opt)

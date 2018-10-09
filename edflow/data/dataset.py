@@ -658,6 +658,30 @@ def JoinedDataset(dataset, key, n_joins):
     return dataset
 
 
+def getDebugDataset(config):
+    '''Loads a dataset from the config and makes ist reasonably small.
+    The config syntax works as in :function:`getSeqDataset`. See there for
+    more extensive documentation.
+
+    Args:
+        config (dict): An edflow config, with at least the keys
+            ``debugdataset`` and nested inside it ``dataset``,
+            ``debug_length``, defining the basedataset and its size.
+
+    Returns:
+        :class:`SubDataset`: A dataset based on the basedataset of the specifed
+            length.
+    '''
+
+    ks = 'debugdataset'
+    base_dset = get_implementations_from_config(config[ks],
+                                                ['dataset'])['dataset']
+    base_dset = base_dset(config=config)
+    indices = np.arange(config[ks]['debug_length'])
+
+    return SubDataset(base_dset, indices)
+
+
 class RandomlyJoinedDataset(DatasetMixin):
     '''Joins similiar JoinedDataset but randomly selects from possible joins.
     '''

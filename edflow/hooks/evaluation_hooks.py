@@ -185,8 +185,6 @@ class RestoreModelHook(Hook):
 RestoreTFModelHook = RestoreModelHook
 
 
-# TODO Test filtering for multiple models
-# TODO Set Global Step
 class RestorePytorchModelHook(Hook):
     '''Restores a PyTorch model from a checkpoint at each epoch. Can also be
     used as a functor.'''
@@ -464,8 +462,6 @@ class MetricHook(Hook):
 
         mean_results = {}
         for name, result in self.metric_results.items():
-            self.logger.info('name: {}'.format(name))
-            self.logger.info('result: {}'.format(result))
             results = np.concatenate(result)
             mean = np.mean(results, axis=0)
             var = np.std(results, axis=0)
@@ -503,7 +499,8 @@ def get_checkpoint_files(checkpoint_root):
                 global_step = RestoreTFModelHook.parse_global_step(normalized)
             else:
                 normalized = p
-                global_step = RestorePytorchModelHook.parse_global_step(normalized)
+                RPM = RestorePytorchModelHook
+                global_step = RPM.parse_global_step(RPM, normalized)
             files.append(p)
             checkpoints.append(normalized)
             global_steps.append(global_step)
@@ -563,7 +560,7 @@ class KeepBestCheckpoints(Hook):
         remove_files = list()
         for step in remove_steps:
             remove_files += checkpoint_files[step]
-        
+
         self.logger.info("Removing files:")
         self.logger.info(remove_files)
         for file_ in remove_files:
