@@ -212,6 +212,9 @@ class PyHookedModelIterator(object):
     def set_global_step(self, step):
         self._global_step = step
 
+    def reset_global_step(self):
+        self.set_global_step(0)
+
     def increment_global_step(self, *args, **kwargs):
         if not self.config.get("test_mode", False):
             self._global_step += 1

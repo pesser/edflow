@@ -97,7 +97,10 @@ def _train(config, root, checkpoint=None, retrain=False):
 
     logger.info("Instantiating model.")
     Model = implementations["model"](config)
-    compat_kwargs = dict(hook_freq = config["hook_freq"])
+    if not "hook_freq" in config:
+        config["hook_freq"] = 1
+    compat_kwargs = dict(hook_freq = config["hook_freq"],
+                         num_epochs = config["num_epochs"])
     logger.info("Instantiating iterator.")
     Trainer = implementations["iterator"](config,
                                           root,
@@ -152,11 +155,13 @@ def _test(config, root, nogpu=False, bar_position=0):
     Model = implementations["model"](config)
 
     config["hook_freq"] = 1
+    config["num_epochs"] = 1
     config["nogpu"] = nogpu
     compat_kwargs = dict(
             hook_freq = config["hook_freq"],
             bar_position = bar_position,
-            nogpu = config["nogpu"])
+            nogpu = config["nogpu"],
+            num_epochs = config["num_epochs"])
     HBU_Evaluator = implementations["iterator"](
         config,
         root,
