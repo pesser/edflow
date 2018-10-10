@@ -4,7 +4,7 @@ try:
 except ModuleNotFoundError:
     print("Warning: Could not import torch.")
 import time
-import os, re
+import os, re, pickle
 import numpy as np
 from collections import OrderedDict, namedtuple
 
@@ -229,7 +229,7 @@ class RestorePytorchModelHook(Hook):
 
     @staticmethod
     def parse_global_step(checkpoint):
-        return RestorePytorchModelHook.parse_checkpoint(checkpoint)[0]
+        return RestorePytorchModelHook.parse_checkpoint(checkpoint)[1]
 
     @staticmethod
     def parse_checkpoint(checkpoint):
@@ -521,7 +521,8 @@ class KeepBestCheckpoints(Hook):
                  checkpoint_root,
                  metric_template,
                  metric_key,
-                 n_keep = 5):
+                 n_keep = 5,
+                 lower_is_better = True):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
             metric_template (str): Format string to find metric file.
@@ -533,13 +534,22 @@ class KeepBestCheckpoints(Hook):
         self.metric_template = metric_template
         self.metric_key = metric_key
         self.n_keep = n_keep
+        self.lower_is_better = lower_is_better
 
         self.logger = get_logger(self)
 
     def get_loss(self, step):
+        path = self.metric_template.format(step)
         try:
-            loss = np.load(self.metric_template.format(step))[self.metric_key][0]
+            if path.endswith(".npz"):
+                loss = np.load(path)[self.metric_key][0]
+            else:
+                with open(path, "rb") as f:
+                    loss = pickle.load(f)[self.metric_key][0]
+            if not self.lower_is_better:
+                loss = -1.0*loss
         except FileNotFoundError:
+            self.logger.debug("Could not find {}".format(path))
             loss = None
         return loss
 
