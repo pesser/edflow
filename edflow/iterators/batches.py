@@ -85,6 +85,7 @@ class Iterator(MultiprocessIterator):
                     print(k)
                     for d in lod:
                         print(d[k])
+                    print(k)
             raise
 
     def __next__(self):
