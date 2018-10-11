@@ -263,7 +263,7 @@ class CachedDataset(DatasetMixin):
         indeces and stores the examples in a file, as well as the labels.'''
 
         if not os.path.isfile(self.store_path) or self.force_cache:
-            print("Caching {}".format(self.base_dataset.name))
+            print("Caching {}".format(self.store_path))
             manager = make_server_manager()
             inqueue = manager.get_inqueue()
             outqueue = manager.get_outqueue()
@@ -354,6 +354,66 @@ class CachedDataset(DatasetMixin):
         example = pickle.loads(example_file)
 
         return example
+
+
+class PathCachedDataset(CachedDataset):
+    """Used for simplified decorator interface to dataset caching."""
+    def __init__(self,
+                 dataset,
+                 path):
+        self.force_cache = False
+        self.keep_existing = True
+
+        self.base_dataset = dataset
+        self.store_dir = os.path.split(path)[0]
+        self.store_path = path
+
+        self.naming_template = 'example_{}.p'
+        self._labels_name = 'labels.p'
+
+        os.makedirs(self.store_dir, exist_ok=True)
+        self.cache_dataset()
+        self.lenfile = self.store_path + ".p"
+        if not os.path.exists(self.lenfile):
+            with open(self.lenfile, "wb") as f:
+                pickle.dump(len(self.base_dataset), f)
+
+    def __len__(self):
+        if not (self.base_dataset is None or os.path.exists(self.lenfile)):
+            return len(self.base_dataset)
+        if not hasattr(self, "_len"):
+            with open(self.lenfile, "rb") as f:
+                self._len = pickle.load(f)
+        return self._len
+
+
+def cachable(path):
+    """Decorator to cache datasets. If not cached, will start a caching server,
+    subsequent calls will just load from cache. Currently all worker must be
+    able to see the path. Be careful, function parameters are ignored on
+    furture calls.
+    Can be used on any callable that returns a dataset. Currently the path
+    should be the path to a zip file to cache into - i.e. it should end in zip."""
+    def decorator(fn):
+        def wrapped(*args, **kwargs):
+            if os.path.exists(path + ".p"):
+                # cached version ready
+                return PathCachedDataset(None, path)
+            elif os.path.exists(path + "parameters.p"):
+                # zip exists but not pickle with length - caching server
+                # started and we are a worker bee
+                with open(path + "parameters.p", "rb") as f:
+                    args, kwargs = pickle.load(f)
+                return fn(*args, **kwargs)
+            else:
+                # start caching server
+                dataset = fn(*args, **kwargs)
+                os.makedirs(os.path.split(path)[0], exist_ok = True)
+                with open(path + "parameters.p", "wb") as f:
+                    pickle.dump((args, kwargs), f)
+                return PathCachedDataset(dataset, path)
+        return wrapped
+    return decorator
 
 
 class SubDataset(DatasetMixin):

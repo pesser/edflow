@@ -17,7 +17,8 @@ class BaseTrainer(HookedModelIterator):
                  model,
                  hooks=[],
                  hook_freq=100,
-                 bar_position=0):
+                 bar_position=0,
+                 **kwargs):
         '''
         Base class for models in this project. Implementations only need to
         define the make_loss_ops method which has to set the attributes
