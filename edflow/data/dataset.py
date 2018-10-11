@@ -742,27 +742,109 @@ class RandomlyJoinedDataset(DatasetMixin):
         return self._prng
 
 
+class DataFolder(DatasetMixin):
+    '''Given the root of a possibly nested folder containing datafiles and a
+    Callable that generates the labels to the datafile from its full name, this
+    class creates a labeled dataset.
+
+    A filtering of unwanted Data can be achieved by having the ``label_fn``
+    return ``None`` for those specific files. The actual files are only
+    read when ``__getitem__`` is called.'''
+
+    def __init__(self,
+                 image_root,
+                 read_fn,
+                 label_fn,
+                 sort_keys=None,
+                 datum_key='datum',
+                 in_memory_keys=None):
+        '''Args:
+            image_root (str): Root containing the files of interest.
+            read_fn (Callable): Given the path to a file, returns the datum.
+            label_fn (Callable): Given the path to a file, returns a dict of
+                labels. If ``label_fn`` returns ``None``, this file is ignored.
+            sort_keys (list): A hierarchy of keys by which the data in this
+                Dataset are sorted.
+            datum_key (str): The return value of ``read_fn`` can be found under
+                the key ``datum_key`` in the ``dict`` returned by
+                ``__getitem__``.
+            in_memory_keys (list): keys which will be collected from examples
+                when the dataset is cached.
+        '''
+
+        self.root = image_root
+
+        self.read = read_fn
+        self.datum_key = datum_key
+
+        self.label_fn = label_fn
+
+        self.sort_keys = sort_keys
+
+        if in_memory_keys is not None:
+            assert isinstance(in_memory_keys, list)
+            self.in_memory_keys = in_memory_keys
+
+        self._read_labels()
+
+    def _read_labels(self):
+        import operator
+
+        self.data = []
+        for root, dirs, files in os.walk(self.root):
+            for f in files:
+                path = os.path.join(root, f)
+                labels = self.label_fn(path)
+
+                if labels is not None:
+                    datum = {'file_path_': path}
+                    datum.update(labels)
+                    self.data += [datum]
+
+        if self.sort_keys is not None:
+            self.data.sort(key=operator.itemgetter(*self.sort_keys))
+
+    def get_example(self, i):
+        datum = self.data[i]
+        path = datum['file_path_']
+
+        file_content = self.read(path)
+        datum[self.datum_key] = file_content
+
+        return datum
+
+    def __len__(self):
+        return len(self.data)
+
+
 if __name__ == '__main__':
-    from hbu_journal.data.prjoti import CachedPrjoti
+    import matplotlib.pyplot as plt
 
-    prjoti = CachedPrjoti()
-    s_prjoti = SequenceDataset(prjoti, 5, 1)
+    r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
+        'show_vids/cut_selection/fortnite/'
 
-    example = s_prjoti[10]
-    keys = [k for k in example]
+    def rfn(im_path):
+        return plt.imread(im_path)
 
-    keys = sorted(keys)
-    print(keys)
+    def lfn(path):
+        if os.path.isfile(path) and path[-4:] == '.jpg':
+            fname = os.path.basename(path)
+            labels = fname[:-4].split('_')
+            if len(labels) == 3:
+                pid, act, fid = labels
+                beam = False
+            else:
+                pid, act, _, fid = labels
+                beam = True
+            return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
 
-    l = 4
-    for s in range(1, 4):
-        s_prjoti = SequenceDataset(prjoti, l, s)
-        for i in range(0, 4):
-            example = s_prjoti[i]
-            print('Start index: {}, Length: {}, Step: {}'.format(i, l, s))
-            print(example['fid'])
+    D = DataFolder(r,
+                   rfn,
+                   lfn,
+                   ['pid', 'vid', 'fid'])
 
-    print([sorted(k.keys()) for k in s_prjoti[:3]])
-    print([sorted(k.keys()) for k in s_prjoti[[0, 2]]])
-
-    print('len base: {}\nlen seqd: {}'.format(len(prjoti), len(s_prjoti)))
+    for i in range(10):
+        d = D[i]
+        print(',\n '.join(['{}: {}'.format(k, v if not hasattr(v, 'shape')
+                                           else v.shape)
+                                           for k, v in d.items()]))
