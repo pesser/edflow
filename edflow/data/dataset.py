@@ -393,7 +393,8 @@ def cachable(path):
     able to see the path. Be careful, function parameters are ignored on
     furture calls.
     Can be used on any callable that returns a dataset. Currently the path
-    should be the path to a zip file to cache into - i.e. it should end in zip."""
+    should be the path to a zip file to cache into - i.e. it should end in zip.
+    """
     def decorator(fn):
         def wrapped(*args, **kwargs):
             if os.path.exists(path + ".p"):
@@ -408,7 +409,7 @@ def cachable(path):
             else:
                 # start caching server
                 dataset = fn(*args, **kwargs)
-                os.makedirs(os.path.split(path)[0], exist_ok = True)
+                os.makedirs(os.path.split(path)[0], exist_ok=True)
                 with open(path + "parameters.p", "wb") as f:
                     pickle.dump((args, kwargs), f)
                 return PathCachedDataset(dataset, path)
