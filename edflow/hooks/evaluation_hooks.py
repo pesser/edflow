@@ -579,3 +579,7 @@ class KeepBestCheckpoints(Hook):
         best_ls = loss_steps[0]
         self.logger.info("Current best: {} = {} @ global step {}".format(
             self.metric_key, best_ls[0], best_ls[1]))
+        no_improvement_since = latest_step - best_ls[1]
+        if no_improvement_since > 0:
+            self.logger.info("No improvement since {} global steps.".format(
+                no_improvement_since))

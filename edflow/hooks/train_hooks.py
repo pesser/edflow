@@ -1,7 +1,8 @@
 import tensorflow as tf
-import os
+import os, time
 
 from edflow.hooks.hook import Hook
+from edflow.hooks.evaluation_hooks import get_checkpoint_files
 from edflow.custom_logging import get_logger
 from edflow.iterators.batches import plot_batch
 
@@ -164,3 +165,36 @@ class RetrainHook(Hook):
     def after_step(self, step, *args, **kwargs):
         if step == 0 and self.epoch == 0:
             self.logger.info("Reset global_step")
+
+
+class WaitForManager(Hook):
+    '''Wait to make sure checkpoints are not overflowing.'''
+
+    def __init__(self,
+                 checkpoint_root,
+                 max_n,
+                 interval=5):
+        '''Args:
+            checkpoint_root (str): Path to look for checkpoints.
+            max_n (int): Wait as long as there are more than max_n ckpts.
+            interval (float): Number of seconds after which to check for number
+                of checkpoints again.
+        '''
+
+        self.root = checkpoint_root
+        self.max_n = max_n
+        self.sleep_interval = interval
+
+        self.logger = get_logger(self)
+
+    def wait(self):
+        '''Loop until the number of checkpoints got reduced.'''
+        while True:
+            n_ckpts = len(get_checkpoint_files(self.root))
+            if n_ckpts <= self.max_n:
+                break
+            self.logger.info("Found {} checkpoints. Waiting until one is removed.".format(n_ckpts))
+            time.sleep(self.sleep_interval)
+
+    def before_epoch(self, ep):
+        self.wait()
