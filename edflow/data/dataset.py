@@ -749,36 +749,35 @@ class DataFolder(DatasetMixin):
 
     A filtering of unwanted Data can be achieved by having the ``label_fn``
     return ``None`` for those specific files. The actual files are only
-    read when ``__getitem__`` is called.'''
+    read when ``__getitem__`` is called.
+
+    If for example ``label_fn`` returns a dict with the keys ``['a', 'b',
+    'c']`` and ``read_fn`` returns one with keys ``['d', 'e']`` then the dict
+    returned by ``__getitem__`` will contain the keys ``['a', 'b', 'c', 'd',
+    'e', 'file_path_', 'index_']``.
+    '''
 
     def __init__(self,
                  image_root,
                  read_fn,
                  label_fn,
                  sort_keys=None,
-                 datum_key='datum',
                  in_memory_keys=None):
         '''Args:
             image_root (str): Root containing the files of interest.
-            read_fn (Callable): Given the path to a file, returns the datum.
+            read_fn (Callable): Given the path to a file, returns the datum as
+                a dict.
             label_fn (Callable): Given the path to a file, returns a dict of
                 labels. If ``label_fn`` returns ``None``, this file is ignored.
             sort_keys (list): A hierarchy of keys by which the data in this
                 Dataset are sorted.
-            datum_key (str): The return value of ``read_fn`` can be found under
-                the key ``datum_key`` in the ``dict`` returned by
-                ``__getitem__``.
             in_memory_keys (list): keys which will be collected from examples
                 when the dataset is cached.
         '''
 
         self.root = image_root
-
         self.read = read_fn
-        self.datum_key = datum_key
-
         self.label_fn = label_fn
-
         self.sort_keys = sort_keys
 
         if in_memory_keys is not None:
@@ -809,7 +808,7 @@ class DataFolder(DatasetMixin):
         path = datum['file_path_']
 
         file_content = self.read(path)
-        datum[self.datum_key] = file_content
+        datum.update(file_content)
 
         return datum
 
@@ -824,7 +823,7 @@ if __name__ == '__main__':
         'show_vids/cut_selection/fortnite/'
 
     def rfn(im_path):
-        return plt.imread(im_path)
+        return {'image': plt.imread(im_path)}
 
     def lfn(path):
         if os.path.isfile(path) and path[-4:] == '.jpg':
