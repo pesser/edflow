@@ -56,16 +56,20 @@ class CheckpointHook(Hook):
 
     def after_step(self, step, last_results):
         if self.interval is not None \
-                and step % self.interval == 0:
+                and self.global_step() % self.interval == 0:
             self.save()
 
     def save(self):
+        global_step = self.global_step()
+        self.saver.save(self.session, self.savename, global_step=global_step)
+        self.logger.info("Saved model to {}".format(self.savename))
+
+    def global_step(self):
         if isinstance(self.step, tf.Tensor):
             global_step = self.step
         else:
             global_step = self.step()
-        self.saver.save(self.session, self.savename, global_step=global_step)
-        self.logger.info("Saved model to {}".format(self.savename))
+        return global_step
 
 
 class LoggingHook(Hook):
