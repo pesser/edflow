@@ -372,8 +372,11 @@ class PathCachedDataset(CachedDataset):
         self._labels_name = 'labels.p'
 
         os.makedirs(self.store_dir, exist_ok=True)
-        self.cache_dataset()
+
         self.lenfile = self.store_path + ".p"
+        if not os.path.exists(self.lenfile):
+            self.force_cache = True
+        self.cache_dataset()
         if not os.path.exists(self.lenfile):
             with open(self.lenfile, "wb") as f:
                 pickle.dump(len(self.base_dataset), f)
