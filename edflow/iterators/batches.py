@@ -25,6 +25,8 @@ def save_image(x, path):
     x = (x + 1.0) / 2.0
     x = np.clip(255 * x, 0, 255)
     x = np.array(x, dtype = "uint8")
+    if x.shape[-1] == 1:
+        x = np.squeeze(x)
     PIL.Image.fromarray(x).save(path)
 
 

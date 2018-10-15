@@ -451,19 +451,45 @@ class SubDataset(DatasetMixin):
         return self._labels
 
 
+class LabelDataset(DatasetMixin):
+    """A label only dataset to avoid loading unnecessary data."""
+    def __init__(self, data):
+        self.data = data
+        self.keys = sorted(self.data.labels.keys())
+
+    def get_example(self, i):
+        """Return labels of example."""
+        example = dict((k, self.data.labels[k][i]) for k in self.keys)
+        example["base_index_"] = i
+        return example
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        return self.data.labels
+
+
 class ProcessedDataset(DatasetMixin):
     """A dataset with data processing applied."""
-    def __init__(self, data, process):
+    def __init__(self, data, process, update = True):
         self.data = data
         self.process = process
+        self.update = update
 
     def get_example(self, i):
         """Get example and process. Wrapped to make sure stacktrace is
         printed in case something goes wrong and we are in a
         MultiprocessIterator."""
         d = self.data.get_example(i)
-        d.update(self.process(**d))
-        return d
+        p = self.process(**d)
+        if self.update:
+            d.update(p)
+            return d
+        else:
+            return p
 
     def __len__(self):
         return len(self.data)
