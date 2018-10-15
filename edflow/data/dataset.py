@@ -645,7 +645,10 @@ class SequenceDataset(DatasetMixin):
     Given the length of those sequences the number of available examples
     is reduced by this length times the step taken. Additionally each
     example must have a frame id `fid`, by which it can be filtered. This is to
-    ensure that each frame is taken from the same video.'''
+    ensure that each frame is taken from the same video.
+    
+    This class assumes that examples come sequentially with fid and that fid 0
+    exists.'''
 
     def __init__(self, dataset, length, step=1):
         '''Args:
