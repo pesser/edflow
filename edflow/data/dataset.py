@@ -483,7 +483,7 @@ class ProcessedDataset(DatasetMixin):
         """Get example and process. Wrapped to make sure stacktrace is
         printed in case something goes wrong and we are in a
         MultiprocessIterator."""
-        d = self.data.get_example(i)
+        d = self.data[i]
         p = self.process(**d)
         if self.update:
             d.update(p)
