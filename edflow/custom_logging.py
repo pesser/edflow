@@ -48,7 +48,7 @@ class LogSingleton(object):
     exists = False
     default = "root"  # default directory of ProjectManager to log into
 
-    def __init__(self, out_base_dir=None, level=logging.DEBUG, write_pos=4):
+    def __init__(self, out_base_dir=None, level=logging.INFO, write_pos=4):
         if self.exists or out_base_dir is None:
             pass
         else:
