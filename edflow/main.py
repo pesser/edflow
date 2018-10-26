@@ -94,6 +94,10 @@ def _train(config, root, checkpoint=None, retrain=False):
         steps_per_epoch = len(dataset) / config["batch_size"]
         num_epochs = config["num_steps"] / steps_per_epoch
         config["num_epochs"] = math.ceil(num_epochs)
+    else:
+        steps_per_epoch = len(dataset) / config["batch_size"]
+        num_steps = config["num_epochs"] * steps_per_epoch
+        config["num_steps"] = math.ceil(num_steps)
 
     logger.info("Instantiating model.")
     Model = implementations["model"](config)
