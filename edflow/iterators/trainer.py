@@ -1,11 +1,13 @@
 import tensorflow as tf
 
-from edflow.iterators.model_iterator import HookedModelIterator
+from edflow.iterators.model_iterator import HookedModelIterator, TFHookedModelIterator
 from edflow.hooks import LoggingHook, CheckpointHook, RetrainHook
 from edflow.hooks import match_frequency
 from edflow.project_manager import ProjectManager
 from edflow.util import make_linear_var
 
+from edflow.hooks.util_hooks import IntervalHook
+from edflow.hooks.evaluation_hooks import RestoreTFModelHook
 
 P = ProjectManager()
 
@@ -154,3 +156,126 @@ class BaseTrainer(HookedModelIterator):
 
     def get_init_variables(self):
         return [v for v in tf.global_variables() if "__noinit__" not in v.name]
+
+
+
+class TFBaseTrainer(TFHookedModelIterator):
+    """Same but based on TFHookedModelIterator."""
+    def __init__(self, config, root, model, **kwargs):
+        super().__init__(config, root, model, **kwargs)
+        self.setup()
+
+
+    def initialize(self, checkpoint_path = None):
+        """Initialize from scratch or restore and keep restorer around."""
+        if checkpoint_path is None:
+            init_op = tf.variables_initializer(self.get_init_variables())
+            self.session.run(init_op)
+        else:
+            restorer = RestoreTFModelHook(variables = self.get_restore_variables(),
+                                          checkpoint_path = ProjectManager.checkpoints,
+                                          global_step_setter = self.set_global_step)
+            with self.session.as_default():
+                restorer(checkpoint_path)
+
+
+    def step_ops(self):
+        return self.train_op
+
+
+    def make_feeds(self, batch):
+        """Put global step into batches and add all extra required placeholders
+        from batches."""
+        feeds = super().make_feeds(batch)
+        batch["global_step"] = self.get_global_step()
+        for k, v in self.train_placeholders.items():
+            if k in batch:
+                feeds[v] = batch[k]
+        return feeds
+
+
+    def setup(self):
+        """Init train_placeholders, log_ops and img_ops which can be added
+        to."""
+        self.train_placeholders = dict()
+        self.log_ops = dict()
+        self.img_ops = dict()
+        self.create_train_op()
+
+        ckpt_hook = CheckpointHook(
+                root_path = ProjectManager.checkpoints,
+                variables = self.get_restore_variables(),
+                modelname = "model",
+                step = self.get_global_step,
+                interval = self.config.get("ckpt_freq", None),
+                max_to_keep = self.config.get("ckpt_keep", None))
+        self.hooks.append(ckpt_hook)
+
+        loghook = LoggingHook(
+                logs = self.log_ops,
+                scalars = self.log_ops,
+                images = self.img_ops,
+                root_path = ProjectManager.train,
+                interval = 1)
+        ihook = IntervalHook([loghook],
+                interval = 1, modify_each = 1,
+                max_interval = self.config.get("log_freq", 1000),
+                get_step = self.get_global_step)
+        self.hooks.append(ihook)
+
+
+    def create_train_op(self):
+        '''Default optimizer + optimize each submodule'''
+        self.train_placeholders["global_step"] = tf.placeholder(tf.int32, name = "global_step")
+        # workaround of https://github.com/tensorflow/tensorflow/issues/23316
+        self._global_step_variable = tf.Variable(0, dtype = tf.int32, trainable = False)
+        self.global_step = tf.assign(self._global_step_variable, self.train_placeholders["global_step"])
+
+        # Optimizer
+        self.initial_lr = self.config["lr"]
+        self.lr_decay_begin = self.config["lr_decay_begin"]
+        self.lr_decay_end = self.config["lr_decay_end"]
+
+        self.lr = lr = make_linear_var(self.global_step,
+                                       self.lr_decay_begin, self.lr_decay_end,
+                                       self.initial_lr, 0.0,
+                                       0.0, self.initial_lr)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=lr,
+                                                beta1=0.5,
+                                                beta2=0.9)
+
+        # Optimization ops
+        losses = self.make_loss_ops()
+        opt_ops = dict()
+        for k in losses:
+            variables = self.get_trainable_variables(k)
+            opt_op = self.optimizer.minimize(losses[k],
+                                             var_list=variables)
+            opt_ops[k] = opt_op
+        opt_op = tf.group(*opt_ops.values())
+        with tf.control_dependencies([opt_op]):
+            train_op = tf.no_op()
+        self.train_op = train_op
+
+        # add log ops
+        self.log_ops["global_step"] = self.global_step
+        self.log_ops["lr"] = self.lr
+
+
+    def make_loss_ops(self):
+        '''Return per submodule loss. Can add tensors to log_ops and img_ops'''
+        raise NotImplemented()
+
+
+    def get_trainable_variables(self, submodule):
+        trainable_variables = [v for v in tf.trainable_variables()
+                               if v in self.model.variables]
+        return [v for v in trainable_variables if submodule in v.name]
+
+
+    def get_init_variables(self):
+        return [v for v in tf.global_variables() if "__noinit__" not in v.name]
+
+
+    def get_restore_variables(self):
+        return self.get_init_variables()
