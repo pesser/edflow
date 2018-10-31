@@ -200,6 +200,7 @@ class TFBaseTrainer(TFHookedModelIterator):
         self.train_placeholders = dict()
         self.log_ops = dict()
         self.img_ops = dict()
+        self.update_ops = list()
         self.create_train_op()
 
         ckpt_hook = CheckpointHook(
@@ -253,7 +254,7 @@ class TFBaseTrainer(TFHookedModelIterator):
                                              var_list=variables)
             opt_ops[k] = opt_op
         opt_op = tf.group(*opt_ops.values())
-        with tf.control_dependencies([opt_op]):
+        with tf.control_dependencies([opt_op] + self.update_ops):
             train_op = tf.no_op()
         self.train_op = train_op
 
