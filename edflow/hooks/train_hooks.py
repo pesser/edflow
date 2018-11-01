@@ -66,7 +66,7 @@ class CheckpointHook(Hook):
         self.logger.info("Saved model to {}".format(self.savename))
 
     def global_step(self):
-        if isinstance(self.step, tf.Tensor):
+        if isinstance(self.step, tf.Tensor) or isinstance(self.step, tf.Variable):
             global_step = self.step
         else:
             global_step = self.step()

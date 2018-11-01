@@ -339,7 +339,7 @@ class PyHookedModelIterator(object):
 
 class TFHookedModelIterator(PyHookedModelIterator):
     def make_feeds(self, batch):
-        feeds = {pl: batch[name] for name, pl in self.model.inputs.items()}
+        feeds = {pl: batch[name] for name, pl in self.model.inputs.items() if name in batch}
         return feeds
 
     def run(self, fetches, feed_dict):
