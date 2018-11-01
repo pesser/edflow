@@ -690,6 +690,54 @@ class SequenceDataset(DatasetMixin):
         return self.dset[i]
 
 
+class UnSequenceDataset(DatasetMixin):
+    '''Flattened version of a :class:`SequenceDataset`.
+    Adds a new key ``seq_idx`` to each example, corresponding to the sequence
+    index and a key ``example_idx`` corresponding to the original index.
+    The ordering of the dataset is kept and sequence examples are ordererd as
+    in the sequence they are taken from.
+
+    .. warning:: This will not create the original non-sequence dataset! The
+        new dataset contains ``sequence-length x len(SequenceDataset)``
+        examples.
+
+    If the original dataset would be represented as a 2d numpy array the 
+    ``UnSequence`` version of it would be the concatenation of all its rows:
+
+    .. codeblock:: python
+
+        a = np.arange(12)
+        seq_dataset = a.reshape([3, 4])
+        unseq_dataset = np.concatenate(seq_dataset, axis=-1)
+
+        np.all(a == unseq_dataset))  # True
+    '''
+
+    def __init__(self, seq_dataset):
+        self.data = seq_dataset
+        self.seq_len = self.data.length
+
+        self._labels = self.data.labels
+        for k, v in self.labels.items():
+            self._labels[k] = np.concatenate(v, axis=-1)
+
+    @property
+    def labels(self):
+        return self._labels
+
+    def __len__(self):
+        return self.seq_len * len(self.data)
+
+    def get_example(self, i):
+        example_idx = i // self.seq_len
+        seq_idx = i % self.seq_len
+
+        example = self.data[i][seq_idx]
+        example.update({'seq_id': seq_idx, 'example_idx': example_idx})
+
+        return example
+
+
 def getSeqDataset(config):
     '''This allows to not define a dataset class, but use a baseclass and a
     `length` and `step` parameter in the supplied `config` to load and
@@ -883,6 +931,7 @@ class DataFolder(DatasetMixin):
         import operator
 
         self.data = []
+        self.labels = {}
         for root, dirs, files in os.walk(self.root):
             for f in files:
                 path = os.path.join(root, f)
@@ -895,6 +944,12 @@ class DataFolder(DatasetMixin):
 
         if self.sort_keys is not None:
             self.data.sort(key=operator.itemgetter(*self.sort_keys))
+
+        for datum in self.data:
+            for k, v in datum.items():
+                if k not in self.labels:
+                    self.labels[k] = []
+                self.labels[k] += [v]
 
     def get_example(self, i):
         datum = self.data[i]
