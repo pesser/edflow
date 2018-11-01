@@ -627,7 +627,10 @@ class ExampleConcatenatedDataset(DatasetMixin):
 
             for k, v in self._labels.items():
                 v = np.array(v)
-                self._labels[k] = v.transpose(1, 0)
+                # sometimes numpy arrays or lists are given as labels
+                # their axes stay at the same positions.
+                trans = [1, 0] + list(range(2, len(v.shape)))
+                self._labels[k] = v.transpose(*trans)
         return self._labels
 
     def get_example(self, i):
@@ -723,7 +726,6 @@ class UnSequenceDataset(DatasetMixin):
             self.seq_len = self.data.length
         except:
             # Try to get the seq_length from the labels
-            print(self.data.labels)
             key = list(self.data.labels.keys())[0]
             self.seq_len = len(self.data.labels[key][0])
 
@@ -742,10 +744,15 @@ class UnSequenceDataset(DatasetMixin):
         example_idx = i // self.seq_len
         seq_idx = i % self.seq_len
 
-        example = self.data[i][seq_idx]
-        example.update({'seq_id': seq_idx, 'example_idx': example_idx})
+        example = self.data[example_idx]
+        seq_example = {}
+        for k, v in example.items():
+            # index is added by DatasetMixin
+            if k != 'index_':
+                seq_example[k] = v[seq_idx]
+        seq_example.update({'seq_idx': seq_idx, 'example_idx': example_idx})
 
-        return example
+        return seq_example
 
 
 def getSeqDataset(config):
@@ -1017,7 +1024,7 @@ if __name__ == '__main__':
         print(k)
         print(np.shape(v))
 
-    S = SequenceDataset(D, 2, 1)
+    S = SequenceDataset(D, 2)
     print('S')
     for k, v in S.labels.items():
         print(k)
@@ -1034,3 +1041,10 @@ if __name__ == '__main__':
     for k, v in U.labels.items():
         print(k)
         print(np.shape(v))
+
+    print(len(S))
+    print(U.seq_len)
+    print(len(U))
+
+    for i in range(len(U)):
+        print(U[i])
