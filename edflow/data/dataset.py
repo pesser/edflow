@@ -618,12 +618,16 @@ class ExampleConcatenatedDataset(DatasetMixin):
         '''Now each index corresponds to a sequence of labels.'''
         if not hasattr(self, '_labels'):
             self._labels = dict()
-            for idx, dataset in self.datasets:
+            for idx, dataset in enumerate(self.datasets):
                 for k in dataset.labels:
                     if k in self._labels:
                         self._labels[k] += [dataset.labels[k]]
                     else:
                         self._labels[k] = [dataset.labels[k]]
+
+            for k, v in self._labels.items():
+                v = np.array(v)
+                self._labels[k] = v.transpose(1, 0)
         return self._labels
 
     def get_example(self, i):
@@ -715,14 +719,20 @@ class UnSequenceDataset(DatasetMixin):
 
     def __init__(self, seq_dataset):
         self.data = seq_dataset
-        self.seq_len = self.data.length
-
-        self._labels = self.data.labels
-        for k, v in self.labels.items():
-            self._labels[k] = np.concatenate(v, axis=-1)
+        try:
+            self.seq_len = self.data.length
+        except:
+            # Try to get the seq_length from the labels
+            print(self.data.labels)
+            key = list(self.data.labels.keys())[0]
+            self.seq_len = len(self.data.labels[key][0])
 
     @property
     def labels(self):
+        if not hasattr(self, "_labels"):
+            self._labels = self.data.labels
+            for k, v in self.labels.items():
+                self._labels[k] = np.concatenate(v, axis=-1)
         return self._labels
 
     def __len__(self):
@@ -967,31 +977,60 @@ class DataFolder(DatasetMixin):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
-    r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
-        'show_vids/cut_selection/fortnite/'
+    # r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
+    #     'show_vids/cut_selection/fortnite/'
 
-    def rfn(im_path):
-        return {'image': plt.imread(im_path)}
+    # def rfn(im_path):
+    #     return {'image': plt.imread(im_path)}
 
-    def lfn(path):
-        if os.path.isfile(path) and path[-4:] == '.jpg':
-            fname = os.path.basename(path)
-            labels = fname[:-4].split('_')
-            if len(labels) == 3:
-                pid, act, fid = labels
-                beam = False
-            else:
-                pid, act, _, fid = labels
-                beam = True
-            return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
+    # def lfn(path):
+    #     if os.path.isfile(path) and path[-4:] == '.jpg':
+    #         fname = os.path.basename(path)
+    #         labels = fname[:-4].split('_')
+    #         if len(labels) == 3:
+    #             pid, act, fid = labels
+    #             beam = False
+    #         else:
+    #             pid, act, _, fid = labels
+    #             beam = True
+    #         return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
 
-    D = DataFolder(r,
-                   rfn,
-                   lfn,
-                   ['pid', 'vid', 'fid'])
+    # D = DataFolder(r,
+    #                rfn,
+    #                lfn,
+    #                ['pid', 'vid', 'fid'])
 
-    for i in range(10):
-        d = D[i]
-        print(',\n '.join(['{}: {}'.format(k, v if not hasattr(v, 'shape')
-                                           else v.shape)
-                                           for k, v in d.items()]))
+    # for i in range(10):
+    #     d = D[i]
+    #     print(',\n '.join(['{}: {}'.format(k, v if not hasattr(v, 'shape')
+    #                                        else v.shape)
+    #                                        for k, v in d.items()]))
+
+    from edflow.debug import DebugDataset
+
+    D = DebugDataset()
+    def labels(data, i):
+        return {'fid': i}
+    D = ExtraLabelsDataset(D, labels)
+    print('D')
+    for k, v in D.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    S = SequenceDataset(D, 2, 1)
+    print('S')
+    for k, v in S.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    S = SubDataset(S, [2, 5, 10])
+    print('Sub')
+    for k, v in S.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    U = UnSequenceDataset(S)
+    print('U')
+    for k, v in U.labels.items():
+        print(k)
+        print(np.shape(v))
