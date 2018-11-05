@@ -618,12 +618,19 @@ class ExampleConcatenatedDataset(DatasetMixin):
         '''Now each index corresponds to a sequence of labels.'''
         if not hasattr(self, '_labels'):
             self._labels = dict()
-            for idx, dataset in self.datasets:
+            for idx, dataset in enumerate(self.datasets):
                 for k in dataset.labels:
                     if k in self._labels:
                         self._labels[k] += [dataset.labels[k]]
                     else:
                         self._labels[k] = [dataset.labels[k]]
+
+            for k, v in self._labels.items():
+                v = np.array(v)
+                # sometimes numpy arrays or lists are given as labels
+                # their axes stay at the same positions.
+                trans = [1, 0] + list(range(2, len(v.shape)))
+                self._labels[k] = v.transpose(*trans)
         return self._labels
 
     def get_example(self, i):
@@ -688,6 +695,64 @@ class SequenceDataset(DatasetMixin):
         '''Retreives a list of examples starting at i.'''
 
         return self.dset[i]
+
+
+class UnSequenceDataset(DatasetMixin):
+    '''Flattened version of a :class:`SequenceDataset`.
+    Adds a new key ``seq_idx`` to each example, corresponding to the sequence
+    index and a key ``example_idx`` corresponding to the original index.
+    The ordering of the dataset is kept and sequence examples are ordererd as
+    in the sequence they are taken from.
+
+    .. warning:: This will not create the original non-sequence dataset! The
+        new dataset contains ``sequence-length x len(SequenceDataset)``
+        examples.
+
+    If the original dataset would be represented as a 2d numpy array the 
+    ``UnSequence`` version of it would be the concatenation of all its rows:
+
+    .. codeblock:: python
+
+        a = np.arange(12)
+        seq_dataset = a.reshape([3, 4])
+        unseq_dataset = np.concatenate(seq_dataset, axis=-1)
+
+        np.all(a == unseq_dataset))  # True
+    '''
+
+    def __init__(self, seq_dataset):
+        self.data = seq_dataset
+        try:
+            self.seq_len = self.data.length
+        except:
+            # Try to get the seq_length from the labels
+            key = list(self.data.labels.keys())[0]
+            self.seq_len = len(self.data.labels[key][0])
+
+    @property
+    def labels(self):
+        if not hasattr(self, "_labels"):
+            self._labels = self.data.labels
+            for k, v in self.labels.items():
+                self._labels[k] = np.concatenate(v, axis=-1)
+        return self._labels
+
+    def __len__(self):
+        return self.seq_len * len(self.data)
+
+    def get_example(self, i):
+        example_idx = i // self.seq_len
+        seq_idx = i % self.seq_len
+
+        example = self.data[example_idx]
+        seq_example = {}
+        for k, v in example.items():
+            # index is added by DatasetMixin
+            if k != 'index_':
+                seq_example[k] = v[seq_idx]
+        seq_example.update({'seq_idx': seq_idx, 'example_idx': example_idx})
+
+        return seq_example
 
 
 def getSeqDataset(config):
@@ -883,6 +948,7 @@ class DataFolder(DatasetMixin):
         import operator
 
         self.data = []
+        self.labels = {}
         for root, dirs, files in os.walk(self.root):
             for f in files:
                 path = os.path.join(root, f)
@@ -895,6 +961,12 @@ class DataFolder(DatasetMixin):
 
         if self.sort_keys is not None:
             self.data.sort(key=operator.itemgetter(*self.sort_keys))
+
+        for datum in self.data:
+            for k, v in datum.items():
+                if k not in self.labels:
+                    self.labels[k] = []
+                self.labels[k] += [v]
 
     def get_example(self, i):
         datum = self.data[i]
@@ -912,31 +984,67 @@ class DataFolder(DatasetMixin):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
-    r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
-        'show_vids/cut_selection/fortnite/'
+    # r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
+    #     'show_vids/cut_selection/fortnite/'
 
-    def rfn(im_path):
-        return {'image': plt.imread(im_path)}
+    # def rfn(im_path):
+    #     return {'image': plt.imread(im_path)}
 
-    def lfn(path):
-        if os.path.isfile(path) and path[-4:] == '.jpg':
-            fname = os.path.basename(path)
-            labels = fname[:-4].split('_')
-            if len(labels) == 3:
-                pid, act, fid = labels
-                beam = False
-            else:
-                pid, act, _, fid = labels
-                beam = True
-            return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
+    # def lfn(path):
+    #     if os.path.isfile(path) and path[-4:] == '.jpg':
+    #         fname = os.path.basename(path)
+    #         labels = fname[:-4].split('_')
+    #         if len(labels) == 3:
+    #             pid, act, fid = labels
+    #             beam = False
+    #         else:
+    #             pid, act, _, fid = labels
+    #             beam = True
+    #         return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
 
-    D = DataFolder(r,
-                   rfn,
-                   lfn,
-                   ['pid', 'vid', 'fid'])
+    # D = DataFolder(r,
+    #                rfn,
+    #                lfn,
+    #                ['pid', 'vid', 'fid'])
 
-    for i in range(10):
-        d = D[i]
-        print(',\n '.join(['{}: {}'.format(k, v if not hasattr(v, 'shape')
-                                           else v.shape)
-                                           for k, v in d.items()]))
+    # for i in range(10):
+    #     d = D[i]
+    #     print(',\n '.join(['{}: {}'.format(k, v if not hasattr(v, 'shape')
+    #                                        else v.shape)
+    #                                        for k, v in d.items()]))
+
+    from edflow.debug import DebugDataset
+
+    D = DebugDataset()
+    def labels(data, i):
+        return {'fid': i}
+    D = ExtraLabelsDataset(D, labels)
+    print('D')
+    for k, v in D.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    S = SequenceDataset(D, 2)
+    print('S')
+    for k, v in S.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    S = SubDataset(S, [2, 5, 10])
+    print('Sub')
+    for k, v in S.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    U = UnSequenceDataset(S)
+    print('U')
+    for k, v in U.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    print(len(S))
+    print(U.seq_len)
+    print(len(U))
+
+    for i in range(len(U)):
+        print(U[i])
