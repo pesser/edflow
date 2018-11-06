@@ -121,19 +121,36 @@ def pickle_and_queue(dataset_factory,
             pbar.update(1)
 
 
+class ExamplesFolder(object):
+    '''Contains all examples and labels of a cached dataset.'''
+    def __init__(self, root):
+        self.root = root
+
+    def read(self, name):
+        with open(os.path.join(self.root, name), 'rb') as example:
+            return example.read()
+
+
 class _CacheDataset(DatasetMixin):
     """Only used to avoid initializing the original dataset."""
-    def __init__(self, root, name):
+    def __init__(self, root, name, _legacy=True):
         self.root = root
         self.name = name
 
-        zippath = os.path.join(root, "cached", name+".zip")
-        naming_template = 'example_{}.p'
-        with ZipFile(zippath, 'r') as zip_f:
-            zipfilenames = zip_f.namelist()
+        filespath = os.path.join(root, 'cached', name)
+
+        if _legacy:
+            zippath = filespath + ".zip"
+            naming_template = 'example_{}.p'
+            with ZipFile(zippath, 'r') as zip_f:
+                filenames = zip_f.namelist()
+        else:
+            filenames = os.listdir(filespath)
+
         def is_example(name):
             return name.startswith("example_") and name.endswith(".p")
-        examplefilenames = [n for n in zipfilenames if is_example(n)]
+
+        examplefilenames = [n for n in filenames if is_example(n)]
         self.n = len(examplefilenames)
 
     def __len__(self):
@@ -191,7 +208,8 @@ class CachedDataset(DatasetMixin):
     def __init__(self,
                  dataset,
                  force_cache=False,
-                 keep_existing=True):
+                 keep_existing=True,
+                 _legacy=True):
         '''Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
@@ -211,17 +229,23 @@ class CachedDataset(DatasetMixin):
             keep_existing (bool): If True, existing entries in cache will
                 not be recomputed and only non existing examples are
                 appended to the cache. Useful if caching was interrupted.
+            _legacy (bool): Read from the cached Zip file. Deprecated mode.
+                Future Datasets should not write into zips as read times are
+                very long.
         '''
 
         self.force_cache = force_cache
         self.keep_existing = keep_existing
+        self._legacy = _legacy
 
         self.base_dataset = dataset
         self._root = root = dataset.root
         name = dataset.name
 
         self.store_dir = os.path.join(root, 'cached')
-        self.store_path = os.path.join(self.store_dir, name + '.zip')
+        self.store_path = os.path.join(self.store_dir, name)
+        if _legacy:
+            self.store_path += '.zip'
 
         #leading_zeroes = str(len(str(len(self))))
         #self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
@@ -235,12 +259,12 @@ class CachedDataset(DatasetMixin):
             self.cache_dataset()
 
     @classmethod
-    def from_cache(cls, root, name):
+    def from_cache(cls, root, name, _legacy=True):
         """Use this constructor to avoid initialization of original dataset
         which can be useful if only the cached zip file is available or to
         avoid expensive constructors of datasets."""
-        dataset = _CacheDataset(root, name)
-        return cls(dataset)
+        dataset = _CacheDataset(root, name, _legacy)
+        return cls(dataset, _legacy=_legacy)
 
     def __getstate__(self):
         """Close file before pickling."""
@@ -252,11 +276,13 @@ class CachedDataset(DatasetMixin):
 
     @property
     def fork_safe_zip(self):
-        currentpid = os.getpid()
-        if getattr(self, "_initpid", None) != currentpid:
-            self._initpid = currentpid
-            self.zip = ZipFile(self.store_path, 'r')
-        return self.zip
+        if self._legacy:
+            currentpid = os.getpid()
+            if getattr(self, "_initpid", None) != currentpid:
+                self._initpid = currentpid
+                self.zip = ZipFile(self.store_path, 'r')
+            return self.zip
+        return ExamplesFolder(self.store_path)
 
     def cache_dataset(self):
         '''Checks if a dataset is stored. If not iterates over all possible
