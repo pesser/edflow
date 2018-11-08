@@ -263,7 +263,14 @@ class PyHookedModelIterator(object):
                 self.increment_global_step()
 
                 if (batch_iterator.is_new_epoch
-                        or self.get_global_step() >= self.config.get("num_steps")):
+                        or self.get_global_step() >= self.config.get("num_steps", float('inf'))):
+                    self.logger.info('Done with epoch')
+                    self.logger.info('is_new_epoch: {}'
+                                     .format(batch_iterator.is_new_epoch))
+                    gs = self.get_global_step()
+                    ns = self.config.get('num_steps', float('inf'))
+                    self.logger.info('gs > ns: {} ({} >= {})'
+                                     .format(gs >= ns, gs, ns))
                     batch_iterator.reset()
                     break
             self.run_hooks(ep, before=False)

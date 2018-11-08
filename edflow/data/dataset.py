@@ -205,6 +205,8 @@ class CachedDataset(DatasetMixin):
     Start a cacherhive!
     """
 
+    _legacy = True
+
     def __init__(self,
                  dataset,
                  force_cache=False,
@@ -605,6 +607,7 @@ class ConcatenatedDataset(DatasetMixin):
 
 class ExampleConcatenatedDataset(DatasetMixin):
     '''Concatenates a list of datasets along the example axis.
+    .. Warning:: Docu is wrong!
     E.g.:
         dset1 = [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}, ...]
         dset2 = [{'a': 6, 'b': 7}, {'a': 8, 'b': 9}, ...]
