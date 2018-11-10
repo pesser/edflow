@@ -239,11 +239,17 @@ class PyHookedModelIterator(object):
         desc_e = base + 'Epoch'
         desc_b = base + 'Batch'
 
-        for ep in trange(self.num_epochs, desc=desc_e, position=pos):
+        for ep in trange(self.num_epochs,
+                         desc=desc_e,
+                         position=pos,
+                         dynamic_ncols=True):
             self.run_hooks(ep, before=True)
 
             pos = self.bar_pos + 1
-            iterator = tqdm(batch_iterator, desc=desc_b, position=pos)
+            iterator = tqdm(batch_iterator,
+                            desc=desc_b,
+                            position=pos,
+                            dynamic_ncols=True)
             for bi, batch in enumerate(iterator):
                 fetches = {'global_step': self.get_global_step,
                            'step_ops': step_ops}
