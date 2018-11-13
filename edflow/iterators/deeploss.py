@@ -24,7 +24,8 @@ def preprocess_input(x):
 
 class VGG19Features(object):
     def __init__(self, session,
-            feature_layers = None, feature_weights = None, gram_weights = None):
+            feature_layers = None, feature_weights = None, gram_weights = None,
+            default_gram = 0.1):
         K.set_session(session)
         self.base_model = VGG19(
                 include_top = False,
@@ -48,7 +49,7 @@ class VGG19Features(object):
         if feature_weights is None:
             feature_weights = len(feature_layers) * [1.0]
         if gram_weights is None:
-            gram_weights = len(feature_layers) * [0.1]
+            gram_weights = len(feature_layers) * [default_gram]
         elif isinstance(gram_weights, (int, float)):
             gram_weights = len(feature_layers) * [gram_weights]
         self.feature_weights = feature_weights
