@@ -965,9 +965,12 @@ class DataFolder(DatasetMixin):
         path = datum['file_path_']
 
         file_content = self.read(path)
-        datum.update(file_content)
 
-        return datum
+        example = dict()
+        example.update(datum)
+        example.update(file_content)
+
+        return example
 
     def __len__(self):
         return len(self.data)
