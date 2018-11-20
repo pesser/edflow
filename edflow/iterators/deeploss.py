@@ -25,7 +25,7 @@ def preprocess_input(x):
 class VGG19Features(object):
     def __init__(self, session,
             feature_layers = None, feature_weights = None, gram_weights = None,
-            default_gram = 0.1):
+            default_gram = 0.1, original_scale = False):
         K.set_session(session)
         self.base_model = VGG19(
                 include_top = False,
@@ -56,6 +56,7 @@ class VGG19Features(object):
         self.gram_weights = gram_weights
         assert len(self.feature_weights) == len(features)
         self.use_gram = np.max(self.gram_weights) > 0.0
+        self.original_scale = original_scale
 
         self.variables = self.base_model.weights
 
@@ -89,6 +90,13 @@ class VGG19Features(object):
 
     def make_loss_op(self, x, y):
         """x, y should be rgb tensors in [-1,1]."""
+        if self.original_scale:
+            xy = tf.concat([x,y], axis = 0)
+            xy = tf.image.resize_bilinear(xy, [256, 256])
+            bs = tf.shape(xy)[0]
+            xy = tf.random_crop(xy, [bs, 224, 224, 3])
+            x, y = tf.split(xy, 2, 0)
+
         x = preprocess_input(x)
         x_features = self.model(x)
 
