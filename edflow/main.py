@@ -11,11 +11,13 @@ from edflow.iterators.batches import make_batches
 from edflow.custom_logging import init_project, get_logger, LogSingleton
 
 
+def get_impl(config, name):
+    impl = config[name]
+    module, cls = impl.rsplit(".", 1)
+    return getattr(importlib.import_module(module, package=None), cls)
+
+
 def get_implementations_from_config(config, names):
-    def get_impl(config, name):
-        impl = config[name]
-        module, cls = impl.rsplit(".", 1)
-        return getattr(importlib.import_module(module, package=None), cls)
     implementations = dict((name, get_impl(config, name)) for name in names)
     return implementations
 
