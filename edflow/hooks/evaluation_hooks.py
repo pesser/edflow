@@ -1,7 +1,7 @@
 import tensorflow as tf
 try:
     import torch
-except ModuleNotFoundError:
+except ImportError:
     print("Warning: Could not import torch.")
 import time
 import os, re, pickle

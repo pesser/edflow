@@ -20,7 +20,8 @@ setup(name='edflow',
           'h5py',
           'scikit-learn',
           'scikit-image',
-          'tensorboardX'
+          'tensorboardX',
+          'natsort'
           ],
       zip_safe=False,
       scripts=["edflow/edflow", "edflow/edcache"])

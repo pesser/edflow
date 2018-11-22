@@ -8,7 +8,8 @@ import random
 from edflow.iterators.resize import resize_image, resize_uint8, resize_float32, resize_hfloat32
 
 from chainer.iterators import MultiprocessIterator
-from chainer.dataset import DatasetMixin
+#from chainer.dataset import DatasetMixin
+from edflow.data.dataset import DatasetMixin
 
 
 def load_image(path):

@@ -24,6 +24,7 @@ from multiprocessing.managers import BaseManager
 import queue
 
 from edflow.main import traceable_method, get_implementations_from_config
+from edflow.util import PRNGMixin
 
 
 class DatasetMixin(DatasetMixin_):
@@ -869,7 +870,7 @@ def getDebugDataset(config):
     return SubDataset(base_dset, indices)
 
 
-class RandomlyJoinedDataset(DatasetMixin):
+class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
     '''Joins similiar JoinedDataset but randomly selects from possible joins.
     '''
     def __init__(self, dataset, key, n_joins):
@@ -918,15 +919,6 @@ class RandomlyJoinedDataset(DatasetMixin):
                     new_examples[key] = [value]
 
         return new_examples
-
-
-    @property
-    def prng(self):
-        currentpid = os.getpid()
-        if getattr(self, "_initpid", None) != currentpid:
-            self._initpid = currentpid
-            self._prng = np.random.RandomState()
-        return self._prng
 
 
 class DataFolder(DatasetMixin):
@@ -1002,9 +994,12 @@ class DataFolder(DatasetMixin):
         path = datum['file_path_']
 
         file_content = self.read(path)
-        datum.update(file_content)
 
-        return datum
+        example = dict()
+        example.update(datum)
+        example.update(file_content)
+
+        return example
 
     def __len__(self):
         return len(self.data)

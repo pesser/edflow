@@ -1,6 +1,7 @@
 '''Some Utility functions, that make yur life easier but don't fit in any
 better catorgory than util.'''
 
+import numpy as np
 import tensorflow as tf
 import os, pickle
 
@@ -196,6 +197,20 @@ def cached_function(fn):
                 result = pickle.load(f)
         return result
     return wrapped
+
+
+class PRNGMixin(object):
+    """Adds a prng property which is a numpy RandomState which gets
+    reinitialized whenever the pid changes to avoid synchronized sampling
+    behavior when used in conjunction with multiprocessing."""
+    @property
+    def prng(self):
+        currentpid = os.getpid()
+        if getattr(self, "_initpid", None) != currentpid:
+            self._initpid = currentpid
+            self._prng = np.random.RandomState()
+        return self._prng
+
 
 
 if __name__ == '__main__':

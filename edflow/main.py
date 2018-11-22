@@ -7,7 +7,6 @@ import math
 import multiprocessing as mp
 import traceback
 
-from edflow.iterators.batches import make_batches
 from edflow.custom_logging import init_project, get_logger, LogSingleton
 
 
@@ -65,6 +64,7 @@ def test(args, job_queue, idx):
 
 def _train(config, root, checkpoint=None, retrain=False):
     '''Run training. Loads model, iterator and dataset according to config.'''
+    from edflow.iterators.batches import make_batches
 
     LogSingleton().set_default('train')
     logger = get_logger('train')
@@ -128,6 +128,7 @@ def _train(config, root, checkpoint=None, retrain=False):
 
 def _test(config, root, nogpu=False, bar_position=0):
     '''Run tests. Loads model, iterator and dataset from config.'''
+    from edflow.iterators.batches import make_batches
 
     LogSingleton().set_default('latest_eval')
     logger = get_logger('test')
