@@ -168,10 +168,9 @@ class TFBaseTrainer(TFHookedModelIterator):
 
     def initialize(self, checkpoint_path = None):
         """Initialize from scratch or restore and keep restorer around."""
-        if checkpoint_path is None:
-            init_op = tf.variables_initializer(self.get_init_variables())
-            self.session.run(init_op)
-        else:
+        init_op = tf.variables_initializer(self.get_init_variables())
+        self.session.run(init_op)
+        if checkpoint_path is not None:
             restorer = RestoreTFModelHook(variables = self.get_restore_variables(),
                                           checkpoint_path = ProjectManager.checkpoints,
                                           global_step_setter = self.set_global_step)
@@ -205,7 +204,7 @@ class TFBaseTrainer(TFHookedModelIterator):
 
         ckpt_hook = CheckpointHook(
                 root_path = ProjectManager.checkpoints,
-                variables = self.get_restore_variables(),
+                variables = self.get_checkpoint_variables(),
                 modelname = "model",
                 step = self.get_global_step,
                 interval = self.config.get("ckpt_freq", None),
@@ -291,4 +290,8 @@ class TFBaseTrainer(TFHookedModelIterator):
 
 
     def get_restore_variables(self):
+        return self.get_init_variables()
+
+
+    def get_checkpoint_variables(self):
         return self.get_init_variables()
