@@ -240,9 +240,14 @@ class TFBaseTrainer(TFHookedModelIterator):
                                        self.lr_decay_begin, self.lr_decay_end,
                                        self.initial_lr, 0.0,
                                        0.0, self.initial_lr)
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=lr,
-                                                beta1=0.5,
-                                                beta2=0.9)
+        optimizer_name = self.config.get("optimizer", "AdamOptimizer")
+        Optimizer = getattr(tf.train, optimizer_name)
+        opt_kwargs = {"learning_rate": lr}
+        if optimizer_name == "AdamOptimizer":
+            opt_kwargs["beta1"] = self.config.get("beta1", 0.5)
+            opt_kwargs["beta2"] = self.config.get("beta2", 0.9)
+
+        self.optimizer = Optimizer(**opt_kwargs)
 
         # Optimization ops
         losses = self.make_loss_ops()
@@ -264,6 +269,8 @@ class TFBaseTrainer(TFHookedModelIterator):
                 opt_op = self.optimizer.minimize(losses[k],
                                                  var_list=variables)
             opt_ops[k] = opt_op
+        self.opt_ops = opt_ops
+
         opt_op = tf.group(*opt_ops.values())
         with tf.control_dependencies([opt_op] + self.update_ops):
             train_op = tf.no_op()
@@ -295,3 +302,20 @@ class TFBaseTrainer(TFHookedModelIterator):
 
     def get_checkpoint_variables(self):
         return self.get_init_variables()
+
+
+class TFFrequencyTrainer(TFBaseTrainer):
+    def create_train_op(self):
+        super().create_train_op()
+        for k in self.opt_ops:
+            self.opt_ops[k] = tf.group(self.opt_ops[k], self.update_ops)
+        self.train_op = None
+
+        self.which_opt = list()
+        for k in self.opt_frequency:
+            self.which_opt += self.opt_frequency[k]*[k]
+
+    def run(self, fetches, feed_dict):
+        current_opt = self.which_opt[self.get_global_step() % len(self.which_opt)]
+        fetches["step_ops"] = self.opt_ops[current_opt]
+        return super().run(fetches, feed_dict)
