@@ -247,7 +247,7 @@ class TFBaseTrainer(TFHookedModelIterator):
             opt_kwargs["beta1"] = self.config.get("beta1", 0.5)
             opt_kwargs["beta2"] = self.config.get("beta2", 0.9)
 
-        self.optimizer = Optimizer(**opt_kwargs)
+        self.optimizers = dict()
 
         # Optimization ops
         losses = self.make_loss_ops()
@@ -255,20 +255,17 @@ class TFBaseTrainer(TFHookedModelIterator):
 
         if hasattr(self, "slow_keys"):
             self.slow_lr = self.slow_factor*self.lr
-            self.slow_optimizer = tf.train.AdamOptimizer(learning_rate=self.slow_lr,
-                                                         beta1=0.5,
-                                                         beta2=0.9)
             self.log_ops["slow_lr"] = self.slow_lr
 
         for k in losses:
             variables = self.get_trainable_variables(k)
             if k in getattr(self, "slow_keys", list()):
-                opt_op = self.slow_optimizer.minimize(losses[k],
-                                                      var_list=variables)
+                opts = dict(opt_kwargs)
+                opts["learning_rate"] = self.slow_lr
+                self.optimizers[k] = Optimizer(**opts)
             else:
-                opt_op = self.optimizer.minimize(losses[k],
-                                                 var_list=variables)
-            opt_ops[k] = opt_op
+                self.optimizers[k] = Optimizer(**opt_kwargs)
+            opt_ops[k] = self.optimizers[k].minimize(losses[k], var_list=variables)
         self.opt_ops = opt_ops
 
         opt_op = tf.group(*opt_ops.values())
