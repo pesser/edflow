@@ -46,11 +46,15 @@ def main(opt):
             name = config.get("experiment_name", None)
         # if it looks like a package path, take its root as the code dir
         # otherwise take cwd
-        path = impl.split(".")
-        if len(path) > 0:
-            code_root = path[0]
+        if 'code_root' in config:
+            code_root = config['code_root']
         else:
-            code_root = "."
+            path = impl.split(".")
+            if len(path) > 0:
+                code_root = path[0]
+            else:
+                code_root = "."
+
         if opt.name is not None:
             # command line takes precedence over "experiment_name" from
             # config

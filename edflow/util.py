@@ -212,6 +212,39 @@ class PRNGMixin(object):
         return self._prng
 
 
+def pprint(nested_thing, heuristics=None):
+    '''Prints nested objects and tries to give relevant information.
+    
+    Args:
+        nested_thing (dict or list): Some nested object.
+        heuristics (Callable): If given this should produce the string, which
+            is printed as description of a leaf object.
+    '''
+
+    if heuristics is None:
+        def heuristics(key, obj):
+            if isinstance(obj, np.ndarray):
+                return '{}: np array - {}'.format(key, obj.shape)
+            else:
+                return '{}: {} - {}'.format(key, type(obj), obj)
+
+    class Printer(object):
+        def __init__(self, string_fn):
+            self.str = ''
+            self.string_fn = string_fn
+
+        def __call__(self, key, obj):
+            self.str += self.string_fn(key, obj) + '\n'
+
+        def __str__(self):
+            return self.str
+
+    P = Printer(heuristics)
+
+    walk(nested_thing, P, pass_key=True)
+
+    print(P)
+
 
 if __name__ == '__main__':
     nested = {'step': 1,
