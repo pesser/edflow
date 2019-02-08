@@ -3,8 +3,8 @@ better catorgory than util.'''
 
 import numpy as np
 import tensorflow as tf
-import os, pickle
-import cv2
+import os
+import pickle
 
 
 def make_linear_var(step,
@@ -33,13 +33,13 @@ def make_linear_var(step,
     return tf.clip_by_value(linear, clip_min, clip_max)
 
 
-def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):
+def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):  #noqa
     '''Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
     Example:
 
-    ..codeblock:: python
+    .. codeblock:: python
 
     dol = {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
 
@@ -155,7 +155,7 @@ def contains_key(nested_thing, key, splitval='/'):
     try:
         retrieve(nested_thing, key, splitval)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -173,10 +173,14 @@ def strenumerate(iterable):
 def cached_function(fn):
     """a very rough cache for function calls. Highly experimental. Only
     active if activated with environment variable."""
-    if not os.environ.get("EDFLOW_CACHED_FUNC", 0) == "42": # secret activation code
+    # secret activation code
+    if not os.environ.get("EDFLOW_CACHED_FUNC", 0) == "42":
         return fn
-    cache_dir = os.path.join(os.environ.get("HOME"), "var", "edflow_cached_func")
-    os.makedirs(cache_dir, exist_ok = True)
+    cache_dir = os.path.join(os.environ.get("HOME"),
+                             "var",
+                             "edflow_cached_func")
+    os.makedirs(cache_dir, exist_ok=True)
+
     def wrapped(*args, **kwargs):
         fnhash = fn.__name__
         callargs = (args, kwargs)
@@ -215,7 +219,7 @@ class PRNGMixin(object):
 
 def pprint(nested_thing, heuristics=None):
     '''Prints nested objects and tries to give relevant information.
-    
+
     Args:
         nested_thing (dict or list): Some nested object.
         heuristics (Callable): If given this should produce the string, which
@@ -247,158 +251,11 @@ def pprint(nested_thing, heuristics=None):
     print(P)
 
 
-def flow2hsv(flow):                                                             
-    '''Given a Flowmap of shape ``[W, H, 2]`` calculates an hsv image,
-    showing the relative magnitude and direction of the optical flow.
-
-    Args:
-        flow (np.array): Optical flow with shape ``[W, H, 2]``.
-    Returns:
-        np.array: Containing the hsv data.
-    '''
-
-    # prepare array - value is always at max
-    hsv = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
-    hsv[:, :, 0] = 255
-    hsv[:, :, 2] = 255
-
-    # magnitude and angle
-    mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-
-    # make it colorful
-    hsv[..., 0] = ang * 180 / np.pi / 2
-    hsv[..., 1] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-
-    return hsv
-
-def hsv2rgb(hsv):
-    '''color space conversion hsv -> rgb. simple wrapper for nice name.'''
-    rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-    return rgb
-
-def flow2rgb(flow):
-    '''converts a flow field to an rgb color image.
-
-    Args:
-        flow (np.array): optical flow with shape ``[W, H, 2]``.
-    Returns:
-        np.array: Containing the rgb data. Color indicates orientation,
-            intensity indicates magnitude.
-    '''
-
-    return hsv2rgb(flow2hsv(flow))
-
-
-def plot_datum(nested_thing,
-               savename='datum.png',
-               heuristics=None,
-               plt_functions=None):
-    '''Plots all data in the nested_thing as best as can.
-
-    If heuristics is given, this determines how each leaf datum is converted
-    to something plottable.
-
-    Args:
-        nested_thing (dict or list): Some nested object.
-        savename (str): ``Path/to/the/plot.png``.
-        heuristics (Callable): If given this should produce a string specifying
-            the kind of data of the leaf. If ``None`` determinde automatically.
-        plt_functions (dict of Callables): Maps a ``kind`` to a function which
-            can plot it. Each callable must be able to receive a the key, the
-            leaf object and the Axes to plot it in.
-    '''
-
-    import matplotlib as mpl
-    mpl.use('Agg')
-
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
-
-    def im_fn(key, im, ax):
-        if im.shape[-1] == 1:
-            im = np.squeeze(im)
-
-        ax.imshow(im)
-        ax.set_ylabel(key, rotation=0)
-
-    def heatmap_fn(key, im, ax):
-        '''Assumes that heatmap shape is [H, W, N]'''
-        im = np.mean(im, axis=-1)
-        im_fn(key, im, ax)
-
-    def flow_fn(key, im, ax):
-        im = flow2rgb(im)
-        im_fn(key, im, ax)
-
-    def other_fn(key, obj, ax):
-        text = '{}: {} - {}'.format(key, type(obj), obj)
-        ax.axis('off')
-        # ax.imshow(np.ones([10, 100]))
-        ax.text(0, 0, text)
-
-
-
-    plt_fns = {'image': im_fn,
-               'heat': heatmap_fn,
-               'flow': flow_fn,
-               'other': other_fn}
-
-    if plt_functions is not None:
-        plt_fns.update(plt_functions)
-
-    if heuristics is None:
-        def heuristics(key, obj):
-            if isinstance(obj, np.ndarray):
-                if len(obj.shape) > 3 or len(obj.shape) < 2:
-                    # This is no image -> Maybe later implement sequence fn
-                    return 'other'
-                else:
-                    if obj.shape[-1] == 3:
-                        return 'image'
-                    elif obj.shape[-1] == 2:
-                        return 'flow'
-                    else:
-                        return 'heat'
-            return 'other'
-
-    class Plotter(object):
-        def __init__(self, kind_fn, savename):
-            self.kind_fn = kind_fn
-            self.savename = savename
-            self.buffer = []
-
-        def __call__(self, key, obj):
-            kind = self.kind_fn(key, obj)
-            self.buffer += [[kind, key, obj]]
-
-        def plot(self):
-            n_pl = len(self.buffer)
-
-            f = plt.figure(figsize=(5, 2*n_pl))
-
-            gs = gridspec.GridSpec(n_pl, 1)
-
-            for i, [kind, key, obj] in enumerate(self.buffer):
-                ax = f.add_subplot(gs[i])
-                plt_fns[kind](key, obj, ax)
-
-            f.savefig(self.savename)
-
-        def __str__(self):
-            self.plot()
-            return 'Saved Plot at {}'.format(self.savename)
-
-    P = Plotter(heuristics, savename)
-
-    walk(nested_thing, P, pass_key=True)
-
-    print(P)
-
-
 if __name__ == '__main__':
+    from edflow.data.util import plot_datum
     image = np.ones([100, 100, 3])
     nested = {'step': 1,
-              'stuff': {'a': 1, 'b': [1,2,3]},
+              'stuff': {'a': 1, 'b': [1, 2, 3]},
               'more': [{'c': 1}, 2, [3, 4]],
               'image': image}
 
