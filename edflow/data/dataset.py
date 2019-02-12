@@ -7,9 +7,7 @@ our version of `DatasetMixin`.
 
 import os
 import pickle
-import traceback
 from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
-from multiprocessing import Process, Queue
 
 import numpy as np
 from tqdm import tqdm, trange
@@ -63,25 +61,26 @@ class DatasetMixin(DatasetMixin_):
         return ret_dict
 
 
-def make_server_manager(port = 63127, authkey = b"edcache"):
+def make_server_manager(port=63127, authkey=b"edcache"):
     inqueue = queue.Queue()
     outqueue = queue.Queue()
+
     class InOutManager(BaseManager):
         pass
     InOutManager.register("get_inqueue", lambda: inqueue)
     InOutManager.register("get_outqueue", lambda: outqueue)
-    manager = InOutManager(address=("", port), authkey = authkey)
+    manager = InOutManager(address=("", port), authkey=authkey)
     manager.start()
     print("Started manager server at {}".format(manager.address))
     return manager
 
 
-def make_client_manager(ip, port = 63127, authkey = b"edcache"):
+def make_client_manager(ip, port=63127, authkey=b"edcache"):
     class InOutManager(BaseManager):
         pass
     InOutManager.register("get_inqueue")
     InOutManager.register("get_outqueue")
-    manager = InOutManager(address=(ip, port), authkey = authkey)
+    manager = InOutManager(address=(ip, port), authkey=authkey)
     manager.connect()
     print("Connected to server at {}".format(manager.address))
     return manager
@@ -112,7 +111,7 @@ def pickle_and_queue(dataset_factory,
         for idx in indices:
             try:
                 example = dataset[idx]
-            except:
+            except BaseException:
                 print("Error getting example {}".format(idx))
                 raise
             pickle_name = naming_template.format(idx)
@@ -124,6 +123,7 @@ def pickle_and_queue(dataset_factory,
 
 class ExamplesFolder(object):
     '''Contains all examples and labels of a cached dataset.'''
+
     def __init__(self, root):
         self.root = root
 
@@ -134,6 +134,7 @@ class ExamplesFolder(object):
 
 class _CacheDataset(DatasetMixin):
     """Only used to avoid initializing the original dataset."""
+
     def __init__(self, root, name, _legacy=True):
         self.root = root
         self.name = name
@@ -142,7 +143,7 @@ class _CacheDataset(DatasetMixin):
 
         if _legacy:
             zippath = filespath + ".zip"
-            naming_template = 'example_{}.p'
+            # naming_template = 'example_{}.p'
             with ZipFile(zippath, 'r') as zip_f:
                 filenames = zip_f.namelist()
         else:
@@ -201,7 +202,7 @@ class CachedDataset(DatasetMixin):
 
     Wake up a worker bee on same or different hosts:
 
-        edcache --address <server_ip_or_hostname> --dataset import.path.to.DataCache
+        edcache --address <server_ip_or_hostname> --dataset import.path.to.DataCache  # noqa
 
     Start a cacherhive!
     """
@@ -250,8 +251,8 @@ class CachedDataset(DatasetMixin):
         if _legacy:
             self.store_path += '.zip'
 
-        #leading_zeroes = str(len(str(len(self))))
-        #self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
+        # leading_zeroes = str(len(str(len(self))))
+        # self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
         # above might be better, but for compatibility we need this right
         # now, because pickle_and_queue did not receive the updated template
         self.naming_template = 'example_{}.p'
@@ -304,13 +305,15 @@ class CachedDataset(DatasetMixin):
                     zipfilenames = zip_f.namelist()
                 zipfilenames = set(zipfilenames)
                 indeces = [i for i in indeces if
-                        not self.naming_template.format(i) in zipfilenames]
-                print("Keeping {} cached examples.".format(N_examples - len(indeces)))
+                           not self.naming_template.format(i) in zipfilenames]
+                print(
+                    "Keeping {} cached examples.".format(
+                        N_examples - len(indeces)))
                 N_examples = len(indeces)
             print("Caching {} examples.".format(N_examples))
             chunk_size = 64
             index_chunks = [indeces[i:i+chunk_size]
-                    for i in range(0, len(indeces), chunk_size)]
+                            for i in range(0, len(indeces), chunk_size)]
             for chunk in index_chunks:
                 inqueue.put(chunk)
             print("Waiting for results.")
@@ -345,14 +348,14 @@ class CachedDataset(DatasetMixin):
                     memory_dict[key] = list()
 
                 for idx in trange(len(self.base_dataset)):
-                    example = self[idx] # load cached version
+                    example = self[idx]  # load cached version
                     # extract keys
                     for key in memory_keys:
                         memory_dict[key].append(example[key])
 
             with ZipFile(self.store_path, "a", ZIP_DEFLATED) as zipfile:
                 zipfile.writestr(self._labels_name,
-                        pickle.dumps(memory_dict))
+                                 pickle.dumps(memory_dict))
             print("Finished caching.")
 
     def __len__(self):
@@ -387,6 +390,7 @@ class CachedDataset(DatasetMixin):
 
 class PathCachedDataset(CachedDataset):
     """Used for simplified decorator interface to dataset caching."""
+
     def __init__(self,
                  dataset,
                  path):
@@ -451,6 +455,7 @@ def cachable(path):
 
 class SubDataset(DatasetMixin):
     """A subset of a given dataset."""
+
     def __init__(self, data, subindices):
         self.data = data
         self.subindices = subindices
@@ -482,6 +487,7 @@ class SubDataset(DatasetMixin):
 
 class LabelDataset(DatasetMixin):
     """A label only dataset to avoid loading unnecessary data."""
+
     def __init__(self, data):
         self.data = data
         self.keys = sorted(self.data.labels.keys())
@@ -503,7 +509,8 @@ class LabelDataset(DatasetMixin):
 
 class ProcessedDataset(DatasetMixin):
     """A dataset with data processing applied."""
-    def __init__(self, data, process, update = True):
+
+    def __init__(self, data, process, update=True):
         self.data = data
         self.process = process
         self.update = update
@@ -531,6 +538,7 @@ class ProcessedDataset(DatasetMixin):
 
 class ExtraLabelsDataset(DatasetMixin):
     """A dataset with extra labels added."""
+
     def __init__(self, data, labeler):
         self.data = data
         self._labeler = labeler
@@ -548,7 +556,8 @@ class ExtraLabelsDataset(DatasetMixin):
     def get_example(self, i):
         """Get example and add new labels."""
         d = self.data.get_example(i)
-        new_labels = dict((k, self._new_labels[k][i]) for k in self._new_labels)
+        new_labels = dict((k, self._new_labels[k][i])
+                          for k in self._new_labels)
         d.update(new_labels)
         return d
 
@@ -562,7 +571,8 @@ class ExtraLabelsDataset(DatasetMixin):
 
 class ConcatenatedDataset(DatasetMixin):
     """A dataset which concatenates given datasets."""
-    def __init__(self, *datasets, balanced = False):
+
+    def __init__(self, *datasets, balanced=False):
         self.datasets = list(datasets)
         self.lengths = [len(d) for d in self.datasets]
         self.boundaries = np.cumsum(self.lengths)
@@ -572,12 +582,12 @@ class ConcatenatedDataset(DatasetMixin):
             for data_idx in range(len(self.datasets)):
                 data_length = len(self.datasets[data_idx])
                 if data_length != max_length:
-                    cycle_indices = [i % data_length for i in range(max_length)]
+                    cycle_indices = [i %
+                                     data_length for i in range(max_length)]
                     self.datasets[data_idx] = SubDataset(
                             self.datasets[data_idx], cycle_indices)
         self.lengths = [len(d) for d in self.datasets]
         self.boundaries = np.cumsum(self.lengths)
-
 
     def get_example(self, i):
         """Get example and add dataset index to it."""
@@ -683,9 +693,14 @@ class SequenceDataset(DatasetMixin):
     is reduced by this length times the step taken. Additionally each
     example must have a frame id `fid`, by which it can be filtered. This is to
     ensure that each frame is taken from the same video.
-    
-    This class assumes that examples come sequentially with fid and that fid 0
-    exists.'''
+
+    This class assumes that examples come sequentially with ``fid`` and that
+    ``fid 0`` exists.
+
+    The SequenceDataset also exposes the Attribute ``self.base_indices``,
+    which holds at each index ``i`` the indices of the elements contained in
+    the example from the sequentialized dataset.
+    '''
 
     def __init__(self, dataset, length, step=1):
         '''Args:
@@ -704,8 +719,10 @@ class SequenceDataset(DatasetMixin):
         top_indeces = np.where(np.array(frame_ids) >= (length * step - 1))[0]
 
         all_subdatasets = []
+        base_indices = []
         for i in range(length * step):
             indeces = top_indeces - i
+            base_indices += [indeces]
             subdset = SubDataset(dataset, indeces)
             all_subdatasets += [subdset]
 
@@ -713,6 +730,7 @@ class SequenceDataset(DatasetMixin):
 
         self.dset = ExampleConcatenatedDataset(*all_subdatasets)
         self.dset.set_example_pars(step=self.step)
+        self.base_indices = np.array(base_indices).transpose(1, 0)[:, ::-1]
 
     @property
     def labels(self):
@@ -738,7 +756,7 @@ class UnSequenceDataset(DatasetMixin):
         new dataset contains ``sequence-length x len(SequenceDataset)``
         examples.
 
-    If the original dataset would be represented as a 2d numpy array the 
+    If the original dataset would be represented as a 2d numpy array the
     ``UnSequence`` version of it would be the concatenation of all its rows:
 
     .. codeblock:: python
@@ -754,7 +772,7 @@ class UnSequenceDataset(DatasetMixin):
         self.data = seq_dataset
         try:
             self.seq_len = self.data.length
-        except:
+        except BaseException:
             # Try to get the seq_length from the labels
             key = list(self.data.labels.keys())[0]
             self.seq_len = len(self.data.labels[key][0])
@@ -835,7 +853,7 @@ def JoinedDataset(dataset, key, n_joins):
     index_map = dict()
     for value in unique_labels:
         index_map[value] = np.nonzero(labels == value)[0]
-    join_indices = [list(range(len(dataset)))] # example_0 is original example
+    join_indices = [list(range(len(dataset)))]  # example_0 is original example
     prng = np.random.RandomState(1)
     for k in range(n_joins - 1):
         indices = [prng.choice(index_map[value]) for value in labels]
@@ -873,6 +891,7 @@ def getDebugDataset(config):
 class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
     '''Joins similiar JoinedDataset but randomly selects from possible joins.
     '''
+
     def __init__(self, dataset, key, n_joins):
         '''Args:
             dataset: Dataset to join in.
@@ -889,10 +908,8 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
         for value in unique_labels:
             self.index_map[value] = np.nonzero(labels == value)[0]
 
-
     def __len__(self):
         return len(self.dataset)
-
 
     @property
     def labels(self):
@@ -900,13 +917,13 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
         joined ones.'''
         return self.dataset.labels
 
-
     def get_example(self, i):
         example = self.dataset[i]
         join_value = example[self.key]
 
         choices = [idx for idx in self.index_map[join_value] if not idx == i]
-        join_indices = self.prng.choice(choices, self.n_joins - 1, replace = False)
+        join_indices = self.prng.choice(
+            choices, self.n_joins - 1, replace=False)
 
         examples = [example] + [self.dataset[idx] for idx in join_indices]
 
@@ -1006,7 +1023,7 @@ class DataFolder(DatasetMixin):
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
 
     # r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
     #     'show_vids/cut_selection/fortnite/'
@@ -1024,7 +1041,7 @@ if __name__ == '__main__':
     #         else:
     #             pid, act, _, fid = labels
     #             beam = True
-    #         return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
+    # return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
 
     # D = DataFolder(r,
     #                rfn,
@@ -1040,6 +1057,7 @@ if __name__ == '__main__':
     from edflow.debug import DebugDataset
 
     D = DebugDataset()
+
     def labels(data, i):
         return {'fid': i}
     D = ExtraLabelsDataset(D, labels)
