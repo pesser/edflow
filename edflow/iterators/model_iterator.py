@@ -149,7 +149,7 @@ class HookedModelIterator(object):
 
     def step_ops(self):
         '''Defines ops that are called at each step.
-        
+
         Returns:
             The operation run at each step.'''
 
@@ -378,6 +378,7 @@ class TFHookedModelIterator(PyHookedModelIterator):
         sess_config.gpu_options.allow_growth = self.config.get("gpu_mem_growth", False)
         gpu_mem_fraction = self.config.get("gpu_mem_fraction", None)
         if gpu_mem_fraction is not None:
+            self.logger.info('Setting GPU MEM Fraction to {}'.format(gpu_mem_fraction))
             sess_config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_fraction
         self._session = tf.Session(config=sess_config)
         return self._session
