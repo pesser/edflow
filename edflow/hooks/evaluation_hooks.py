@@ -29,7 +29,8 @@ class WaitForCheckpointHook(Hook):
                  filter_cond=lambda c: True,
                  interval=5,
                  add_sec=5,
-                 callback=None):
+                 callback=None,
+                 eval_all = False):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
             filter_cond (Callable): A function used to filter files, to only
@@ -41,17 +42,25 @@ class WaitForCheckpointHook(Hook):
                 being written at the time it's meant to be read.
             callback (Callable): Callback called with path of found
                 checkpoint.
+            eval_all (bool): Accept all instead of just latest checkpoint.
         '''
 
         self.root = checkpoint_root
-        self.fcond = filter_cond
+        self._fcond = filter_cond
         self.sleep_interval = interval
         self.additional_wait = add_sec
         self.callback = callback
+        self.eval_all = eval_all
 
         self.logger = get_logger(self)
 
-        self.latest_checkpoint = None
+        self.known_checkpoints = set()
+
+    def fcond(self, c):
+        cond = self._fcond(c)
+        if self.eval_all:
+            cond = cond and c not in self.known_checkpoints
+        return cond
 
     def look(self):
         '''Loop until a new checkpoint is found.'''
@@ -60,8 +69,8 @@ class WaitForCheckpointHook(Hook):
             time.sleep(self.sleep_interval)
 
             latest_checkpoint = get_latest_checkpoint(self.root, self.fcond)
-            if latest_checkpoint is not None and latest_checkpoint != self.latest_checkpoint:
-                self.latest_checkpoint = latest_checkpoint
+            if latest_checkpoint is not None and latest_checkpoint not in self.known_checkpoints:
+                self.known_checkpoints.add(latest_checkpoint)
                 time.sleep(self.additional_wait)
                 self.logger.info("Found new checkpoint: {}".format(latest_checkpoint))
                 if self.callback is not None:

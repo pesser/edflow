@@ -66,7 +66,8 @@ class TFBaseEvaluator(TFHookedModelIterator):
                                       checkpoint_path = ProjectManager.checkpoints,
                                       global_step_setter = self.set_global_step)
         waiter = WaitForCheckpointHook(checkpoint_root = ProjectManager.checkpoints,
-                                       callback = restorer)
+                                       callback = restorer,
+                                       eval_all = self.config.get("eval_all", False))
         self.hooks += [waiter]
 
     def step_ops(self):
