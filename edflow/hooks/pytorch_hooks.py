@@ -1,12 +1,14 @@
 import torch
 import os
+import numpy as np
 
 from tensorboardX import SummaryWriter
 
 from edflow.hooks.hook import Hook
 from edflow.custom_logging import get_logger
-from edflow.iterators.batches import plot_batch
 from edflow.util import retrieve
+from edflow.util import walk
+from edflow.iterators.batches import plot_batch
 
 
 """PyTorch hooks useful during training."""
@@ -118,7 +120,11 @@ class PyLoggingHook(Hook):
 
             for key in self.image_keys:
                 value = retrieve(key, last_results)
-                self.tb_logger.add_image(key, value, step)
+
+                name = key.split('/')[-1]
+                full_name = name + "_{:07}.png".format(step)
+                save_path = os.path.join(self.root, full_name)
+                plot_batch(value, save_path)
 
             for key in self.log_keys:
                 value = retrieve(key, last_results)
@@ -142,3 +148,30 @@ class ToNumpyHook(Hook):
                 return var_or_tens
 
         walk(results, convert, inplace=True)
+
+
+class ToTorchHook(Hook):
+    '''Converts all numpy arrays in the batch to torch.Tensor
+    arrays and leaves the rest as is.'''
+
+    def __init__(self, push_to_gpu=True, dtype=torch.float):
+        self.use_gpu = push_to_gpu
+        self.dtype = dtype
+
+    def before_step(self, step, fetches, feeds, batch):
+        def convert(obj):
+            if isinstance(obj, np.ndarray):
+                obj = torch.tensor(obj)
+                obj = obj.to(self.dtype)
+                if self.use_gpu:
+                    obj = obj.cuda()
+                return obj
+            else:
+                return obj
+
+        walk(feeds, convert, inplace=True)
+
+
+class ToFromTorchHook(ToNumpyHook, ToTorchHook):
+    def __init__(self, *args, **kwargs):
+        ToTorchHook.__init__(self, *args, **kwargs)
