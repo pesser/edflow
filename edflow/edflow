@@ -2,6 +2,11 @@
 
 import os
 
+import sys  # noqa
+
+
+sys.path.append(os.getcwd())  # convenience: load implementations from cwd
+
 pytorch_mp = os.environ.get('USE_PYTORCH_MP', 'False') == 'True'
 if not pytorch_mp:
     import multiprocessing as mp
@@ -10,7 +15,7 @@ else:
     print('Using pytorch mp')
     import torch.multiprocessing as mp
 
-import sys  # noqa
+
 import argparse  # noqa
 import yaml  # noqa
 
@@ -18,8 +23,6 @@ from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
 from edflow.hooks.evaluation_hooks import get_latest_checkpoint  # noqa
-
-sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
 
 def update_config(config, options):
