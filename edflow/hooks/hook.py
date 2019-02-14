@@ -27,7 +27,7 @@ class Hook(object):
             for i, batch in enumerate(batches):
                 fetches, feeds = some_function(batch)
                 hook.before_step(i, fetches, feeds)  # change fetches & feeds
-                
+
                 results = session.run(fetches, feed_dict=feeds)
 
                 hook.after_step(i, results)
@@ -53,7 +53,7 @@ class Hook(object):
             batch (list or dict): All data available at this step.
         '''
 
-        pass 
+        pass
 
     def after_step(self, step, last_results):
         '''Called after each step.
