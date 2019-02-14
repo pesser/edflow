@@ -27,19 +27,22 @@ def _get_logger(name, out_dir, pos=4, level=logging.INFO):
     '''Creates a logger the way it's meant to be.'''
     # init logging
     logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
 
     if not len(logger.handlers) > 0:
         ch = TqdmHandler(pos)
         ch.setLevel(level)
-        logger.addHandler(ch)
 
         fh = logging.FileHandler(filename=os.path.join(out_dir, 'log.txt'))
         fh.setLevel(logging.DEBUG)
-        logger.addHandler(fh)
 
-        formatter = logging.Formatter('[%(levelname)s] [%(name)s]: %(message)s')
+        fmt_string = '[%(levelname)s] [%(name)s]: %(message)s'
+        formatter = logging.Formatter(fmt_string)
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
+
+        logger.addHandler(ch)
+        logger.addHandler(fh)
 
     return logger
 
@@ -86,11 +89,11 @@ class LogSingleton(object):
 
 
 def set_global_stdout_level(level='info'):
-    L = LogSingleton()
     level = getattr(logging, level.upper())
+    print('Setting Log Level to {}'.format(level))
 
-    L._level = level
-    for logger in L.loggers:
+    LogSingleton._level = level
+    for logger in LogSingleton.loggers:
         logger.handlers[0].setLevel(level)
 
 
