@@ -10,6 +10,9 @@ from edflow.util import retrieve
 from edflow.util import walk
 from edflow.iterators.batches import plot_batch
 
+import signal
+import sys
+
 
 """PyTorch hooks useful during training."""
 
@@ -28,8 +31,11 @@ class PyCheckpointHook(Hook):
             model (nn.Module): Model to checkpoint.
             modelname (str): Prefix for checkpoint files.
             interval (int): Number of iterations after which a checkpoint is
-                saved. If None, a checkpoint is saved after each epoch.
+                saved. In any case a checkpoint is savead after each epoch.
         '''
+
+        signal.signal(signal.SIGINT, self.at_exception)
+        signal.signal(signal.SIGTERM, self.at_exception)
 
         self.root = root_path
         self.interval = interval
@@ -41,18 +47,26 @@ class PyCheckpointHook(Hook):
         self.savename = os.path.join(root_path,
                                      '{{}}-{{}}_{}.ckpt'.format(modelname))
 
+        # Init to save even before first step... More of a debug statement
+        self.step = 0
+        self.epoch = 0
+
     def before_epoch(self, epoch):
         self.epoch = epoch
 
     def after_epoch(self, epoch):
-        if self.interval is None:
-            self.save()
+        self.save()
 
     def after_step(self, step, last_results):
         self.step = retrieve('global_step', last_results)
         if self.interval is not None \
                 and step % self.interval == 0:
             self.save()
+
+    def at_exception(self, *args, **kwargs):
+        self.save()
+
+        sys.exit()
 
     def save(self):
         e = self.epoch

@@ -74,6 +74,11 @@ class Hook(object):
 
         pass
 
+    def at_exception(self, *args, **kwargs):
+        '''Called when an exception is raised.'''
+
+        pass
+
 
 class Hooker(object):
     '''Probably should rename that...'''
