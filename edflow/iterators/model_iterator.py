@@ -232,6 +232,21 @@ class PyHookedModelIterator(object):
             batch_iterator (Iterable): Iterable returning training data.
         '''
 
+        try:
+            self._iterate(batch_iterator)
+        except Exception as e:
+            for hook in self.hooks:
+                hook.at_exception()
+
+            raise e
+
+    def _iterate(self, batch_iterator):
+        '''Iterates over the data supplied and feeds it to the model.
+
+        Args:
+            batch_iterator (Iterable): Iterable returning training data.
+        '''
+
         step_ops = self.step_ops()
 
         pos = self.bar_pos
