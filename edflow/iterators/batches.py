@@ -121,3 +121,25 @@ def make_batches(dataset, batch_size, shuffle, n_processes=8, n_prefetch=1):
                        n_prefetch=n_prefetch,
                        shuffle=shuffle)
     return batches
+
+
+if __name__ == '__main__':
+    from edflow.util import pprint
+
+    class Dset(DatasetMixin):
+        def get_example(self, idx):
+            return {'im': np.random.randint(0, 255, size=[32, 32, 3])}
+
+        def __len__(self):
+            return 100
+
+    B = make_batches(Dset(), batch_size=16, shuffle=True)
+
+    pprint(next(B))
+
+    print(dir(B))
+
+    B._prefetch_loop.batch_size = 32
+    B.batch_size = 32
+
+    pprint(next(B))
