@@ -1,10 +1,14 @@
 import tensorflow as tf
-import os, time
+import os
+import time
 
 from edflow.hooks.hook import Hook
 from edflow.hooks.evaluation_hooks import get_checkpoint_files
 from edflow.custom_logging import get_logger
 from edflow.iterators.batches import plot_batch
+
+import signal
+import sys
 
 """TensorFlow hooks useful during training."""
 
@@ -27,19 +31,22 @@ class CheckpointHook(Hook):
             session (tf.Session): Session instance for saver.
             modelname (str): Used to name the checkpoint.
             step (tf.Tensor or callable): Step op, that can be evaluated
-                (i,.e. a tf.Tensor or a python callable returning the step as an
-                integer).
+                (i,.e. a tf.Tensor or a python callable returning the step as
+                an integer).
             interval (int): Number of iterations after which a checkpoint is
                 saved. If None, a checkpoint is saved after each epoch.
             max_to_keep (int): Maximum number of checkpoints to keep on
                 disk. Use 0 or None to never delete any checkpoints.
         '''
 
+        signal.signal(signal.SIGINT, self.at_exception)
+        signal.signal(signal.SIGTERM, self.at_exception)
+
         self.root = root_path
         self.interval = interval
         self.step = step if step is not None else tf.train.get_global_step()
 
-        self.saver = tf.train.Saver(variables, max_to_keep = max_to_keep)
+        self.saver = tf.train.Saver(variables, max_to_keep=max_to_keep)
         self.logger = get_logger(self)
 
         os.makedirs(root_path, exist_ok=True)
@@ -60,13 +67,20 @@ class CheckpointHook(Hook):
                 and self.global_step() % self.interval == 0:
             self.save()
 
+    def at_exception(self, *args, **kwargs):
+        self.save()
+
+        sys.exit()
+
     def save(self):
         global_step = self.global_step()
         self.saver.save(self.session, self.savename, global_step=global_step)
         self.logger.info("Saved model to {}".format(self.savename))
 
     def global_step(self):
-        if isinstance(self.step, tf.Tensor) or isinstance(self.step, tf.Variable):
+        if isinstance(
+                self.step, tf.Tensor) or isinstance(
+                self.step, tf.Variable):
             global_step = self.step
         else:
             global_step = self.step()
@@ -97,7 +111,7 @@ class LoggingHook(Hook):
 
         scalars = [tf.summary.scalar(n, s) for n, s in scalars.items()]
         histograms = [tf.summary.histogram(n, h)
-                           for n, h in histograms.items()]
+                      for n, h in histograms.items()]
 
         self._has_summary = len(scalars + histograms) > 0
         if self._has_summary:
@@ -193,7 +207,9 @@ class WaitForManager(Hook):
             n_ckpts = len(get_checkpoint_files(self.root))
             if n_ckpts <= self.max_n:
                 break
-            self.logger.info("Found {} checkpoints. Waiting until one is removed.".format(n_ckpts))
+            self.logger.info(
+                "Found {} checkpoints.".format(n_ckpts)
+                + "Waiting until one is removed.")
             time.sleep(self.sleep_interval)
 
     def before_epoch(self, ep):
