@@ -33,6 +33,32 @@ def make_linear_var(step,
     return tf.clip_by_value(linear, clip_min, clip_max)
 
 
+def linear_var(step,
+               start, end,
+               start_value, end_value,
+               clip_min=0.0, clip_max=1.0):
+    r"""Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
+    :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
+
+    Args:
+        step (float): :math:`x`
+        start: :math:`a`
+        end: :math:`b`
+        start_value: :math:`\alpha`
+        end_value: :math:`\beta`
+        clip_min: Minimal value returned.
+        clip_max: Maximum value returned.
+
+    Returns:
+        float: :math:`y`
+    """
+    linear = (
+            (end_value - start_value) /
+            (end - start) *
+            (float(step) - start) + start_value)
+    return float(np.clip(linear, clip_min, clip_max))
+
+
 def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):  #noqa
     '''Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
