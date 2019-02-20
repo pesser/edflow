@@ -278,6 +278,8 @@ class TFBaseTrainer(TFHookedModelIterator):
             train_op = tf.no_op()
         self.train_op = train_op
 
+        self.run_once_op = self.make_run_once_op()
+
         # add log ops
         self.log_ops["global_step"] = self.global_step
         self.log_ops["lr"] = self.lr
@@ -286,6 +288,12 @@ class TFBaseTrainer(TFHookedModelIterator):
     def make_loss_ops(self):
         '''Return per submodule loss. Can add tensors to log_ops and img_ops'''
         raise NotImplemented()
+
+
+    def make_run_once_op(self):
+        '''Return op to be run at step zero. Used for custom initialization
+        etc.'''
+        return tf.no_op()
 
 
     def get_trainable_variables(self, submodule):
@@ -304,6 +312,13 @@ class TFBaseTrainer(TFHookedModelIterator):
 
     def get_checkpoint_variables(self):
         return self.get_init_variables()
+
+
+    def run(self, fetches, feed_dict):
+        if self.get_global_step() == 0:
+            self.logger.info('Running custom initialization op.')
+            fetches["step_ops"] = self.run_once_op
+        return super().run(fetches, feed_dict)
 
 
 class TFFrequencyTrainer(TFBaseTrainer):
