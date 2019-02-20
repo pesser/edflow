@@ -91,7 +91,7 @@ def sup_str_to_num(support_str):
     return mn, mx
 
 
-def adjust_support(image, future_support, current_support=None):
+def adjust_support(image, future_support, current_support=None, clip=False):
     '''Will adjust the support of all color values in :attr:`image`.
 
     Args:
@@ -102,6 +102,10 @@ def adjust_support(image, future_support, current_support=None):
         current_support (str): The support of the colors currentl in
             :attr:`image`. If not given it will be estimated by
             :function:`get_support`.
+        clip (bool): By default the return values in image are simply coming
+            from a linear transform, thus the actual support might be larger
+            than the requested interval. If set to ``True`` the returned
+            array will be cliped to ``future_support``.
 
     Returns:
         same type as image: The given :attr:`image` with transformed support.
@@ -127,7 +131,16 @@ def adjust_support(image, future_support, current_support=None):
     if future_support == '0->255':
         image = image.astype(np.uint8)
 
+    if clip:
+        image = clip_to_support(image, future_support)
+
     return image
+
+
+def clip_to_support(image, supp_str):
+    vmin, vmax = sup_str_to_num(supp_str)
+
+    return np.clip(image, vmin, vmax)
 
 
 def add_im_info(image, ax):
