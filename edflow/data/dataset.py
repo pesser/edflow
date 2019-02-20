@@ -958,7 +958,8 @@ class DataFolder(DatasetMixin):
                  read_fn,
                  label_fn,
                  sort_keys=None,
-                 in_memory_keys=None):
+                 in_memory_keys=None,
+                 legacy=True):
         '''Args:
             image_root (str): Root containing the files of interest.
             read_fn (Callable): Given the path to a file, returns the datum as
@@ -969,12 +970,17 @@ class DataFolder(DatasetMixin):
                 Dataset are sorted.
             in_memory_keys (list): keys which will be collected from examples
                 when the dataset is cached.
+            legacy (bool): Use the old read ethod, where only the path to the
+                current file is passed to the reader. The new version will
+                see all labels, that have been previously collected.
         '''
 
         self.root = image_root
         self.read = read_fn
         self.label_fn = label_fn
         self.sort_keys = sort_keys
+
+        self.legacy = legacy
 
         if in_memory_keys is not None:
             assert isinstance(in_memory_keys, list)
@@ -1010,7 +1016,10 @@ class DataFolder(DatasetMixin):
         datum = self.data[i]
         path = datum['file_path_']
 
-        file_content = self.read(path)
+        if self.legacy:
+            file_content = self.read(path)
+        else:
+            file_content = self.read(**datum)
 
         example = dict()
         example.update(datum)
