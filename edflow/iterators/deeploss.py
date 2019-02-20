@@ -22,6 +22,16 @@ def preprocess_input(x):
     return x
 
 
+def _ll_loss(target, reconstruction, log_variance):
+    dim = np.prod(target.shape.as_list()[1:])
+    variance = tf.exp(log_variance)
+    log2pi = np.log(2.0*np.pi)
+    e = tf.reduce_mean(tf.square(target - reconstruction))
+    l = 0.5*dim*(e / variance + log_variance + log2pi)
+    calibrate = tf.assign(log_variance, tf.log(e))
+    return l, calibrate
+
+
 class VGG19Features(object):
     def __init__(self, session,
             feature_layers = None, feature_weights = None, gram_weights = None,
@@ -42,6 +52,7 @@ class VGG19Features(object):
                 raise KeyError(
                         "Invalid layer {}. Available layers: {}".format(
                             k, self.layer_names))
+        self.feature_layers = feature_layers
         features = [self.base_model.get_layer(k).output for k in feature_layers]
         self.model = Model(
                 inputs = self.base_model.input,
@@ -122,5 +133,48 @@ class VGG19Features(object):
 
         self.losses = losses
         self.gram_losses = gram_losses
+
+        return loss
+
+
+    def make_nll_op(self, x, y, log_variances, gram_log_variances = None):
+        """x, y should be rgb tensors in [-1,1]."""
+        use_gram = gram_log_variances is not None
+        if self.original_scale:
+            xy = tf.concat([x,y], axis = 0)
+            xy = tf.image.resize_bilinear(xy, [256, 256])
+            bs = tf.shape(xy)[0]
+            xy = tf.random_crop(xy, [bs, 224, 224, 3])
+            x, y = tf.split(xy, 2, 0)
+
+        x = preprocess_input(x)
+        x_features = self.model(x)
+
+        y = preprocess_input(y)
+        y_features = self.model(y)
+
+        if use_gram:
+            x_grams = self.grams(x_features)
+            y_grams = self.grams(y_features)
+
+        feature_ops = [
+                _ll_loss(xf, yf, logvar) for xf, yf, logvar in zip(
+                    x_features, y_features, log_variances)]
+        losses = [f[0] for f in feature_ops]
+        self.losses = losses
+        calibrations = [f[1] for f in feature_ops]
+        self.calibrations = calibrations
+        if use_gram:
+            gram_ops = [
+                    _ll_loss(xg, yg, glogvar) for xg, yg, glogvar in zip(
+                        x_grams, y_grams, gram_log_variances)]
+            gram_losses = [g[0] for g in gram_ops]
+            self.gram_losses = gram_losses
+            gram_calibrations = [g[1] for g in gram_ops]
+            self.gram_calibrations = gram_calibrations
+
+        loss = tf.add_n(losses)
+        if use_gram:
+            loss = loss + tf.add_n(gram_losses)
 
         return loss
