@@ -60,6 +60,40 @@ class DatasetMixin(DatasetMixin_):
 
         return ret_dict
 
+    def __mul__(self, val):
+        '''Returns a ConcatenatedDataset of multiples of itself.
+
+        Args:
+            val (int): How many times do you want this dataset stacked?
+
+        Returns:
+            ConcatenatedDataset: A dataset of ``val``-times the length as
+                ``self``.
+        '''
+
+        assert isinstance(val, int), 'Datasets can only be multiplied by ints'
+
+        concs = [self] * val
+        return ConcatenatedDataset(*concs)
+
+    def __rmul__(self, val):
+        return self.__mul__(val)
+
+    def __add__(self, dset):
+        '''Concatenates self with the other dataset :attr:`dset`.
+
+        Args:
+            dset (DatasetMixin): Another dataset to be concatenated behind
+                ``self``.
+
+        Returns:
+            ConcatenatedDataset: A dataset of form ``[self, dset]``.
+        '''
+
+        assert isinstance(dset, DatasetMixin), 'Can only add DatasetMixins'
+
+        return ConcatenatedDataset(self, dset)
+
 
 def make_server_manager(port=63127, authkey=b"edcache"):
     inqueue = queue.Queue()
@@ -607,11 +641,11 @@ class ConcatenatedDataset(DatasetMixin):
     def labels(self):
         # relay if data is cached
         if not hasattr(self, "_labels"):
-            labels = self.datasets[0].labels
+            labels = dict(self.datasets[0].labels)
             for i in range(1, len(self.datasets)):
                 new_labels = self.datasets[i].labels
                 for k in labels:
-                    labels[k] += new_labels[k]
+                    labels[k] = labels[k] + new_labels[k]
             self._labels = labels
         return self._labels
 
