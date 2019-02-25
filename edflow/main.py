@@ -10,6 +10,11 @@ import traceback
 from edflow.custom_logging import init_project, get_logger, LogSingleton
 
 
+def get_obj_from_str(string):
+    module, cls = string.rsplit(".", 1)
+    return getattr(importlib.import_module(module, package=None), cls)
+
+
 def get_impl(config, name):
     impl = config[name]
     module, cls = impl.rsplit(".", 1)
