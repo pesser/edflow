@@ -4,7 +4,9 @@ try:
 except ImportError:
     print("Warning: Could not import torch.")
 import time
-import os, re, pickle
+import os
+import re
+import pickle
 import numpy as np
 from collections import OrderedDict, namedtuple
 
@@ -57,16 +59,17 @@ class WaitForCheckpointHook(Hook):
         '''Loop until a new checkpoint is found.'''
         self.logger.info("Waiting for new checkpoint.")
         while True:
-            time.sleep(self.sleep_interval)
-
             latest_checkpoint = get_latest_checkpoint(self.root, self.fcond)
-            if latest_checkpoint is not None and latest_checkpoint != self.latest_checkpoint:
+            if latest_checkpoint is not None \
+                    and latest_checkpoint != self.latest_checkpoint:
                 self.latest_checkpoint = latest_checkpoint
                 time.sleep(self.additional_wait)
-                self.logger.info("Found new checkpoint: {}".format(latest_checkpoint))
+                self.logger.info(
+                    "Found new checkpoint: {}".format(latest_checkpoint))
                 if self.callback is not None:
                     self.callback(latest_checkpoint)
                 break
+            time.sleep(self.sleep_interval)
 
     def before_epoch(self, ep):
         self.look()
@@ -160,7 +163,7 @@ class RestoreModelHook(Hook):
         return self._session
 
     def before_epoch(self, ep):
-        #checkpoint = tf.train.latest_checkpoint(self.root)
+        # checkpoint = tf.train.latest_checkpoint(self.root)
         checkpoint = get_latest_checkpoint(self.root, self.fcond)
         self(checkpoint)
 
@@ -176,7 +179,6 @@ class RestoreModelHook(Hook):
     def parse_global_step(checkpoint):
         global_step = int(checkpoint.rsplit("-", 1)[1])
         return global_step
-
 
 
 # Simple renaming for consistency
@@ -500,7 +502,9 @@ def get_checkpoint_files(checkpoint_root):
                 global_step = RestoreTFModelHook.parse_global_step(normalized)
             else:
                 normalized = p
-                global_step = RestorePytorchModelHook.parse_global_step(normalized)
+                global_step = RestorePytorchModelHook.parse_global_step(
+                    normalized
+                )
             files.append(p)
             checkpoints.append(normalized)
             global_steps.append(global_step)
@@ -521,8 +525,8 @@ class KeepBestCheckpoints(Hook):
                  checkpoint_root,
                  metric_template,
                  metric_key,
-                 n_keep = 5,
-                 lower_is_better = True):
+                 n_keep=5,
+                 lower_is_better=True):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
             metric_template (str): Format string to find metric file.
@@ -563,10 +567,11 @@ class KeepBestCheckpoints(Hook):
 
         latest_step = max(steps)
 
-        loss_steps = sorted(zip(losses, steps), key = lambda x: x[0])
+        loss_steps = sorted(zip(losses, steps), key=lambda x: x[0])
         steps = [s for _, s in loss_steps]
         remove_steps = steps[self.n_keep:]
-        remove_steps = [step for step in remove_steps if not step == latest_step]
+        remove_steps = [step for step in remove_steps
+                        if not step == latest_step]
         remove_files = list()
         for step in remove_steps:
             remove_files += checkpoint_files[step]
