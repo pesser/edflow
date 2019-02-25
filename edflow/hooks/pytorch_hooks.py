@@ -171,15 +171,19 @@ class ToTorchHook(Hook):
     def __init__(self, push_to_gpu=True, dtype=torch.float):
         self.use_gpu = push_to_gpu
         self.dtype = dtype
+        self.logger = get_logger(self)
 
     def before_step(self, step, fetches, feeds, batch):
         def convert(obj):
             if isinstance(obj, np.ndarray):
-                obj = torch.tensor(obj)
-                obj = obj.to(self.dtype)
-                if self.use_gpu:
-                    obj = obj.cuda()
-                return obj
+                try:
+                    obj = torch.tensor(obj)
+                    obj = obj.to(self.dtype)
+                    if self.use_gpu:
+                        obj = obj.cuda()
+                    return obj
+                except Exception:
+                    return obj
             else:
                 return obj
 
