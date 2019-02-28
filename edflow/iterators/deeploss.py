@@ -22,13 +22,16 @@ def preprocess_input(x):
     return x
 
 
-def _ll_loss(target, reconstruction, log_variance):
+def _ll_loss(target, reconstruction, log_variance, calibrate):
     dim = np.prod(target.shape.as_list()[1:])
     variance = tf.exp(log_variance)
     log2pi = np.log(2.0*np.pi)
     e = tf.reduce_mean(tf.square(target - reconstruction))
     l = 0.5*dim*(e / variance + log_variance + log2pi)
-    calibrate = tf.assign(log_variance, tf.log(e))
+    if calibrate:
+        calibrate_op = tf.assign(log_variance, tf.log(e))
+    else:
+        calibrate_op = tf.no_op()
     return l, calibrate
 
 
@@ -137,7 +140,8 @@ class VGG19Features(object):
         return loss
 
 
-    def make_nll_op(self, x, y, log_variances, gram_log_variances = None):
+    def make_nll_op(self, x, y, log_variances, gram_log_variances = None,
+            calibrate = True):
         """x, y should be rgb tensors in [-1,1]."""
         use_gram = gram_log_variances is not None
         if self.original_scale:
@@ -157,8 +161,11 @@ class VGG19Features(object):
             x_grams = self.grams(x_features)
             y_grams = self.grams(y_features)
 
+        if len(log_variances) == 1:
+            log_variances = len(x_features)*[log_variances[0]]
+
         feature_ops = [
-                _ll_loss(xf, yf, logvar) for xf, yf, logvar in zip(
+                _ll_loss(xf, yf, logvar, calibrate = calibrate) for xf, yf, logvar in zip(
                     x_features, y_features, log_variances)]
         losses = [f[0] for f in feature_ops]
         self.losses = losses
