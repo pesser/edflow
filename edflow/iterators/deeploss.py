@@ -103,7 +103,7 @@ class VGG19Features(object):
 
 
     def make_loss_op(self, x, y):
-        """x, y should be rgb tensors in [-1,1]."""
+        """x, y should be rgb tensors in [-1,1]. Uses l1 and spatial average."""
         if self.original_scale:
             xy = tf.concat([x,y], axis = 0)
             xy = tf.image.resize_bilinear(xy, [256, 256])
@@ -142,7 +142,8 @@ class VGG19Features(object):
 
     def make_nll_op(self, x, y, log_variances, gram_log_variances = None,
             calibrate = True):
-        """x, y should be rgb tensors in [-1,1]."""
+        """x, y should be rgb tensors in [-1,1]. This version treats every
+        layer independently."""
         use_gram = gram_log_variances is not None
         if self.original_scale:
             xy = tf.concat([x,y], axis = 0)
@@ -185,3 +186,17 @@ class VGG19Features(object):
             loss = loss + tf.add_n(gram_losses)
 
         return loss
+
+
+    def make_l1_nll_op(self, x, y, log_variance):
+        """x, y should be rgb tensors in [-1,1]. Uses make_loss_op to compute
+        version compatible with previous experiments."""
+
+        rec_loss = 1e-3*self.make_loss_op(x, y)
+        dim = np.prod(x.shape.as_list()[1:])
+        log_gamma = log_variance
+        gamma = tf.exp(log_gamma)
+        log2pi = np.log(2.0*np.pi)
+        likelihood = 0.5*dim*(rec_loss / gamma + log_gamma + log2pi)
+
+        return likelihood
