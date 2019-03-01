@@ -382,9 +382,13 @@ class TFListTrainer(TFBaseTrainer):
 
             for k in losses:
                 variables = self.get_trainable_variables(k)
-                optimizers[k] = Optimizer(**opt_kwargs)
+                current_opt_kwargs = dict(opt_kwargs)
+                current_opt_kwargs["learning_rate"] = (
+                        current_opt_kwargs["learning_rate"] *
+                        self.get_learning_rate_multiplier(i))
+                optimizers[k] = Optimizer(**current_opt_kwargs)
                 opt_ops[k] = optimizers[k].minimize(losses[k], var_list=variables)
-                print(i, k)
+                print(i, k, self.get_learning_rate_multiplier(i))
                 print("============================")
                 print("\n".join([v.name for v in variables]))
                 print(len(variables))
@@ -396,6 +400,7 @@ class TFListTrainer(TFBaseTrainer):
             self.all_train_ops.append(train_op)
 
         self.train_op = None # dummy, set actual train op in run
+        self.run_once_op = self.make_run_once_op()
         # add log ops
         self.log_ops["global_step"] = self.global_step
         self.log_ops["lr"] = self.lr
@@ -404,3 +409,6 @@ class TFListTrainer(TFBaseTrainer):
         train_idx = self.get_global_step() % len(self.all_train_ops)
         fetches["step_ops"] = self.all_train_ops[train_idx]
         return super().run(fetches, feed_dict)
+
+    def get_learning_rate_multiplier(self, i):
+        return 1.0
