@@ -128,11 +128,11 @@ def adjust_support(image, future_support, current_support=None, clip=False):
     image *= (fut_max - fut_min)
     image += fut_min
 
-    if future_support == '0->255':
-        image = image.astype(np.uint8)
-
     if clip:
         image = clip_to_support(image, future_support)
+
+    if future_support == '0->255':
+        image = image.astype(np.uint8)
 
     return image
 
