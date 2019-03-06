@@ -10,6 +10,7 @@ import pickle
 from zipfile import ZipFile, ZIP_DEFLATED  # , ZIP_BZIP2, ZIP_LZMA
 
 import numpy as np
+import pandas as pd
 from tqdm import tqdm, trange
 from chainer.dataset import DatasetMixin as DatasetMixin_
 # TODO maybe just pull
@@ -993,7 +994,8 @@ class DataFolder(DatasetMixin):
                  label_fn,
                  sort_keys=None,
                  in_memory_keys=None,
-                 legacy=True):
+                 legacy=True,
+                 show_bar=False):
         '''Args:
             image_root (str): Root containing the files of interest.
             read_fn (Callable): Given the path to a file, returns the datum as
@@ -1007,6 +1009,7 @@ class DataFolder(DatasetMixin):
             legacy (bool): Use the old read ethod, where only the path to the
                 current file is passed to the reader. The new version will
                 see all labels, that have been previously collected.
+            show_bar (bool): Show a loading bar when loading labels.
         '''
 
         self.root = image_root
@@ -1015,6 +1018,7 @@ class DataFolder(DatasetMixin):
         self.sort_keys = sort_keys
 
         self.legacy = legacy
+        self.show_bar = show_bar
 
         if in_memory_keys is not None:
             assert isinstance(in_memory_keys, list)
@@ -1025,9 +1029,18 @@ class DataFolder(DatasetMixin):
     def _read_labels(self):
         import operator
 
+        if self.show_bar:
+            n_files = 0
+            for _ in os.walk(self.root):
+                n_files += 1
+
+            iterator = tqdm(os.walk(self.root), total=n_files, desc='Labels')
+        else:
+            iterator = tqdm(os.walk(self.root))
+
         self.data = []
         self.labels = {}
-        for root, dirs, files in os.walk(self.root):
+        for root, dirs, files in iterator:
             for f in files:
                 path = os.path.join(root, f)
                 labels = self.label_fn(path)
@@ -1063,6 +1076,38 @@ class DataFolder(DatasetMixin):
 
     def __len__(self):
         return len(self.data)
+
+
+class CsvDataset(DatasetMixin):
+    '''Using a csv file as index, this Dataset returns only the entries in the
+    csv file, but can be easily extended to load other data using the
+    :class:`ProcessedDatasets`.
+    '''
+
+    def __init__(self, csv_root, **pandas_kwargs):
+        '''Args:
+            csv_root (str): Path/to/the/csv containing all datapoints. The
+                first line in the file should contain the names for the
+                attributes in the corresponding columns.
+                pandas_kwargs (kwargs): Passed to :function:`pandas.read_csv`
+                    when loading the csv file.
+        '''
+
+        self.root = csv_root
+        self.data = pd.read_csv(csv_root, **pandas_kwargs)
+
+        # Stacking allows to also contain higher dimensional data in the csv
+        # file like bounding boxes or keypoints.
+        # Just make sure to load the data correctly, e.g. by passing the
+        # converter ast.literal_val for the corresponding column.
+        self.labels = {k: np.stack(self.data[k].values) for k in self.data}
+
+    def get_example(self, idx):
+        '''Returns all entries in row :attr:`idx` of the labels.'''
+
+        # Labels are a pandas dataframe. `.iloc[idx]` returns the row at index
+        # idx. Converting to dict results in column_name: row_entry pairs.
+        return dict(self.data.iloc[idx])
 
 
 if __name__ == '__main__':
