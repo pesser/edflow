@@ -61,6 +61,32 @@ class DatasetMixin(DatasetMixin_):
 
         return ret_dict
 
+    def __len__(self):
+        '''Add default behaviour for datasets defining an attribute
+        :attr:`data`, which in turn is a dataset. This happens often when
+        stacking several datasets on top of each other.
+
+        The default behaviour now is to return ``len(self.data)`` if possible,
+        and otherwise revert to the original behaviour.
+        '''
+        if hasattr(self, 'data'):
+            return len(self.data)
+        else:
+            return super().__len__()
+
+    def get_example(self, *args, **kwargs):
+        '''Add default behaviour for datasets defining an attribute
+        :attr:`data`, which in turn is a dataset. This happens often when
+        stacking several datasets on top of each other.
+
+        The default behaviour now is to return ``self.data.get_example(idx)``
+        if possible, and otherwise revert to the original behaviour.
+        '''
+        if hasattr(self, 'data'):
+            return self.data.get_example(*args, **kwargs)
+        else:
+            return super().get_example(*args, **kwargs)
+
     def __mul__(self, val):
         '''Returns a ConcatenatedDataset of multiples of itself.
 
@@ -74,8 +100,11 @@ class DatasetMixin(DatasetMixin_):
 
         assert isinstance(val, int), 'Datasets can only be multiplied by ints'
 
-        concs = [self] * val
-        return ConcatenatedDataset(*concs)
+        if val > 1:
+            concs = [self] * val
+            return ConcatenatedDataset(*concs)
+        else:
+            return self
 
     def __rmul__(self, val):
         return self.__mul__(val)
