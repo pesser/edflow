@@ -200,3 +200,14 @@ class VGG19Features(object):
         likelihood = 0.5*dim*(rec_loss / gamma + log_gamma + log2pi)
 
         return likelihood
+
+
+    def make_style_op(self, x, y):
+        __feature_weights = self.feature_weights
+        __gram_weights = self.gram_weights
+        self.feature_weights = [0.01 for _ in __feature_weights]
+        self.gram_weights = [1.0 for _ in __gram_weights]
+        loss = self.make_loss_op(x, y)
+        self.feature_weights = __feature_weights
+        self.gram_weights = __gram_weights
+        return loss
