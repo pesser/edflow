@@ -20,7 +20,6 @@ setup(name='edflow',
           'h5py',
           'scikit-learn',
           'scikit-image',
-          'tensorboardX',
           'natsort'
           ],
       zip_safe=False,
