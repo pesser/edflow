@@ -2,8 +2,8 @@
 better catorgory than util.'''
 
 import numpy as np
-import tensorflow as tf
-import os, pickle
+import os
+import pickle
 
 
 def make_linear_var(step,
@@ -25,6 +25,7 @@ def make_linear_var(step,
     Returns:
         tf.Tensor: :math:`y`
     """
+    import tensorflow as tf
     if clip_min is None:
         clip_min = min(start_value, end_value)
     if clip_max is None:
@@ -60,13 +61,13 @@ def make_exponential_var(step,
     return tf.math.pow(decay, stepper)*start_value
 
 
-def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):
+def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):  #noqa
     '''Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
     Example:
 
-    ..codeblock:: python
+    .. codeblock:: python
 
     dol = {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
 
@@ -182,7 +183,7 @@ def contains_key(nested_thing, key, splitval='/'):
     try:
         retrieve(nested_thing, key, splitval)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -200,10 +201,14 @@ def strenumerate(iterable):
 def cached_function(fn):
     """a very rough cache for function calls. Highly experimental. Only
     active if activated with environment variable."""
-    if not os.environ.get("EDFLOW_CACHED_FUNC", 0) == "42": # secret activation code
+    # secret activation code
+    if not os.environ.get("EDFLOW_CACHED_FUNC", 0) == "42":
         return fn
-    cache_dir = os.path.join(os.environ.get("HOME"), "var", "edflow_cached_func")
-    os.makedirs(cache_dir, exist_ok = True)
+    cache_dir = os.path.join(os.environ.get("HOME"),
+                             "var",
+                             "edflow_cached_func")
+    os.makedirs(cache_dir, exist_ok=True)
+
     def wrapped(*args, **kwargs):
         fnhash = fn.__name__
         callargs = (args, kwargs)
@@ -240,11 +245,131 @@ class PRNGMixin(object):
         return self._prng
 
 
+class Printer(object):
+    '''For usage with walk: collects strings for printing'''
+
+    def __init__(self, string_fn):
+        self.str = ''
+        self.string_fn = string_fn
+
+    def __call__(self, key, obj):
+        self.str += self.string_fn(key, obj) + '\n'
+
+    def __str__(self):
+        return self.str
+
+
+class TablePrinter(object):
+    '''For usage with walk: Collects string to put in a table.'''
+
+    def __init__(self, string_fn, names=None):
+        if names is None:
+            self.vals = []
+            self.has_header = False
+        else:
+            self.vals = [names]
+            self.has_header = True
+        self.string_fn = string_fn
+
+    def __call__(self, key, obj):
+        self.vals += [list(self.string_fn(key, obj))]
+
+    def __str__(self):
+        # get width of table:
+        col_widths = [0] * len(self.vals[0])
+        for val in self.vals:
+            for i, entry in enumerate(val):
+                col_widths[i] = max(col_widths[i], len(entry) + 2)
+
+        form = '|'
+        for cw in col_widths:
+            form += ' {: >' + str(cw) + '} |'
+        form += '\n'
+
+        ref_line = form.format(*self.vals[0])
+        sep = '-' * (len(ref_line) - 1)
+        hsep = '=' * (len(ref_line) - 1)
+
+        chars = np.array(list(ref_line))
+        crossings = np.where(chars == '|')[0]
+        print(crossings)
+        for c in crossings:
+            sep = sep[:c] + '+' + sep[c+1:]
+            hsep = hsep[:c] + '+' + hsep[c+1:]
+        sep += '\n'
+        hsep += '\n'
+
+        table_str = sep
+        for i, val in enumerate(self.vals):
+            table_str += form.format(*val)
+            if self.has_header and i == 0:
+                table_str += hsep
+            else:
+                table_str += sep
+
+        return table_str
+
+
+def pprint_str(nested_thing, heuristics=None):
+    '''Formats nested objects as string and tries to give relevant information.
+
+    Args:
+        nested_thing (dict or list): Some nested object.
+        heuristics (Callable): If given this should produce the string, which
+            is printed as description of a leaf object.
+    '''
+
+    if heuristics is None:
+        def heuristics(key, obj):
+            if isinstance(obj, np.ndarray):
+                return '{}: np array - {}'.format(key, obj.shape)
+            else:
+                return '{}: {} - {}'.format(key, type(obj), obj)
+
+    P = Printer(heuristics)
+
+    walk(nested_thing, P, pass_key=True)
+
+    return str(P)
+
+
+def pprint(nested_thing, heuristics=None):
+    '''Prints nested objects and tries to give relevant information.
+
+    Args:
+        nested_thing (dict or list): Some nested object.
+        heuristics (Callable): If given this should produce the string, which
+            is printed as description of a leaf object.
+    '''
+    print(pprint_str(nested_thing, heuristics))
+
+
+def pp2mkdtable(nested_thing):
+    '''Turns a formatted string into a markdown table.'''
+
+    def heuristics(key, obj):
+        if hasattr(obj, 'shape'):
+            s = str(obj) if obj.shape == () else str(obj.shape)
+            return key, str(obj.__class__.__name__), s
+        elif hasattr(obj, 'size'):
+            return key, str(obj.__class__.__name__), str(obj.size())
+        else:
+            return key, str(obj.__class__.__name__), str(obj)
+
+    P = TablePrinter(heuristics, names=['Name', 'Type', 'Content'])
+
+    walk(nested_thing, P, pass_key=True)
+
+    return str(P)
+
 
 if __name__ == '__main__':
+    from edflow.data.util import plot_datum
+    image = np.ones([100, 100, 3])
     nested = {'step': 1,
-              'stuff': {'a': 1, 'b': [1,2,3]},
-              'more': [{'c': 1}, 2, [3, 4]]}
+              'stuff': {'a': 1, 'b': [1, 2, 3]},
+              'more': [{'c': 1}, 2, [3, 4]],
+              'image': image}
 
     def fn(val):
         print(val)
@@ -254,3 +379,9 @@ if __name__ == '__main__':
 
     print(nested)
     print(new)
+
+    pprint(nested)
+
+    print(pp2mkdtable(nested))
+
+    plot_datum(nested)
