@@ -118,7 +118,7 @@ active if activated with environment variable.</p>
 <dt id="edflow.util.contains_key">
 <code class="descclassname">edflow.util.</code><code class="descname">contains_key</code><span class="sig-paren">(</span><em>nested_thing</em>, <em>key</em>, <em>splitval='/'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#contains_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.contains_key" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests if the path like key can find an object in the nested_thing.
-Has the same signature as <a href="#id1"><span class="problematic" id="id2">:function:`retrieve`</span></a>.</p>
+Has the same signature as <a class="reference internal" href="#edflow.util.retrieve" title="edflow.util.retrieve"><code class="xref py py-func docutils literal notranslate"><span class="pre">retrieve()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="function">
@@ -584,6 +584,13 @@ examples.</p>
 </div>
 <p>If the original dataset would be represented as a 2d numpy array the
 <code class="docutils literal notranslate"><span class="pre">UnSequence</span></code> version of it would be the concatenation of all its rows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">seq_dataset</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="n">unseq_dataset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">seq_dataset</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">unseq_dataset</span><span class="p">))</span>  <span class="c1"># True</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="edflow.data.dataset.UnSequenceDataset.get_example">
 <code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#UnSequenceDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.UnSequenceDataset.get_example" title="Permalink to this definition">¶</a></dt>
@@ -617,7 +624,7 @@ should be the path to a zip file to cache into - i.e. it should end in zip.</p>
 <dt id="edflow.data.dataset.getDebugDataset">
 <code class="descclassname">edflow.data.dataset.</code><code class="descname">getDebugDataset</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#getDebugDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.getDebugDataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a dataset from the config and makes ist reasonably small.
-The config syntax works as in <a href="#id3"><span class="problematic" id="id4">:function:`getSeqDataset`</span></a>. See there for
+The config syntax works as in <a class="reference internal" href="#edflow.data.dataset.getSeqDataset" title="edflow.data.dataset.getSeqDataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">getSeqDataset()</span></code></a>. See there for
 more extensive documentation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -645,6 +652,16 @@ more extensive documentation.</p>
 <cite>length</cite> and <cite>step</cite> parameter in the supplied <cite>config</cite> to load and
 sequentialize a dataset.</p>
 <p>A config passed to edflow would the look like this:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dataset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">edflow.data.dataset.getSeqDataSet</span>
+<span class="nt">model</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Some Model</span>
+<span class="nt">iterator</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Some Iterator</span>
+
+<span class="nt">seqdataset</span><span class="p">:</span>
+        <span class="nt">dataset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">import.path.to.your.basedataset,</span>
+        <span class="nt">length</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3,</span>
+        <span class="nt">step</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1}</span>
+</pre></div>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">getSeqDataSet</span></code> will import the base <code class="docutils literal notranslate"><span class="pre">dataset</span></code> and pass it to
 <a class="reference internal" href="#edflow.data.dataset.SequenceDataset" title="edflow.data.dataset.SequenceDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDataset</span></code></a> together with <code class="docutils literal notranslate"><span class="pre">length</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> to
 make the actually used dataset.</p>
@@ -704,8 +721,8 @@ the stored file given its index.</p></li>
 <li><p><a class="reference external" href="#Authors">Authors</a></p></li>
 </ol>
 </div>
-<div class="section" id="id5">
-<h2>Setup<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h2>Setup<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>There are two ways for setting up <strong>EDFlow</strong> on your system:</p>
 <ol class="arabic">
 <li><p>Use PyPI:</p>
@@ -731,12 +748,12 @@ In edflow directory
 </li>
 </ol>
 </div>
-<div class="section" id="id6">
-<h2>Workflow<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id2">
+<h2>Workflow<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p>For more information, look into our <a class="reference external" href="link">starter guide</a>.</p>
 </div>
-<div class="section" id="id7">
-<h2>Example<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h2>Example<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="tensorflow">
 <h3>Tensorflow<a class="headerlink" href="#tensorflow" title="Permalink to this headline">¶</a></h3>
 </div>
@@ -744,10 +761,10 @@ In edflow directory
 <h3>Pytorch<a class="headerlink" href="#pytorch" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
-<div class="section" id="id8">
-<h2>Other<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id9">
-<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h2>Other<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">path/to/config</span></code></p>
 <blockquote>
@@ -767,15 +784,15 @@ In edflow directory
 </li>
 </ul>
 </div>
-<div class="section" id="id10">
-<h3>Known Issues<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Known Issues<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="id11">
-<h3>Compatibility<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Compatibility<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
-<div class="section" id="id12">
-<h2>Contributions<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id8">
+<h2>Contributions<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
 <p>`
 .. image:: <a class="reference external" href="https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
 <blockquote>
@@ -882,12 +899,12 @@ In edflow directory
 <p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/pulse">https://github.com/pesser/edflow/pulse</a>&gt;`_</p>
 </div></blockquote>
 </div>
-<div class="section" id="id13">
-<h2>LICENSE<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h2>LICENSE<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
 <p>coming soon…</p>
 </div>
-<div class="section" id="id14">
-<h2>Authors<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h2>Authors<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
 <p>Mimo Tilbich `
 .. image:: <a class="reference external" href="https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
 <blockquote>
@@ -939,22 +956,22 @@ In edflow directory
 <li><a class="reference internal" href="#">Welcome to EDFlow’s documentation!</a></li>
 <li><a class="reference internal" href="#edflow-evaluation-driven-workflow">EDFlow - Evaluation Driven workFlow</a><ul>
 <li><a class="reference internal" href="#table-of-contents">Table of Contents</a></li>
-<li><a class="reference internal" href="#id5">Setup</a></li>
-<li><a class="reference internal" href="#id6">Workflow</a></li>
-<li><a class="reference internal" href="#id7">Example</a><ul>
+<li><a class="reference internal" href="#id1">Setup</a></li>
+<li><a class="reference internal" href="#id2">Workflow</a></li>
+<li><a class="reference internal" href="#id3">Example</a><ul>
 <li><a class="reference internal" href="#tensorflow">Tensorflow</a></li>
 <li><a class="reference internal" href="#pytorch">Pytorch</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id8">Other</a><ul>
-<li><a class="reference internal" href="#id9">Parameters</a></li>
-<li><a class="reference internal" href="#id10">Known Issues</a></li>
-<li><a class="reference internal" href="#id11">Compatibility</a></li>
+<li><a class="reference internal" href="#id4">Other</a><ul>
+<li><a class="reference internal" href="#id5">Parameters</a></li>
+<li><a class="reference internal" href="#id6">Known Issues</a></li>
+<li><a class="reference internal" href="#id7">Compatibility</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id12">Contributions</a></li>
-<li><a class="reference internal" href="#id13">LICENSE</a></li>
-<li><a class="reference internal" href="#id14">Authors</a></li>
+<li><a class="reference internal" href="#id8">Contributions</a></li>
+<li><a class="reference internal" href="#id9">LICENSE</a></li>
+<li><a class="reference internal" href="#id10">Authors</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#quick-and-dirty">Quick and Dirty</a></li>

@@ -712,7 +712,7 @@ class UnSequenceDataset(DatasetMixin):
     If the original dataset would be represented as a 2d numpy array the 
     ``UnSequence`` version of it would be the concatenation of all its rows:
 
-    .. codeblock:: python
+    .. code-block:: python
 
         a = np.arange(12)
         seq_dataset = a.reshape([3, 4])
@@ -763,7 +763,7 @@ def getSeqDataset(config):
 
     A config passed to edflow would the look like this:
 
-    .. codeblock:: yaml
+    .. code-block:: yaml
 
         dataset: edflow.data.dataset.getSeqDataSet
         model: Some Model
@@ -819,7 +819,7 @@ def JoinedDataset(dataset, key, n_joins):
 
 def getDebugDataset(config):
     '''Loads a dataset from the config and makes ist reasonably small.
-    The config syntax works as in :function:`getSeqDataset`. See there for
+    The config syntax works as in :func:`getSeqDataset`. See there for
     more extensive documentation.
 
     Args:
