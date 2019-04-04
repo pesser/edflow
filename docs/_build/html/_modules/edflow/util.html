@@ -46,7 +46,7 @@
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">pickle</span>
 
 
-<div class="viewcode-block" id="make_linear_var"><a class="viewcode-back" href="../../index.html#edflow.util.make_linear_var">[docs]</a><span class="k">def</span> <span class="nf">make_linear_var</span><span class="p">(</span><span class="n">step</span><span class="p">,</span>
+<div class="viewcode-block" id="make_linear_var"><a class="viewcode-back" href="../../docu.html#edflow.util.make_linear_var">[docs]</a><span class="k">def</span> <span class="nf">make_linear_var</span><span class="p">(</span><span class="n">step</span><span class="p">,</span>
                     <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span>
                     <span class="n">start_value</span><span class="p">,</span> <span class="n">end_value</span><span class="p">,</span>
                     <span class="n">clip_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clip_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -76,7 +76,7 @@
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="n">clip_min</span><span class="p">,</span> <span class="n">clip_max</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="make_exponential_var"><a class="viewcode-back" href="../../index.html#edflow.util.make_exponential_var">[docs]</a><span class="k">def</span> <span class="nf">make_exponential_var</span><span class="p">(</span><span class="n">step</span><span class="p">,</span>
+<div class="viewcode-block" id="make_exponential_var"><a class="viewcode-back" href="../../docu.html#edflow.util.make_exponential_var">[docs]</a><span class="k">def</span> <span class="nf">make_exponential_var</span><span class="p">(</span><span class="n">step</span><span class="p">,</span>
                          <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span>
                          <span class="n">start_value</span><span class="p">,</span> <span class="n">end_value</span><span class="p">,</span>
                          <span class="n">decay</span><span class="p">):</span>
@@ -100,7 +100,7 @@
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">decay</span><span class="p">,</span> <span class="n">stepper</span><span class="p">)</span><span class="o">*</span><span class="n">start_value</span></div>
 
 
-<div class="viewcode-block" id="walk"><a class="viewcode-back" href="../../index.html#edflow.util.walk">[docs]</a><span class="k">def</span> <span class="nf">walk</span><span class="p">(</span><span class="n">dict_or_list</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pass_key</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prev_key</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="walk"><a class="viewcode-back" href="../../docu.html#edflow.util.walk">[docs]</a><span class="k">def</span> <span class="nf">walk</span><span class="p">(</span><span class="n">dict_or_list</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pass_key</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prev_key</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Walk a nested list and/or dict recursively and call fn on all non</span>
 <span class="sd">    list or dict objects.</span>
 
@@ -184,7 +184,7 @@
     <span class="k">return</span> <span class="n">results</span></div>
 
 
-<div class="viewcode-block" id="retrieve"><a class="viewcode-back" href="../../index.html#edflow.util.retrieve">[docs]</a><span class="k">def</span> <span class="nf">retrieve</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">list_or_dict</span><span class="p">,</span> <span class="n">splitval</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="retrieve"><a class="viewcode-back" href="../../docu.html#edflow.util.retrieve">[docs]</a><span class="k">def</span> <span class="nf">retrieve</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">list_or_dict</span><span class="p">,</span> <span class="n">splitval</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Given a nested list or dict return the desired value at key.</span>
 
 <span class="sd">    Args:</span>
@@ -216,7 +216,7 @@
     <span class="k">return</span> <span class="n">list_or_dict</span></div>
 
 
-<div class="viewcode-block" id="contains_key"><a class="viewcode-back" href="../../index.html#edflow.util.contains_key">[docs]</a><span class="k">def</span> <span class="nf">contains_key</span><span class="p">(</span><span class="n">nested_thing</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">splitval</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="contains_key"><a class="viewcode-back" href="../../docu.html#edflow.util.contains_key">[docs]</a><span class="k">def</span> <span class="nf">contains_key</span><span class="p">(</span><span class="n">nested_thing</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">splitval</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Tests if the path like key can find an object in the nested_thing.</span>
 <span class="sd">    Has the same signature as :func:`retrieve`.&#39;&#39;&#39;</span>
     <span class="k">try</span><span class="p">:</span>
@@ -226,7 +226,7 @@
         <span class="k">return</span> <span class="kc">False</span></div>
 
 
-<div class="viewcode-block" id="strenumerate"><a class="viewcode-back" href="../../index.html#edflow.util.strenumerate">[docs]</a><span class="k">def</span> <span class="nf">strenumerate</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+<div class="viewcode-block" id="strenumerate"><a class="viewcode-back" href="../../docu.html#edflow.util.strenumerate">[docs]</a><span class="k">def</span> <span class="nf">strenumerate</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Works just as enumerate, but the returned index is a string.</span>
 
 <span class="sd">    Args:</span>
@@ -237,7 +237,7 @@
         <span class="k">yield</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">val</span></div>
 
 
-<div class="viewcode-block" id="cached_function"><a class="viewcode-back" href="../../index.html#edflow.util.cached_function">[docs]</a><span class="k">def</span> <span class="nf">cached_function</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+<div class="viewcode-block" id="cached_function"><a class="viewcode-back" href="../../docu.html#edflow.util.cached_function">[docs]</a><span class="k">def</span> <span class="nf">cached_function</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;a very rough cache for function calls. Highly experimental. Only</span>
 <span class="sd">    active if activated with environment variable.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;EDFLOW_CACHED_FUNC&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;42&quot;</span><span class="p">:</span> <span class="c1"># secret activation code</span>
@@ -267,7 +267,7 @@
     <span class="k">return</span> <span class="n">wrapped</span></div>
 
 
-<div class="viewcode-block" id="PRNGMixin"><a class="viewcode-back" href="../../index.html#edflow.util.PRNGMixin">[docs]</a><span class="k">class</span> <span class="nc">PRNGMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="PRNGMixin"><a class="viewcode-back" href="../../docu.html#edflow.util.PRNGMixin">[docs]</a><span class="k">class</span> <span class="nc">PRNGMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Adds a prng property which is a numpy RandomState which gets</span>
 <span class="sd">    reinitialized whenever the pid changes to avoid synchronized sampling</span>
 <span class="sd">    behavior when used in conjunction with multiprocessing.&quot;&quot;&quot;</span>

@@ -9,7 +9,8 @@ from tqdm import tqdm, trange
 
 import multiprocessing as mp
 
-from edflow.custom_logging import init_logging, get_logger
+#from edflow.custom_logging import init_logging, get_logger
+from edflow.custom_logging import get_logger
 from edflow.main import train, test
 
 
