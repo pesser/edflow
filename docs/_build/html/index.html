@@ -23,6 +23,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">EDFlow  documentation</a> &#187;</li> 
       </ul>
     </div>  
@@ -32,9 +35,232 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-edflow-s-documentation">
-<h1>Welcome to EDFlow’s documentation!<a class="headerlink" href="#welcome-to-edflow-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-edflow">
+<span id="welcome-to-edflow-s-documentation"></span><h1>Welcome to EDFlow’s documentation!<a class="headerlink" href="#module-edflow" title="Permalink to this headline">¶</a></h1>
+</div>
+<div class="section" id="edflow-evaluation-driven-workflow">
+<h1>EDFlow - Evaluation Driven workFlow<a class="headerlink" href="#edflow-evaluation-driven-workflow" title="Permalink to this headline">¶</a></h1>
+<p>A small framework for training and evaluating tensorflow models by Mimo Tilbich.</p>
+<hr class="docutils" />
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="#Setup">Setup</a></p></li>
+<li><p><a class="reference external" href="#Workflow">Workflow</a></p></li>
+<li><p><a class="reference external" href="#Example">Example</a></p></li>
+<li><p><a class="reference external" href="#Other">Other</a></p>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="#Parameters">Parameters</a></p></li>
+<li><p><a class="reference external" href="#Known-Issues">Known Issues</a></p></li>
+<li><p><a class="reference external" href="#Compatibility">Compatibility</a></p></li>
+</ol>
+</li>
+<li><p><a class="reference external" href="#Contributions">Contributions</a></p></li>
+<li><p><a class="reference external" href="#LICENSE">LICENSE</a></p></li>
+<li><p><a class="reference external" href="#Authors">Authors</a></p></li>
+</ol>
+</div>
+<div class="section" id="id1">
+<h2>Setup<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>There are two ways for setting up <strong>EDFlow</strong> on your system:</p>
+<ol class="arabic">
+<li><p>Use PyPI:</p>
+<blockquote>
+<div><p>Recommended: Install edflow into a conda environment.</p>
+</div></blockquote>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>   conda create --name myenv python=3.6
+   source activate myenv
+
+Pull and install the current in the current directory with PyPi
+``pip install -e git+https://github.com/pesser/edflow.git``
+</pre></div>
+</div>
+</li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>:</p>
+<blockquote>
+<div><p>Pull repository
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/pesser/edflow.git</span></code>
+<code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">edflow</span></code>
+In edflow directory
+<code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">setup.py</span></code></p>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="id2">
+<h2>Workflow<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>For more information, look into our <a class="reference external" href="link">starter guide</a>.</p>
+</div>
+<div class="section" id="id3">
+<h2>Example<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tensorflow">
+<h3>Tensorflow<a class="headerlink" href="#tensorflow" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="pytorch">
+<h3>Pytorch<a class="headerlink" href="#pytorch" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>Other<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">path/to/config</span></code></p>
+<blockquote>
+<div><p>yaml file with all information see [Workflow][#Workflow]</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--checkpoint</span> <span class="pre">path/to/checkpoint</span> <span class="pre">to</span> <span class="pre">restore</span></code></p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">--noeval</span></code></dt><dd><p>only run training</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">--retrain</span></code></dt><dd><p>reset global step to zero</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h3>Known Issues<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="id7">
+<h3>Compatibility<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="id8">
+<h2>Contributions<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<p>`
+.. image:: <a class="reference external" href="https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-Commits</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/graphs/commit-activity">https://github.com/pesser/edflow/graphs/commit-activity</a>&gt;`_</p>
+</div></blockquote>
+<p>`
+.. image:: <a class="reference external" href="https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-Issues</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/issues">https://github.com/pesser/edflow/issues</a>&gt;`_</p>
+</div></blockquote>
+<p>`
+.. image:: <a class="reference external" href="https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-PRs</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/pulls">https://github.com/pesser/edflow/pulls</a>&gt;`_</p>
+</div></blockquote>
+<p>`
+.. image:: <a class="reference external" href="https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white">https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white">https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-Status</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/releases">https://github.com/pesser/edflow/releases</a>&gt;`_</p>
+</div></blockquote>
+<p>`
+.. image:: <a class="reference external" href="https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-Stars</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/stargazers">https://github.com/pesser/edflow/stargazers</a>&gt;`_</p>
+</div></blockquote>
+<p>`
+.. image:: <a class="reference external" href="https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-Forks</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/network">https://github.com/pesser/edflow/network</a>&gt;`_</p>
+</div></blockquote>
+<p>`
+.. image:: <a class="reference external" href="https://img.shields.io/github/last-commit/pesser/edflow/master.svg?logo=github&amp;logoColor=white&amp;label=pushed">https://img.shields.io/github/last-commit/pesser/edflow/master.svg?logo=github&amp;logoColor=white&amp;label=pushed</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/last-commit/pesser/edflow/master.svg?logo=github&amp;logoColor=white&amp;label=pushed">https://img.shields.io/github/last-commit/pesser/edflow/master.svg?logo=github&amp;logoColor=white&amp;label=pushed</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-Updated</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/pulse">https://github.com/pesser/edflow/pulse</a>&gt;`_</p>
+</div></blockquote>
+</div>
+<div class="section" id="id9">
+<h2>LICENSE<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<p>coming soon…</p>
+</div>
+<div class="section" id="id10">
+<h2>Authors<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
+<p>Mimo Tilbich `
+.. image:: <a class="reference external" href="https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+<blockquote>
+<div><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">target</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
+</dd>
+<dt class="field-even">alt</dt>
+<dd class="field-even"><p>GitHub-Contributions</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/graphs/contributors">https://github.com/pesser/edflow/graphs/contributors</a>&gt;`_</p>
+</div></blockquote>
 <div class="toctree-wrapper compound">
+</div>
 </div>
 </div>
 <div class="section" id="quick-and-dirty">
@@ -56,8 +282,6 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-<div class="toctree-wrapper compound">
-</div>
 </div>
 
 
@@ -69,6 +293,26 @@
   <h3><a href="#">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Welcome to EDFlow’s documentation!</a></li>
+<li><a class="reference internal" href="#edflow-evaluation-driven-workflow">EDFlow - Evaluation Driven workFlow</a><ul>
+<li><a class="reference internal" href="#table-of-contents">Table of Contents</a></li>
+<li><a class="reference internal" href="#id1">Setup</a></li>
+<li><a class="reference internal" href="#id2">Workflow</a></li>
+<li><a class="reference internal" href="#id3">Example</a><ul>
+<li><a class="reference internal" href="#tensorflow">Tensorflow</a></li>
+<li><a class="reference internal" href="#pytorch">Pytorch</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id4">Other</a><ul>
+<li><a class="reference internal" href="#id5">Parameters</a></li>
+<li><a class="reference internal" href="#id6">Known Issues</a></li>
+<li><a class="reference internal" href="#id7">Compatibility</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id8">Contributions</a></li>
+<li><a class="reference internal" href="#id9">LICENSE</a></li>
+<li><a class="reference internal" href="#id10">Authors</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#quick-and-dirty">Quick and Dirty</a></li>
 <li><a class="reference internal" href="#user-guide">User Guide</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -101,6 +345,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">EDFlow  documentation</a> &#187;</li> 
       </ul>
     </div>
