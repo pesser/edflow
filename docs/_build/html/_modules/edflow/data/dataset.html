@@ -752,7 +752,7 @@
 <span class="sd">    If the original dataset would be represented as a 2d numpy array the </span>
 <span class="sd">    ``UnSequence`` version of it would be the concatenation of all its rows:</span>
 
-<span class="sd">    .. codeblock:: python</span>
+<span class="sd">    .. code-block:: python</span>
 
 <span class="sd">        a = np.arange(12)</span>
 <span class="sd">        seq_dataset = a.reshape([3, 4])</span>
@@ -803,7 +803,7 @@
 
 <span class="sd">    A config passed to edflow would the look like this:</span>
 
-<span class="sd">    .. codeblock:: yaml</span>
+<span class="sd">    .. code-block:: yaml</span>
 
 <span class="sd">        dataset: edflow.data.dataset.getSeqDataSet</span>
 <span class="sd">        model: Some Model</span>
@@ -859,7 +859,7 @@
 
 <div class="viewcode-block" id="getDebugDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.getDebugDataset">[docs]</a><span class="k">def</span> <span class="nf">getDebugDataset</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Loads a dataset from the config and makes ist reasonably small.</span>
-<span class="sd">    The config syntax works as in :function:`getSeqDataset`. See there for</span>
+<span class="sd">    The config syntax works as in :func:`getSeqDataset`. See there for</span>
 <span class="sd">    more extensive documentation.</span>
 
 <span class="sd">    Args:</span>
