@@ -6,16 +6,16 @@ A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 |PyPI-Versions| |PyPI-Status| |Conda-Forge-Status|
 
 ## Table of Contents
-1. [Setup](##Setup)
-2. [Workflow](##Workflow)
-3. [Example](##Example)
-4. [Other](##Other)
-    1. [Parameters](###Parameters)
-    2. [Known Issues](###Known issues)
-    3. [Compatibility](###Compatibility)
-5. [Contributions](##Contributions)
-6. [LICENSE](##LICENSE)
-7. [Authors](##Authors)
+1. [Setup](#Setup)
+2. [Workflow](#Workflow)
+3. [Example](#Example)
+4. [Other](#Other)
+    1. [Parameters](##Parameters)
+    2. [Known Issues](##Known issues)
+    3. [Compatibility](##Compatibility)
+5. [Contributions](#Contributions)
+6. [LICENSE](#LICENSE)
+7. [Authors](#Authors)
 
 
 ## Setup
