@@ -2,6 +2,8 @@
 
 A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 
+**Please note: This is a work in progress. Nothing is finished and a lot you read here might be wrong.**
+
 
 ---
 
