@@ -7,9 +7,9 @@ A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 2. [Workflow](#Workflow)
 3. [Example](#Example)
 4. [Other](#Other)
-    1. [Parameters](##Parameters)
-    2. [Known Issues](##Known issues)
-    3. [Compatibility](##Compatibility)
+    1. [Parameters](#Parameters)
+    2. [Known Issues](#Known Issues)
+    3. [Compatibility](#Compatibility)
 5. [Contributions](#Contributions)
 6. [LICENSE](#LICENSE)
 7. [Authors](#Authors)
@@ -81,7 +81,6 @@ For more information, look into our [starter guide](link).
 ## LICENSE
  
 [![LICENSE][LICENSE]](https://raw.githubusercontent.com/pesser/edflow/master/LICENSE)
-
 
 ## Authors
 
