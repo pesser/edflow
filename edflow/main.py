@@ -185,11 +185,6 @@ def _test(config, root, nogpu=False, bar_position=0):
             break
 
 def main(opt):
-    '''
-    this is the main
-    ----------------
-    some strings
-    '''
     with open(opt.config) as f:
         config = yaml.load(f)
 
