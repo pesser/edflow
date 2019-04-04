@@ -11,7 +11,7 @@ A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 3. [Example](#Example)
 4. [Other](#Other)
     1. [Parameters](#Parameters)
-    2. [Known Issues](#Known Issues)
+    2. [Known Issues](#Known-Issues)
     3. [Compatibility](#Compatibility)
 5. [Contributions](#Contributions)
 6. [LICENSE](#LICENSE)
@@ -56,7 +56,21 @@ For more information, look into our [starter guide](link).
 ## Other
 
 ### Parameters
-### Knwon Issues
+
+- `--config path/to/config`
+
+    yaml file with all information see [Workflow][#Workflow]
+
+- `--checkpoint path/to/checkpoint to restore`
+
+- `--noeval`
+    only run training
+
+- `--retrain`
+    reset global step to zero
+
+
+### Known Issues
 ### Compatibility
 
 
