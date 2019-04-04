@@ -8,8 +8,8 @@ class Dataset_MNIST(DatasetMixin):
         '''
         Parameters
         ----------
-        config: str
-            path to config file
+        config: dict
+            dictionary representing config options
         '''
         self.config = config
 
@@ -28,6 +28,18 @@ class Dataset_MNIST(DatasetMixin):
 
 
     def get_example(self, idx):
+        '''
+        similar to getitem, this method returns A DICT of values for the index idx.
+        Parameters
+        ----------
+        idx : int
+            index to get
+
+        Returns
+        -------
+            a dict of data for this idx
+
+        '''
         example = dict()
 
         image = self.data_train[0][idx]
@@ -36,28 +48,5 @@ class Dataset_MNIST(DatasetMixin):
         example["target"] = class_
         return example
 
-
     def __len__(self):
-        return len(self.data_train[0]) # RIGHT implementation, yields 60000
-        # return len(self.data_train) # WRONG implementation, yields 2
-
-
-if __name__ == '__main__':
-    config = {
-        "batch_size" : 8,
-        "spatial_size" : 28
-    }
-    d = Dataset_MNIST(config)
-
-    diter = make_batches(d, 16, True, 1, n_prefetch=1)
-    for i in range(10):
-        n = next(diter)
-        for nn in n.values(): print(nn.shape)
-    # yields batches of size 2
-
-
-    diter = make_batches(d, 16, False, 1, n_prefetch=1)
-    for i in range(10):
-        n = next(diter)
-        for nn in n.values(): print(nn.shape)
-    # yield batches of size 16
+        return len(self.data_train[0])
