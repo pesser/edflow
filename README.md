@@ -52,7 +52,6 @@ For more information, look into our [starter guide](link).
 ## Other
 
 ### Parameters
-
 - `--config path/to/config`
 
     yaml file with all information see [Workflow][#Workflow]
