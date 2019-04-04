@@ -9,6 +9,11 @@ import traceback
 
 from edflow.custom_logging import init_project, get_logger, LogSingleton
 
+"""
+main.py
+====================================
+The core module of my example project
+""" 
 
 def get_implementations_from_config(config, names):
     def get_impl(config, name):
@@ -179,8 +184,12 @@ def _test(config, root, nogpu=False, bar_position=0):
         if not config.get("eval_forever", False):
             break
 
-
 def main(opt):
+    '''
+    this is the main
+    ------
+    some strings
+    '''
     with open(opt.config) as f:
         config = yaml.load(f)
 
