@@ -89,7 +89,7 @@ For more information, look into our [starter guide](link).
 ## LICENSE
  
 [![LICENSE][LICENSE]](https://raw.githubusercontent.com/pesser/edflow/master/LICENSE)
-
+This project is licensed under the terms of the MIT license.
 
 ## Authors
 
