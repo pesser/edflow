@@ -88,7 +88,7 @@ For more information, look into our [starter guide](link).
 
 ## LICENSE
 
-coming soon…
+This project is licensed under the terms of the MIT license.
 
 ## Authors
 
