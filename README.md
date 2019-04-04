@@ -56,7 +56,21 @@ For more information, look into our [starter guide](link).
 ## Other
 
 ### Parameters
-### Knwon Issues
+
+- `--config path/to/config`
+
+    yaml file with all information see [Workflow][#Workflow]
+
+- `--checkpoint path/to/checkpoint to restore`
+
+- `--noeval`
+    only run training
+
+- `--retrain`
+    reset global step to zero
+
+
+### Known Issues
 ### Compatibility
 
 
