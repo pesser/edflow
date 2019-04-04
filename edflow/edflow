@@ -163,15 +163,16 @@ def main(opt):
             if done_count >= len(processes):
                 break
 
-    # Landing
-        for p in processes:
-            p.join()
-
-    except (Exception, KeyboardInterrupt):
+    except (Exception, KeyboardInterrupt) as e:
         logger.info('Terminating all processes')
         for p in processes:
             p.terminate()
+
+        raise e
     finally:
+        # Landing
+        for p in processes:
+            p.join()
         logger.info('Finished')
 
 
