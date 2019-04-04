@@ -74,8 +74,14 @@ class Hook(object):
 
         pass
 
-    def at_exception(self, *args, **kwargs):
-        '''Called when an exception is raised.'''
+    def at_exception(self, exception):
+        '''Called when an exception is raised.
+
+        Args:
+            exception (Exception): The exception which is being raised. Will
+                be raised again after all :method:`at_eception` calls have
+                been handled.
+        '''
 
         pass
 

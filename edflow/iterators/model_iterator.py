@@ -236,7 +236,7 @@ class PyHookedModelIterator(object):
             self._iterate(batch_iterator)
         except Exception as e:
             for hook in self.hooks:
-                hook.at_exception()
+                hook.at_exception(e)
 
             raise e
 
