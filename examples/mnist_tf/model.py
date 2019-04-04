@@ -1,26 +1,13 @@
-import sys, os
 import tensorflow as tf
-import numpy as np
-
 from edflow.iterators.trainer import TFBaseTrainer
-import edflow.iterators.deeploss as deeploss
-from edflow.hooks.evaluation_hooks import RestoreTFModelHook
-from edflow.util import make_linear_var
-
 import mnist_tf.nn as nn
-from tensorflow.contrib.framework.python.ops import add_arg_scope, arg_scope
+from examples.mnist_tf.nn import conv2D, dense
+from tensorflow.contrib.framework.python.ops import arg_scope
+
 
 # mnist example form
 # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/tutorials/mnist/mnist.py
-
-@add_arg_scope
-def conv2D(x, f, k, s=1, padding="same", activation=None):
-    return tf.layers.Conv2D(f, k, strides=s, padding=padding, activation=activation)(x)
-
-
-@add_arg_scope
-def dense(x, f, activation=None):
-    return tf.layers.dense(x, f, activation=activation)
+# adapted for EDFLOW
 
 
 def mnist_model(x):
@@ -56,8 +43,6 @@ class TrainModel(object):
     def __init__(self, config):
         self.config = config
         self.define_graph()
-        # self.variables = [v for v in tf.global_variables() if not v in variables]
-        # self.variables = [v for v in self.variables if not self.e1_name in v.name]
         self.variables = tf.global_variables()
 
 
@@ -71,7 +56,6 @@ class TrainModel(object):
     def outputs(self):
         return {'probs' : self.probs,
                 "classes" : self.classes}
-
 
     def define_graph(self):
         # inputs
