@@ -1,11 +1,11 @@
 from setuptools import setup
 
 setup(name='edflow',
-      version='0.1',
-      description='Our code to make videos of realisitc human motion.',
-      url='http://bitbucket.com/jhaux/edflow',
-      author='Patrick Esser, Johannes Haux, Timo Milbich',
-      author_email='{patrick.esser, johannes.haux, timo.milbich}'
+      version='0.2',
+      description='Logistics for Deep Learning',
+      url='https://github.com/pesser/edflow',
+      author='Mimo Tilbich et al.',
+      author_email='{patrick.esser, johannes.haux}'
                    '@iwr.uni-heidelberg.de',
       license='MIT',
       packages=['edflow'],
@@ -20,7 +20,7 @@ setup(name='edflow',
           'h5py',
           'scikit-learn',
           'scikit-image',
-          'tensorboardX'
+          'natsort'
           ],
       zip_safe=False,
       scripts=["edflow/edflow", "edflow/edcache"])

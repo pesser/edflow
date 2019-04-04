@@ -1,8 +1,9 @@
 import tensorflow as tf
 import os
 
-from edflow.iterators.model_iterator import HookedModelIterator
+from edflow.iterators.model_iterator import HookedModelIterator, TFHookedModelIterator
 from edflow.hooks import WaitForCheckpointHook, RestoreModelHook
+from edflow.hooks.evaluation_hooks import RestoreTFModelHook
 from edflow.project_manager import ProjectManager
 
 
@@ -49,4 +50,25 @@ class BaseEvaluator(HookedModelIterator):
 
     def step_ops(self):
         '''Evaluate the model!!!!'''
+        return self.model.outputs
+
+
+class TFBaseEvaluator(TFHookedModelIterator):
+    def __init__(self, *args, **kwargs):
+        kwargs['desc'] = 'Eval'
+        kwargs['hook_freq'] = 1
+        kwargs["num_epochs"] = 1
+        super().__init__(*args, **kwargs)
+
+        # wait for new checkpoint and restore
+        self.restore_variables = self.model.variables
+        restorer = RestoreTFModelHook(variables = self.restore_variables,
+                                      checkpoint_path = ProjectManager.checkpoints,
+                                      global_step_setter = self.set_global_step)
+        waiter = WaitForCheckpointHook(checkpoint_root = ProjectManager.checkpoints,
+                                       callback = restorer,
+                                       eval_all = self.config.get("eval_all", False))
+        self.hooks += [waiter]
+
+    def step_ops(self):
         return self.model.outputs

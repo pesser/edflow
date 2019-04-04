@@ -24,6 +24,7 @@ from multiprocessing.managers import BaseManager
 import queue
 
 from edflow.main import traceable_method, get_implementations_from_config
+from edflow.util import PRNGMixin
 
 
 class DatasetMixin(DatasetMixin_):
@@ -263,7 +264,7 @@ class CachedDataset(DatasetMixin):
         indeces and stores the examples in a file, as well as the labels.'''
 
         if not os.path.isfile(self.store_path) or self.force_cache:
-            print("Caching {}".format(self.base_dataset.name))
+            print("Caching {}".format(self.store_path))
             manager = make_server_manager()
             inqueue = manager.get_inqueue()
             outqueue = manager.get_outqueue()
@@ -356,6 +357,70 @@ class CachedDataset(DatasetMixin):
         return example
 
 
+class PathCachedDataset(CachedDataset):
+    """Used for simplified decorator interface to dataset caching."""
+    def __init__(self,
+                 dataset,
+                 path):
+        self.force_cache = False
+        self.keep_existing = True
+
+        self.base_dataset = dataset
+        self.store_dir = os.path.split(path)[0]
+        self.store_path = path
+
+        self.naming_template = 'example_{}.p'
+        self._labels_name = 'labels.p'
+
+        os.makedirs(self.store_dir, exist_ok=True)
+
+        self.lenfile = self.store_path + ".p"
+        if not os.path.exists(self.lenfile):
+            self.force_cache = True
+        self.cache_dataset()
+        if not os.path.exists(self.lenfile):
+            with open(self.lenfile, "wb") as f:
+                pickle.dump(len(self.base_dataset), f)
+
+    def __len__(self):
+        if not (self.base_dataset is None or os.path.exists(self.lenfile)):
+            return len(self.base_dataset)
+        if not hasattr(self, "_len"):
+            with open(self.lenfile, "rb") as f:
+                self._len = pickle.load(f)
+        return self._len
+
+
+def cachable(path):
+    """Decorator to cache datasets. If not cached, will start a caching server,
+    subsequent calls will just load from cache. Currently all worker must be
+    able to see the path. Be careful, function parameters are ignored on
+    furture calls.
+    Can be used on any callable that returns a dataset. Currently the path
+    should be the path to a zip file to cache into - i.e. it should end in zip.
+    """
+    def decorator(fn):
+        def wrapped(*args, **kwargs):
+            if os.path.exists(path + ".p"):
+                # cached version ready
+                return PathCachedDataset(None, path)
+            elif os.path.exists(path + "parameters.p"):
+                # zip exists but not pickle with length - caching server
+                # started and we are a worker bee
+                with open(path + "parameters.p", "rb") as f:
+                    args, kwargs = pickle.load(f)
+                return fn(*args, **kwargs)
+            else:
+                # start caching server
+                dataset = fn(*args, **kwargs)
+                os.makedirs(os.path.split(path)[0], exist_ok=True)
+                with open(path + "parameters.p", "wb") as f:
+                    pickle.dump((args, kwargs), f)
+                return PathCachedDataset(dataset, path)
+        return wrapped
+    return decorator
+
+
 class SubDataset(DatasetMixin):
     """A subset of a given dataset."""
     def __init__(self, data, subindices):
@@ -387,19 +452,45 @@ class SubDataset(DatasetMixin):
         return self._labels
 
 
+class LabelDataset(DatasetMixin):
+    """A label only dataset to avoid loading unnecessary data."""
+    def __init__(self, data):
+        self.data = data
+        self.keys = sorted(self.data.labels.keys())
+
+    def get_example(self, i):
+        """Return labels of example."""
+        example = dict((k, self.data.labels[k][i]) for k in self.keys)
+        example["base_index_"] = i
+        return example
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        return self.data.labels
+
+
 class ProcessedDataset(DatasetMixin):
     """A dataset with data processing applied."""
-    def __init__(self, data, process):
+    def __init__(self, data, process, update = True):
         self.data = data
         self.process = process
+        self.update = update
 
     def get_example(self, i):
         """Get example and process. Wrapped to make sure stacktrace is
         printed in case something goes wrong and we are in a
         MultiprocessIterator."""
-        d = self.data.get_example(i)
-        d.update(self.process(**d))
-        return d
+        d = self.data[i]
+        p = self.process(**d)
+        if self.update:
+            d.update(p)
+            return d
+        else:
+            return p
 
     def __len__(self):
         return len(self.data)
@@ -528,12 +619,19 @@ class ExampleConcatenatedDataset(DatasetMixin):
         '''Now each index corresponds to a sequence of labels.'''
         if not hasattr(self, '_labels'):
             self._labels = dict()
-            for idx, dataset in self.datasets:
+            for idx, dataset in enumerate(self.datasets):
                 for k in dataset.labels:
                     if k in self._labels:
                         self._labels[k] += [dataset.labels[k]]
                     else:
                         self._labels[k] = [dataset.labels[k]]
+
+            for k, v in self._labels.items():
+                v = np.array(v)
+                # sometimes numpy arrays or lists are given as labels
+                # their axes stay at the same positions.
+                trans = [1, 0] + list(range(2, len(v.shape)))
+                self._labels[k] = v.transpose(*trans)
         return self._labels
 
     def get_example(self, i):
@@ -555,7 +653,10 @@ class SequenceDataset(DatasetMixin):
     Given the length of those sequences the number of available examples
     is reduced by this length times the step taken. Additionally each
     example must have a frame id `fid`, by which it can be filtered. This is to
-    ensure that each frame is taken from the same video.'''
+    ensure that each frame is taken from the same video.
+    
+    This class assumes that examples come sequentially with fid and that fid 0
+    exists.'''
 
     def __init__(self, dataset, length, step=1):
         '''Args:
@@ -595,6 +696,64 @@ class SequenceDataset(DatasetMixin):
         '''Retreives a list of examples starting at i.'''
 
         return self.dset[i]
+
+
+class UnSequenceDataset(DatasetMixin):
+    '''Flattened version of a :class:`SequenceDataset`.
+    Adds a new key ``seq_idx`` to each example, corresponding to the sequence
+    index and a key ``example_idx`` corresponding to the original index.
+    The ordering of the dataset is kept and sequence examples are ordererd as
+    in the sequence they are taken from.
+
+    .. warning:: This will not create the original non-sequence dataset! The
+        new dataset contains ``sequence-length x len(SequenceDataset)``
+        examples.
+
+    If the original dataset would be represented as a 2d numpy array the 
+    ``UnSequence`` version of it would be the concatenation of all its rows:
+
+    .. codeblock:: python
+
+        a = np.arange(12)
+        seq_dataset = a.reshape([3, 4])
+        unseq_dataset = np.concatenate(seq_dataset, axis=-1)
+
+        np.all(a == unseq_dataset))  # True
+    '''
+
+    def __init__(self, seq_dataset):
+        self.data = seq_dataset
+        try:
+            self.seq_len = self.data.length
+        except:
+            # Try to get the seq_length from the labels
+            key = list(self.data.labels.keys())[0]
+            self.seq_len = len(self.data.labels[key][0])
+
+    @property
+    def labels(self):
+        if not hasattr(self, "_labels"):
+            self._labels = self.data.labels
+            for k, v in self.labels.items():
+                self._labels[k] = np.concatenate(v, axis=-1)
+        return self._labels
+
+    def __len__(self):
+        return self.seq_len * len(self.data)
+
+    def get_example(self, i):
+        example_idx = i // self.seq_len
+        seq_idx = i % self.seq_len
+
+        example = self.data[example_idx]
+        seq_example = {}
+        for k, v in example.items():
+            # index is added by DatasetMixin
+            if k != 'index_':
+                seq_example[k] = v[seq_idx]
+        seq_example.update({'seq_idx': seq_idx, 'example_idx': example_idx})
+
+        return seq_example
 
 
 def getSeqDataset(config):
@@ -682,7 +841,7 @@ def getDebugDataset(config):
     return SubDataset(base_dset, indices)
 
 
-class RandomlyJoinedDataset(DatasetMixin):
+class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
     '''Joins similiar JoinedDataset but randomly selects from possible joins.
     '''
     def __init__(self, dataset, key, n_joins):
@@ -733,36 +892,154 @@ class RandomlyJoinedDataset(DatasetMixin):
         return new_examples
 
 
-    @property
-    def prng(self):
-        currentpid = os.getpid()
-        if getattr(self, "_initpid", None) != currentpid:
-            self._initpid = currentpid
-            self._prng = np.random.RandomState()
-        return self._prng
+class DataFolder(DatasetMixin):
+    '''Given the root of a possibly nested folder containing datafiles and a
+    Callable that generates the labels to the datafile from its full name, this
+    class creates a labeled dataset.
+
+    A filtering of unwanted Data can be achieved by having the ``label_fn``
+    return ``None`` for those specific files. The actual files are only
+    read when ``__getitem__`` is called.
+
+    If for example ``label_fn`` returns a dict with the keys ``['a', 'b',
+    'c']`` and ``read_fn`` returns one with keys ``['d', 'e']`` then the dict
+    returned by ``__getitem__`` will contain the keys ``['a', 'b', 'c', 'd',
+    'e', 'file_path_', 'index_']``.
+    '''
+
+    def __init__(self,
+                 image_root,
+                 read_fn,
+                 label_fn,
+                 sort_keys=None,
+                 in_memory_keys=None):
+        '''Args:
+            image_root (str): Root containing the files of interest.
+            read_fn (Callable): Given the path to a file, returns the datum as
+                a dict.
+            label_fn (Callable): Given the path to a file, returns a dict of
+                labels. If ``label_fn`` returns ``None``, this file is ignored.
+            sort_keys (list): A hierarchy of keys by which the data in this
+                Dataset are sorted.
+            in_memory_keys (list): keys which will be collected from examples
+                when the dataset is cached.
+        '''
+
+        self.root = image_root
+        self.read = read_fn
+        self.label_fn = label_fn
+        self.sort_keys = sort_keys
+
+        if in_memory_keys is not None:
+            assert isinstance(in_memory_keys, list)
+            self.in_memory_keys = in_memory_keys
+
+        self._read_labels()
+
+    def _read_labels(self):
+        import operator
+
+        self.data = []
+        self.labels = {}
+        for root, dirs, files in os.walk(self.root):
+            for f in files:
+                path = os.path.join(root, f)
+                labels = self.label_fn(path)
+
+                if labels is not None:
+                    datum = {'file_path_': path}
+                    datum.update(labels)
+                    self.data += [datum]
+
+        if self.sort_keys is not None:
+            self.data.sort(key=operator.itemgetter(*self.sort_keys))
+
+        for datum in self.data:
+            for k, v in datum.items():
+                if k not in self.labels:
+                    self.labels[k] = []
+                self.labels[k] += [v]
+
+    def get_example(self, i):
+        datum = self.data[i]
+        path = datum['file_path_']
+
+        file_content = self.read(path)
+
+        example = dict()
+        example.update(datum)
+        example.update(file_content)
+
+        return example
+
+    def __len__(self):
+        return len(self.data)
 
 
 if __name__ == '__main__':
-    from hbu_journal.data.prjoti import CachedPrjoti
+    import matplotlib.pyplot as plt
 
-    prjoti = CachedPrjoti()
-    s_prjoti = SequenceDataset(prjoti, 5, 1)
+    # r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
+    #     'show_vids/cut_selection/fortnite/'
 
-    example = s_prjoti[10]
-    keys = [k for k in example]
+    # def rfn(im_path):
+    #     return {'image': plt.imread(im_path)}
 
-    keys = sorted(keys)
-    print(keys)
+    # def lfn(path):
+    #     if os.path.isfile(path) and path[-4:] == '.jpg':
+    #         fname = os.path.basename(path)
+    #         labels = fname[:-4].split('_')
+    #         if len(labels) == 3:
+    #             pid, act, fid = labels
+    #             beam = False
+    #         else:
+    #             pid, act, _, fid = labels
+    #             beam = True
+    #         return {'pid': int(pid), 'vid': 0, 'fid': int(fid), 'action': act}
 
-    l = 4
-    for s in range(1, 4):
-        s_prjoti = SequenceDataset(prjoti, l, s)
-        for i in range(0, 4):
-            example = s_prjoti[i]
-            print('Start index: {}, Length: {}, Step: {}'.format(i, l, s))
-            print(example['fid'])
+    # D = DataFolder(r,
+    #                rfn,
+    #                lfn,
+    #                ['pid', 'vid', 'fid'])
 
-    print([sorted(k.keys()) for k in s_prjoti[:3]])
-    print([sorted(k.keys()) for k in s_prjoti[[0, 2]]])
+    # for i in range(10):
+    #     d = D[i]
+    #     print(',\n '.join(['{}: {}'.format(k, v if not hasattr(v, 'shape')
+    #                                        else v.shape)
+    #                                        for k, v in d.items()]))
 
-    print('len base: {}\nlen seqd: {}'.format(len(prjoti), len(s_prjoti)))
+    from edflow.debug import DebugDataset
+
+    D = DebugDataset()
+    def labels(data, i):
+        return {'fid': i}
+    D = ExtraLabelsDataset(D, labels)
+    print('D')
+    for k, v in D.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    S = SequenceDataset(D, 2)
+    print('S')
+    for k, v in S.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    S = SubDataset(S, [2, 5, 10])
+    print('Sub')
+    for k, v in S.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    U = UnSequenceDataset(S)
+    print('U')
+    for k, v in U.labels.items():
+        print(k)
+        print(np.shape(v))
+
+    print(len(S))
+    print(U.seq_len)
+    print(len(U))
+
+    for i in range(len(U)):
+        print(U[i])

@@ -12,7 +12,8 @@ class IntervalHook(Hook):
                  stop=None,
                  modify_each=None,
                  modifier=lambda interval: 2*interval,
-                 max_interval=None):
+                 max_interval=None,
+                 get_step=None):
         '''Args:
             hook (list of Hook): The set of managed hooks. Each must implement
                 the methods of a :class:`Hook`.
@@ -27,6 +28,8 @@ class IntervalHook(Hook):
             modifier (Callable): See `modify_each`.
             max_interval (int): If given, the modifier can only increase the
                 interval up to this number of steps.
+            get_step (Callable): If given, prefer over the use of batch index
+                to determine run condition, e.g. to run based on global step.
         '''
 
         self.hooks = hooks
@@ -39,10 +42,13 @@ class IntervalHook(Hook):
         self.modival = modify_each if modify_each is not None else inf
         self.modifier = modifier
         self.max_interval = max_interval if max_interval is not None else inf
+        self.get_step = get_step
 
         self.counter = 0
 
     def run_condition(self, step, is_before=False):
+        if self.get_step is not None:
+            step = self.get_step()
         if step > self.start and step <= self.stop:
             if step % self.base_interval == 0:
                 self.counter += 1 if is_before else 0

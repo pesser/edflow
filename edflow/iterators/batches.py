@@ -8,7 +8,8 @@ import random
 from edflow.iterators.resize import resize_image, resize_uint8, resize_float32, resize_hfloat32
 
 from chainer.iterators import MultiprocessIterator
-from chainer.dataset import DatasetMixin
+#from chainer.dataset import DatasetMixin
+from edflow.data.dataset import DatasetMixin
 
 
 def load_image(path):
@@ -25,6 +26,8 @@ def save_image(x, path):
     x = (x + 1.0) / 2.0
     x = np.clip(255 * x, 0, 255)
     x = np.array(x, dtype = "uint8")
+    if x.shape[-1] == 1:
+        x = np.squeeze(x)
     PIL.Image.fromarray(x).save(path)
 
 

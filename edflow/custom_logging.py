@@ -28,17 +28,18 @@ def _get_logger(name, out_dir, pos=4, level=logging.INFO):
     # init logging
     logger = logging.getLogger(name)
 
-    ch = TqdmHandler(pos)
-    ch.setLevel(level)
-    logger.addHandler(ch)
+    if not len(logger.handlers) > 0:
+        ch = TqdmHandler(pos)
+        ch.setLevel(level)
+        logger.addHandler(ch)
 
-    fh = logging.FileHandler(filename=os.path.join(out_dir, 'log.txt'))
-    fh.setLevel(logging.DEBUG)
-    logger.addHandler(fh)
+        fh = logging.FileHandler(filename=os.path.join(out_dir, 'log.txt'))
+        fh.setLevel(logging.DEBUG)
+        logger.addHandler(fh)
 
-    formatter = logging.Formatter('[%(levelname)s] [%(name)s]: %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
+        formatter = logging.Formatter('[%(levelname)s] [%(name)s]: %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
 
     return logger
 
@@ -47,7 +48,7 @@ class LogSingleton(object):
     exists = False
     default = "root"  # default directory of ProjectManager to log into
 
-    def __init__(self, out_base_dir=None, level=logging.DEBUG, write_pos=4):
+    def __init__(self, out_base_dir=None, level=logging.INFO, write_pos=4):
         if self.exists or out_base_dir is None:
             pass
         else:
@@ -85,12 +86,11 @@ class LogSingleton(object):
 
 
 def set_global_stdout_level(level='info'):
-    L = LogSingleton
+    L = LogSingleton()
     level = getattr(logging, level.upper())
 
     L._level = level
     for logger in L.loggers:
-        print(logger)
         logger.handlers[0].setLevel(level)
 
 

@@ -1,6 +1,7 @@
 '''Some Utility functions, that make yur life easier but don't fit in any
 better catorgory than util.'''
 
+import numpy as np
 import tensorflow as tf
 import os, pickle
 
@@ -8,7 +9,7 @@ import os, pickle
 def make_linear_var(step,
                     start, end,
                     start_value, end_value,
-                    clip_min=0.0, clip_max=1.0):
+                    clip_min=None, clip_max=None):
     r"""Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
     :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
 
@@ -24,11 +25,39 @@ def make_linear_var(step,
     Returns:
         tf.Tensor: :math:`y`
     """
+    if clip_min is None:
+        clip_min = min(start_value, end_value)
+    if clip_max is None:
+        clip_max = max(start_value, end_value)
     linear = (
             (end_value - start_value) /
             (end - start) *
             (tf.cast(step, tf.float32) - start) + start_value)
     return tf.clip_by_value(linear, clip_min, clip_max)
+
+
+def make_exponential_var(step,
+                         start, end,
+                         start_value, end_value,
+                         decay):
+    r"""Exponential from :math:`(a, \alpha)` to :math:`(b, \beta)` with decay
+    rate decay.
+
+    Args:
+        step (tf.Tensor): :math:`x`
+        start: :math:`a`
+        end: :math:`b`
+        start_value: :math:`\alpha`
+        end_value: :math:`\beta`
+        decay: Decay rate
+
+    Returns:
+        tf.Tensor: :math:`y`
+    """
+    startstep = start
+    endstep = (np.log(end_value) - np.log(start_value))/np.log(decay)
+    stepper = make_linear_var(step, start, end, startstep, endstep)
+    return tf.math.pow(decay, stepper)*start_value
 
 
 def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):
@@ -196,6 +225,20 @@ def cached_function(fn):
                 result = pickle.load(f)
         return result
     return wrapped
+
+
+class PRNGMixin(object):
+    """Adds a prng property which is a numpy RandomState which gets
+    reinitialized whenever the pid changes to avoid synchronized sampling
+    behavior when used in conjunction with multiprocessing."""
+    @property
+    def prng(self):
+        currentpid = os.getpid()
+        if getattr(self, "_initpid", None) != currentpid:
+            self._initpid = currentpid
+            self._prng = np.random.RandomState()
+        return self._prng
+
 
 
 if __name__ == '__main__':

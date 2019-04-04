@@ -1,10 +1,10 @@
 import tensorflow as tf
 try:
     import torch
-except ModuleNotFoundError:
+except ImportError:
     print("Warning: Could not import torch.")
 import time
-import os, re
+import os, re, pickle
 import numpy as np
 from collections import OrderedDict, namedtuple
 
@@ -29,7 +29,8 @@ class WaitForCheckpointHook(Hook):
                  filter_cond=lambda c: True,
                  interval=5,
                  add_sec=5,
-                 callback=None):
+                 callback=None,
+                 eval_all = False):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
             filter_cond (Callable): A function used to filter files, to only
@@ -41,17 +42,25 @@ class WaitForCheckpointHook(Hook):
                 being written at the time it's meant to be read.
             callback (Callable): Callback called with path of found
                 checkpoint.
+            eval_all (bool): Accept all instead of just latest checkpoint.
         '''
 
         self.root = checkpoint_root
-        self.fcond = filter_cond
+        self._fcond = filter_cond
         self.sleep_interval = interval
         self.additional_wait = add_sec
         self.callback = callback
+        self.eval_all = eval_all
 
         self.logger = get_logger(self)
 
-        self.latest_checkpoint = None
+        self.known_checkpoints = set()
+
+    def fcond(self, c):
+        cond = self._fcond(c)
+        if self.eval_all:
+            cond = cond and c not in self.known_checkpoints
+        return cond
 
     def look(self):
         '''Loop until a new checkpoint is found.'''
@@ -60,8 +69,8 @@ class WaitForCheckpointHook(Hook):
             time.sleep(self.sleep_interval)
 
             latest_checkpoint = get_latest_checkpoint(self.root, self.fcond)
-            if latest_checkpoint is not None and latest_checkpoint != self.latest_checkpoint:
-                self.latest_checkpoint = latest_checkpoint
+            if latest_checkpoint is not None and latest_checkpoint not in self.known_checkpoints:
+                self.known_checkpoints.add(latest_checkpoint)
                 time.sleep(self.additional_wait)
                 self.logger.info("Found new checkpoint: {}".format(latest_checkpoint))
                 if self.callback is not None:
@@ -229,7 +238,7 @@ class RestorePytorchModelHook(Hook):
 
     @staticmethod
     def parse_global_step(checkpoint):
-        return RestorePytorchModelHook.parse_checkpoint(checkpoint)[0]
+        return RestorePytorchModelHook.parse_checkpoint(checkpoint)[1]
 
     @staticmethod
     def parse_checkpoint(checkpoint):
@@ -521,7 +530,8 @@ class KeepBestCheckpoints(Hook):
                  checkpoint_root,
                  metric_template,
                  metric_key,
-                 n_keep = 5):
+                 n_keep = 5,
+                 lower_is_better = True):
         '''Args:
             checkpoint_root (str): Path to look for checkpoints.
             metric_template (str): Format string to find metric file.
@@ -533,13 +543,22 @@ class KeepBestCheckpoints(Hook):
         self.metric_template = metric_template
         self.metric_key = metric_key
         self.n_keep = n_keep
+        self.lower_is_better = lower_is_better
 
         self.logger = get_logger(self)
 
     def get_loss(self, step):
+        path = self.metric_template.format(step)
         try:
-            loss = np.load(self.metric_template.format(step))[self.metric_key][0]
+            if path.endswith(".npz"):
+                loss = np.load(path)[self.metric_key][0]
+            else:
+                with open(path, "rb") as f:
+                    loss = pickle.load(f)[self.metric_key][0]
+            if not self.lower_is_better:
+                loss = -1.0*loss
         except FileNotFoundError:
+            self.logger.debug("Could not find {}".format(path))
             loss = None
         return loss
 
@@ -569,3 +588,7 @@ class KeepBestCheckpoints(Hook):
         best_ls = loss_steps[0]
         self.logger.info("Current best: {} = {} @ global step {}".format(
             self.metric_key, best_ls[0], best_ls[1]))
+        no_improvement_since = latest_step - best_ls[1]
+        if no_improvement_since > 0:
+            self.logger.info("No improvement since {} global steps.".format(
+                no_improvement_since))
