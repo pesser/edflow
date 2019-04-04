@@ -2,7 +2,33 @@ Welcome to EDFlow's documentation!
 ==================================
 
 
-.. automodule:: edflow
+.. automodule:: edflow.main
+    :members:
+    :show-inheritance:
+
+.. automodule:: edflow.model
+    :members:
+    :show-inheritance:
+
+.. automodule:: edflow.evaluate
+    :members:
+    :show-inheritance:
+
+.. automodule:: edflow.project_manager
+    :members:
+    :show-inheritance:
+
+.. automodule:: edflow.train
+    :members:
+    :show-inheritance:
+
+.. automodule:: edflow.util
+    :members:
+    :show-inheritance:
+
+.. automodule:: edflow.data.dataset
+    :members:
+    :show-inheritance:
 
 .. mdinclude:: ../README.md
 

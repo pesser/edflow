@@ -13,6 +13,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -35,8 +36,651 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="module-edflow">
-<span id="welcome-to-edflow-s-documentation"></span><h1>Welcome to EDFlow’s documentation!<a class="headerlink" href="#module-edflow" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-edflow.main">
+<span id="welcome-to-edflow-s-documentation"></span><h1>Welcome to EDFlow’s documentation!<a class="headerlink" href="#module-edflow.main" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="edflow.main.main">
+<code class="descclassname">edflow.main.</code><code class="descname">main</code><span class="sig-paren">(</span><em>opt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/main.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.main.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>some strings</p>
+</dd></dl>
+
+<span class="target" id="module-edflow.model"></span><dl class="class">
+<dt id="edflow.model.Model">
+<em class="property">class </em><code class="descclassname">edflow.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/model.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class defining all neccessary model methods.</p>
+<dl class="attribute">
+<dt id="edflow.model.Model.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#edflow.model.Model.inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input placeholders</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="edflow.model.Model.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#edflow.model.Model.outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output tensors.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="edflow.model.Model.variables">
+<code class="descname">variables</code><a class="headerlink" href="#edflow.model.Model.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variables.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-edflow.evaluate"></span><span class="target" id="module-edflow.project_manager"></span><dl class="class">
+<dt id="edflow.project_manager.ProjectManager">
+<em class="property">class </em><code class="descclassname">edflow.project_manager.</code><code class="descname">ProjectManager</code><span class="sig-paren">(</span><em>base=None</em>, <em>given_directory=None</em>, <em>code_root='.'</em>, <em>postfix=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/project_manager.html#ProjectManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.project_manager.ProjectManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Singelton managing all directories for one Experiment.</p>
+<dl class="method">
+<dt id="edflow.project_manager.ProjectManager.copy_code">
+<code class="descname">copy_code</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/project_manager.html#ProjectManager.copy_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.project_manager.ProjectManager.copy_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies all code to the code directory of the project, for best
+possible documentation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="edflow.project_manager.ProjectManager.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/project_manager.html#ProjectManager.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.project_manager.ProjectManager.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make all the directories.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="edflow.project_manager.ProjectManager.setup_new_eval">
+<code class="descname">setup_new_eval</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/project_manager.html#ProjectManager.setup_new_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.project_manager.ProjectManager.setup_new_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always create subfolder in eval to avoid clashes between
+evaluations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-edflow.util"></span><p>Some Utility functions, that make yur life easier but don’t fit in any
+better catorgory than util.</p>
+<dl class="class">
+<dt id="edflow.util.PRNGMixin">
+<em class="property">class </em><code class="descclassname">edflow.util.</code><code class="descname">PRNGMixin</code><a class="reference internal" href="_modules/edflow/util.html#PRNGMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.PRNGMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Adds a prng property which is a numpy RandomState which gets
+reinitialized whenever the pid changes to avoid synchronized sampling
+behavior when used in conjunction with multiprocessing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.util.cached_function">
+<code class="descclassname">edflow.util.</code><code class="descname">cached_function</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#cached_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.cached_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>a very rough cache for function calls. Highly experimental. Only
+active if activated with environment variable.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.util.contains_key">
+<code class="descclassname">edflow.util.</code><code class="descname">contains_key</code><span class="sig-paren">(</span><em>nested_thing</em>, <em>key</em>, <em>splitval='/'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#contains_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.contains_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if the path like key can find an object in the nested_thing.
+Has the same signature as <a href="#id1"><span class="problematic" id="id2">:function:`retrieve`</span></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.util.make_exponential_var">
+<code class="descclassname">edflow.util.</code><code class="descname">make_exponential_var</code><span class="sig-paren">(</span><em>step</em>, <em>start</em>, <em>end</em>, <em>start_value</em>, <em>end_value</em>, <em>decay</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#make_exponential_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.make_exponential_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential from <span class="math notranslate nohighlight">\((a, \alpha)\)</span> to <span class="math notranslate nohighlight">\((b, \beta)\)</span> with decay
+rate decay.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<em>tf.Tensor</em>) – <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><strong>start</strong> – <span class="math notranslate nohighlight">\(a\)</span></p></li>
+<li><p><strong>end</strong> – <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<li><p><strong>start_value</strong> – <span class="math notranslate nohighlight">\(\alpha\)</span></p></li>
+<li><p><strong>end_value</strong> – <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
+<li><p><strong>decay</strong> – Decay rate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><span class="math notranslate nohighlight">\(y\)</span></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.util.make_linear_var">
+<code class="descclassname">edflow.util.</code><code class="descname">make_linear_var</code><span class="sig-paren">(</span><em>step</em>, <em>start</em>, <em>end</em>, <em>start_value</em>, <em>end_value</em>, <em>clip_min=None</em>, <em>clip_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#make_linear_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.make_linear_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear from <span class="math notranslate nohighlight">\((a, \alpha)\)</span> to <span class="math notranslate nohighlight">\((b, \beta)\)</span>, i.e.
+<span class="math notranslate nohighlight">\(y = (\beta - \alpha)/(b - a) * (x - a) + \alpha\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<em>tf.Tensor</em>) – <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><strong>start</strong> – <span class="math notranslate nohighlight">\(a\)</span></p></li>
+<li><p><strong>end</strong> – <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<li><p><strong>start_value</strong> – <span class="math notranslate nohighlight">\(\alpha\)</span></p></li>
+<li><p><strong>end_value</strong> – <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
+<li><p><strong>clip_min</strong> – Minimal value returned.</p></li>
+<li><p><strong>clip_max</strong> – Maximum value returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><span class="math notranslate nohighlight">\(y\)</span></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.util.retrieve">
+<code class="descclassname">edflow.util.</code><code class="descname">retrieve</code><span class="sig-paren">(</span><em>key</em>, <em>list_or_dict</em>, <em>splitval='/'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#retrieve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.retrieve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a nested list or dict return the desired value at key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – key/to/value, path like string describing all keys
+necessary to consider to get to the desired value. List indices
+can also be passed here.</p></li>
+<li><p><strong>list_or_dict</strong> (<em>list</em><em> or </em><em>dict</em>) – Possibly nested list or dictionary.</p></li>
+<li><p><strong>splitval</strong> (<em>str</em>) – String that defines the delimiter between keys of the
+different depth levels in <cite>key</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>)</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>The desired value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.util.strenumerate">
+<code class="descclassname">edflow.util.</code><code class="descname">strenumerate</code><span class="sig-paren">(</span><em>iterable</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#strenumerate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.strenumerate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Works just as enumerate, but the returned index is a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>iterable</strong> (<em>Iterable</em>) – An (guess what) iterable object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.util.walk">
+<code class="descclassname">edflow.util.</code><code class="descname">walk</code><span class="sig-paren">(</span><em>dict_or_list</em>, <em>fn</em>, <em>inplace=False</em>, <em>pass_key=False</em>, <em>prev_key=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/util.html#walk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.util.walk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Walk a nested list and/or dict recursively and call fn on all non
+list or dict objects.</p>
+<p>Example:</p>
+<p>..codeblock:: python</p>
+<p>dol = {‘a’: [1, 2], ‘b’: {‘c’: 3, ‘d’: 4}}</p>
+<dl class="simple">
+<dt>def fn(val):</dt><dd><p>return val**2</p>
+</dd>
+</dl>
+<p>result = walk(dol, fn)
+print(result)  # {‘a’: [1, 4], ‘b’: {‘c’: 9, ‘d’: 16}}
+print(dol)  # {‘a’: [1, 2], ‘b’: {‘c’: 3, ‘d’: 4}}</p>
+<p>result = walk(dol, fn, inplace=True)
+print(result)  # {‘a’: [1, 4], ‘b’: {‘c’: 9, ‘d’: 16}}
+print(dol)  # {‘a’: [1, 4], ‘b’: {‘c’: 9, ‘d’: 16}}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dict_or_list</strong> (<em>dict</em><em> or </em><em>list</em>) – Possibly nested list or dictionary.</p></li>
+<li><p><strong>fn</strong> (<em>Callable</em>) – Applied to each leave of the nested list_dict-object.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If False, a new object with the same structure
+and the results of fn at the leaves is created. If True the leaves
+are replaced by the results of fn.</p></li>
+<li><p><strong>pass_key</strong> (<em>bool</em>) – Also passes the key or index of the leave element to
+<code class="docutils literal notranslate"><span class="pre">fn</span></code>.</p></li>
+<li><p><strong>prev_key</strong> (<em>str</em>) – If <code class="docutils literal notranslate"><span class="pre">pass_key</span> <span class="pre">==</span> <span class="pre">True</span></code> keys of parent nodes are passed
+to calls of <code class="docutils literal notranslate"><span class="pre">walk</span></code> on child nodes to accumulate the keys.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The resulting nested list-dict-object with the results of</dt><dd><p>fn at its leaves.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict or list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-edflow.data.dataset"></span><p>All handy dataset classes we use.
+Our Datasets (TODO usually) inherit from the <cite>chainer.dataset.DatasetMixin</cite>.
+Please note that we overwrite the <cite>__getitem__</cite> method.
+This does not change its functionality and there is not problem in not using
+our version of <cite>DatasetMixin</cite>.</p>
+<dl class="class">
+<dt id="edflow.data.dataset.CachedDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">CachedDataset</code><span class="sig-paren">(</span><em>dataset</em>, <em>force_cache=False</em>, <em>keep_existing=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#CachedDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.CachedDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>Using a Dataset of single examples creates a cached (saved to memory)
+version, which can be accessed way faster at runtime.</p>
+<p>To avoid creating the dataset multiple times, it is checked if the cached
+version already exists.</p>
+<p>Calling <cite>__getitem__</cite> on this class will try to retrieve the samples from
+the cached dataset to reduce the preprocessing overhead.</p>
+<p>The cached dataset will be stored in the root directory of the base dataset
+in the subfolder <cite>cached</cite> with name <cite>name.zip</cite>.</p>
+<p>Besides the usual DatasetMixin interface, datasets to be cached must
+also implement</p>
+<blockquote>
+<div><p>root        # (str) root folder to cache into
+name        # (str) unqiue name</p>
+</div></blockquote>
+<p>Optionally but highly recommended, they should provide</p>
+<blockquote>
+<div><p>in_memory_keys  # list(str) keys which will be collected from examples</p>
+</div></blockquote>
+<p>The collected values are stored in a dict of list, mapping an
+in_memory_key to a list containing the i-ths value at the i-ths place.
+This data structure is then exposed via the attribute <cite>labels</cite> and
+enables rapid iteration over useful labels without loading each example
+seperately. That way, downstream datasets can filter the indices of the
+cached dataset efficiently, e.g. filtering based on train/eval splits.</p>
+<p>Caching proceeds as follows:
+Expose a method which returns the dataset to be cached, e.g.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>def DataToCache():</dt><dd><p>path = “/path/to/data”
+return MyCachableDataset(path)</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Start caching server on host &lt;server_ip_or_hostname&gt;:</p>
+<blockquote>
+<div><p>edcache –server –dataset import.path.to.DataToCache</p>
+</div></blockquote>
+<p>Wake up a worker bee on same or different hosts:</p>
+<blockquote>
+<div><p>edcache –address &lt;server_ip_or_hostname&gt; –dataset import.path.to.DataCache</p>
+</div></blockquote>
+<p>Start a cacherhive!</p>
+<dl class="method">
+<dt id="edflow.data.dataset.CachedDataset.cache_dataset">
+<code class="descname">cache_dataset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#CachedDataset.cache_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.CachedDataset.cache_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a dataset is stored. If not iterates over all possible
+indeces and stores the examples in a file, as well as the labels.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="edflow.data.dataset.CachedDataset.from_cache">
+<em class="property">classmethod </em><code class="descname">from_cache</code><span class="sig-paren">(</span><em>root</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#CachedDataset.from_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.CachedDataset.from_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this constructor to avoid initialization of original dataset
+which can be useful if only the cached zip file is available or to
+avoid expensive constructors of datasets.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="edflow.data.dataset.CachedDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#CachedDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.CachedDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an index i, returns a example.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="edflow.data.dataset.CachedDataset.labels">
+<code class="descname">labels</code><a class="headerlink" href="#edflow.data.dataset.CachedDataset.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the labels associated with the base dataset, but from the
+cached source.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="edflow.data.dataset.CachedDataset.root">
+<code class="descname">root</code><a class="headerlink" href="#edflow.data.dataset.CachedDataset.root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the root to the base dataset.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.ConcatenatedDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">ConcatenatedDataset</code><span class="sig-paren">(</span><em>*datasets</em>, <em>balanced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ConcatenatedDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ConcatenatedDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>A dataset which concatenates given datasets.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.ConcatenatedDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ConcatenatedDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ConcatenatedDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get example and add dataset index to it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.DataFolder">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">DataFolder</code><span class="sig-paren">(</span><em>image_root</em>, <em>read_fn</em>, <em>label_fn</em>, <em>sort_keys=None</em>, <em>in_memory_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#DataFolder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.DataFolder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>Given the root of a possibly nested folder containing datafiles and a
+Callable that generates the labels to the datafile from its full name, this
+class creates a labeled dataset.</p>
+<p>A filtering of unwanted Data can be achieved by having the <code class="docutils literal notranslate"><span class="pre">label_fn</span></code>
+return <code class="docutils literal notranslate"><span class="pre">None</span></code> for those specific files. The actual files are only
+read when <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code> is called.</p>
+<p>If for example <code class="docutils literal notranslate"><span class="pre">label_fn</span></code> returns a dict with the keys <code class="docutils literal notranslate"><span class="pre">['a',</span> <span class="pre">'b',</span>
+<span class="pre">'c']</span></code> and <code class="docutils literal notranslate"><span class="pre">read_fn</span></code> returns one with keys <code class="docutils literal notranslate"><span class="pre">['d',</span> <span class="pre">'e']</span></code> then the dict
+returned by <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code> will contain the keys <code class="docutils literal notranslate"><span class="pre">['a',</span> <span class="pre">'b',</span> <span class="pre">'c',</span> <span class="pre">'d',</span>
+<span class="pre">'e',</span> <span class="pre">'file_path_',</span> <span class="pre">'index_']</span></code>.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.DataFolder.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#DataFolder.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.DataFolder.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the i-th example.</p>
+<p>Implementations should override it. It should raise <code class="xref py py-class docutils literal notranslate"><span class="pre">IndexError</span></code>
+if the index is invalid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – The index of the example.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The i-th example.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.DatasetMixin">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">DatasetMixin</code><a class="reference internal" href="_modules/edflow/data/dataset.html#DatasetMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.DatasetMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">chainer.dataset.dataset_mixin.DatasetMixin</span></code></p>
+<dl class="method">
+<dt id="edflow.data.dataset.DatasetMixin.d_msg">
+<code class="descname">d_msg</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#DatasetMixin.d_msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.DatasetMixin.d_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Informs the user that val should be a dict.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.ExampleConcatenatedDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">ExampleConcatenatedDataset</code><span class="sig-paren">(</span><em>*datasets</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ExampleConcatenatedDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ExampleConcatenatedDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>Concatenates a list of datasets along the example axis.
+E.g.:</p>
+<blockquote>
+<div><p>dset1 = [{‘a’: 1, ‘b’: 2}, {‘a’: 3, ‘b’: 4}, …]
+dset2 = [{‘a’: 6, ‘b’: 7}, {‘a’: 8, ‘b’: 9}, …]</p>
+<p>dset_conc = ExampleConcatenatedDataset(dset1, dset2)
+print(dset_conc[0])
+# {‘a_0’: 1, ‘a_1’: 6,
+#  ‘b_0’: 2, ‘b_1’: 7,
+#  ‘a’: [‘a_0’, ‘a_1’],
+#  ‘b’: [‘b_0’, ‘b_1’]}</p>
+</div></blockquote>
+<p>The new keys (e.g. <cite>a_0, a_1</cite>) are numbered in the order they are taken
+from datasets. Additionally, the original, shared key is preserved and
+returns the list of newly generated keys in correct order.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.ExampleConcatenatedDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ExampleConcatenatedDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ExampleConcatenatedDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the i-th example.</p>
+<p>Implementations should override it. It should raise <code class="xref py py-class docutils literal notranslate"><span class="pre">IndexError</span></code>
+if the index is invalid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – The index of the example.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The i-th example.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="edflow.data.dataset.ExampleConcatenatedDataset.labels">
+<code class="descname">labels</code><a class="headerlink" href="#edflow.data.dataset.ExampleConcatenatedDataset.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Now each index corresponds to a sequence of labels.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="edflow.data.dataset.ExampleConcatenatedDataset.set_example_pars">
+<code class="descname">set_example_pars</code><span class="sig-paren">(</span><em>start=None</em>, <em>stop=None</em>, <em>step=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ExampleConcatenatedDataset.set_example_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ExampleConcatenatedDataset.set_example_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows to manipulate the length and step of the returned example
+lists.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.ExtraLabelsDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">ExtraLabelsDataset</code><span class="sig-paren">(</span><em>data</em>, <em>labeler</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ExtraLabelsDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ExtraLabelsDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>A dataset with extra labels added.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.ExtraLabelsDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ExtraLabelsDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ExtraLabelsDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get example and add new labels.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.data.dataset.JoinedDataset">
+<code class="descclassname">edflow.data.dataset.</code><code class="descname">JoinedDataset</code><span class="sig-paren">(</span><em>dataset</em>, <em>key</em>, <em>n_joins</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#JoinedDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.JoinedDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concat n_joins random samples based on the condition that
+example_i[key] == example_j[key] for all i,j. Key must be in labels of
+dataset.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.LabelDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">LabelDataset</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#LabelDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.LabelDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>A label only dataset to avoid loading unnecessary data.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.LabelDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#LabelDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.LabelDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return labels of example.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.PathCachedDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">PathCachedDataset</code><span class="sig-paren">(</span><em>dataset</em>, <em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#PathCachedDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.PathCachedDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.CachedDataset" title="edflow.data.dataset.CachedDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.CachedDataset</span></code></a></p>
+<p>Used for simplified decorator interface to dataset caching.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.ProcessedDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">ProcessedDataset</code><span class="sig-paren">(</span><em>data</em>, <em>process</em>, <em>update=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ProcessedDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ProcessedDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>A dataset with data processing applied.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.ProcessedDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#ProcessedDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.ProcessedDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get example and process. Wrapped to make sure stacktrace is
+printed in case something goes wrong and we are in a
+MultiprocessIterator.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.RandomlyJoinedDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">RandomlyJoinedDataset</code><span class="sig-paren">(</span><em>dataset</em>, <em>key</em>, <em>n_joins</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#RandomlyJoinedDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.RandomlyJoinedDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a>, <a class="reference internal" href="#edflow.util.PRNGMixin" title="edflow.util.PRNGMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.util.PRNGMixin</span></code></a></p>
+<p>Joins similiar JoinedDataset but randomly selects from possible joins.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.RandomlyJoinedDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#RandomlyJoinedDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.RandomlyJoinedDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the i-th example.</p>
+<p>Implementations should override it. It should raise <code class="xref py py-class docutils literal notranslate"><span class="pre">IndexError</span></code>
+if the index is invalid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – The index of the example.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The i-th example.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="edflow.data.dataset.RandomlyJoinedDataset.labels">
+<code class="descname">labels</code><a class="headerlink" href="#edflow.data.dataset.RandomlyJoinedDataset.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Careful this can only give labels of the original item, not the
+joined ones.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.SequenceDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">SequenceDataset</code><span class="sig-paren">(</span><em>dataset</em>, <em>length</em>, <em>step=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#SequenceDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.SequenceDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>Wraps around a dataset and returns sequences of examples.
+Given the length of those sequences the number of available examples
+is reduced by this length times the step taken. Additionally each
+example must have a frame id <cite>fid</cite>, by which it can be filtered. This is to
+ensure that each frame is taken from the same video.</p>
+<p>This class assumes that examples come sequentially with fid and that fid 0
+exists.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.SequenceDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#SequenceDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.SequenceDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retreives a list of examples starting at i.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.SubDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">SubDataset</code><span class="sig-paren">(</span><em>data</em>, <em>subindices</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#SubDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.SubDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>A subset of a given dataset.</p>
+<dl class="method">
+<dt id="edflow.data.dataset.SubDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#SubDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.SubDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get example and process. Wrapped to make sure stacktrace is
+printed in case something goes wrong and we are in a
+MultiprocessIterator.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="edflow.data.dataset.UnSequenceDataset">
+<em class="property">class </em><code class="descclassname">edflow.data.dataset.</code><code class="descname">UnSequenceDataset</code><span class="sig-paren">(</span><em>seq_dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#UnSequenceDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.UnSequenceDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#edflow.data.dataset.DatasetMixin" title="edflow.data.dataset.DatasetMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">edflow.data.dataset.DatasetMixin</span></code></a></p>
+<p>Flattened version of a <a class="reference internal" href="#edflow.data.dataset.SequenceDataset" title="edflow.data.dataset.SequenceDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDataset</span></code></a>.
+Adds a new key <code class="docutils literal notranslate"><span class="pre">seq_idx</span></code> to each example, corresponding to the sequence
+index and a key <code class="docutils literal notranslate"><span class="pre">example_idx</span></code> corresponding to the original index.
+The ordering of the dataset is kept and sequence examples are ordererd as
+in the sequence they are taken from.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This will not create the original non-sequence dataset! The
+new dataset contains <code class="docutils literal notranslate"><span class="pre">sequence-length</span> <span class="pre">x</span> <span class="pre">len(SequenceDataset)</span></code>
+examples.</p>
+</div>
+<p>If the original dataset would be represented as a 2d numpy array the
+<code class="docutils literal notranslate"><span class="pre">UnSequence</span></code> version of it would be the concatenation of all its rows:</p>
+<dl class="method">
+<dt id="edflow.data.dataset.UnSequenceDataset.get_example">
+<code class="descname">get_example</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#UnSequenceDataset.get_example"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.UnSequenceDataset.get_example" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the i-th example.</p>
+<p>Implementations should override it. It should raise <code class="xref py py-class docutils literal notranslate"><span class="pre">IndexError</span></code>
+if the index is invalid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – The index of the example.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The i-th example.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.data.dataset.cachable">
+<code class="descclassname">edflow.data.dataset.</code><code class="descname">cachable</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#cachable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.cachable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to cache datasets. If not cached, will start a caching server,
+subsequent calls will just load from cache. Currently all worker must be
+able to see the path. Be careful, function parameters are ignored on
+furture calls.
+Can be used on any callable that returns a dataset. Currently the path
+should be the path to a zip file to cache into - i.e. it should end in zip.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.data.dataset.getDebugDataset">
+<code class="descclassname">edflow.data.dataset.</code><code class="descname">getDebugDataset</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#getDebugDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.getDebugDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a dataset from the config and makes ist reasonably small.
+The config syntax works as in <a href="#id3"><span class="problematic" id="id4">:function:`getSeqDataset`</span></a>. See there for
+more extensive documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – An edflow config, with at least the keys
+<code class="docutils literal notranslate"><span class="pre">debugdataset</span></code> and nested inside it <code class="docutils literal notranslate"><span class="pre">dataset</span></code>,
+<code class="docutils literal notranslate"><span class="pre">debug_length</span></code>, defining the basedataset and its size.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A dataset based on the basedataset of the specifed</dt><dd><p>length.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#edflow.data.dataset.SubDataset" title="edflow.data.dataset.SubDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">SubDataset</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.data.dataset.getSeqDataset">
+<code class="descclassname">edflow.data.dataset.</code><code class="descname">getSeqDataset</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#getSeqDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.getSeqDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>This allows to not define a dataset class, but use a baseclass and a
+<cite>length</cite> and <cite>step</cite> parameter in the supplied <cite>config</cite> to load and
+sequentialize a dataset.</p>
+<p>A config passed to edflow would the look like this:</p>
+<p><code class="docutils literal notranslate"><span class="pre">getSeqDataSet</span></code> will import the base <code class="docutils literal notranslate"><span class="pre">dataset</span></code> and pass it to
+<a class="reference internal" href="#edflow.data.dataset.SequenceDataset" title="edflow.data.dataset.SequenceDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDataset</span></code></a> together with <code class="docutils literal notranslate"><span class="pre">length</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> to
+make the actually used dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – An edflow config, with at least the keys
+<code class="docutils literal notranslate"><span class="pre">seqdataset</span></code> and nested inside it <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">seq_length</span></code> and
+<code class="docutils literal notranslate"><span class="pre">seq_step</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Sequence Dataset based on the basedataset.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#edflow.data.dataset.SequenceDataset" title="edflow.data.dataset.SequenceDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDataset</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edflow.data.dataset.pickle_and_queue">
+<code class="descclassname">edflow.data.dataset.</code><code class="descname">pickle_and_queue</code><span class="sig-paren">(</span><em>dataset_factory</em>, <em>inqueue</em>, <em>outqueue</em>, <em>naming_template='example_{}.p'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edflow/data/dataset.html#pickle_and_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edflow.data.dataset.pickle_and_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parallelizable function to retrieve and queue examples from a Dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_factory</strong> (<em>(</em><em>) </em><em>-&gt; chainer.DatasetMixin</em>) – A dataset factory, with
+methods described in <a class="reference internal" href="#edflow.data.dataset.CachedDataset" title="edflow.data.dataset.CachedDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">CachedDataset</span></code></a>.</p></li>
+<li><p><strong>indeces</strong> (<em>list</em>) – List of indeces, used to retrieve samples from dataset.</p></li>
+<li><p><strong>queue</strong> (<em>mp.Queue</em>) – Queue to put the samples in.</p></li>
+<li><p><strong>naming_template</strong> (<em>str</em>) – Formatable string, which defines the name of
+the stored file given its index.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="edflow-evaluation-driven-workflow">
 <h1>EDFlow - Evaluation Driven workFlow<a class="headerlink" href="#edflow-evaluation-driven-workflow" title="Permalink to this headline">¶</a></h1>
@@ -60,8 +704,8 @@
 <li><p><a class="reference external" href="#Authors">Authors</a></p></li>
 </ol>
 </div>
-<div class="section" id="id1">
-<h2>Setup<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h2>Setup<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <p>There are two ways for setting up <strong>EDFlow</strong> on your system:</p>
 <ol class="arabic">
 <li><p>Use PyPI:</p>
@@ -87,12 +731,12 @@ In edflow directory
 </li>
 </ol>
 </div>
-<div class="section" id="id2">
-<h2>Workflow<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id6">
+<h2>Workflow<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <p>For more information, look into our <a class="reference external" href="link">starter guide</a>.</p>
 </div>
-<div class="section" id="id3">
-<h2>Example<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2>Example<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="tensorflow">
 <h3>Tensorflow<a class="headerlink" href="#tensorflow" title="Permalink to this headline">¶</a></h3>
 </div>
@@ -100,10 +744,10 @@ In edflow directory
 <h3>Pytorch<a class="headerlink" href="#pytorch" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
-<div class="section" id="id4">
-<h2>Other<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id5">
-<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h2>Other<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">path/to/config</span></code></p>
 <blockquote>
@@ -123,15 +767,15 @@ In edflow directory
 </li>
 </ul>
 </div>
-<div class="section" id="id6">
-<h3>Known Issues<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Known Issues<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="id7">
-<h3>Compatibility<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h3>Compatibility<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
-<div class="section" id="id8">
-<h2>Contributions<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id12">
+<h2>Contributions<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
 <p>`
 .. image:: <a class="reference external" href="https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
 <blockquote>
@@ -238,12 +882,12 @@ In edflow directory
 <p>&lt;<a class="reference external" href="https://github.com/pesser/edflow/pulse">https://github.com/pesser/edflow/pulse</a>&gt;`_</p>
 </div></blockquote>
 </div>
-<div class="section" id="id9">
-<h2>LICENSE<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id13">
+<h2>LICENSE<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
 <p>coming soon…</p>
 </div>
-<div class="section" id="id10">
-<h2>Authors<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id14">
+<h2>Authors<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
 <p>Mimo Tilbich `
 .. image:: <a class="reference external" href="https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white">https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white</a></p>
 <blockquote>
@@ -295,22 +939,22 @@ In edflow directory
 <li><a class="reference internal" href="#">Welcome to EDFlow’s documentation!</a></li>
 <li><a class="reference internal" href="#edflow-evaluation-driven-workflow">EDFlow - Evaluation Driven workFlow</a><ul>
 <li><a class="reference internal" href="#table-of-contents">Table of Contents</a></li>
-<li><a class="reference internal" href="#id1">Setup</a></li>
-<li><a class="reference internal" href="#id2">Workflow</a></li>
-<li><a class="reference internal" href="#id3">Example</a><ul>
+<li><a class="reference internal" href="#id5">Setup</a></li>
+<li><a class="reference internal" href="#id6">Workflow</a></li>
+<li><a class="reference internal" href="#id7">Example</a><ul>
 <li><a class="reference internal" href="#tensorflow">Tensorflow</a></li>
 <li><a class="reference internal" href="#pytorch">Pytorch</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id4">Other</a><ul>
-<li><a class="reference internal" href="#id5">Parameters</a></li>
-<li><a class="reference internal" href="#id6">Known Issues</a></li>
-<li><a class="reference internal" href="#id7">Compatibility</a></li>
+<li><a class="reference internal" href="#id8">Other</a><ul>
+<li><a class="reference internal" href="#id9">Parameters</a></li>
+<li><a class="reference internal" href="#id10">Known Issues</a></li>
+<li><a class="reference internal" href="#id11">Compatibility</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id8">Contributions</a></li>
-<li><a class="reference internal" href="#id9">LICENSE</a></li>
-<li><a class="reference internal" href="#id10">Authors</a></li>
+<li><a class="reference internal" href="#id12">Contributions</a></li>
+<li><a class="reference internal" href="#id13">LICENSE</a></li>
+<li><a class="reference internal" href="#id14">Authors</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#quick-and-dirty">Quick and Dirty</a></li>
