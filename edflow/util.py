@@ -178,7 +178,7 @@ def retrieve(key, list_or_dict, splitval='/'):
 
 def contains_key(nested_thing, key, splitval='/'):
     '''Tests if the path like key can find an object in the nested_thing.
-    Has the same signature as :function:`retrieve`.'''
+    Has the same signature as :func:`retrieve`.'''
     try:
         retrieve(nested_thing, key, splitval)
         return True
