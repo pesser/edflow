@@ -2,21 +2,17 @@
 
 A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 
-
----
-
 ## Table of Contents
-1. [Setup](#Setup)
-2. [Workflow](#Workflow)
-3. [Example](#Example)
-4. [Other](#Other)
-    1. [Parameters](#Parameters)
-    2. [Known Issues](#Known-Issues)
-    3. [Compatibility](#Compatibility)
-5. [Contributions](#Contributions)
-6. [LICENSE](#LICENSE)
-7. [Authors](#Authors)
-
+1. [Setup](##Setup)
+2. [Workflow](##Workflow)
+3. [Example](##Example)
+4. [Other](##Other)
+    1. [Parameters](###Parameters)
+    2. [Known Issues](###Known issues)
+    3. [Compatibility](###Compatibility)
+5. [Contributions](##Contributions)
+6. [LICENSE](##LICENSE)
+7. [Authors](##Authors)
 
 ## Setup
 
@@ -69,10 +65,9 @@ For more information, look into our [starter guide](link).
 - `--retrain`
     reset global step to zero
 
-
 ### Known Issues
-### Compatibility
 
+### Compatibility
 
 ## Contributions
 [![GitHub-Commits][GitHub-Commits]](https://github.com/pesser/edflow/graphs/commit-activity)
@@ -83,9 +78,6 @@ For more information, look into our [starter guide](link).
 [![GitHub-Forks][GitHub-Forks]](https://github.com/pesser/edflow/network)
 [![GitHub-Updated][GitHub-Updated]](https://github.com/pesser/edflow/pulse)
   
-
-
-
 ## LICENSE
  
 [![LICENSE][LICENSE]](https://raw.githubusercontent.com/pesser/edflow/master/LICENSE)
