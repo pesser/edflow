@@ -76,7 +76,7 @@ For more information, look into our [starter guide](link).
 [![GitHub-Stars][GitHub-Stars]](https://github.com/pesser/edflow/stargazers)
 [![GitHub-Forks][GitHub-Forks]](https://github.com/pesser/edflow/network)
 [![GitHub-Updated][GitHub-Updated]](https://github.com/pesser/edflow/pulse)
-  
+
 ## LICENSE
  
 [![LICENSE][LICENSE]](https://raw.githubusercontent.com/pesser/edflow/master/LICENSE)

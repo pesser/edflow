@@ -1,54 +1,30 @@
-Welcome to EDFlow's documentation!
-==================================
+==================
+Welcome to EDFlow!
+==================
 
 
-.. automodule:: edflow.main
-    :members:
-    :show-inheritance:
-
-.. automodule:: edflow.model
-    :members:
-    :show-inheritance:
-
-.. automodule:: edflow.evaluate
-    :members:
-    :show-inheritance:
-
-.. automodule:: edflow.project_manager
-    :members:
-    :show-inheritance:
-
-.. automodule:: edflow.train
-    :members:
-    :show-inheritance:
-
-.. automodule:: edflow.util
-    :members:
-    :show-inheritance:
-
-.. automodule:: edflow.data.dataset
-    :members:
-    :show-inheritance:
-
-.. mdinclude:: ../README.md
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
+Introduction
+============
+Here we give a short introduction
 
 Quick and Dirty
 ===============
-
 .. note::
     example of a standart mnist problem
 
-
-User Guide
-==========
-
 We created a user guide for you to use, have a look:
 :doc:`source/user_guide`
+
+Contents
+========
+.. toctree::
+   :maxdepth: 2
+
+   source/user_guide
+   README
+   docu
+
+
 
 Indices and tables
 ==================

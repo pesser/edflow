@@ -67,8 +67,8 @@
 <span class="kn">from</span> <span class="nn">edflow.util</span> <span class="k">import</span> <span class="n">PRNGMixin</span>
 
 
-<div class="viewcode-block" id="DatasetMixin"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.DatasetMixin">[docs]</a><span class="k">class</span> <span class="nc">DatasetMixin</span><span class="p">(</span><span class="n">DatasetMixin_</span><span class="p">):</span>
-<div class="viewcode-block" id="DatasetMixin.d_msg"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.DatasetMixin.d_msg">[docs]</a>    <span class="k">def</span> <span class="nf">d_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+<div class="viewcode-block" id="DatasetMixin"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.DatasetMixin">[docs]</a><span class="k">class</span> <span class="nc">DatasetMixin</span><span class="p">(</span><span class="n">DatasetMixin_</span><span class="p">):</span>
+<div class="viewcode-block" id="DatasetMixin.d_msg"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.DatasetMixin.d_msg">[docs]</a>    <span class="k">def</span> <span class="nf">d_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Informs the user that val should be a dict.&#39;&#39;&#39;</span>
 
         <span class="k">return</span> <span class="s1">&#39;The edflow version of DatasetMixin requires the &#39;</span> \
@@ -127,7 +127,7 @@
     <span class="k">return</span> <span class="n">manager</span>
 
 
-<div class="viewcode-block" id="pickle_and_queue"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.pickle_and_queue">[docs]</a><span class="k">def</span> <span class="nf">pickle_and_queue</span><span class="p">(</span><span class="n">dataset_factory</span><span class="p">,</span>
+<div class="viewcode-block" id="pickle_and_queue"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.pickle_and_queue">[docs]</a><span class="k">def</span> <span class="nf">pickle_and_queue</span><span class="p">(</span><span class="n">dataset_factory</span><span class="p">,</span>
                      <span class="n">inqueue</span><span class="p">,</span>
                      <span class="n">outqueue</span><span class="p">,</span>
                      <span class="n">naming_template</span><span class="o">=</span><span class="s1">&#39;example_</span><span class="si">{}</span><span class="s1">.p&#39;</span><span class="p">):</span>
@@ -181,7 +181,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
 
 
-<div class="viewcode-block" id="CachedDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.CachedDataset">[docs]</a><span class="k">class</span> <span class="nc">CachedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="CachedDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.CachedDataset">[docs]</a><span class="k">class</span> <span class="nc">CachedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Using a Dataset of single examples creates a cached (saved to memory)</span>
 <span class="sd">    version, which can be accessed way faster at runtime.</span>
 
@@ -275,7 +275,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_cache</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cache_dataset</span><span class="p">()</span>
 
-<div class="viewcode-block" id="CachedDataset.from_cache"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.CachedDataset.from_cache">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="CachedDataset.from_cache"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.CachedDataset.from_cache">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_cache</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Use this constructor to avoid initialization of original dataset</span>
 <span class="sd">        which can be useful if only the cached zip file is available or to</span>
@@ -299,7 +299,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">zip</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zip</span>
 
-<div class="viewcode-block" id="CachedDataset.cache_dataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.CachedDataset.cache_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">cache_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CachedDataset.cache_dataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.CachedDataset.cache_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">cache_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Checks if a dataset is stored. If not iterates over all possible</span>
 <span class="sd">        indeces and stores the examples in a file, as well as the labels.&#39;&#39;&#39;</span>
 
@@ -386,7 +386,7 @@
         <span class="sd">&#39;&#39;&#39;Returns the root to the base dataset.&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
 
-<div class="viewcode-block" id="CachedDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.CachedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="CachedDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.CachedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Given an index i, returns a example.&#39;&#39;&#39;</span>
 
         <span class="n">example_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">naming_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -397,7 +397,7 @@
         <span class="k">return</span> <span class="n">example</span></div></div>
 
 
-<div class="viewcode-block" id="PathCachedDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.PathCachedDataset">[docs]</a><span class="k">class</span> <span class="nc">PathCachedDataset</span><span class="p">(</span><span class="n">CachedDataset</span><span class="p">):</span>
+<div class="viewcode-block" id="PathCachedDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.PathCachedDataset">[docs]</a><span class="k">class</span> <span class="nc">PathCachedDataset</span><span class="p">(</span><span class="n">CachedDataset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Used for simplified decorator interface to dataset caching.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">dataset</span><span class="p">,</span>
@@ -431,7 +431,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span></div>
 
 
-<div class="viewcode-block" id="cachable"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.cachable">[docs]</a><span class="k">def</span> <span class="nf">cachable</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<div class="viewcode-block" id="cachable"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.cachable">[docs]</a><span class="k">def</span> <span class="nf">cachable</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Decorator to cache datasets. If not cached, will start a caching server,</span>
 <span class="sd">    subsequent calls will just load from cache. Currently all worker must be</span>
 <span class="sd">    able to see the path. Be careful, function parameters are ignored on</span>
@@ -461,7 +461,7 @@
     <span class="k">return</span> <span class="n">decorator</span></div>
 
 
-<div class="viewcode-block" id="SubDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.SubDataset">[docs]</a><span class="k">class</span> <span class="nc">SubDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="SubDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.SubDataset">[docs]</a><span class="k">class</span> <span class="nc">SubDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A subset of a given dataset.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">subindices</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
@@ -472,7 +472,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Expected a list of subindices.&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
 
-<div class="viewcode-block" id="SubDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.SubDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="SubDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.SubDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get example and process. Wrapped to make sure stacktrace is</span>
 <span class="sd">        printed in case something goes wrong and we are in a</span>
 <span class="sd">        MultiprocessIterator.&quot;&quot;&quot;</span>
@@ -492,13 +492,13 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span></div>
 
 
-<div class="viewcode-block" id="LabelDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.LabelDataset">[docs]</a><span class="k">class</span> <span class="nc">LabelDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="LabelDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.LabelDataset">[docs]</a><span class="k">class</span> <span class="nc">LabelDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A label only dataset to avoid loading unnecessary data.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
-<div class="viewcode-block" id="LabelDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.LabelDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="LabelDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.LabelDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return labels of example.&quot;&quot;&quot;</span>
         <span class="n">example</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">)</span>
         <span class="n">example</span><span class="p">[</span><span class="s2">&quot;base_index_&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
@@ -513,14 +513,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span></div>
 
 
-<div class="viewcode-block" id="ProcessedDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ProcessedDataset">[docs]</a><span class="k">class</span> <span class="nc">ProcessedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="ProcessedDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ProcessedDataset">[docs]</a><span class="k">class</span> <span class="nc">ProcessedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A dataset with data processing applied.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">update</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">process</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="n">update</span>
 
-<div class="viewcode-block" id="ProcessedDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ProcessedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="ProcessedDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ProcessedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get example and process. Wrapped to make sure stacktrace is</span>
 <span class="sd">        printed in case something goes wrong and we are in a</span>
 <span class="sd">        MultiprocessIterator.&quot;&quot;&quot;</span>
@@ -541,7 +541,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span></div>
 
 
-<div class="viewcode-block" id="ExtraLabelsDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ExtraLabelsDataset">[docs]</a><span class="k">class</span> <span class="nc">ExtraLabelsDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtraLabelsDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ExtraLabelsDataset">[docs]</a><span class="k">class</span> <span class="nc">ExtraLabelsDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A dataset with extra labels added.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">labeler</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
@@ -557,7 +557,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_new_labels</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ExtraLabelsDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ExtraLabelsDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtraLabelsDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ExtraLabelsDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get example and add new labels.&quot;&quot;&quot;</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_example</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="n">new_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_labels</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_labels</span><span class="p">)</span>
@@ -572,7 +572,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span></div>
 
 
-<div class="viewcode-block" id="ConcatenatedDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ConcatenatedDataset">[docs]</a><span class="k">class</span> <span class="nc">ConcatenatedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="ConcatenatedDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ConcatenatedDataset">[docs]</a><span class="k">class</span> <span class="nc">ConcatenatedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A dataset which concatenates given datasets.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">datasets</span><span class="p">,</span> <span class="n">balanced</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span>
@@ -591,7 +591,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">boundaries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengths</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ConcatenatedDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ConcatenatedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="ConcatenatedDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ConcatenatedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get example and add dataset index to it.&quot;&quot;&quot;</span>
         <span class="n">did</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundaries</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">did</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -618,18 +618,18 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span></div>
 
 
-<div class="viewcode-block" id="ExampleConcatenatedDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ExampleConcatenatedDataset">[docs]</a><span class="k">class</span> <span class="nc">ExampleConcatenatedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="ExampleConcatenatedDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ExampleConcatenatedDataset">[docs]</a><span class="k">class</span> <span class="nc">ExampleConcatenatedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Concatenates a list of datasets along the example axis.</span>
 <span class="sd">    E.g.:</span>
-<span class="sd">        dset1 = [{&#39;a&#39;: 1, &#39;b&#39;: 2}, {&#39;a&#39;: 3, &#39;b&#39;: 4}, ...]</span>
-<span class="sd">        dset2 = [{&#39;a&#39;: 6, &#39;b&#39;: 7}, {&#39;a&#39;: 8, &#39;b&#39;: 9}, ...]</span>
+<span class="sd">    dset1 = [{&#39;a&#39;: 1, &#39;b&#39;: 2}, {&#39;a&#39;: 3, &#39;b&#39;: 4}, ...]</span>
+<span class="sd">    dset2 = [{&#39;a&#39;: 6, &#39;b&#39;: 7}, {&#39;a&#39;: 8, &#39;b&#39;: 9}, ...]</span>
 
-<span class="sd">        dset_conc = ExampleConcatenatedDataset(dset1, dset2)</span>
-<span class="sd">        print(dset_conc[0])</span>
-<span class="sd">        # {&#39;a_0&#39;: 1, &#39;a_1&#39;: 6,</span>
-<span class="sd">        #  &#39;b_0&#39;: 2, &#39;b_1&#39;: 7,</span>
-<span class="sd">        #  &#39;a&#39;: [&#39;a_0&#39;, &#39;a_1&#39;],</span>
-<span class="sd">        #  &#39;b&#39;: [&#39;b_0&#39;, &#39;b_1&#39;]}</span>
+<span class="sd">    dset_conc = ExampleConcatenatedDataset(dset1, dset2)</span>
+<span class="sd">    print(dset_conc[0])</span>
+<span class="sd">    # {&#39;a_0&#39;: 1, &#39;a_1&#39;: 6,</span>
+<span class="sd">    #  &#39;b_0&#39;: 2, &#39;b_1&#39;: 7,</span>
+<span class="sd">    #  &#39;a&#39;: [&#39;a_0&#39;, &#39;a_1&#39;],</span>
+<span class="sd">    #  &#39;b&#39;: [&#39;b_0&#39;, &#39;b_1&#39;]}</span>
 
 <span class="sd">    The new keys (e.g. `a_0, a_1`) are numbered in the order they are taken</span>
 <span class="sd">    from datasets. Additionally, the original, shared key is preserved and</span>
@@ -645,7 +645,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">datasets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_example_pars</span><span class="p">()</span>
 
-<div class="viewcode-block" id="ExampleConcatenatedDataset.set_example_pars"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ExampleConcatenatedDataset.set_example_pars">[docs]</a>    <span class="k">def</span> <span class="nf">set_example_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ExampleConcatenatedDataset.set_example_pars"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ExampleConcatenatedDataset.set_example_pars">[docs]</a>    <span class="k">def</span> <span class="nf">set_example_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Allows to manipulate the length and step of the returned example</span>
 <span class="sd">        lists.&#39;&#39;&#39;</span>
 
@@ -674,7 +674,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">*</span><span class="n">trans</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
 
-<div class="viewcode-block" id="ExampleConcatenatedDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.ExampleConcatenatedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="ExampleConcatenatedDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.ExampleConcatenatedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="n">examples</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">example_slice</span><span class="p">]]</span>
 
         <span class="n">new_examples</span> <span class="o">=</span> <span class="p">{}</span>
@@ -688,7 +688,7 @@
         <span class="k">return</span> <span class="n">new_examples</span></div></div>
 
 
-<div class="viewcode-block" id="SequenceDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.SequenceDataset">[docs]</a><span class="k">class</span> <span class="nc">SequenceDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="SequenceDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.SequenceDataset">[docs]</a><span class="k">class</span> <span class="nc">SequenceDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Wraps around a dataset and returns sequences of examples.</span>
 <span class="sd">    Given the length of those sequences the number of available examples</span>
 <span class="sd">    is reduced by this length times the step taken. Additionally each</span>
@@ -732,13 +732,13 @@
     <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dset</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SequenceDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.SequenceDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="SequenceDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.SequenceDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Retreives a list of examples starting at i.&#39;&#39;&#39;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div></div>
 
 
-<div class="viewcode-block" id="UnSequenceDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.UnSequenceDataset">[docs]</a><span class="k">class</span> <span class="nc">UnSequenceDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="UnSequenceDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.UnSequenceDataset">[docs]</a><span class="k">class</span> <span class="nc">UnSequenceDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Flattened version of a :class:`SequenceDataset`.</span>
 <span class="sd">    Adds a new key ``seq_idx`` to each example, corresponding to the sequence</span>
 <span class="sd">    index and a key ``example_idx`` corresponding to the original index.</span>
@@ -781,7 +781,7 @@
     <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_len</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
-<div class="viewcode-block" id="UnSequenceDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.UnSequenceDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="UnSequenceDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.UnSequenceDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="n">example_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_len</span>
         <span class="n">seq_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_len</span>
 
@@ -796,7 +796,7 @@
         <span class="k">return</span> <span class="n">seq_example</span></div></div>
 
 
-<div class="viewcode-block" id="getSeqDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.getSeqDataset">[docs]</a><span class="k">def</span> <span class="nf">getSeqDataset</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<div class="viewcode-block" id="getSeqDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.getSeqDataset">[docs]</a><span class="k">def</span> <span class="nf">getSeqDataset</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;This allows to not define a dataset class, but use a baseclass and a</span>
 <span class="sd">    `length` and `step` parameter in the supplied `config` to load and</span>
 <span class="sd">    sequentialize a dataset.</span>
@@ -837,7 +837,7 @@
                            <span class="n">config</span><span class="p">[</span><span class="n">ks</span><span class="p">][</span><span class="s1">&#39;seq_step&#39;</span><span class="p">])</span></div>
 
 
-<div class="viewcode-block" id="JoinedDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.JoinedDataset">[docs]</a><span class="k">def</span> <span class="nf">JoinedDataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">n_joins</span><span class="p">):</span>
+<div class="viewcode-block" id="JoinedDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.JoinedDataset">[docs]</a><span class="k">def</span> <span class="nf">JoinedDataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">n_joins</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Concat n_joins random samples based on the condition that</span>
 <span class="sd">    example_i[key] == example_j[key] for all i,j. Key must be in labels of</span>
 <span class="sd">    dataset.&quot;&quot;&quot;</span>
@@ -857,7 +857,7 @@
     <span class="k">return</span> <span class="n">dataset</span></div>
 
 
-<div class="viewcode-block" id="getDebugDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.getDebugDataset">[docs]</a><span class="k">def</span> <span class="nf">getDebugDataset</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<div class="viewcode-block" id="getDebugDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.getDebugDataset">[docs]</a><span class="k">def</span> <span class="nf">getDebugDataset</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Loads a dataset from the config and makes ist reasonably small.</span>
 <span class="sd">    The config syntax works as in :func:`getSeqDataset`. See there for</span>
 <span class="sd">    more extensive documentation.</span>
@@ -881,7 +881,7 @@
     <span class="k">return</span> <span class="n">SubDataset</span><span class="p">(</span><span class="n">base_dset</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RandomlyJoinedDataset"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.RandomlyJoinedDataset">[docs]</a><span class="k">class</span> <span class="nc">RandomlyJoinedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">,</span> <span class="n">PRNGMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomlyJoinedDataset"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.RandomlyJoinedDataset">[docs]</a><span class="k">class</span> <span class="nc">RandomlyJoinedDataset</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">,</span> <span class="n">PRNGMixin</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Joins similiar JoinedDataset but randomly selects from possible joins.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">n_joins</span><span class="p">):</span>
@@ -912,7 +912,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">labels</span>
 
 
-<div class="viewcode-block" id="RandomlyJoinedDataset.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.RandomlyJoinedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomlyJoinedDataset.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.RandomlyJoinedDataset.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="n">example</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">join_value</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
 
@@ -932,7 +932,7 @@
         <span class="k">return</span> <span class="n">new_examples</span></div></div>
 
 
-<div class="viewcode-block" id="DataFolder"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.DataFolder">[docs]</a><span class="k">class</span> <span class="nc">DataFolder</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="DataFolder"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.DataFolder">[docs]</a><span class="k">class</span> <span class="nc">DataFolder</span><span class="p">(</span><span class="n">DatasetMixin</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Given the root of a possibly nested folder containing datafiles and a</span>
 <span class="sd">    Callable that generates the labels to the datafile from its full name, this</span>
 <span class="sd">    class creates a labeled dataset.</span>
@@ -1000,7 +1000,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>
 
-<div class="viewcode-block" id="DataFolder.get_example"><a class="viewcode-back" href="../../../index.html#edflow.data.dataset.DataFolder.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="DataFolder.get_example"><a class="viewcode-back" href="../../../docu.html#edflow.data.dataset.DataFolder.get_example">[docs]</a>    <span class="k">def</span> <span class="nf">get_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="n">datum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">datum</span><span class="p">[</span><span class="s1">&#39;file_path_&#39;</span><span class="p">]</span>
 
