@@ -44,4 +44,4 @@ class DebugDataset(DatasetMixin):
         return self._labels
 
     def __len__(self):
-        return 100
+        return self.size

@@ -149,7 +149,7 @@ class HookedModelIterator(object):
 
     def step_ops(self):
         '''Defines ops that are called at each step.
-        
+
         Returns:
             The operation run at each step.'''
 
@@ -232,6 +232,21 @@ class PyHookedModelIterator(object):
             batch_iterator (Iterable): Iterable returning training data.
         '''
 
+        try:
+            self._iterate(batch_iterator)
+        except Exception as e:
+            for hook in self.hooks:
+                hook.at_exception(e)
+
+            raise e
+
+    def _iterate(self, batch_iterator):
+        '''Iterates over the data supplied and feeds it to the model.
+
+        Args:
+            batch_iterator (Iterable): Iterable returning training data.
+        '''
+
         step_ops = self.step_ops()
 
         pos = self.bar_pos
@@ -239,11 +254,17 @@ class PyHookedModelIterator(object):
         desc_e = base + 'Epoch'
         desc_b = base + 'Batch'
 
-        for ep in trange(self.num_epochs, desc=desc_e, position=pos):
+        for ep in trange(self.num_epochs,
+                         desc=desc_e,
+                         position=pos,
+                         dynamic_ncols=True):
             self.run_hooks(ep, before=True)
 
             pos = self.bar_pos + 1
-            iterator = tqdm(batch_iterator, desc=desc_b, position=pos)
+            iterator = tqdm(batch_iterator,
+                            desc=desc_b,
+                            position=pos,
+                            dynamic_ncols=True)
             for bi, batch in enumerate(iterator):
                 fetches = {'global_step': self.get_global_step,
                            'step_ops': step_ops}
@@ -263,7 +284,14 @@ class PyHookedModelIterator(object):
                 self.increment_global_step()
 
                 if (batch_iterator.is_new_epoch
-                        or self.get_global_step() >= self.config.get("num_steps", float("inf"))):
+                        or self.get_global_step() >= self.config.get("num_steps", float('inf'))):
+                    self.logger.info('Done with epoch')
+                    self.logger.info('is_new_epoch: {}'
+                                     .format(batch_iterator.is_new_epoch))
+                    gs = self.get_global_step()
+                    ns = self.config.get('num_steps', float('inf'))
+                    self.logger.info('gs > ns: {} ({} >= {})'
+                                     .format(gs >= ns, gs, ns))
                     batch_iterator.reset()
                     break
             self.run_hooks(ep, before=False)
@@ -365,6 +393,7 @@ class TFHookedModelIterator(PyHookedModelIterator):
         sess_config.gpu_options.allow_growth = self.config.get("gpu_mem_growth", False)
         gpu_mem_fraction = self.config.get("gpu_mem_fraction", None)
         if gpu_mem_fraction is not None:
+            self.logger.info('Setting GPU MEM Fraction to {}'.format(gpu_mem_fraction))
             sess_config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_fraction
         self._session = tf.Session(config=sess_config)
         return self._session
