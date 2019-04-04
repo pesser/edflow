@@ -15,9 +15,13 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 # Just some settings that I like when documenting my sources
-autodoc_default_flags = ["members", "inherited-members", "show-inheritance"]
-autodoc_member_order = "bysource"
-autoclass_content = "both"
+#autodoc_default_options = {
+#        "members":True,
+#        "inherited-members":True,
+#        "show-inheritance":True,
+#        }
+#autodoc_member_order = "bysource"
+#autoclass_content = "both"
 
 
 # -- Project information -----------------------------------------------------
@@ -43,6 +47,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    'm2r'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -57,7 +62,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+#source_suffix = '.rst'
         
 
 # -- Options for HTML output -------------------------------------------------
