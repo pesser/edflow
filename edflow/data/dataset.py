@@ -581,15 +581,15 @@ class ConcatenatedDataset(DatasetMixin):
 class ExampleConcatenatedDataset(DatasetMixin):
     '''Concatenates a list of datasets along the example axis.
     E.g.:
-        dset1 = [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}, ...]
-        dset2 = [{'a': 6, 'b': 7}, {'a': 8, 'b': 9}, ...]
+    dset1 = [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}, ...]
+    dset2 = [{'a': 6, 'b': 7}, {'a': 8, 'b': 9}, ...]
 
-        dset_conc = ExampleConcatenatedDataset(dset1, dset2)
-        print(dset_conc[0])
-        # {'a_0': 1, 'a_1': 6,
-        #  'b_0': 2, 'b_1': 7,
-        #  'a': ['a_0', 'a_1'],
-        #  'b': ['b_0', 'b_1']}
+    dset_conc = ExampleConcatenatedDataset(dset1, dset2)
+    print(dset_conc[0])
+    # {'a_0': 1, 'a_1': 6,
+    #  'b_0': 2, 'b_1': 7,
+    #  'a': ['a_0', 'a_1'],
+    #  'b': ['b_0', 'b_1']}
 
     The new keys (e.g. `a_0, a_1`) are numbered in the order they are taken
     from datasets. Additionally, the original, shared key is preserved and

@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Setup &#8212; EDFlow  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EDFlow  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="setup">
+<h1>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h1>
+<p>There are two ways for setting up <strong>EDFlow</strong> on your system:</p>
+<ol class="arabic">
+<li><p>Use PyPI:</p>
+<blockquote>
+<div><p>Recommended: Install edflow into a conda environment.</p>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   conda create --name myenv python=3.6
+   source activate myenv
+
+Pull and install the current in the current directory with PyPi
+``pip install -e git+https://github.com/pesser/edflow.git``
+</pre></div>
+</div>
+</li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>:</p>
+<blockquote>
+<div><p>Pull repository
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/pesser/edflow.git</span></code>
+<code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">edflow</span></code>
+In edflow directory
+<code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">setup.py</span></code></p>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="workflow">
+<h1>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h1>
+<p>For more information, look into our <a class="reference external" href="link">starter guide</a>.</p>
+</div>
+<div class="section" id="example">
+<h1>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tensorflow">
+<h2>Tensorflow<a class="headerlink" href="#tensorflow" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pytorch">
+<h2>Pytorch<a class="headerlink" href="#pytorch" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+<div class="section" id="other">
+<h1>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">path/to/config</span></code></p>
+<blockquote>
+<div><p>yaml file with all information see [Workflow][#Workflow]</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--checkpoint</span> <span class="pre">path/to/checkpoint</span> <span class="pre">to</span> <span class="pre">restore</span></code></p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">--noeval</span></code></dt><dd><p>only run training</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">--retrain</span></code></dt><dd><p>reset global step to zero</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="known-issues">
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="compatibility">
+<h2>Compatibility<a class="headerlink" href="#compatibility" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+<div class="section" id="contributions">
+<h1>Contributions<a class="headerlink" href="#contributions" title="Permalink to this headline">¶</a></h1>
+<img alt="https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Commits&lt;https://github.com/pesser/edflow/graphs/commit-activity&gt;" src="https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Commits&lt;https://github.com/pesser/edflow/graphs/commit-activity&gt;" />
+<img alt="https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Issues&lt;https://github.com/pesser/edflow/issues&gt;" src="https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/issues-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Issues&lt;https://github.com/pesser/edflow/issues&gt;" />
+<img alt="https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-PRs&lt;https://github.com/pesser/edflow/pulls&gt;" src="https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-PRs&lt;https://github.com/pesser/edflow/pulls&gt;" />
+<img alt="https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white:target:https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white:alt:GitHub-Status&lt;https://github.com/pesser/edflow/releases&gt;" src="https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white:target:https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&amp;logo=github&amp;logoColor=white:alt:GitHub-Status&lt;https://github.com/pesser/edflow/releases&gt;" />
+<img alt="https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Stars&lt;https://github.com/pesser/edflow/stargazers&gt;" src="https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/stars/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Stars&lt;https://github.com/pesser/edflow/stargazers&gt;" />
+<img alt="https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Forks&lt;https://github.com/pesser/edflow/network&gt;" src="https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Forks&lt;https://github.com/pesser/edflow/network&gt;" />
+</div>
+<div class="section" id="license">
+<h1>LICENSE<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
+<p>coming soon…</p>
+</div>
+<div class="section" id="authors">
+<h1>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h1>
+<p>Mimo Tilbich</p>
+<img alt="https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Contributions&lt;https://github.com/pesser/edflow/graphs/contributors&gt;" src="https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white:target:https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&amp;logoColor=white:alt:GitHub-Contributions&lt;https://github.com/pesser/edflow/graphs/contributors&gt;" />
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Setup</a></li>
+<li><a class="reference internal" href="#workflow">Workflow</a></li>
+<li><a class="reference internal" href="#example">Example</a><ul>
+<li><a class="reference internal" href="#tensorflow">Tensorflow</a></li>
+<li><a class="reference internal" href="#pytorch">Pytorch</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#other">Other</a><ul>
+<li><a class="reference internal" href="#parameters">Parameters</a></li>
+<li><a class="reference internal" href="#known-issues">Known Issues</a></li>
+<li><a class="reference internal" href="#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contributions">Contributions</a></li>
+<li><a class="reference internal" href="#license">LICENSE</a></li>
+<li><a class="reference internal" href="#authors">Authors</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/README.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EDFlow  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Mimo Tilbich.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>
