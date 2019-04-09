@@ -54,6 +54,10 @@ For more information, look into our [starter guide](link).
 
 ### Tensorflow
 
+    cd examples
+    edflow -t mnist_tf/train.yaml -n hello_world
+
+
 ### Pytorch
 
 
