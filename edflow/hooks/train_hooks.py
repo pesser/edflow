@@ -157,6 +157,8 @@ class LoggingHook(Hook):
                 save_path = os.path.join(self.root, full_name)
                 plot_batch(image_batch, save_path)
 
+            self.logger.info("project root: {}".format(self.root))
+
 
 class RetrainHook(Hook):
     '''Restes the global step at the beginning of training.'''

@@ -2,6 +2,10 @@
 
 A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 
+---
+
+**Please note: This is a work in progress. Nothing is finished and a lot you read here might be wrong.**
+
 
 ---
 
@@ -50,6 +54,10 @@ For more information, look into our [starter guide](link).
 
 ### Tensorflow
 
+    cd examples
+    edflow -t mnist_tf/train.yaml -n hello_world
+
+
 ### Pytorch
 
 
@@ -87,15 +95,13 @@ For more information, look into our [starter guide](link).
 
 
 ## LICENSE
-
+ 
+[![LICENSE][LICENSE]](https://raw.githubusercontent.com/pesser/edflow/master/LICENSE)
 This project is licensed under the terms of the MIT license.
 
 ## Authors
 
 Mimo Tilbich [![GitHub-Contributions][GitHub-Contributions]](https://github.com/pesser/edflow/graphs/contributors)
-
-
-
 
 
 [GitHub-Status]: https://img.shields.io/github/tag/pesser/edflow.svg?maxAge=86400&logo=github&logoColor=white
@@ -106,3 +112,5 @@ Mimo Tilbich [![GitHub-Contributions][GitHub-Contributions]](https://github.com/
 [GitHub-PRs]: https://img.shields.io/github/issues-pr-closed/pesser/edflow.svg?logo=github&logoColor=white
 [GitHub-Contributions]: https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&logoColor=white
 [GitHub-Updated]: https://img.shields.io/github/last-commit/pesser/edflow/master.svg?logo=github&logoColor=white&label=pushed
+
+[LICENSE]: https://img.shields.io/github/license/pesser/edflow.svg

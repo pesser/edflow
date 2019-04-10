@@ -1,0 +1,18 @@
+# must specify
+model: mnist_tf.model.TrainModel
+iterator: mnist_tf.model.Trainer
+dataset: mnist_tf.data.Dataset_MNIST
+
+batch_size: 5
+num_steps: 1001
+lr : 1.0e-4  # yaml needs 1.0 for exponential notation
+lr_decay_begin : 100 # TODO remove these in future versions
+lr_decay_end : 1001  # TODO remove these in future versions
+
+
+# options
+spatial_size: 28
+log_freq : 10
+
+# cd edflow/examples
+# run with edflow -t mnist_tf/train.yaml -n mnist_tf
