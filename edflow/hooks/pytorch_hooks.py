@@ -193,3 +193,53 @@ class ToTorchHook(Hook):
 class ToFromTorchHook(ToNumpyHook, ToTorchHook):
     def __init__(self, *args, **kwargs):
         ToTorchHook.__init__(self, *args, **kwargs)
+
+
+# TODO: include this hook by default in the pytorch iterator.
+class DataPrepHook(ToFromTorchHook):
+    """
+    The hook is needed in order to convert the input appropriately. Here, we have
+    to reshape the input i.e. append 1 to the shape (for the number of channels
+    of  the image). Plus, it converts to data to Pytorch tensors, and back.
+    """
+    def before_step(self, step, fetches, feeds, batch):
+        """
+        Steps taken before the training step.
+        :param step:
+        :param fetches:
+        :param feeds:
+        :param batch:
+        :return:
+        """
+        def to_image(obj):
+            if isinstance(obj, np.ndarray) and len(obj.shape) == 3:
+                batches, height, width = obj.shape
+                obj = obj.reshape(batches, height, width, 1)
+            if isinstance(obj, np.ndarray) and len(obj.shape) == 4:
+                return obj.transpose(0, 3, 1, 2)
+            else:
+                return obj
+
+        walk(feeds, to_image, inplace=True)
+
+        super().before_step(step, fetches, feeds, batch)
+
+    def after_step(self, step, results):
+        """
+        Steps taken after the training step.
+        :param step:
+        :param results:
+        :return:
+        """
+        super().after_step(step, results)
+
+        def to_image(k, obj):
+            if 'weights' not in k \
+                    and isinstance(obj, np.ndarray) \
+                    and len(obj.shape) == 4:
+                return obj.transpose(0, 2, 3, 1)
+            else:
+                return obj
+
+        walk(results, to_image, inplace=True, pass_key=True)
+
