@@ -25,11 +25,12 @@ class BaseTrainer(HookedModelIterator):
         Base class for models in this project. Implementations only need to
         define the make_loss_ops method which has to set the attributes
         log_ops, img_ops and return a per submodule loss tensor.
+
         Args:
             trainer_config (str): Some config file.
             root_path (str): Root directory to store all training outputs.
             model (Model): :class:`Model` to train.
-            hooks (list): List of :class:'`Hook`s
+            hooks (list): List of :class:'`Hook`
             hook_freq (int): Step frequencey at which hooks are evaluated.
             bar_position (int): Used by tqdm to place bars at the right
                 position when using multiple Iterators in parallel.
