@@ -23,27 +23,28 @@ A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 
 
 ## Setup
+Clone this repository:
 
-There are two ways for setting up **EDFlow** on your system:
+    git clone https://github.com/pesser/edflow.git
+    cd edflow
 
-1. Use PyPI:
+We provide different [conda](https://conda.io) environments in the folder
+`environments`:
 
-    Recommended: Install edflow into a conda environment.
-    ```
-    conda create --name myenv python=3.6
-    source activate myenv
-    ```
-    
-    Pull and install the current in the current directory with PyPi
-    `pip install -e git+https://github.com/pesser/edflow.git`
+- `edflow_tf_cu9.yaml`: Use if you have `CUDA>=9` available and
+  want to use tensorflow.
+- `edflow_pt_cu9.yaml`: Use if you have `CUDA>=9` available and
+  want to use pytorch.
+- `edflow_cpu`: Use if you don't have a `CUDA>=9` GPU available.
 
-2. Use `setup.py`:
+Choose an appropriate environment and execute
 
-    Pull repository
-    `git clone https://github.com/pesser/edflow.git`
-    `cd edflow`
-    In edflow directory
-    `python3 setup.py`
+    conda env create -f environments/<env>.yaml
+    conda activate <env>
+    pip install -e .
+
+where `<env>` is one of the `yaml` files described above.
+
 
 ## Workflow
 
