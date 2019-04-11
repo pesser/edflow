@@ -15,21 +15,29 @@ class IntervalHook(Hook):
                  max_interval=None,
                  get_step=None):
         '''Args:
-            hook (list of Hook): The set of managed hooks. Each must implement
-                the methods of a :class:`Hook`.
-            interval (int): The number of steps after which the managed hooks
-                are run.
-            start (int): If `start` is not None, the first time the hooks are
-                run ist after `start` number of steps have been made.
-            stop (int): If given, this hook is not evaluated anymore after
-                `stop` steps.
-            modify_each (int): If given, `modifier` is called on the interval
-                after this many executions of thois hook.
-            modifier (Callable): See `modify_each`.
-            max_interval (int): If given, the modifier can only increase the
-                interval up to this number of steps.
-            get_step (Callable): If given, prefer over the use of batch index
-                to determine run condition, e.g. to run based on global step.
+
+        hook (list of Hook): The set of managed hooks. Each must implement
+        the methods of a :class:`Hook`.
+
+        interval (int): The number of steps after which the managed hooks
+        are run.
+
+        start (int): If `start` is not None, the first time the hooks are
+        run ist after `start` number of steps have been made.
+
+        stop (int): If given, this hook is not evaluated anymore after
+        `stop` steps.
+
+        modify_each (int): If given, `modifier` is called on the interval
+        after this many executions of thois hook.
+
+        modifier (Callable): See `modify_each`.
+
+        max_interval (int): If given, the modifier can only increase the
+        interval up to this number of steps.
+
+        get_step (Callable): If given, prefer over the use of batch index
+        to determine run condition, e.g. to run based on global step.
         '''
 
         self.hooks = hooks

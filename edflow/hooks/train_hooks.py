@@ -22,17 +22,24 @@ class CheckpointHook(Hook):
                  interval=None,
                  max_to_keep=5):
         '''Args:
-            root_path (str): Path to where the checkpoints are stored.
-            variables (list): List of all variables to keep track of.
-            session (tf.Session): Session instance for saver.
-            modelname (str): Used to name the checkpoint.
-            step (tf.Tensor or callable): Step op, that can be evaluated
-                (i,.e. a tf.Tensor or a python callable returning the step as an
-                integer).
-            interval (int): Number of iterations after which a checkpoint is
-                saved. If None, a checkpoint is saved after each epoch.
-            max_to_keep (int): Maximum number of checkpoints to keep on
-                disk. Use 0 or None to never delete any checkpoints.
+
+        root_path (str): Path to where the checkpoints are stored.
+
+        variables (list): List of all variables to keep track of.
+
+        session (tf.Session): Session instance for saver.
+
+        modelname (str): Used to name the checkpoint.
+
+        step (tf.Tensor or callable): Step op, that can be evaluated
+        (i,.e. a tf.Tensor or a python callable returning the step as an
+        integer).
+
+        interval (int): Number of iterations after which a checkpoint is
+        saved. If None, a checkpoint is saved after each epoch.
+
+        max_to_keep (int): Maximum number of checkpoints to keep on
+        disk. Use 0 or None to never delete any checkpoints.
         '''
 
         self.root = root_path
@@ -85,14 +92,21 @@ class LoggingHook(Hook):
                  interval=100,
                  root_path='logs'):
         '''Args:
-            scalars (dict): Scalar ops.
-            histograms (dict): Histogram ops.
-            images (dict): Image ops. Note that for these no
-                tensorboard logging ist used but a custom image saver.
-            logs (dict): Logs to std out via logger.
-            graph (tf.Graph): Current graph.
-            interval (int): Intervall of training steps before logging.
-            root_path (str): Path at which the logs are stored.
+
+        scalars (dict): Scalar ops.
+
+        histograms (dict): Histogram ops.
+
+        images (dict): Image ops. Note that for these no
+        tensorboard logging ist used but a custom image saver.
+
+        logs (dict): Logs to std out via logger.
+
+        graph (tf.Graph): Current graph.
+
+        interval (int): Intervall of training steps before logging.
+
+        root_path (str): Path at which the logs are stored.
         '''
 
         scalars = [tf.summary.scalar(n, s) for n, s in scalars.items()]
@@ -175,10 +189,13 @@ class WaitForManager(Hook):
                  max_n,
                  interval=5):
         '''Args:
-            checkpoint_root (str): Path to look for checkpoints.
-            max_n (int): Wait as long as there are more than max_n ckpts.
-            interval (float): Number of seconds after which to check for number
-                of checkpoints again.
+
+        checkpoint_root (str): Path to look for checkpoints.
+
+        max_n (int): Wait as long as there are more than max_n ckpts.
+
+        interval (float): Number of seconds after which to check for number
+        of checkpoints again.
         '''
 
         self.root = checkpoint_root

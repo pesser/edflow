@@ -111,7 +111,7 @@ class HookedModelIterator(object):
             fetches (list or dict): Fetches for the next session.run call.
             feeds (dict): Feeds for the next session.run call.
             results (same as fetches): Results from the last session.run call.
-            before (bool): If not obvious determines if the before_ or after_
+            before (bool): If not obvious determines if the before\_ or after\_
                 methods of the hooks should be called.
 
         Return:
@@ -302,7 +302,7 @@ class PyHookedModelIterator(object):
             fetches (list or dict): Fetches for the next session.run call.
             feeds (dict): Feeds for the next session.run call.
             results (same as fetches): Results from the last session.run call.
-            before (bool): If not obvious determines if the before_ or after_
+            before (bool): If not obvious determines if the before\_ or after\_
                 methods of the hooks should be called.
 
         Return:

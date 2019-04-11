@@ -22,11 +22,15 @@ class PyCheckpointHook(Hook):
                  modelname='model',
                  interval=None):
         '''Args:
-            root_path (str): Path to where the checkpoints are stored.
-            model (nn.Module): Model to checkpoint.
-            modelname (str): Prefix for checkpoint files.
-            interval (int): Number of iterations after which a checkpoint is
-                saved. If None, a checkpoint is saved after each epoch.
+
+        root_path (str): Path to where the checkpoints are stored.
+
+        model (nn.Module): Model to checkpoint.
+
+        modelname (str): Prefix for checkpoint files.
+
+        interval (int): Number of iterations after which a checkpoint is
+        saved. If None, a checkpoint is saved after each epoch.
         '''
 
         self.root = root_path
@@ -74,15 +78,23 @@ class PyLoggingHook(Hook):
                  interval=100,
                  root_path='logs'):
         '''Args:
-            log_ops (list): Ops to run at logging time.
-            scalars (dict): Scalar ops.
-            histograms (dict): Histogram ops.
-            images (dict): Image ops. Note that for these no
-                tensorboard logging ist used but a custom image saver.
-            logs (dict): Logs to std out via logger.
-            graph (tf.Graph): Current graph.
-            interval (int): Intervall of training steps before logging.
-            root_path (str): Path at which the logs are stored.
+
+        log_ops (list): Ops to run at logging time.
+
+        scalars (dict): Scalar ops.
+
+        histograms (dict): Histogram ops.
+
+        images (dict): Image ops. Note that for these no
+        tensorboard logging ist used but a custom image saver.
+
+        logs (dict): Logs to std out via logger.
+
+        graph (tf.Graph): Current graph.
+
+        interval (int): Intervall of training steps before logging.
+        
+        root_path (str): Path at which the logs are stored.
         '''
 
         self.log_ops = log_ops
