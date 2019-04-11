@@ -24,7 +24,11 @@ class IntervalHook(Hook):
             stop (int): If given, this hook is not evaluated anymore after
                 `stop` steps.
             modify_each (int): If given, `modifier` is called on the interval
-                after this many executions of thois hook.
+                after this many executions of thois hook. If `None` it is set
+                to :attr:`interval`. In case you do not want any mofification
+                you can either set :attr:`max_interval` to :attr:`interval` or
+                choose the modifier to be `lambda x: x` or set
+                :attr:`modify_each` to `float(inf)`.
             modifier (Callable): See `modify_each`.
             max_interval (int): If given, the modifier can only increase the
                 interval up to this number of steps.
@@ -39,7 +43,7 @@ class IntervalHook(Hook):
         inf = float('inf')
         self.start = start if start is not None else -1
         self.stop = stop if stop is not None else inf
-        self.modival = modify_each if modify_each is not None else inf
+        self.modival = modify_each if modify_each is not None else interval
         self.modifier = modifier
         self.max_interval = max_interval if max_interval is not None else inf
         self.get_step = get_step

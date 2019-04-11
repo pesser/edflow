@@ -2,6 +2,11 @@
 
 import os
 
+import sys  # noqa
+
+
+sys.path.append(os.getcwd())  # convenience: load implementations from cwd
+
 pytorch_mp = os.environ.get('USE_PYTORCH_MP', 'False') == 'True'
 if not pytorch_mp:
     import multiprocessing as mp
@@ -10,7 +15,7 @@ else:
     print('Using pytorch mp')
     import torch.multiprocessing as mp
 
-import sys  # noqa
+
 import argparse  # noqa
 import yaml  # noqa
 
@@ -18,8 +23,6 @@ from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
 from edflow.hooks.evaluation_hooks import get_latest_checkpoint  # noqa
-
-sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
 
 def update_config(config, options):
@@ -38,19 +41,32 @@ def main(opt):
         P = use_project(opt.project, postfix=opt.name)
     else:
         assert opt.train is not None
+        # Get base or default parameters
+        base_config = {}
+        if opt.base is not None:
+            for base in opt.base:
+                print(base)
+                with open(base) as f:
+                    base_config.update(yaml.load(f))
+        print(base_config)
         # get path to implementation
         with open(opt.train) as f:
-            config = yaml.load(f)
+            config = base_config
+            config.update(yaml.load(f))
             update_config(config, opt.option)
             impl = config["model"]
             name = config.get("experiment_name", None)
         # if it looks like a package path, take its root as the code dir
         # otherwise take cwd
-        path = impl.split(".")
-        if len(path) > 0:
-            code_root = path[0]
+        if 'code_root' in config:
+            code_root = config['code_root']
         else:
-            code_root = "."
+            path = impl.split(".")
+            if len(path) > 0:
+                code_root = path[0]
+            else:
+                code_root = "."
+
         if opt.name is not None:
             # command line takes precedence over "experiment_name" from
             # config
@@ -77,8 +93,18 @@ def main(opt):
             checkpoint = get_latest_checkpoint(P.checkpoints)
         else:
             checkpoint = None
+
+        base_config = {}
+        if opt.base is not None:
+            for base in opt.base:
+                print(base)
+                with open(base) as f:
+                    base_config.update(yaml.load(f))
+        print(base_config)
+        # get path to implementation
         with open(opt.train) as f:
-            config = yaml.load(f)
+            config = base_config
+            config.update(yaml.load(f))
             update_config(config, opt.option)
 
         logger.info("Training config: {}".format(opt.train))
@@ -86,17 +112,24 @@ def main(opt):
 
         train_process = mp.Process(target=train,
                                    args=((config,
-                                         P.train,
-                                         checkpoint,
-                                         opt.retrain),
+                                          P.train,
+                                          checkpoint,
+                                          opt.retrain),
                                          JQ, len(processes)))
         processes.append(train_process)
 
     # Evaluation
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
+        base_config = {}
+        if opt.base is not None:
+            for base in opt.base:
+                with open(base) as f:
+                    base_config.update(yaml.load(f))
+        # get path to implementation
         with open(eval_config) as f:
-            config = yaml.load(f)
+            config = base_config
+            config.update(yaml.load(f))
             update_config(config, opt.option)
         logger.info("Evaluation config: {}".format(eval_config))
         logger.info(yaml.dump(config))
@@ -130,35 +163,61 @@ def main(opt):
             if done_count >= len(processes):
                 break
 
-    # Landing
-        for p in processes:
-            p.join()
-
-    except (Exception, KeyboardInterrupt):
+    except (Exception, KeyboardInterrupt) as e:
         logger.info('Terminating all processes')
         for p in processes:
             p.terminate()
-    finally:
-        logger.info('Finished')
 
+        raise e
+    finally:
+        # Landing
+        for p in processes:
+            p.join()
+        logger.info('Finished')
 
 
 if __name__ == "__main__":
     default_log_dir = os.path.join(os.getcwd(), "log")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--name",
-            metavar = "description", help="postfix of log directory.")
+    parser.add_argument(
+        "-n", "--name", metavar="description",
+        help="postfix of log directory.")
+    parser.add_argument(
+        "-b",
+        "--base",
+        nargs='*',
+        metavar="base_config.yaml",
+        help="Path to base config. Any parameter in here is overwritten by "
+        "the train of eval config. Useful e.g. for model parameters, which"
+        " stay constant between trainings and evaluations.",
+        default=None
+    )
     parser.add_argument("-t", "--train",
-            metavar = "config.yaml", help="path to training config")
-    parser.add_argument("-e", "--eval", nargs = "*",
-            metavar = "config.yaml", help="path to evaluation configs")
+                        metavar="config.yaml", help="path to training config")
+    parser.add_argument(
+        "-e",
+        "--eval",
+        nargs="*",
+        metavar="config.yaml",
+        help="path to evaluation configs")
     parser.add_argument("-p", "--project", help="path to existing project")
-    parser.add_argument("-c", "--checkpoint", help="path to existing checkpoint")
-    parser.add_argument("-r", "--retrain", action = "store_true", help="reset global step")
-    parser.add_argument("--nogpu", action = "store_true", help="disable gpu for tensorflow")
-    parser.add_argument("--option", "-o", action = "append",
-            help="additional key: value options to update all config with")
+    parser.add_argument(
+        "-c",
+        "--checkpoint",
+        help="path to existing checkpoint")
+    parser.add_argument(
+        "-r",
+        "--retrain",
+        action="store_true",
+        help="reset global step")
+    parser.add_argument(
+        "--nogpu",
+        action="store_true",
+        help="disable gpu for tensorflow")
+    parser.add_argument(
+        "--option", "-o", action="append",
+        help="additional key: value options to update all config with")
     parser.add_argument('-log', '--log-level',
                         metavar='LEVEL',
                         type=str,
