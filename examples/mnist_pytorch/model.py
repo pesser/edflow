@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from edflow.iterators.model_iterator import PyHookedModelIterator
+from edflow.iterators.model_iterator import TorchHookedModelIterator
 
 
 class CNN(nn.Module):
@@ -30,7 +30,7 @@ class CNN(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-class Iterator(PyHookedModelIterator):
+class Iterator(TorchHookedModelIterator):
     def __init__(self, config, root, model, **kwargs):
         """
         THe iterator class is the backbone of your EDflow training. It will handle your training

@@ -179,8 +179,7 @@ class PyHookedModelIterator(object):
                  hooks=[],
                  bar_position=0,
                  nogpu=False,
-                 desc='',
-                 transform=True):
+                 desc=''):
         '''Constructor.
 
         Args:
@@ -201,10 +200,6 @@ class PyHookedModelIterator(object):
         self.num_epochs = num_epochs
 
         self.hooks = hooks
-        # check if the data preparation hook is already supplied.
-        check = transform and not any([isinstance(hook, DataPrepHook) for hook in self.hooks])
-        if check:
-            self.hooks += [DataPrepHook()]
 
         self.hook_freq = hook_freq
 
@@ -406,3 +401,12 @@ class TFHookedModelIterator(PyHookedModelIterator):
             sess_config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_fraction
         self._session = tf.Session(config=sess_config)
         return self._session
+
+
+class TorchHookedModelIterator(PyHookedModelIterator):
+    def __init__(self, *args, transform=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        # check if the data preparation hook is already supplied.
+        check = transform and not any([isinstance(hook, DataPrepHook) for hook in self.hooks])
+        if check:
+            self.hooks += [DataPrepHook()]
