@@ -25,11 +25,11 @@ def make_linear_var(step,
     Returns:
         tf.Tensor: :math:`y`
     """
+    import tensorflow as tf
     if clip_min is None:
         clip_min = min(start_value, end_value)
     if clip_max is None:
         clip_max = max(start_value, end_value)
-    import tensorflow as tf
     linear = (
             (end_value - start_value) /
             (end - start) *
@@ -37,17 +37,6 @@ def make_linear_var(step,
     return tf.clip_by_value(linear, clip_min, clip_max)
 
 
-<<<<<<< HEAD
-def make_exponential_var(step,
-                         start, end,
-                         start_value, end_value,
-                         decay):
-    r"""Exponential from :math:`(a, \alpha)` to :math:`(b, \beta)` with decay
-    rate decay.
-
-    Args:
-        step (tf.Tensor): :math:`x`
-=======
 def linear_var(step,
                start, end,
                start_value, end_value,
@@ -57,25 +46,6 @@ def linear_var(step,
 
     Args:
         step (float): :math:`x`
->>>>>>> ff8f5a0f98acab1acf7eb38af1285f6b92dbaab8
-        start: :math:`a`
-        end: :math:`b`
-        start_value: :math:`\alpha`
-        end_value: :math:`\beta`
-<<<<<<< HEAD
-        decay: Decay rate
-
-    Returns:
-        tf.Tensor: :math:`y`
-    """
-    startstep = start
-    endstep = (np.log(end_value) - np.log(start_value))/np.log(decay)
-    stepper = make_linear_var(step, start, end, startstep, endstep)
-    return tf.math.pow(decay, stepper)*start_value
-
-
-def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):
-=======
         clip_min: Minimal value returned.
         clip_max: Maximum value returned.
 
@@ -89,8 +59,33 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):
     return float(np.clip(linear, clip_min, clip_max))
 
 
+def make_exponential_var(step,
+                         start, end,
+                         start_value, end_value,
+                         decay):
+    r"""Exponential from :math:`(a, \alpha)` to :math:`(b, \beta)` with decay
+    rate decay.
+
+    Args:
+        step (tf.Tensor): :math:`x`
+        start: :math:`a`
+        end: :math:`b`
+        start_value: :math:`\alpha`
+        end_value: :math:`\beta`
+        decay: Decay rate
+
+    Returns:
+        tf.Tensor: :math:`y`
+    """
+    import tensorflow as tf
+
+    startstep = start
+    endstep = (np.log(end_value) - np.log(start_value))/np.log(decay)
+    stepper = make_linear_var(step, start, end, startstep, endstep)
+    return tf.math.pow(decay, stepper)*start_value
+
+
 def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):  #noqa
->>>>>>> ff8f5a0f98acab1acf7eb38af1285f6b92dbaab8
     '''Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 

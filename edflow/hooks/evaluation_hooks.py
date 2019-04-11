@@ -71,7 +71,7 @@ class WaitForCheckpointHook(Hook):
             latest_checkpoint = get_latest_checkpoint(self.root, self.fcond)
             if latest_checkpoint is not None \
                     and latest_checkpoint != self.latest_checkpoint:
-                self.latest_checkpoint = latest_checkpoint
+                self.known_checkpoints.add(latest_checkpoint)
                 time.sleep(self.additional_wait)
                 self.logger.info(
                     "Found new checkpoint: {}".format(latest_checkpoint))
