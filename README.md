@@ -55,10 +55,13 @@ For more information, look into our [starter guide](link).
 ### Tensorflow
 
     cd examples
-    edflow -t mnist_tf/train.yaml -n hello_world
+    edflow -t mnist_tf/train.yaml -n hello_tensorflow
 
 
 ### Pytorch
+
+    cd examples
+    edflow -t mnist_pytorch/mnist_config.yaml -n hello_pytorch
 
 
 ## Other
