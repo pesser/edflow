@@ -32,17 +32,23 @@ class WaitForCheckpointHook(Hook):
                  callback=None,
                  eval_all = False):
         '''Args:
-            checkpoint_root (str): Path to look for checkpoints.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted.
-            interval (float): Number of seconds after which to check for a new
-                checkpoint again.
-            add_sec (float): Number of seconds to wait, after a checkpoint is
-                found, to avoid race conditions, if the checkpoint is still
-                being written at the time it's meant to be read.
-            callback (Callable): Callback called with path of found
-                checkpoint.
-            eval_all (bool): Accept all instead of just latest checkpoint.
+
+        checkpoint_root (str): Path to look for checkpoints.
+
+        filter_cond (Callable): A function used to filter files, to only
+        get the checkpoints that are wanted.
+
+        interval (float): Number of seconds after which to check for a new
+        checkpoint again.
+
+        add_sec (float): Number of seconds to wait, after a checkpoint is
+        found, to avoid race conditions, if the checkpoint is still
+        being written at the time it's meant to be read.
+
+        callback (Callable): Callback called with path of found
+        checkpoint.
+
+        eval_all (bool): Accept all instead of just latest checkpoint.
         '''
 
         self.root = checkpoint_root
@@ -146,13 +152,17 @@ class RestoreModelHook(Hook):
                  filter_cond=lambda c: True,
                  global_step_setter=None):
         '''Args:
-            variables (list): tf.Variable to be loaded from the checkpoint.
-            checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint. Ignored if used as functor.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted. Ignored if used as
-                functor.
-            global_step_setter (Callable): Callback to set global_step.
+        
+        variables (list): tf.Variable to be loaded from the checkpoint.
+
+        checkpoint_path (str): Directory in which the checkpoints are
+        stored or explicit checkpoint. Ignored if used as functor.
+
+        filter_cond (Callable): A function used to filter files, to only
+        get the checkpoints that are wanted. Ignored if used as
+        functor.
+
+        global_step_setter (Callable): Callback to set global_step.
         '''
         self.root = checkpoint_path
         self.fcond = filter_cond
@@ -204,14 +214,18 @@ class RestorePytorchModelHook(Hook):
                  filter_cond=lambda c: True,
                  global_step_setter=None):
         '''Args:
-            model (torch.nn.Module): Model to initialize
-            checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint. Ignored if used as functor.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted. Ignored if used as
-                functor.
-            global_step_setter (Callable): Function, that the retrieved global
-                step can be passed to.
+
+        model (torch.nn.Module): Model to initialize
+
+        checkpoint_path (str): Directory in which the checkpoints are
+        stored or explicit checkpoint. Ignored if used as functor.
+            
+        filter_cond (Callable): A function used to filter files, to only
+        get the checkpoints that are wanted. Ignored if used as
+        functor.
+
+        global_step_setter (Callable): Function, that the retrieved global
+        step can be passed to.
         '''
         self.root = checkpoint_path
         self.fcond = filter_cond
@@ -407,21 +421,24 @@ class MetricHook(Hook):
 
     def __init__(self, metrics, save_root, consider_only_first=None):
         '''Args:
-            metrics (list): List of ``MetricTuple``s of the form
-                ``(input names, output names, metric, name)``.
-                - ``input names`` are the keys corresponding to the feeds of
-                    interest, e.g. an original image.
-                - ``output names`` are the keys corresponding to the values
-                    in the results dict.
-                - ``metric`` is a ``Callable`` that accepts all inputs and
-                    outputs keys as keyword arguments
-                - ``name`` is a
-                If nested feeds or results are expected the names can be
-                passed as "path" like ``'key1_key2'`` returning
-                ``dict[key1][key2]``.
-            save_root (str): Path to where the results are stored.
-            consider_only_first (int): Metric is only evaluated on the first
-                `consider_only_first` examples.
+
+        metrics (list): List of ``MetricTuple`` of the form 
+        ``(input names, output names, metric, name)``.
+
+        - ``input names`` are the keys corresponding to the feeds of interest, e.g. an original image.
+        - ``output names`` are the keys corresponding to the values in the results dict.
+        - ``metric`` is a ``Callable`` that accepts all inputs and
+          outputs keys as keyword arguments
+        - ``name`` is a
+
+        If nested feeds or results are expected the names can be
+        passed as "path" like ``'key1_key2'`` returning
+        ``dict[key1][key2]``.
+
+        save_root (str): Path to where the results are stored.
+
+        consider_only_first (int): Metric is only evaluated on the first
+        `consider_only_first` examples.
         '''
 
         self.metrics = metrics

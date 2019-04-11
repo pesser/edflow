@@ -23,14 +23,21 @@ class BaseEvaluator(HookedModelIterator):
                  bar_position=0,
                  **kwargs):
         '''Args:
-            config (str): Some config file. (TODO: make this into kwargs)
-            root_path (str): Root directory to store all eval outputs.
-            model (Model): :class:`Model` to evaluate.
-            hooks (list): List of :class:'`Hook`s
-            logger (logging.Logger): Logger instance for logging log stuff.
-            hook_freq (int): Step frequencey at which hooks are evaluated.
-            bar_position (int): Used by tqdm to place bars at the right
-                position when using multiple Iterators in parallel.
+
+        config (str): Some config file. (TODO: make this into kwargs)
+
+        root_path (str): Root directory to store all eval outputs.
+
+        model (Model): :class:`Model` to evaluate.
+
+        hooks (list): List of :class:'`Hook`
+
+        logger (logging.Logger): Logger instance for logging log stuff.
+
+        hook_freq (int): Step frequencey at which hooks are evaluated.
+
+        bar_position (int): Used by tqdm to place bars at the right
+        position when using multiple Iterators in parallel.
         '''
         super().__init__(model, 1, hooks, hook_freq, bar_position, **kwargs)
 

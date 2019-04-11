@@ -598,8 +598,8 @@ class ExampleConcatenatedDataset(DatasetMixin):
 
     def __init__(self, *datasets):
         '''Args:
-            *datasets (DatasetMixin): All the datasets to concatenate. Each
-                dataset must return a dict as example!
+            \*datasets (DatasetMixin): All the datasets to concatenate. Each
+            dataset must return a dict as example!
         '''
         assert np.all(np.equal(len(datasets[0]), [len(d) for d in datasets]))
         self.datasets = datasets
@@ -914,15 +914,19 @@ class DataFolder(DatasetMixin):
                  sort_keys=None,
                  in_memory_keys=None):
         '''Args:
-            image_root (str): Root containing the files of interest.
-            read_fn (Callable): Given the path to a file, returns the datum as
-                a dict.
-            label_fn (Callable): Given the path to a file, returns a dict of
-                labels. If ``label_fn`` returns ``None``, this file is ignored.
-            sort_keys (list): A hierarchy of keys by which the data in this
-                Dataset are sorted.
-            in_memory_keys (list): keys which will be collected from examples
-                when the dataset is cached.
+
+        image_root (str): Root containing the files of interest.
+        read_fn (Callable): Given the path to a file, returns the datum as
+        a dict.
+
+        label_fn (Callable): Given the path to a file, returns a dict of
+        labels. If ``label_fn`` returns ``None``, this file is ignored.
+
+        sort_keys (list): A hierarchy of keys by which the data in this
+        Dataset are sorted.
+
+        in_memory_keys (list): keys which will be collected from examples
+        when the dataset is cached.
         '''
 
         self.root = image_root

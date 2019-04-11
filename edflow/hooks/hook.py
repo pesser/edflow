@@ -79,12 +79,13 @@ class Hooker(object):
     '''Probably should rename that...'''
 
     def __init__(self, hooks, index, batch=None, session=None, logger=None):
-        '''Args:
+        '''
+        Args:
             hooks (list): All :class:`Hook`s to be run before and after
                 this :class:`Hooker`.
             index (int): step or epoch.
             batch (list or dict): Feed dict when calling the hook.
-            session (tf.Session): Session object to run the :class:`Hook`s
+            session (tf.Session): Session object to run the :class:`Hook` 
                 with.
             logger (logging.Logger): Logging log log logs.
         '''

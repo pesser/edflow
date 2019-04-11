@@ -10,7 +10,8 @@ class ProjectManager(object):
     exists = False
 
     def __init__(self, base=None, given_directory=None, code_root='.', postfix = None):
-        '''Args:
+        '''
+        Args:
             base (str): Top level directory, where all experiments live.
             given_directory (str): If not None, this will be used to get all
                 relevant paths.
