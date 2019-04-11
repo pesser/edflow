@@ -23,6 +23,11 @@ A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 
 
 ## Setup
+Clone this repository:
+
+    git clone https://github.com/pesser/edflow.git
+    cd edflow
+
 We provide different [conda](https://conda.io) environments in the folder
 `environments`:
 
@@ -34,8 +39,6 @@ We provide different [conda](https://conda.io) environments in the folder
 
 Choose an appropriate environment and execute
 
-    git clone https://github.com/pesser/edflow.git
-    cd edflow
     conda env create -f environments/<env>.yaml
     conda activate <env>
     pip install -e .
