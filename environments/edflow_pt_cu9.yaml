@@ -1,0 +1,14 @@
+name: edflow_pt_cu9
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.6
+  - cudatoolkit=9.0
+  - cudnn=7.1.2
+  - pytorch=1.0.1
+  - torchvision=0.2.2
+  - pip:
+    - tensorboardx==1.6
+    - tensorflow-gpu==1.12.0
+
