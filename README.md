@@ -2,13 +2,6 @@
 
 A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 
----
-
-**Please note: This is a work in progress. Nothing is finished and a lot you read here might be wrong.**
-
-
----
-
 ## Table of Contents
 1. [Setup](#Setup)
 2. [Workflow](#Workflow)
@@ -20,7 +13,6 @@ A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 5. [Contributions](#Contributions)
 6. [LICENSE](#LICENSE)
 7. [Authors](#Authors)
-
 
 ## Setup
 We provide different [conda](https://conda.io) environments in the folder
@@ -65,7 +57,6 @@ For more information, look into our [starter guide](link).
 ## Other
 
 ### Parameters
-
 - `--config path/to/config`
 
     yaml file with all information see [Workflow][#Workflow]
@@ -78,10 +69,9 @@ For more information, look into our [starter guide](link).
 - `--retrain`
     reset global step to zero
 
-
 ### Known Issues
-### Compatibility
 
+### Compatibility
 
 ## Contributions
 [![GitHub-Commits][GitHub-Commits]](https://github.com/pesser/edflow/graphs/commit-activity)
@@ -91,14 +81,10 @@ For more information, look into our [starter guide](link).
 [![GitHub-Stars][GitHub-Stars]](https://github.com/pesser/edflow/stargazers)
 [![GitHub-Forks][GitHub-Forks]](https://github.com/pesser/edflow/network)
 [![GitHub-Updated][GitHub-Updated]](https://github.com/pesser/edflow/pulse)
-  
-
-
 
 ## LICENSE
  
 [![LICENSE][LICENSE]](https://raw.githubusercontent.com/pesser/edflow/master/LICENSE)
-This project is licensed under the terms of the MIT license.
 
 ## Authors
 
