@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 try:
     import torch
 except ImportError:
@@ -23,17 +24,19 @@ P = ProjectManager()
 
 
 class WaitForCheckpointHook(Hook):
-    '''Waits until a new checkpoint is created, then lets the Iterator
-    continue.'''
+    """Waits until a new checkpoint is created, then lets the Iterator
+    continue."""
 
-    def __init__(self,
-                 checkpoint_root,
-                 filter_cond=lambda c: True,
-                 interval=5,
-                 add_sec=5,
-                 callback=None,
-                 eval_all = False):
-        '''Args:
+    def __init__(
+        self,
+        checkpoint_root,
+        filter_cond=lambda c: True,
+        interval=5,
+        add_sec=5,
+        callback=None,
+        eval_all=False,
+    ):
+        """Args:
             checkpoint_root (str): Path to look for checkpoints.
             filter_cond (Callable): A function used to filter files, to only
                 get the checkpoints that are wanted.
@@ -45,7 +48,7 @@ class WaitForCheckpointHook(Hook):
             callback (Callable): Callback called with path of found
                 checkpoint.
             eval_all (bool): Accept all instead of just latest checkpoint.
-        '''
+        """
 
         self.root = checkpoint_root
         self._fcond = filter_cond
@@ -65,15 +68,17 @@ class WaitForCheckpointHook(Hook):
         return cond
 
     def look(self):
-        '''Loop until a new checkpoint is found.'''
+        """Loop until a new checkpoint is found."""
         self.logger.info("Waiting for new checkpoint.")
         while True:
             latest_checkpoint = get_latest_checkpoint(self.root, self.fcond)
-            if latest_checkpoint is not None and latest_checkpoint not in self.known_checkpoints:
+            if (
+                latest_checkpoint is not None
+                and latest_checkpoint not in self.known_checkpoints
+            ):
                 self.known_checkpoints.add(latest_checkpoint)
                 time.sleep(self.additional_wait)
-                self.logger.info(
-                    "Found new checkpoint: {}".format(latest_checkpoint))
+                self.logger.info("Found new checkpoint: {}".format(latest_checkpoint))
                 if self.callback is not None:
                     self.callback(latest_checkpoint)
                 break
@@ -84,7 +89,7 @@ class WaitForCheckpointHook(Hook):
 
 
 def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
-    '''Return path to name of latest checkpoint in checkpoint_root dir.
+    """Return path to name of latest checkpoint in checkpoint_root dir.
 
     Args:
         checkpoint_root (str): Path to where the checkpoints live.
@@ -95,7 +100,7 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
         str: path of the latest checkpoint. Note that for tensorflow
             checkpoints this is not an existing file, but
             path{.index,.meta,data*} should be
-    '''
+    """
     ckpt_root = checkpoint_root
 
     all_files = sorted(os.listdir(ckpt_root))
@@ -139,15 +144,17 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
 
 
 class RestoreModelHook(Hook):
-    '''Restores a TensorFlow model from a checkpoint at each epoch. Can also
-    be used as a functor.'''
+    """Restores a TensorFlow model from a checkpoint at each epoch. Can also
+    be used as a functor."""
 
-    def __init__(self,
-                 variables,
-                 checkpoint_path,
-                 filter_cond=lambda c: True,
-                 global_step_setter=None):
-        '''Args:
+    def __init__(
+        self,
+        variables,
+        checkpoint_path,
+        filter_cond=lambda c: True,
+        global_step_setter=None,
+    ):
+        """Args:
             variables (list): tf.Variable to be loaded from the checkpoint.
             checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint. Ignored if used as functor.
@@ -155,7 +162,7 @@ class RestoreModelHook(Hook):
                 get the checkpoints that are wanted. Ignored if used as
                 functor.
             global_step_setter (Callable): Callback to set global_step.
-        '''
+        """
         self.root = checkpoint_path
         self.fcond = filter_cond
         self.setstep = global_step_setter
@@ -196,15 +203,17 @@ RestoreTFModelHook = RestoreModelHook
 
 
 class RestorePytorchModelHook(Hook):
-    '''Restores a PyTorch model from a checkpoint at each epoch. Can also be
-    used as a functor.'''
+    """Restores a PyTorch model from a checkpoint at each epoch. Can also be
+    used as a functor."""
 
-    def __init__(self,
-                 model,
-                 checkpoint_path,
-                 filter_cond=lambda c: True,
-                 global_step_setter=None):
-        '''Args:
+    def __init__(
+        self,
+        model,
+        checkpoint_path,
+        filter_cond=lambda c: True,
+        global_step_setter=None,
+    ):
+        """Args:
             model (torch.nn.Module): Model to initialize
             checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint. Ignored if used as functor.
@@ -213,7 +222,7 @@ class RestorePytorchModelHook(Hook):
                 functor.
             global_step_setter (Callable): Function, that the retrieved global
                 step can be passed to.
-        '''
+        """
         self.root = checkpoint_path
         self.fcond = filter_cond
 
@@ -234,8 +243,7 @@ class RestorePytorchModelHook(Hook):
 
         if self.global_step_setter is not None:
             self.global_step_setter(step)
-        self.logger.info("Epoch: {}, Global step: {}"
-                         .format(epoch, step))
+        self.logger.info("Epoch: {}, Global step: {}".format(epoch, step))
 
     @staticmethod
     def parse_global_step(checkpoint):
@@ -243,75 +251,75 @@ class RestorePytorchModelHook(Hook):
 
     @staticmethod
     def parse_checkpoint(checkpoint):
-        e_s = os.path.basename(checkpoint).split('.')[0].split('-')
+        e_s = os.path.basename(checkpoint).split(".")[0].split("-")
         if len(e_s) > 1:
             epoch = e_s[0]
-            step = e_s[1].split('_')[0]
+            step = e_s[1].split("_")[0]
         else:
             epoch = 0
-            step = e_s[0].split('_')[0]
+            step = e_s[0].split("_")[0]
 
         return int(epoch), int(step)
 
 
 def strenumerate(*args, **kwargs):
-    '''Same as enumerate, but yields str(index).'''
+    """Same as enumerate, but yields str(index)."""
     for i, v in enumerate(*args, **kwargs):
         yield str(i), v
 
 
 def make_iterator(list_or_dict):
-    '''Make an iterator that yields key value pairs.'''
+    """Make an iterator that yields key value pairs."""
 
     if isinstance(list_or_dict, (dict, OrderedDict)):
         return list_or_dict.items()
     elif isinstance(list_or_dict, (list, tuple)):
         return strenumerate(list_or_dict)
     else:
-        msg = 'results must be list or dict but is '
-        msg += '{} '.format(type(list_or_dict))
+        msg = "results must be list or dict but is "
+        msg += "{} ".format(type(list_or_dict))
         raise ValueError(msg)
 
 
-def dict_repr(some_dict, pre='', level=0):
-    '''Makes a nice representation of a nested dict.'''
+def dict_repr(some_dict, pre="", level=0):
+    """Makes a nice representation of a nested dict."""
 
-    outstr = ''
+    outstr = ""
     n = 1
     N = len(some_dict)
     for k, v in some_dict.items():
-        corner = '├╴ ' if n < N else '└╴ '
-        straight = '│  ' if n < N else '   '
+        corner = "├╴ " if n < N else "└╴ "
+        straight = "│  " if n < N else "   "
 
         if isinstance(v, dict):
-            outstr += pre + '{}{}\n'.format(corner, k)
-            outstr += dict_repr(v, pre+straight, level+1)
+            outstr += pre + "{}{}\n".format(corner, k)
+            outstr += dict_repr(v, pre + straight, level + 1)
         else:
-            outstr += pre + '{}{}: {}\n'.format(corner, k, type(v))
+            outstr += pre + "{}{}: {}\n".format(corner, k, type(v))
 
         n += 1
     return outstr
 
 
 class CollectorHook(Hook):
-    '''Collects data. Supposed to be used as base class.'''
+    """Collects data. Supposed to be used as base class."""
 
     def __init__(self):
         self.collected_data = {}
 
-        self.logger = get_logger(self, 'latest_eval')
+        self.logger = get_logger(self, "latest_eval")
 
     def after_step(self, step, results):
         self.stack_results(results, self.collected_data)
 
     def stack_results(self, new_data, all_data):
-        '''Given the current collected data append the new results along the
+        """Given the current collected data append the new results along the
         batch dimension.
 
         Args:
             new_data (list or dict): data to append.
             all_data (list or dict): data to append to.
-        '''
+        """
 
         iterator = make_iterator(new_data)
 
@@ -332,82 +340,83 @@ class CollectorHook(Hook):
 
 
 class StoreArraysHook(CollectorHook):
-    '''Collects lots of data, stacks them and then stores them.'''
+    """Collects lots of data, stacks them and then stores them."""
 
     def __init__(self, save_root):
-        '''Collect all outputs of step op and store them as npz.'''
+        """Collect all outputs of step op and store them as npz."""
         super().__init__()
         self.root = save_root
 
     def after_epoch(self, epoch):
         data = self.collected_data
-        self.logger.info('Collected Data:\n'+dict_repr(data))
+        self.logger.info("Collected Data:\n" + dict_repr(data))
 
-        global_step = data['global_step'][0]
+        global_step = data["global_step"][0]
 
         # Flatten results dictionary for easy storage
         self.flat_dict = {}
-        self.flatten_results(data, '', self.flat_dict)
-        self.logger.info('Stored Data:\n'+dict_repr(self.flat_dict))
+        self.flatten_results(data, "", self.flat_dict)
+        self.logger.info("Stored Data:\n" + dict_repr(self.flat_dict))
 
-        name = '{:0>6d}_results'.format(global_step)
+        name = "{:0>6d}_results".format(global_step)
         name = os.path.join(self.root, name)
         np.savez_compressed(name, **self.flat_dict)
 
     def flatten_results(self, results, prefix, store_dict):
-        '''Recursively walk over the results dictionary and stack the data.
+        """Recursively walk over the results dictionary and stack the data.
 
         Args:
             results (dict or list): Containing results.
             prefix (str): Prepended to name when storing.
             store_dict (dict): Flat storage dictionary.
-        '''
+        """
 
         iterator = make_iterator(results)
 
         for name, value in iterator:
-            save_name = '{}_{}'.format(prefix, name) if prefix != '' else name
+            save_name = "{}_{}".format(prefix, name) if prefix != "" else name
             if isinstance(value, SAVABLES):
                 store_dict[save_name] = value
             else:
                 self.flatten_results(value, save_name, store_dict)
 
 
-MetricTuple = namedtuple('MetricTuple', 'input_names output_names metric name')
+MetricTuple = namedtuple("MetricTuple", "input_names output_names metric name")
 
 
 def test_valid_metrictuple(metric_tuple):
-    '''Checks if all inputs are correct.'''
+    """Checks if all inputs are correct."""
     in_names = metric_tuple.input_names
     out_names = metric_tuple.output_names
 
     if not isinstance(in_names, dict):
-        raise ValueError('input_names must be a dict')
+        raise ValueError("input_names must be a dict")
     if not isinstance(out_names, dict):
-        raise ValueError('output_names must be a dict')
+        raise ValueError("output_names must be a dict")
     if not callable(metric_tuple.metric):
-        raise ValueError('metric must be callable')
+        raise ValueError("metric must be callable")
     if not isinstance(metric_tuple.name, str):
-        raise ValueError('name must be a string')
+        raise ValueError("name must be a string")
 
     if not all([isinstance(i, str) for i in in_names.values()]):
-        raise ValueError('All entries in input_names must be strings')
+        raise ValueError("All entries in input_names must be strings")
     if not all([isinstance(o, str) for o in out_names.values()]):
-        raise ValueError('All entries in output_names must be strings')
+        raise ValueError("All entries in output_names must be strings")
 
     identical_names = set(in_names.values()) & set(out_names.values())
     if len(identical_names) > 0:
-        raise ValueError('All names must be unique. '
-                         'Found {}'.format(identical_names))
+        raise ValueError(
+            "All names must be unique. " "Found {}".format(identical_names)
+        )
 
     # enough checking already :)
 
 
 class MetricHook(Hook):
-    '''Applies a set of given metrics to the calculated data.'''
+    """Applies a set of given metrics to the calculated data."""
 
     def __init__(self, metrics, save_root, consider_only_first=None):
-        '''Args:
+        """Args:
             metrics (list): List of ``MetricTuple``s of the form
                 ``(input names, output names, metric, name)``.
                 - ``input names`` are the keys corresponding to the feeds of
@@ -423,12 +432,12 @@ class MetricHook(Hook):
             save_root (str): Path to where the results are stored.
             consider_only_first (int): Metric is only evaluated on the first
                 `consider_only_first` examples.
-        '''
+        """
 
         self.metrics = metrics
 
         self.root = save_root
-        self.logger = get_logger(self, 'latest_eval')
+        self.logger = get_logger(self, "latest_eval")
 
         self.max_step = consider_only_first
 
@@ -465,7 +474,7 @@ class MetricHook(Hook):
             m_res = metric(**self.storage_dict[m_name])
             self.metric_results[m_name] += [m_res]
 
-        self.global_step = results['global_step']
+        self.global_step = results["global_step"]
         self.count += 1
 
     def after_epoch(self, epoch):
@@ -485,17 +494,17 @@ class MetricHook(Hook):
             self.tb_saver.add_summary(summary, self.global_step)
             self.tb_saver.flush()
 
-        name = '{:0>6d}_metrics'.format(self.global_step)
+        name = "{:0>6d}_metrics".format(self.global_step)
         name = os.path.join(self.root, name)
         np.savez_compressed(name, **mean_results)
 
 
 def get_checkpoint_files(checkpoint_root):
-    '''Return {global_step: [files,...]}.
+    """Return {global_step: [files,...]}.
 
     Args:
         checkpoint_root (str): Path to where the checkpoints live.
-    '''
+    """
     ckpt_root = checkpoint_root
     files = []
     checkpoints = []
@@ -503,16 +512,14 @@ def get_checkpoint_files(checkpoint_root):
     all_files = os.listdir(ckpt_root)
     for p in all_files:
         p = os.path.join(ckpt_root, p)
-        if '.ckpt' in p:
+        if ".ckpt" in p:
             name, ext = os.path.splitext(p)
             if not ext == ".ckpt":
                 normalized = name
                 global_step = RestoreTFModelHook.parse_global_step(normalized)
             else:
                 normalized = p
-                global_step = RestorePytorchModelHook.parse_global_step(
-                    normalized
-                )
+                global_step = RestorePytorchModelHook.parse_global_step(normalized)
             files.append(p)
             checkpoints.append(normalized)
             global_steps.append(global_step)
@@ -526,21 +533,23 @@ def get_checkpoint_files(checkpoint_root):
 
 
 class KeepBestCheckpoints(Hook):
-    '''Tries to find a metric for all checkpoints and keeps the n_keep best
-    checkpoints and the latest checkpoint.'''
+    """Tries to find a metric for all checkpoints and keeps the n_keep best
+    checkpoints and the latest checkpoint."""
 
-    def __init__(self,
-                 checkpoint_root,
-                 metric_template,
-                 metric_key,
-                 n_keep=5,
-                 lower_is_better=True):
-        '''Args:
+    def __init__(
+        self,
+        checkpoint_root,
+        metric_template,
+        metric_key,
+        n_keep=5,
+        lower_is_better=True,
+    ):
+        """Args:
             checkpoint_root (str): Path to look for checkpoints.
             metric_template (str): Format string to find metric file.
             metric_key (str): Key to use from metric file.
             n_keep (int): Maximum number of checkpoints to keep.
-        '''
+        """
 
         self.root = checkpoint_root
         self.metric_template = metric_template
@@ -559,7 +568,7 @@ class KeepBestCheckpoints(Hook):
                 with open(path, "rb") as f:
                     loss = pickle.load(f)[self.metric_key][0]
             if not self.lower_is_better:
-                loss = -1.0*loss
+                loss = -1.0 * loss
         except FileNotFoundError:
             self.logger.debug("Could not find {}".format(path))
             loss = None
@@ -577,9 +586,8 @@ class KeepBestCheckpoints(Hook):
 
         loss_steps = sorted(zip(losses, steps), key=lambda x: x[0])
         steps = [s for _, s in loss_steps]
-        remove_steps = steps[self.n_keep:]
-        remove_steps = [step for step in remove_steps
-                        if not step == latest_step]
+        remove_steps = steps[self.n_keep :]
+        remove_steps = [step for step in remove_steps if not step == latest_step]
         remove_files = list()
         for step in remove_steps:
             remove_files += checkpoint_files[step]
@@ -590,9 +598,13 @@ class KeepBestCheckpoints(Hook):
             os.remove(file_)
 
         best_ls = loss_steps[0]
-        self.logger.info("Current best: {} = {} @ global step {}".format(
-            self.metric_key, best_ls[0], best_ls[1]))
+        self.logger.info(
+            "Current best: {} = {} @ global step {}".format(
+                self.metric_key, best_ls[0], best_ls[1]
+            )
+        )
         no_improvement_since = latest_step - best_ls[1]
         if no_improvement_since > 0:
-            self.logger.info("No improvement since {} global steps.".format(
-                no_improvement_since))
+            self.logger.info(
+                "No improvement since {} global steps.".format(no_improvement_since)
+            )

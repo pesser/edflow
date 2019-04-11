@@ -1,15 +1,14 @@
-'''Some Utility functions, that make yur life easier but don't fit in any
-better catorgory than util.'''
+"""Some Utility functions, that make yur life easier but don't fit in any
+better catorgory than util."""
 
 import numpy as np
 import os
 import pickle
 
 
-def make_linear_var(step,
-                    start, end,
-                    start_value, end_value,
-                    clip_min=None, clip_max=None):
+def make_linear_var(
+    step, start, end, start_value, end_value, clip_min=None, clip_max=None
+):
     r"""Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
     :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
 
@@ -26,21 +25,18 @@ def make_linear_var(step,
         tf.Tensor: :math:`y`
     """
     import tensorflow as tf
+
     if clip_min is None:
         clip_min = min(start_value, end_value)
     if clip_max is None:
         clip_max = max(start_value, end_value)
-    linear = (
-            (end_value - start_value) /
-            (end - start) *
-            (tf.cast(step, tf.float32) - start) + start_value)
+    linear = (end_value - start_value) / (end - start) * (
+        tf.cast(step, tf.float32) - start
+    ) + start_value
     return tf.clip_by_value(linear, clip_min, clip_max)
 
 
-def linear_var(step,
-               start, end,
-               start_value, end_value,
-               clip_min=0.0, clip_max=1.0):
+def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=1.0):
     r"""Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
     :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
 
@@ -56,17 +52,13 @@ def linear_var(step,
     Returns:
         float: :math:`y`
     """
-    linear = (
-            (end_value - start_value) /
-            (end - start) *
-            (float(step) - start) + start_value)
+    linear = (end_value - start_value) / (end - start) * (
+        float(step) - start
+    ) + start_value
     return float(np.clip(linear, clip_min, clip_max))
 
 
-def make_exponential_var(step,
-                         start, end,
-                         start_value, end_value,
-                         decay):
+def make_exponential_var(step, start, end, start_value, end_value, decay):
     r"""Exponential from :math:`(a, \alpha)` to :math:`(b, \beta)` with decay
     rate decay.
 
@@ -84,13 +76,13 @@ def make_exponential_var(step,
     import tensorflow as tf
 
     startstep = start
-    endstep = (np.log(end_value) - np.log(start_value))/np.log(decay)
+    endstep = (np.log(end_value) - np.log(start_value)) / np.log(decay)
     stepper = make_linear_var(step, start, end, startstep, endstep)
-    return tf.math.pow(decay, stepper)*start_value
+    return tf.math.pow(decay, stepper) * start_value
 
 
-def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):  #noqa
-    '''Walk a nested list and/or dict recursively and call fn on all non
+def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
+    """Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
     Example:
@@ -125,15 +117,18 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):  #noqa
     Returns:
         dict or list: The resulting nested list-dict-object with the results of
             fn at its leaves.
-    '''
+    """
 
     if not pass_key:
+
         def call(value):
             if isinstance(value, (list, dict)):
                 return walk(value, fn, inplace)
             else:
                 return fn(value)
+
     else:
+
         def call(key, value):
             key = os.path.join(prev_key, key)
             if isinstance(value, (list, dict)):
@@ -173,8 +168,8 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=''):  #noqa
     return results
 
 
-def retrieve(key, list_or_dict, splitval='/'):
-    '''Given a nested list or dict return the desired value at key.
+def retrieve(key, list_or_dict, splitval="/"):
+    """Given a nested list or dict return the desired value at key.
 
     Args:
         key (str): key/to/value, path like string describing all keys
@@ -186,7 +181,7 @@ def retrieve(key, list_or_dict, splitval='/'):
 
     Returns:
         The desired value :)
-    '''
+    """
 
     keys = key.split(splitval)
 
@@ -199,15 +194,15 @@ def retrieve(key, list_or_dict, splitval='/'):
                 list_or_dict = list_or_dict[int(key)]
             visited += [key]
     except Exception as e:
-        print('Key not found: {}, seen: {}'.format(keys, visited))
+        print("Key not found: {}, seen: {}".format(keys, visited))
         raise e
 
     return list_or_dict
 
 
-def contains_key(nested_thing, key, splitval='/'):
-    '''Tests if the path like key can find an object in the nested_thing.
-    Has the same signature as :function:`retrieve`.'''
+def contains_key(nested_thing, key, splitval="/"):
+    """Tests if the path like key can find an object in the nested_thing.
+    Has the same signature as :function:`retrieve`."""
     try:
         retrieve(nested_thing, key, splitval)
         return True
@@ -216,11 +211,11 @@ def contains_key(nested_thing, key, splitval='/'):
 
 
 def strenumerate(iterable):
-    '''Works just as enumerate, but the returned index is a string.
+    """Works just as enumerate, but the returned index is a string.
 
     Args:
         iterable (Iterable): An (guess what) iterable object.
-    '''
+    """
 
     for i, val in enumerate(iterable):
         yield str(i), val
@@ -232,9 +227,7 @@ def cached_function(fn):
     # secret activation code
     if not os.environ.get("EDFLOW_CACHED_FUNC", 0) == "42":
         return fn
-    cache_dir = os.path.join(os.environ.get("HOME"),
-                             "var",
-                             "edflow_cached_func")
+    cache_dir = os.path.join(os.environ.get("HOME"), "var", "edflow_cached_func")
     os.makedirs(cache_dir, exist_ok=True)
 
     def wrapped(*args, **kwargs):
@@ -257,6 +250,7 @@ def cached_function(fn):
             with open(ppath, "rb") as f:
                 result = pickle.load(f)
         return result
+
     return wrapped
 
 
@@ -264,6 +258,7 @@ class PRNGMixin(object):
     """Adds a prng property which is a numpy RandomState which gets
     reinitialized whenever the pid changes to avoid synchronized sampling
     behavior when used in conjunction with multiprocessing."""
+
     @property
     def prng(self):
         currentpid = os.getpid()
@@ -274,21 +269,21 @@ class PRNGMixin(object):
 
 
 class Printer(object):
-    '''For usage with walk: collects strings for printing'''
+    """For usage with walk: collects strings for printing"""
 
     def __init__(self, string_fn):
-        self.str = ''
+        self.str = ""
         self.string_fn = string_fn
 
     def __call__(self, key, obj):
-        self.str += self.string_fn(key, obj) + '\n'
+        self.str += self.string_fn(key, obj) + "\n"
 
     def __str__(self):
         return self.str
 
 
 class TablePrinter(object):
-    '''For usage with walk: Collects string to put in a table.'''
+    """For usage with walk: Collects string to put in a table."""
 
     def __init__(self, string_fn, names=None):
         if names is None:
@@ -309,23 +304,23 @@ class TablePrinter(object):
             for i, entry in enumerate(val):
                 col_widths[i] = max(col_widths[i], len(entry) + 2)
 
-        form = '|'
+        form = "|"
         for cw in col_widths:
-            form += ' {: >' + str(cw) + '} |'
-        form += '\n'
+            form += " {: >" + str(cw) + "} |"
+        form += "\n"
 
         ref_line = form.format(*self.vals[0])
-        sep = '-' * (len(ref_line) - 1)
-        hsep = '=' * (len(ref_line) - 1)
+        sep = "-" * (len(ref_line) - 1)
+        hsep = "=" * (len(ref_line) - 1)
 
         chars = np.array(list(ref_line))
-        crossings = np.where(chars == '|')[0]
+        crossings = np.where(chars == "|")[0]
         print(crossings)
         for c in crossings:
-            sep = sep[:c] + '+' + sep[c+1:]
-            hsep = hsep[:c] + '+' + hsep[c+1:]
-        sep += '\n'
-        hsep += '\n'
+            sep = sep[:c] + "+" + sep[c + 1 :]
+            hsep = hsep[:c] + "+" + hsep[c + 1 :]
+        sep += "\n"
+        hsep += "\n"
 
         table_str = sep
         for i, val in enumerate(self.vals):
@@ -339,20 +334,21 @@ class TablePrinter(object):
 
 
 def pprint_str(nested_thing, heuristics=None):
-    '''Formats nested objects as string and tries to give relevant information.
+    """Formats nested objects as string and tries to give relevant information.
 
     Args:
         nested_thing (dict or list): Some nested object.
         heuristics (Callable): If given this should produce the string, which
             is printed as description of a leaf object.
-    '''
+    """
 
     if heuristics is None:
+
         def heuristics(key, obj):
             if isinstance(obj, np.ndarray):
-                return '{}: np array - {}'.format(key, obj.shape)
+                return "{}: np array - {}".format(key, obj.shape)
             else:
-                return '{}: {} - {}'.format(key, type(obj), obj)
+                return "{}: {} - {}".format(key, type(obj), obj)
 
     P = Printer(heuristics)
 
@@ -362,42 +358,45 @@ def pprint_str(nested_thing, heuristics=None):
 
 
 def pprint(nested_thing, heuristics=None):
-    '''Prints nested objects and tries to give relevant information.
+    """Prints nested objects and tries to give relevant information.
 
     Args:
         nested_thing (dict or list): Some nested object.
         heuristics (Callable): If given this should produce the string, which
             is printed as description of a leaf object.
-    '''
+    """
     print(pprint_str(nested_thing, heuristics))
 
 
 def pp2mkdtable(nested_thing):
-    '''Turns a formatted string into a markdown table.'''
+    """Turns a formatted string into a markdown table."""
 
     def heuristics(key, obj):
-        if hasattr(obj, 'shape'):
+        if hasattr(obj, "shape"):
             s = str(obj) if obj.shape == () else str(obj.shape)
             return key, str(obj.__class__.__name__), s
-        elif hasattr(obj, 'size'):
+        elif hasattr(obj, "size"):
             return key, str(obj.__class__.__name__), str(obj.size())
         else:
             return key, str(obj.__class__.__name__), str(obj)
 
-    P = TablePrinter(heuristics, names=['Name', 'Type', 'Content'])
+    P = TablePrinter(heuristics, names=["Name", "Type", "Content"])
 
     walk(nested_thing, P, pass_key=True)
 
     return str(P)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from edflow.data.util import plot_datum
+
     image = np.ones([100, 100, 3])
-    nested = {'step': 1,
-              'stuff': {'a': 1, 'b': [1, 2, 3]},
-              'more': [{'c': 1}, 2, [3, 4]],
-              'image': image}
+    nested = {
+        "step": 1,
+        "stuff": {"a": 1, "b": [1, 2, 3]},
+        "more": [{"c": 1}, 2, [3, 4]],
+        "image": image,
+    }
 
     def fn(val):
         print(val)

@@ -1,9 +1,9 @@
-'''All handy dataset classes we use.
+"""All handy dataset classes we use.
 Our Datasets (TODO usually) inherit from the `chainer.dataset.DatasetMixin`.
 Please note that we overwrite the `__getitem__` method.
 This does not change its functionality and there is not problem in not using
 our version of `DatasetMixin`.
-'''
+"""
 
 import os
 import pickle
@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm, trange
 from chainer.dataset import DatasetMixin as DatasetMixin_
+
 # TODO maybe just pull
 # https://github.com/chainer/chainer/blob/v4.4.0/chainer/dataset/dataset_mixin.py
 # into the rep to avoid dependency on chainer for this one mixin - it doesnt
@@ -28,11 +29,13 @@ from edflow.util import PRNGMixin
 
 class DatasetMixin(DatasetMixin_):
     def d_msg(self, val):
-        '''Informs the user that val should be a dict.'''
+        """Informs the user that val should be a dict."""
 
-        return 'The edflow version of DatasetMixin requires the ' \
-               '`get_example` method to return a `dict`. Yours returned a ' \
-               '{}'.format(type(val))
+        return (
+            "The edflow version of DatasetMixin requires the "
+            "`get_example` method to return a `dict`. Yours returned a "
+            "{}".format(type(val))
+        )
 
     @traceable_method(ignores=[BrokenPipeError])
     def __getitem__(self, i):
@@ -45,50 +48,50 @@ class DatasetMixin(DatasetMixin_):
             for idx, d in zip(range(start, stop, step), ret_dict):
                 if not isinstance(d, dict):
                     raise ValueError(self.d_msg(d))
-                d['index_'] = idx
+                d["index_"] = idx
 
         elif isinstance(i, list) or isinstance(i, np.ndarray):
             for idx, d in zip(i, ret_dict):
                 if not isinstance(d, dict):
                     raise ValueError(self.d_msg(d))
-                d['index_'] = idx
+                d["index_"] = idx
 
         else:
             if not isinstance(ret_dict, dict):
                 raise ValueError(self.d_msg(ret_dict))
 
-            ret_dict['index_'] = i
+            ret_dict["index_"] = i
 
         return ret_dict
 
     def __len__(self):
-        '''Add default behaviour for datasets defining an attribute
+        """Add default behaviour for datasets defining an attribute
         :attr:`data`, which in turn is a dataset. This happens often when
         stacking several datasets on top of each other.
 
         The default behaviour now is to return ``len(self.data)`` if possible,
         and otherwise revert to the original behaviour.
-        '''
-        if hasattr(self, 'data'):
+        """
+        if hasattr(self, "data"):
             return len(self.data)
         else:
             return super().__len__()
 
     def get_example(self, *args, **kwargs):
-        '''Add default behaviour for datasets defining an attribute
+        """Add default behaviour for datasets defining an attribute
         :attr:`data`, which in turn is a dataset. This happens often when
         stacking several datasets on top of each other.
 
         The default behaviour now is to return ``self.data.get_example(idx)``
         if possible, and otherwise revert to the original behaviour.
-        '''
-        if hasattr(self, 'data'):
+        """
+        if hasattr(self, "data"):
             return self.data.get_example(*args, **kwargs)
         else:
             return super().get_example(*args, **kwargs)
 
     def __mul__(self, val):
-        '''Returns a ConcatenatedDataset of multiples of itself.
+        """Returns a ConcatenatedDataset of multiples of itself.
 
         Args:
             val (int): How many times do you want this dataset stacked?
@@ -96,9 +99,9 @@ class DatasetMixin(DatasetMixin_):
         Returns:
             ConcatenatedDataset: A dataset of ``val``-times the length as
                 ``self``.
-        '''
+        """
 
-        assert isinstance(val, int), 'Datasets can only be multiplied by ints'
+        assert isinstance(val, int), "Datasets can only be multiplied by ints"
 
         if val > 1:
             concs = [self] * val
@@ -110,7 +113,7 @@ class DatasetMixin(DatasetMixin_):
         return self.__mul__(val)
 
     def __add__(self, dset):
-        '''Concatenates self with the other dataset :attr:`dset`.
+        """Concatenates self with the other dataset :attr:`dset`.
 
         Args:
             dset (DatasetMixin): Another dataset to be concatenated behind
@@ -118,9 +121,9 @@ class DatasetMixin(DatasetMixin_):
 
         Returns:
             ConcatenatedDataset: A dataset of form ``[self, dset]``.
-        '''
+        """
 
-        assert isinstance(dset, DatasetMixin), 'Can only add DatasetMixins'
+        assert isinstance(dset, DatasetMixin), "Can only add DatasetMixins"
 
         return ConcatenatedDataset(self, dset)
 
@@ -131,6 +134,7 @@ def make_server_manager(port=63127, authkey=b"edcache"):
 
     class InOutManager(BaseManager):
         pass
+
     InOutManager.register("get_inqueue", lambda: inqueue)
     InOutManager.register("get_outqueue", lambda: outqueue)
     manager = InOutManager(address=("", port), authkey=authkey)
@@ -142,6 +146,7 @@ def make_server_manager(port=63127, authkey=b"edcache"):
 def make_client_manager(ip, port=63127, authkey=b"edcache"):
     class InOutManager(BaseManager):
         pass
+
     InOutManager.register("get_inqueue")
     InOutManager.register("get_outqueue")
     manager = InOutManager(address=(ip, port), authkey=authkey)
@@ -150,11 +155,10 @@ def make_client_manager(ip, port=63127, authkey=b"edcache"):
     return manager
 
 
-def pickle_and_queue(dataset_factory,
-                     inqueue,
-                     outqueue,
-                     naming_template='example_{}.p'):
-    '''Parallelizable function to retrieve and queue examples from a Dataset.
+def pickle_and_queue(
+    dataset_factory, inqueue, outqueue, naming_template="example_{}.p"
+):
+    """Parallelizable function to retrieve and queue examples from a Dataset.
 
     Args:
         dataset_factory (() -> chainer.DatasetMixin): A dataset factory, with
@@ -163,7 +167,7 @@ def pickle_and_queue(dataset_factory,
         queue (mp.Queue): Queue to put the samples in.
         naming_template (str): Formatable string, which defines the name of
             the stored file given its index.
-    '''
+    """
     pbar = tqdm()
     dataset = dataset_factory()
     while True:
@@ -186,13 +190,13 @@ def pickle_and_queue(dataset_factory,
 
 
 class ExamplesFolder(object):
-    '''Contains all examples and labels of a cached dataset.'''
+    """Contains all examples and labels of a cached dataset."""
 
     def __init__(self, root):
         self.root = root
 
     def read(self, name):
-        with open(os.path.join(self.root, name), 'rb') as example:
+        with open(os.path.join(self.root, name), "rb") as example:
             return example.read()
 
 
@@ -203,12 +207,12 @@ class _CacheDataset(DatasetMixin):
         self.root = root
         self.name = name
 
-        filespath = os.path.join(root, 'cached', name)
+        filespath = os.path.join(root, "cached", name)
 
         if _legacy:
             zippath = filespath + ".zip"
             # naming_template = 'example_{}.p'
-            with ZipFile(zippath, 'r') as zip_f:
+            with ZipFile(zippath, "r") as zip_f:
                 filenames = zip_f.namelist()
         else:
             filenames = os.listdir(filespath)
@@ -273,12 +277,8 @@ class CachedDataset(DatasetMixin):
 
     _legacy = True
 
-    def __init__(self,
-                 dataset,
-                 force_cache=False,
-                 keep_existing=True,
-                 _legacy=True):
-        '''Given a dataset class, stores all examples in the dataset, if this
+    def __init__(self, dataset, force_cache=False, keep_existing=True, _legacy=True):
+        """Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
         Args:
@@ -300,7 +300,7 @@ class CachedDataset(DatasetMixin):
             _legacy (bool): Read from the cached Zip file. Deprecated mode.
                 Future Datasets should not write into zips as read times are
                 very long.
-        '''
+        """
 
         self.force_cache = force_cache
         self.keep_existing = keep_existing
@@ -310,17 +310,17 @@ class CachedDataset(DatasetMixin):
         self._root = root = dataset.root
         name = dataset.name
 
-        self.store_dir = os.path.join(root, 'cached')
+        self.store_dir = os.path.join(root, "cached")
         self.store_path = os.path.join(self.store_dir, name)
         if _legacy:
-            self.store_path += '.zip'
+            self.store_path += ".zip"
 
         # leading_zeroes = str(len(str(len(self))))
         # self.naming_template = 'example_{:0>' + leading_zeroes + '}.p'
         # above might be better, but for compatibility we need this right
         # now, because pickle_and_queue did not receive the updated template
-        self.naming_template = 'example_{}.p'
-        self._labels_name = 'labels.p'
+        self.naming_template = "example_{}.p"
+        self._labels_name = "labels.p"
 
         os.makedirs(self.store_dir, exist_ok=True)
         if self.force_cache:
@@ -348,13 +348,13 @@ class CachedDataset(DatasetMixin):
             currentpid = os.getpid()
             if getattr(self, "_initpid", None) != currentpid:
                 self._initpid = currentpid
-                self.zip = ZipFile(self.store_path, 'r')
+                self.zip = ZipFile(self.store_path, "r")
             return self.zip
         return ExamplesFolder(self.store_path)
 
     def cache_dataset(self):
-        '''Checks if a dataset is stored. If not iterates over all possible
-        indeces and stores the examples in a file, as well as the labels.'''
+        """Checks if a dataset is stored. If not iterates over all possible
+        indeces and stores the examples in a file, as well as the labels."""
 
         if not os.path.isfile(self.store_path) or self.force_cache:
             print("Caching {}".format(self.store_path))
@@ -365,19 +365,21 @@ class CachedDataset(DatasetMixin):
             N_examples = len(self.base_dataset)
             indeces = np.arange(N_examples)
             if self.keep_existing and os.path.isfile(self.store_path):
-                with ZipFile(self.store_path, 'r') as zip_f:
+                with ZipFile(self.store_path, "r") as zip_f:
                     zipfilenames = zip_f.namelist()
                 zipfilenames = set(zipfilenames)
-                indeces = [i for i in indeces if
-                           not self.naming_template.format(i) in zipfilenames]
-                print(
-                    "Keeping {} cached examples.".format(
-                        N_examples - len(indeces)))
+                indeces = [
+                    i
+                    for i in indeces
+                    if not self.naming_template.format(i) in zipfilenames
+                ]
+                print("Keeping {} cached examples.".format(N_examples - len(indeces)))
                 N_examples = len(indeces)
             print("Caching {} examples.".format(N_examples))
             chunk_size = 64
-            index_chunks = [indeces[i:i+chunk_size]
-                            for i in range(0, len(indeces), chunk_size)]
+            index_chunks = [
+                indeces[i : i + chunk_size] for i in range(0, len(indeces), chunk_size)
+            ]
             for chunk in index_chunks:
                 inqueue.put(chunk)
             print("Waiting for results.")
@@ -405,8 +407,8 @@ class CachedDataset(DatasetMixin):
             # problems, try to write a new zip file with desired contents or
             # delete cached zip and cache again.
             memory_dict = dict()
-            if hasattr(self.base_dataset, 'in_memory_keys'):
-                print('Caching Labels.')
+            if hasattr(self.base_dataset, "in_memory_keys"):
+                print("Caching Labels.")
                 memory_keys = self.base_dataset.in_memory_keys
                 for key in memory_keys:
                     memory_dict[key] = list()
@@ -418,18 +420,17 @@ class CachedDataset(DatasetMixin):
                         memory_dict[key].append(example[key])
 
             with ZipFile(self.store_path, "a", ZIP_DEFLATED) as zipfile:
-                zipfile.writestr(self._labels_name,
-                                 pickle.dumps(memory_dict))
+                zipfile.writestr(self._labels_name, pickle.dumps(memory_dict))
             print("Finished caching.")
 
     def __len__(self):
-        '''Number of examples in this Dataset.'''
+        """Number of examples in this Dataset."""
         return len(self.base_dataset)
 
     @property
     def labels(self):
-        '''Returns the labels associated with the base dataset, but from the
-        cached source.'''
+        """Returns the labels associated with the base dataset, but from the
+        cached source."""
         if not hasattr(self, "_labels"):
             labels = self.fork_safe_zip.read(self._labels_name)
             labels = pickle.loads(labels)
@@ -438,11 +439,11 @@ class CachedDataset(DatasetMixin):
 
     @property
     def root(self):
-        '''Returns the root to the base dataset.'''
+        """Returns the root to the base dataset."""
         return self._root
 
     def get_example(self, i):
-        '''Given an index i, returns a example.'''
+        """Given an index i, returns a example."""
 
         example_name = self.naming_template.format(i)
         example_file = self.fork_safe_zip.read(example_name)
@@ -455,9 +456,7 @@ class CachedDataset(DatasetMixin):
 class PathCachedDataset(CachedDataset):
     """Used for simplified decorator interface to dataset caching."""
 
-    def __init__(self,
-                 dataset,
-                 path):
+    def __init__(self, dataset, path):
         self.force_cache = False
         self.keep_existing = True
 
@@ -465,8 +464,8 @@ class PathCachedDataset(CachedDataset):
         self.store_dir = os.path.split(path)[0]
         self.store_path = path
 
-        self.naming_template = 'example_{}.p'
-        self._labels_name = 'labels.p'
+        self.naming_template = "example_{}.p"
+        self._labels_name = "labels.p"
 
         os.makedirs(self.store_dir, exist_ok=True)
 
@@ -495,6 +494,7 @@ def cachable(path):
     Can be used on any callable that returns a dataset. Currently the path
     should be the path to a zip file to cache into - i.e. it should end in zip.
     """
+
     def decorator(fn):
         def wrapped(*args, **kwargs):
             if os.path.exists(path + ".p"):
@@ -513,7 +513,9 @@ def cachable(path):
                 with open(path + "parameters.p", "wb") as f:
                     pickle.dump((args, kwargs), f)
                 return PathCachedDataset(dataset, path)
+
         return wrapped
+
     return decorator
 
 
@@ -620,8 +622,7 @@ class ExtraLabelsDataset(DatasetMixin):
     def get_example(self, i):
         """Get example and add new labels."""
         d = self.data.get_example(i)
-        new_labels = dict((k, self._new_labels[k][i])
-                          for k in self._new_labels)
+        new_labels = dict((k, self._new_labels[k][i]) for k in self._new_labels)
         d.update(new_labels)
         return d
 
@@ -646,10 +647,10 @@ class ConcatenatedDataset(DatasetMixin):
             for data_idx in range(len(self.datasets)):
                 data_length = len(self.datasets[data_idx])
                 if data_length != max_length:
-                    cycle_indices = [i %
-                                     data_length for i in range(max_length)]
+                    cycle_indices = [i % data_length for i in range(max_length)]
                     self.datasets[data_idx] = SubDataset(
-                            self.datasets[data_idx], cycle_indices)
+                        self.datasets[data_idx], cycle_indices
+                    )
         self.lengths = [len(d) for d in self.datasets]
         self.boundaries = np.cumsum(self.lengths)
 
@@ -657,7 +658,7 @@ class ConcatenatedDataset(DatasetMixin):
         """Get example and add dataset index to it."""
         did = np.where(i < self.boundaries)[0][0]
         if did > 0:
-            local_i = i - self.boundaries[did-1]
+            local_i = i - self.boundaries[did - 1]
         else:
             local_i = i
         example = self.datasets[did][local_i]
@@ -681,7 +682,7 @@ class ConcatenatedDataset(DatasetMixin):
 
 
 class ExampleConcatenatedDataset(DatasetMixin):
-    '''Concatenates a list of datasets along the example axis.
+    """Concatenates a list of datasets along the example axis.
     .. Warning:: Docu is wrong!
     E.g.:
         dset1 = [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}, ...]
@@ -697,20 +698,20 @@ class ExampleConcatenatedDataset(DatasetMixin):
     The new keys (e.g. `a_0, a_1`) are numbered in the order they are taken
     from datasets. Additionally, the original, shared key is preserved and
     returns the list of newly generated keys in correct order.
-    '''
+    """
 
     def __init__(self, *datasets):
-        '''Args:
+        """Args:
             *datasets (DatasetMixin): All the datasets to concatenate. Each
                 dataset must return a dict as example!
-        '''
+        """
         assert np.all(np.equal(len(datasets[0]), [len(d) for d in datasets]))
         self.datasets = datasets
         self.set_example_pars()
 
     def set_example_pars(self, start=None, stop=None, step=None):
-        '''Allows to manipulate the length and step of the returned example
-        lists.'''
+        """Allows to manipulate the length and step of the returned example
+        lists."""
 
         self.example_slice = slice(start, stop, step)
 
@@ -719,8 +720,8 @@ class ExampleConcatenatedDataset(DatasetMixin):
 
     @property
     def labels(self):
-        '''Now each index corresponds to a sequence of labels.'''
-        if not hasattr(self, '_labels'):
+        """Now each index corresponds to a sequence of labels."""
+        if not hasattr(self, "_labels"):
             self._labels = dict()
             for idx, dataset in enumerate(self.datasets):
                 for k in dataset.labels:
@@ -752,7 +753,7 @@ class ExampleConcatenatedDataset(DatasetMixin):
 
 
 class SequenceDataset(DatasetMixin):
-    '''Wraps around a dataset and returns sequences of examples.
+    """Wraps around a dataset and returns sequences of examples.
     Given the length of those sequences the number of available examples
     is reduced by this length times the step taken. Additionally each
     example must have a frame id `fid`, by which it can be filtered. This is to
@@ -764,22 +765,22 @@ class SequenceDataset(DatasetMixin):
     The SequenceDataset also exposes the Attribute ``self.base_indices``,
     which holds at each index ``i`` the indices of the elements contained in
     the example from the sequentialized dataset.
-    '''
+    """
 
     def __init__(self, dataset, length, step=1):
-        '''Args:
+        """Args:
             dataset (DatasetMixin): Dataset from which single frame examles
                 are taken.
             length (int): Length of the returned sequences in frames.
             step (int): Step between returned frames. Must be `>= 1`.
 
         This dataset will have `len(dataset) - length * step` examples.
-        '''
+        """
 
         self.step = step
         self.length = length
 
-        frame_ids = dataset.labels['fid']
+        frame_ids = dataset.labels["fid"]
         top_indeces = np.where(np.array(frame_ids) >= (length * step - 1))[0]
 
         all_subdatasets = []
@@ -804,13 +805,13 @@ class SequenceDataset(DatasetMixin):
         return len(self.dset)
 
     def get_example(self, i):
-        '''Retreives a list of examples starting at i.'''
+        """Retreives a list of examples starting at i."""
 
         return self.dset[i]
 
 
 class UnSequenceDataset(DatasetMixin):
-    '''Flattened version of a :class:`SequenceDataset`.
+    """Flattened version of a :class:`SequenceDataset`.
     Adds a new key ``seq_idx`` to each example, corresponding to the sequence
     index and a key ``example_idx`` corresponding to the original index.
     The ordering of the dataset is kept and sequence examples are ordererd as
@@ -830,7 +831,7 @@ class UnSequenceDataset(DatasetMixin):
         unseq_dataset = np.concatenate(seq_dataset, axis=-1)
 
         np.all(a == unseq_dataset))  # True
-    '''
+    """
 
     def __init__(self, seq_dataset):
         self.data = seq_dataset
@@ -860,15 +861,15 @@ class UnSequenceDataset(DatasetMixin):
         seq_example = {}
         for k, v in example.items():
             # index is added by DatasetMixin
-            if k != 'index_':
+            if k != "index_":
                 seq_example[k] = v[seq_idx]
-        seq_example.update({'seq_idx': seq_idx, 'example_idx': example_idx})
+        seq_example.update({"seq_idx": seq_idx, "example_idx": example_idx})
 
         return seq_example
 
 
 def getSeqDataset(config):
-    '''This allows to not define a dataset class, but use a baseclass and a
+    """This allows to not define a dataset class, but use a baseclass and a
     `length` and `step` parameter in the supplied `config` to load and
     sequentialize a dataset.
 
@@ -896,16 +897,13 @@ def getSeqDataset(config):
 
     Returns:
         :class:`SequenceDataset`: A Sequence Dataset based on the basedataset.
-    '''
+    """
 
-    ks = 'seqdataset'
-    base_dset = get_implementations_from_config(config[ks],
-                                                ['dataset'])['dataset']
+    ks = "seqdataset"
+    base_dset = get_implementations_from_config(config[ks], ["dataset"])["dataset"]
     base_dset = base_dset(config=config)
 
-    return SequenceDataset(base_dset,
-                           config[ks]['seq_length'],
-                           config[ks]['seq_step'])
+    return SequenceDataset(base_dset, config[ks]["seq_length"], config[ks]["seq_step"])
 
 
 def JoinedDataset(dataset, key, n_joins):
@@ -929,7 +927,7 @@ def JoinedDataset(dataset, key, n_joins):
 
 
 def getDebugDataset(config):
-    '''Loads a dataset from the config and makes ist reasonably small.
+    """Loads a dataset from the config and makes ist reasonably small.
     The config syntax works as in :function:`getSeqDataset`. See there for
     more extensive documentation.
 
@@ -941,27 +939,26 @@ def getDebugDataset(config):
     Returns:
         :class:`SubDataset`: A dataset based on the basedataset of the specifed
             length.
-    '''
+    """
 
-    ks = 'debugdataset'
-    base_dset = get_implementations_from_config(config[ks],
-                                                ['dataset'])['dataset']
+    ks = "debugdataset"
+    base_dset = get_implementations_from_config(config[ks], ["dataset"])["dataset"]
     base_dset = base_dset(config=config)
-    indices = np.arange(config[ks]['debug_length'])
+    indices = np.arange(config[ks]["debug_length"])
 
     return SubDataset(base_dset, indices)
 
 
 class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
-    '''Joins similiar JoinedDataset but randomly selects from possible joins.
-    '''
+    """Joins similiar JoinedDataset but randomly selects from possible joins.
+    """
 
     def __init__(self, dataset, key, n_joins):
-        '''Args:
+        """Args:
             dataset: Dataset to join in.
             key: Key to join on. Must be in dataset labels.
             n_joins: Number of examples to join.
-        '''
+        """
         self.dataset = dataset
         self.key = key
         self.n_joins = n_joins
@@ -977,8 +974,8 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
 
     @property
     def labels(self):
-        '''Careful this can only give labels of the original item, not the
-        joined ones.'''
+        """Careful this can only give labels of the original item, not the
+        joined ones."""
         return self.dataset.labels
 
     def get_example(self, i):
@@ -986,8 +983,7 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
         join_value = example[self.key]
 
         choices = [idx for idx in self.index_map[join_value] if not idx == i]
-        join_indices = self.prng.choice(
-            choices, self.n_joins - 1, replace=False)
+        join_indices = self.prng.choice(choices, self.n_joins - 1, replace=False)
 
         examples = [example] + [self.dataset[idx] for idx in join_indices]
 
@@ -1003,7 +999,7 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
 
 
 class DataFolder(DatasetMixin):
-    '''Given the root of a possibly nested folder containing datafiles and a
+    """Given the root of a possibly nested folder containing datafiles and a
     Callable that generates the labels to the datafile from its full name, this
     class creates a labeled dataset.
 
@@ -1015,17 +1011,19 @@ class DataFolder(DatasetMixin):
     'c']`` and ``read_fn`` returns one with keys ``['d', 'e']`` then the dict
     returned by ``__getitem__`` will contain the keys ``['a', 'b', 'c', 'd',
     'e', 'file_path_', 'index_']``.
-    '''
+    """
 
-    def __init__(self,
-                 image_root,
-                 read_fn,
-                 label_fn,
-                 sort_keys=None,
-                 in_memory_keys=None,
-                 legacy=True,
-                 show_bar=False):
-        '''Args:
+    def __init__(
+        self,
+        image_root,
+        read_fn,
+        label_fn,
+        sort_keys=None,
+        in_memory_keys=None,
+        legacy=True,
+        show_bar=False,
+    ):
+        """Args:
             image_root (str): Root containing the files of interest.
             read_fn (Callable): Given the path to a file, returns the datum as
                 a dict.
@@ -1039,7 +1037,7 @@ class DataFolder(DatasetMixin):
                 current file is passed to the reader. The new version will
                 see all labels, that have been previously collected.
             show_bar (bool): Show a loading bar when loading labels.
-        '''
+        """
 
         self.root = image_root
         self.read = read_fn
@@ -1063,7 +1061,7 @@ class DataFolder(DatasetMixin):
             for _ in os.walk(self.root):
                 n_files += 1
 
-            iterator = tqdm(os.walk(self.root), total=n_files, desc='Labels')
+            iterator = tqdm(os.walk(self.root), total=n_files, desc="Labels")
         else:
             iterator = tqdm(os.walk(self.root))
 
@@ -1075,7 +1073,7 @@ class DataFolder(DatasetMixin):
                 labels = self.label_fn(path)
 
                 if labels is not None:
-                    datum = {'file_path_': path}
+                    datum = {"file_path_": path}
                     datum.update(labels)
                     self.data += [datum]
 
@@ -1090,7 +1088,7 @@ class DataFolder(DatasetMixin):
 
     def get_example(self, i):
         datum = self.data[i]
-        path = datum['file_path_']
+        path = datum["file_path_"]
 
         if self.legacy:
             file_content = self.read(path)
@@ -1108,19 +1106,19 @@ class DataFolder(DatasetMixin):
 
 
 class CsvDataset(DatasetMixin):
-    '''Using a csv file as index, this Dataset returns only the entries in the
+    """Using a csv file as index, this Dataset returns only the entries in the
     csv file, but can be easily extended to load other data using the
     :class:`ProcessedDatasets`.
-    '''
+    """
 
     def __init__(self, csv_root, **pandas_kwargs):
-        '''Args:
+        """Args:
             csv_root (str): Path/to/the/csv containing all datapoints. The
                 first line in the file should contain the names for the
                 attributes in the corresponding columns.
                 pandas_kwargs (kwargs): Passed to :function:`pandas.read_csv`
                     when loading the csv file.
-        '''
+        """
 
         self.root = csv_root
         self.data = pd.read_csv(csv_root, **pandas_kwargs)
@@ -1132,14 +1130,14 @@ class CsvDataset(DatasetMixin):
         self.labels = {k: np.stack(self.data[k].values) for k in self.data}
 
     def get_example(self, idx):
-        '''Returns all entries in row :attr:`idx` of the labels.'''
+        """Returns all entries in row :attr:`idx` of the labels."""
 
         # Labels are a pandas dataframe. `.iloc[idx]` returns the row at index
         # idx. Converting to dict results in column_name: row_entry pairs.
         return dict(self.data.iloc[idx])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # import matplotlib.pyplot as plt
 
     # r = '/home/johannes/Documents/Uni HD/Dr_J/Projects/data_creation/' \
@@ -1176,27 +1174,28 @@ if __name__ == '__main__':
     D = DebugDataset()
 
     def labels(data, i):
-        return {'fid': i}
+        return {"fid": i}
+
     D = ExtraLabelsDataset(D, labels)
-    print('D')
+    print("D")
     for k, v in D.labels.items():
         print(k)
         print(np.shape(v))
 
     S = SequenceDataset(D, 2)
-    print('S')
+    print("S")
     for k, v in S.labels.items():
         print(k)
         print(np.shape(v))
 
     S = SubDataset(S, [2, 5, 10])
-    print('Sub')
+    print("Sub")
     for k, v in S.labels.items():
         print(k)
         print(np.shape(v))
 
     U = UnSequenceDataset(S)
-    print('U')
+    print("U")
     for k, v in U.labels.items():
         print(k)
         print(np.shape(v))

@@ -17,19 +17,17 @@ def main(opt):
     with open(opt.config) as f:
         config = yaml.load(f)
 
-    out_dir = init_logging('logs')
-    logger = get_logger('main_training')
+    out_dir = init_logging("logs")
+    logger = get_logger("main_training")
     logger.info(opt)
     logger.info(yaml.dump(config))
 
     if not opt.doeval:
         train(config, out_dir, opt.checkpoint, opt.retrain)
     else:
-        train_process = mp.Process(target=train,
-                                   args=(config,
-                                         out_dir,
-                                         opt.checkpoint,
-                                         opt.retrain))
+        train_process = mp.Process(
+            target=train, args=(config, out_dir, opt.checkpoint, opt.retrain)
+        )
         test_process = mp.Process(target=test, args=(config, out_dir))
 
         processes = [train_process, test_process]
@@ -42,11 +40,11 @@ def main(opt):
                 p.join()
 
         except KeyboardInterrupt:
-            logger.info('Terminating all processes')
+            logger.info("Terminating all processes")
             for p in processes:
                 p.terminate()
         finally:
-            logger.info('Finished')
+            logger.info("Finished")
 
 
 if __name__ == "__main__":
@@ -55,14 +53,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
     parser.add_argument("--checkpoint", help="path to checkpoint to restore")
-    parser.add_argument("--doeval",
-                        action="store_true",
-                        default=False,
-                        help="only run training")
-    parser.add_argument("--retrain",
-                        action="store_true",
-                        default=False,
-                        help="reset global_step to zero")
+    parser.add_argument(
+        "--doeval", action="store_true", default=False, help="only run training"
+    )
+    parser.add_argument(
+        "--retrain",
+        action="store_true",
+        default=False,
+        help="reset global_step to zero",
+    )
 
     opt = parser.parse_args()
     main(opt)
