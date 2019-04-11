@@ -24,9 +24,7 @@ Contents
    README
    docu
 
-
-
-Indices and tables
+ndices and tables
 ==================
 
 * :ref:`genindex`
