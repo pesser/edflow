@@ -3,6 +3,7 @@ from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
 from edflow.util import walk
+from edflow.hooks.pytorch_hooks import DataPrepHook
 
 
 class HookedModelIterator(object):
@@ -197,6 +198,7 @@ class PyHookedModelIterator(object):
         self.num_epochs = num_epochs
 
         self.hooks = hooks
+
         self.hook_freq = hook_freq
 
         self.bar_pos = bar_position * 2
@@ -397,3 +399,18 @@ class TFHookedModelIterator(PyHookedModelIterator):
             sess_config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_fraction
         self._session = tf.Session(config=sess_config)
         return self._session
+
+
+class TorchHookedModelIterator(PyHookedModelIterator):
+    """
+    Iterator class for framework PyTorch, inherited from PyHookedModelIterator.
+    Args:
+        transform (bool): If the batches are to be transformed to pytorch tensors. Should be true even if your input
+                    is already pytorch tensors!
+    """
+    def __init__(self, *args, transform=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        # check if the data preparation hook is already supplied.
+        check = transform and not any([isinstance(hook, DataPrepHook) for hook in self.hooks])
+        if check:
+            self.hooks += [DataPrepHook()]

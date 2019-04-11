@@ -1,7 +1,9 @@
-import torch
 import os
-import numpy as np
+import signal
+import sys
 
+import torch
+import numpy as np
 from tensorboardX import SummaryWriter
 
 from edflow.hooks.hook import Hook
@@ -9,10 +11,6 @@ from edflow.custom_logging import get_logger
 from edflow.util import retrieve
 from edflow.util import walk
 from edflow.iterators.batches import plot_batch
-
-import signal
-import sys
-
 
 """PyTorch hooks useful during training."""
 
@@ -205,10 +203,10 @@ class DataPrepHook(ToFromTorchHook):
     def before_step(self, step, fetches, feeds, batch):
         """
         Steps taken before the training step.
-        :param step:
-        :param fetches:
-        :param feeds:
-        :param batch:
+        :param step: Training step.
+        :param fetches: Fetches for the next session.run call.
+        :param feeds: Feeds for the next session.run call.
+        :param batch: The batch to be iterated over.
         :return:
         """
         def to_image(obj):
@@ -227,8 +225,8 @@ class DataPrepHook(ToFromTorchHook):
     def after_step(self, step, results):
         """
         Steps taken after the training step.
-        :param step:
-        :param results:
+        :param step: Training step.
+        :param results: Result of the session.
         :return:
         """
         super().after_step(step, results)
