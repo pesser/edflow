@@ -24,4 +24,4 @@ setup(name='edflow',
           'pandas'
           ],
       zip_safe=False,
-      scripts=["edflow/edflow", "edflow/edcache"])
+      scripts=["edflow/edflow", "edflow/edcache", "edflow/edlist"])
