@@ -78,7 +78,21 @@ html_theme = 'classic'
 html_static_path = ['_static']
 
 
-autodoc_mock_imports = ["tensorflow", 'tensorboardX', 'torch']
+autodoc_mock_imports = ["tensorflow",
+        'tensorboardX',
+        'torch',
+        'pyyaml',
+        'opencv-python',
+        'tqdm',
+        'Pillow',
+        'chainer',
+        'numpy',
+        'scipy',
+        'h5py',
+        'scikit-learn',
+        'scikit-image',
+        'natsort'
+]
 autosummary_generate = True
 templates_path = [ '_templates' ]
 exclude_patterns = ['_build', '_templates']
