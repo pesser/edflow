@@ -24,5 +24,6 @@
 
 # Documentation
 docs/build/*
+docs/_*
 
 .nfs*
