@@ -7,7 +7,7 @@ class Dataset_MNIST(DatasetMixin):
     def __init__(self, config):
         self.config = config
         self.data = MNIST(root="./data", train=True, transform=None, download=True)
-        self.im_shape = config.get('spatial_size', [28, 28])
+        self.im_shape = config.get("spatial_size", [28, 28])
         if isinstance(self.im_shape, int):
             self.im_shape = [self.im_shape] * 2
 

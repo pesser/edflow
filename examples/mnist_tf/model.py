@@ -45,45 +45,46 @@ class TrainModel(object):
         self.define_graph()
         self.variables = tf.global_variables()
 
-
     @property
     def inputs(self):
-        '''
+        """
         inputs of model at inference time
         Returns
         -------
 
-        '''
-        return {'image': self.image,
-                "target" : self.targets}
-
+        """
+        return {"image": self.image, "target": self.targets}
 
     @property
     def outputs(self):
-        '''
+        """
         outputs of model at inference time
         Returns
         -------
 
-        '''
-        return {'probs' : self.probs,
-                "classes" : self.classes}
+        """
+        return {"probs": self.probs, "classes": self.classes}
 
     def define_graph(self):
         # inputs
         self.image = tf.placeholder(
             tf.float32,
-            shape = (
+            shape=(
                 self.config["batch_size"],
                 self.config["spatial_size"],
                 self.config["spatial_size"],
-                1),
-            name = "image_in")
+                1,
+            ),
+            name="image_in",
+        )
         self.targets = tf.placeholder(
             tf.float32,
             shape=(
-                self.config["batch_size"], # 10 classes in mnist # TODO maybe move this to config
-            ))
+                self.config[
+                    "batch_size"
+                ],  # 10 classes in mnist # TODO maybe move this to config
+            ),
+        )
 
         # model definition
         model = nn.make_model("model", mnist_model)
@@ -97,15 +98,12 @@ class TrainModel(object):
 
 class Trainer(TFBaseTrainer):
     def get_restore_variables(self):
-        ''' nothing fancy here '''
+        """ nothing fancy here """
         return super().get_restore_variables()
 
-
-    def initialize(self, checkpoint_path = None):
-        ''' in this case, we do not need to initialize anything special '''
+    def initialize(self, checkpoint_path=None):
+        """ in this case, we do not need to initialize anything special """
         return super().initialize(checkpoint_path)
-
-
 
     def make_loss_ops(self):
         probs = self.model.outputs["probs"]

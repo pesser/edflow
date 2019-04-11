@@ -1,4 +1,3 @@
-
 import tensorflow as tf
 
 import argparse
@@ -19,14 +18,14 @@ def main(opt):
         config = yaml.load(f)
 
     P = use_project(opt.project)
-    logger = get_logger('main_evaluate', 'latest_eval')
+    logger = get_logger("main_evaluate", "latest_eval")
     logger.info(opt)
     logger.info(P)
     logger.info(yaml.dump(config))
 
     test(config, P.latest_eval)
-    logger.info('Finished')
-    print('\n'*5)
+    logger.info("Finished")
+    print("\n" * 5)
 
 
 if __name__ == "__main__":
