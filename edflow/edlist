@@ -6,34 +6,16 @@ import sys  # noqa
 import psutil
 import os
 
-# def get_process(proc_name):
-#     """Get process given  string in
-#     process cmd line.
-#     """
-#     proc_list = []
-#     for pr in psutil.process_iter():
-#         if any(list(map(lambda x: proc_name == os.path.basename(x), pr.cmdline()))):
-#             attrs = ["pid", "name", "cmdline"]
-#             parent = pr.parent()
-#             proc_dict = pr.as_dict(attrs)
-#             proc_dict.update({"parent" : parent})
-#             proc_list.append(proc_dict)
-#
-#         # for args in pr.cmdline():
-#         #     if proc_name in args:
-#         #         proc = pr
-#         #         proc_list.append((proc.name(), proc.parent())
-#     return proc_list
-
-
 def get_process(proc_name):
     """Get process given  string in
     process cmd line.
     """
+    pid = os.getpid()
+    my_username = psutil.Process(pid).username()
     proc_list = []
     for pr in psutil.process_iter():
-        if has_argument(pr, proc_name):
-            attrs = ["pid", "name", "cmdline"]
+        if has_argument(pr, proc_name) and pr.username() == my_username:
+            attrs = ["pid", "name", "cmdline", "username"]
             parent = pr.parent()
             proc_dict = pr.as_dict(attrs)
             if not has_parent(pr) or not has_same_parent(pr, proc_name):
@@ -56,27 +38,11 @@ def has_same_parent(p, name):
 
 
 
+
 if __name__ == '__main__':
     all_edflow_processes = get_process("edflow")
     for _dict in all_edflow_processes:
-        print(_dict["pid"], _dict["cmdline"])
-
-
-
-
-# def get_process(proc_name):
-#     """Get process given  string in
-#     process cmd line.
-#     """
-#     LOG = log.getLogger(__name__)
-#     proc = None
-#     try:
-#         for pr in psutil.process_iter():
-#             for args in pr.cmdline():
-#                 if proc_name in args.split(" "):
-#                     proc = pr
-#                     return proc
-#     except BaseException:
-#         # pass
-#         LOG.error("Error fetching {%s} process..." % proc_name)
-#     return None
+        args = _dict["cmdline"]
+        args = args[1:]
+        args[0] = os.path.basename(args[0])
+        print(' '.join(args))
