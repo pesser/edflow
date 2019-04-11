@@ -3,6 +3,7 @@ from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
 from edflow.util import walk
+from edflow.hooks.pytorch_hooks import DataPrepHook
 
 
 class HookedModelIterator(object):
@@ -178,7 +179,8 @@ class PyHookedModelIterator(object):
                  hooks=[],
                  bar_position=0,
                  nogpu=False,
-                 desc=''):
+                 desc='',
+                 transform=True):
         '''Constructor.
 
         Args:
@@ -189,6 +191,8 @@ class PyHookedModelIterator(object):
             hook_freq (int): Frequency at which hooks are evaluated.
             bar_position (int): Used by tqdm to place bars at the right
                 position when using multiple Iterators in parallel.
+            transform (bool): If the batches are to be transformed to pytorch tensors. Should be true even if your input
+                is already pytorch tensors!
         '''
         self.config = config
         self.root = root
@@ -197,6 +201,11 @@ class PyHookedModelIterator(object):
         self.num_epochs = num_epochs
 
         self.hooks = hooks
+        # check if the data preparation hook is already supplied.
+        check = transform and not any([isinstance(hook, DataPrepHook) for hook in self.hooks])
+        if check:
+            self.hooks += [DataPrepHook()]
+
         self.hook_freq = hook_freq
 
         self.bar_pos = bar_position * 2

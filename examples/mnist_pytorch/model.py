@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from edflow.iterators.model_iterator import PyHookedModelIterator
-from edflow.hooks.pytorch_hooks import DataPrepHook
 
 
 class CNN(nn.Module):
@@ -55,8 +54,6 @@ class Iterator(PyHookedModelIterator):
                                           lr=lr,
                                           betas=(0.5, 0.9))
         self.criterion = torch.nn.CrossEntropyLoss()
-        DPrepH = DataPrepHook()
-        self.hooks += [DPrepH]
 
     def initialize(self, checkpoint=None, **kwargs):
         if checkpoint is not None:
