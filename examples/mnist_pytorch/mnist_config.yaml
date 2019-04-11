@@ -1,9 +1,8 @@
-model: examples.mnist_pytorch.model.CNN
-iterator: examples.mnist_pytorch.model.Iterator
+model: mnist_pytorch.model.CNN
+iterator: mnist_pytorch.model.Iterator
 
-dataset: examples.mnist_pytorch.dataset.Dataset_MNIST
+dataset: mnist_pytorch.dataset.Dataset_MNIST
 
-code_root: /export/home/rmarwaha/projects/edflow/
 
 batch_size: 30
 spatial_size: 28
