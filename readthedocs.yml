@@ -2,7 +2,3 @@ python:
    pip_install: true
    extra_requirements:
        - docs
-
-dependencies:
-  - python=3.5
-  - cmake
