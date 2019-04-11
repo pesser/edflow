@@ -96,20 +96,3 @@ Mimo Tilbich [![GitHub-Contributions][GitHub-Contributions]](https://github.com/
 [GitHub-Updated]: https://img.shields.io/github/last-commit/pesser/edflow/master.svg?logo=github&logoColor=white&label=pushed
 
 [LICENSE]: https://img.shields.io/github/license/pesser/edflow.svg
-=======
-### Knwon bugs
-### Compatibility
-
-
-## Contributions
-|GitHub-Commits| |GitHub-Issues| |GitHub-PRs|
-
-
-
-## LICENSE
-
-coming soon...
-
-## Authors
-
-Mimo Tilbich |GitHub-Contributions|

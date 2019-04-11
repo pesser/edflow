@@ -24,8 +24,6 @@ Contents
    README
    docu
 
-
-
 Indices and tables
 ==================
 

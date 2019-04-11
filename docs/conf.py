@@ -14,16 +14,6 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-# Just some settings that I like when documenting my sources
-#autodoc_default_options = {
-#        "members":True,
-#        "inherited-members":True,
-#        "show-inheritance":True,
-#        }
-#autodoc_member_order = "bysource"
-#autoclass_content = "both"
-
-
 # -- Project information -----------------------------------------------------
 
 project = 'EDFlow'
@@ -58,13 +48,6 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
-#source_suffix = '.rst'
-        
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -89,8 +72,6 @@ autodoc_mock_imports = ["tensorflow",
         'numpy',
         'scipy',
         'h5py',
-        'scikit-learn',
-        'scikit-image',
         'skimage',
         'natsort'
 ]
