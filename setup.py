@@ -23,5 +23,9 @@ setup(name='edflow',
           'natsort',
           'pandas'
           ],
+      extras_require={
+          'docs': [
+            'sphinx >= 1.4',
+            'sphinx_rtd_theme']},
       zip_safe=False,
       scripts=["edflow/edflow", "edflow/edcache", "edflow/edlist"])
