@@ -1,5 +1,5 @@
 import tensorflow as tf
-from edflow.iterators.trainer import TFBaseTrainer
+from edflow.iterators.tf_trainer import TFBaseTrainer
 import mnist_tf.nn as nn
 from examples.mnist_tf.nn import conv2D, dense
 from tensorflow.contrib.framework.python.ops import arg_scope
