@@ -5,6 +5,7 @@ import logging
 import sys  # noqa
 import psutil
 import os
+import datetime
 
 
 def get_process(proc_name):
@@ -16,7 +17,7 @@ def get_process(proc_name):
     proc_list = []
     for pr in psutil.process_iter():
         if has_argument(pr, proc_name) and pr.username() == my_username:
-            attrs = ["pid", "name", "cmdline", "username"]
+            attrs = ["pid", "name", "cmdline", "username", "create_time"]
             parent = pr.parent()
             proc_dict = pr.as_dict(attrs)
             if not has_parent(pr) or not has_same_parent(pr, proc_name):
@@ -41,8 +42,14 @@ def has_same_parent(p, name):
 
 if __name__ == "__main__":
     all_edflow_processes = get_process("edflow")
+    all_edflow_processes = sorted(all_edflow_processes, key = lambda x: x["create_time"])
+    if all_edflow_processes:
+        print("#"+", ".join(["pid".rjust(5), "start".ljust(19), "command"]))
     for _dict in all_edflow_processes:
         args = _dict["cmdline"]
         args = args[1:]
         args[0] = os.path.basename(args[0])
-        print(" ".join(args))
+        cmd = " ".join(args)
+        pid = str(_dict["pid"])
+        create_time = datetime.datetime.fromtimestamp(_dict["create_time"]).strftime("%Y-%m-%d %H:%M:%S")
+        print(", ".join([pid.rjust(6), create_time, cmd]))
