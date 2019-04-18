@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+
+import os
+import logging
+import sys  # noqa
+import psutil
+import os
+import datetime
+
+
+def get_process(proc_name):
+    """Get process given  string in
+    process cmd line.
+    """
+    pid = os.getpid()
+    my_username = psutil.Process(pid).username()
+    proc_list = []
+    for pr in psutil.process_iter():
+        if has_argument(pr, proc_name) and pr.username() == my_username:
+            attrs = ["pid", "name", "cmdline", "username", "create_time"]
+            parent = pr.parent()
+            proc_dict = pr.as_dict(attrs)
+            if not has_parent(pr) or not has_same_parent(pr, proc_name):
+                proc_dict.update({"parent": parent})
+                proc_list.append(proc_dict)
+
+    return proc_list
+
+
+def has_argument(p, name):
+    return any(list(map(lambda x: name == os.path.basename(x), p.cmdline())))
+
+
+def has_parent(p):
+    return p.parent() is not None
+
+
+def has_same_parent(p, name):
+    parent = p.parent()
+    return has_argument(parent, name)
+
+
+if __name__ == "__main__":
+    all_edflow_processes = get_process("edflow")
+    all_edflow_processes = sorted(all_edflow_processes, key = lambda x: x["create_time"])
+    if all_edflow_processes:
+        print("#"+", ".join(["pid".rjust(5), "start".ljust(19), "command"]))
+    for _dict in all_edflow_processes:
+        args = _dict["cmdline"]
+        args = args[1:]
+        args[0] = os.path.basename(args[0])
+        cmd = " ".join(args)
+        pid = str(_dict["pid"])
+        create_time = datetime.datetime.fromtimestamp(_dict["create_time"]).strftime("%Y-%m-%d %H:%M:%S")
+        print(", ".join([pid.rjust(6), create_time, cmd]))

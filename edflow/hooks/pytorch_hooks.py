@@ -1,7 +1,9 @@
-import torch
 import os
-import numpy as np
+import signal
+import sys
 
+import torch
+import numpy as np
 from tensorboardX import SummaryWriter
 
 from edflow.hooks.hook import Hook
@@ -10,29 +12,21 @@ from edflow.util import retrieve
 from edflow.util import walk
 from edflow.iterators.batches import plot_batch
 
-import signal
-import sys
-
-
 """PyTorch hooks useful during training."""
 
 
 class PyCheckpointHook(Hook):
-    '''Does that checkpoint thingy where it stores everything in a
-    checkpoint.'''
+    """Does that checkpoint thingy where it stores everything in a
+    checkpoint."""
 
-    def __init__(self,
-                 root_path,
-                 model,
-                 modelname='model',
-                 interval=None):
-        '''Args:
+    def __init__(self, root_path, model, modelname="model", interval=None):
+        """Args:
             root_path (str): Path to where the checkpoints are stored.
             model (nn.Module): Model to checkpoint.
             modelname (str): Prefix for checkpoint files.
             interval (int): Number of iterations after which a checkpoint is
                 saved. In any case a checkpoint is savead after each epoch.
-        '''
+        """
 
         signal.signal(signal.SIGINT, self.at_exception)
         signal.signal(signal.SIGTERM, self.at_exception)
@@ -44,8 +38,7 @@ class PyCheckpointHook(Hook):
         self.logger = get_logger(self)
 
         os.makedirs(root_path, exist_ok=True)
-        self.savename = os.path.join(root_path,
-                                     '{{}}-{{}}_{}.ckpt'.format(modelname))
+        self.savename = os.path.join(root_path, "{{}}-{{}}_{}.ckpt".format(modelname))
 
         # Init to save even before first step... More of a debug statement
         self.step = 0
@@ -58,9 +51,8 @@ class PyCheckpointHook(Hook):
         self.save()
 
     def after_step(self, step, last_results):
-        self.step = retrieve('global_step', last_results)
-        if self.interval is not None \
-                and step % self.interval == 0:
+        self.step = retrieve("global_step", last_results)
+        if self.interval is not None and step % self.interval == 0:
             self.save()
 
     def at_exception(self, *args, **kwargs):
@@ -78,18 +70,20 @@ class PyCheckpointHook(Hook):
 
 
 class PyLoggingHook(Hook):
-    '''Supply and evaluate logging ops at an intervall of training steps.'''
+    """Supply and evaluate logging ops at an intervall of training steps."""
 
-    def __init__(self,
-                 log_ops=[],
-                 scalar_keys=[],
-                 histogram_keys=[],
-                 image_keys=[],
-                 log_keys=[],
-                 graph=None,
-                 interval=100,
-                 root_path='logs'):
-        '''Args:
+    def __init__(
+        self,
+        log_ops=[],
+        scalar_keys=[],
+        histogram_keys=[],
+        image_keys=[],
+        log_keys=[],
+        graph=None,
+        interval=100,
+        root_path="logs",
+    ):
+        """Args:
             log_ops (list): Ops to run at logging time.
             scalars (dict): Scalar ops.
             histograms (dict): Histogram ops.
@@ -99,7 +93,7 @@ class PyLoggingHook(Hook):
             graph (tf.Graph): Current graph.
             interval (int): Intervall of training steps before logging.
             root_path (str): Path at which the logs are stored.
-        '''
+        """
 
         self.log_ops = log_ops
 
@@ -118,11 +112,11 @@ class PyLoggingHook(Hook):
 
     def before_step(self, batch_index, fetches, feeds, batch):
         if batch_index % self.interval == 0:
-            fetches['logging'] = self.log_ops
+            fetches["logging"] = self.log_ops
 
     def after_step(self, batch_index, last_results):
         if batch_index % self.interval == 0:
-            step = last_results['global_step']
+            step = last_results["global_step"]
 
             for key in self.scalar_keys:
                 value = retrieve(key, last_results)
@@ -135,23 +129,23 @@ class PyLoggingHook(Hook):
             for key in self.image_keys:
                 value = retrieve(key, last_results)
 
-                name = key.split('/')[-1]
+                name = key.split("/")[-1]
                 full_name = name + "_{:07}.png".format(step)
                 save_path = os.path.join(self.root, full_name)
                 plot_batch(value, save_path)
 
             for key in self.log_keys:
                 value = retrieve(key, last_results)
-                self.logger.info('{}: {}'.format(key, value))
+                self.logger.info("{}: {}".format(key, value))
 
 
 class ToNumpyHook(Hook):
-    '''Converts all pytorch Variables and Tensors in the results to numpy
-    arrays and leaves the rest as is.'''
+    """Converts all pytorch Variables and Tensors in the results to numpy
+    arrays and leaves the rest as is."""
 
     def after_step(self, step, results):
         def convert(var_or_tens):
-            if hasattr(var_or_tens, 'cpu'):
+            if hasattr(var_or_tens, "cpu"):
                 var_or_tens = var_or_tens.cpu()
 
             if isinstance(var_or_tens, torch.autograd.Variable):
@@ -165,8 +159,8 @@ class ToNumpyHook(Hook):
 
 
 class ToTorchHook(Hook):
-    '''Converts all numpy arrays in the batch to torch.Tensor
-    arrays and leaves the rest as is.'''
+    """Converts all numpy arrays in the batch to torch.Tensor
+    arrays and leaves the rest as is."""
 
     def __init__(self, push_to_gpu=True, dtype=torch.float):
         self.use_gpu = push_to_gpu
@@ -195,22 +189,23 @@ class ToFromTorchHook(ToNumpyHook, ToTorchHook):
         ToTorchHook.__init__(self, *args, **kwargs)
 
 
-# TODO: include this hook by default in the pytorch iterator.
 class DataPrepHook(ToFromTorchHook):
     """
     The hook is needed in order to convert the input appropriately. Here, we have
     to reshape the input i.e. append 1 to the shape (for the number of channels
     of  the image). Plus, it converts to data to Pytorch tensors, and back.
     """
+
     def before_step(self, step, fetches, feeds, batch):
         """
         Steps taken before the training step.
-        :param step:
-        :param fetches:
-        :param feeds:
-        :param batch:
+        :param step: Training step.
+        :param fetches: Fetches for the next session.run call.
+        :param feeds: Feeds for the next session.run call.
+        :param batch: The batch to be iterated over.
         :return:
         """
+
         def to_image(obj):
             if isinstance(obj, np.ndarray) and len(obj.shape) == 3:
                 batches, height, width = obj.shape
@@ -227,19 +222,20 @@ class DataPrepHook(ToFromTorchHook):
     def after_step(self, step, results):
         """
         Steps taken after the training step.
-        :param step:
-        :param results:
+        :param step: Training step.
+        :param results: Result of the session.
         :return:
         """
         super().after_step(step, results)
 
         def to_image(k, obj):
-            if 'weights' not in k \
-                    and isinstance(obj, np.ndarray) \
-                    and len(obj.shape) == 4:
+            if (
+                "weights" not in k
+                and isinstance(obj, np.ndarray)
+                and len(obj.shape) == 4
+            ):
                 return obj.transpose(0, 2, 3, 1)
             else:
                 return obj
 
         walk(results, to_image, inplace=True, pass_key=True)
-

@@ -38,7 +38,7 @@ def traceable_process(fn, args, job_queue, idx):
         else:
             raise exc
 
-    job_queue.put([idx, 'Done', None])
+    job_queue.put([idx, "Done", None])
 
 
 def traceable_function(method, ignores=None):
@@ -50,12 +50,14 @@ def traceable_function(method, ignores=None):
                 if not isinstance(e, tuple(ignores)):
                     traceback.print_exc()
                     raise e
+
     return tmethod
 
 
 def traceable_method(ignores=None):
     def decorator(method):
         return traceable_function(method, ignores=ignores)
+
     return decorator
 
 
@@ -68,16 +70,17 @@ def test(args, job_queue, idx):
 
 
 def _train(config, root, checkpoint=None, retrain=False):
-    '''Run training. Loads model, iterator and dataset according to config.'''
+    """Run training. Loads model, iterator and dataset according to config."""
     from edflow.iterators.batches import make_batches
 
-    LogSingleton().set_default('train')
-    logger = get_logger('train')
-    logger.info('Starting Training with config:')
+    LogSingleton().set_default("train")
+    logger = get_logger("train")
+    logger.info("Starting Training with config:")
     logger.info(config)
 
     implementations = get_implementations_from_config(
-            config, ["model", "iterator", "dataset"])
+        config, ["model", "iterator", "dataset"]
+    )
 
     # fork early to avoid taking all the crap into forked processes
     logger.info("Instantiating dataset.")
@@ -85,11 +88,13 @@ def _train(config, root, checkpoint=None, retrain=False):
     logger.info("Number of training samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
-    batches = make_batches(dataset,
-                           batch_size=config["batch_size"],
-                           shuffle=True,
-                           n_processes=n_processes,
-                           n_prefetch=n_prefetch)
+    batches = make_batches(
+        dataset,
+        batch_size=config["batch_size"],
+        shuffle=True,
+        n_processes=n_processes,
+        n_prefetch=n_prefetch,
+    )
     # get them going
     logger.info("Warm up batches.")
     next(batches)
@@ -110,13 +115,9 @@ def _train(config, root, checkpoint=None, retrain=False):
     Model = implementations["model"](config)
     if not "hook_freq" in config:
         config["hook_freq"] = 1
-    compat_kwargs = dict(hook_freq = config["hook_freq"],
-                         num_epochs = config["num_epochs"])
+    compat_kwargs = dict(hook_freq=config["hook_freq"], num_epochs=config["num_epochs"])
     logger.info("Instantiating iterator.")
-    Trainer = implementations["iterator"](config,
-                                          root,
-                                          Model,
-                                          **compat_kwargs)
+    Trainer = implementations["iterator"](config, root, Model, **compat_kwargs)
 
     logger.info("Initializing model.")
     if checkpoint is not None:
@@ -132,31 +133,34 @@ def _train(config, root, checkpoint=None, retrain=False):
 
 
 def _test(config, root, nogpu=False, bar_position=0):
-    '''Run tests. Loads model, iterator and dataset from config.'''
+    """Run tests. Loads model, iterator and dataset from config."""
     from edflow.iterators.batches import make_batches
 
-    LogSingleton().set_default('latest_eval')
-    logger = get_logger('test')
-    logger.info('Starting Evaluation with config')
+    LogSingleton().set_default("latest_eval")
+    logger = get_logger("test")
+    logger.info("Starting Evaluation with config")
     logger.info(config)
 
     if "test_batch_size" in config:
-        config['batch_size'] = config['test_batch_size']
+        config["batch_size"] = config["test_batch_size"]
     if "test_mode" not in config:
         config["test_mode"] = True
 
     implementations = get_implementations_from_config(
-            config, ["model", "iterator", "dataset"])
+        config, ["model", "iterator", "dataset"]
+    )
 
     dataset = implementations["dataset"](config=config)
     logger.info("Number of testing samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
-    batches = make_batches(dataset,
-                           batch_size=config["batch_size"],
-                           shuffle=False,
-                           n_processes=n_processes,
-                           n_prefetch=n_prefetch)
+    batches = make_batches(
+        dataset,
+        batch_size=config["batch_size"],
+        shuffle=False,
+        n_processes=n_processes,
+        n_prefetch=n_prefetch,
+    )
     # get going
     next(batches)
     batches.reset()
@@ -170,17 +174,14 @@ def _test(config, root, nogpu=False, bar_position=0):
     config["num_epochs"] = 1
     config["nogpu"] = nogpu
     compat_kwargs = dict(
-            hook_freq = config["hook_freq"],
-            bar_position = bar_position,
-            nogpu = config["nogpu"],
-            num_epochs = config["num_epochs"])
-    HBU_Evaluator = implementations["iterator"](
-        config,
-        root,
-        Model,
-        **compat_kwargs)
+        hook_freq=config["hook_freq"],
+        bar_position=bar_position,
+        nogpu=config["nogpu"],
+        num_epochs=config["num_epochs"],
+    )
+    HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
 
-    logger.info('Iterating')
+    logger.info("Iterating")
     while True:
         HBU_Evaluator.iterate(batches)
         if not config.get("eval_forever", False):
@@ -191,8 +192,8 @@ def main(opt):
     with open(opt.config) as f:
         config = yaml.load(f)
 
-    P = init_project('logs')
-    logger = get_logger('main')
+    P = init_project("logs")
+    logger = get_logger("main")
     logger.info(opt)
     logger.info(yaml.dump(config))
     logger.info(P)
@@ -200,13 +201,10 @@ def main(opt):
     if opt.noeval:
         train(config, P.train, opt.checkpoint, opt.retrain)
     else:
-        train_process = mp.Process(target=train,
-                                   args=(config,
-                                         P.train,
-                                         opt.checkpoint,
-                                         opt.retrain))
-        test_process = mp.Process(target=test,
-                                  args=(config, P.latest_eval, True))
+        train_process = mp.Process(
+            target=train, args=(config, P.train, opt.checkpoint, opt.retrain)
+        )
+        test_process = mp.Process(target=test, args=(config, P.latest_eval, True))
 
         processes = [train_process, test_process]
 
@@ -218,11 +216,11 @@ def main(opt):
                 p.join()
 
         except KeyboardInterrupt:
-            logger.info('Terminating all processes')
+            logger.info("Terminating all processes")
             for p in processes:
                 p.terminate()
         finally:
-            logger.info('Finished')
+            logger.info("Finished")
 
 
 if __name__ == "__main__":
@@ -231,14 +229,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
     parser.add_argument("--checkpoint", help="path to checkpoint to restore")
-    parser.add_argument("--noeval",
-                        action="store_true",
-                        default=False,
-                        help="only run training")
-    parser.add_argument("--retrain",
-                        action="store_true",
-                        default=False,
-                        help="reset global_step to zero")
+    parser.add_argument(
+        "--noeval", action="store_true", default=False, help="only run training"
+    )
+    parser.add_argument(
+        "--retrain",
+        action="store_true",
+        default=False,
+        help="reset global_step to zero",
+    )
 
     opt = parser.parse_args()
     main(opt)

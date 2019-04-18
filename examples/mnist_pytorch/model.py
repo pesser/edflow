@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from edflow.iterators.model_iterator import PyHookedModelIterator
-from edflow.hooks.pytorch_hooks import DataPrepHook
+from edflow.iterators.model_iterator import TorchHookedModelIterator
 
 
 class CNN(nn.Module):
@@ -31,7 +30,7 @@ class CNN(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-class Iterator(PyHookedModelIterator):
+class Iterator(TorchHookedModelIterator):
     def __init__(self, config, root, model, **kwargs):
         """
         THe iterator class is the backbone of your EDflow training. It will handle your training
@@ -46,17 +45,13 @@ class Iterator(PyHookedModelIterator):
         super().__init__(config, root, model, **kwargs)
         self.model = model
         self.config = config
-        bs = config['batch_size']
-        self.bs = config.get('applied_batch_size', None)
+        bs = config["batch_size"]
+        self.bs = config.get("applied_batch_size", None)
         if self.bs is None:
             self.bs = bs
-        self.lr = lr = config.get('learning_rate', 1e-4)
-        self.optimizer = torch.optim.Adam(model.parameters(),
-                                          lr=lr,
-                                          betas=(0.5, 0.9))
+        self.lr = lr = config.get("learning_rate", 1e-4)
+        self.optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.9))
         self.criterion = torch.nn.CrossEntropyLoss()
-        DPrepH = DataPrepHook()
-        self.hooks += [DPrepH]
 
     def initialize(self, checkpoint=None, **kwargs):
         if checkpoint is not None:
@@ -70,10 +65,7 @@ class Iterator(PyHookedModelIterator):
         :param target: The target label.
         :return: Nested dictionary with the input keys and values.
         """
-        return {'inputs': {
-            'image': image,
-            'target': target,
-        }}
+        return {"inputs": {"image": image, "target": target}}
 
     def _collect_output(self, model, image):
         """
