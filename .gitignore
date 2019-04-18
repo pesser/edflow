@@ -27,3 +27,6 @@ docs/build/*
 docs/_*
 
 .nfs*
+
+# Generated output
+examples/data
