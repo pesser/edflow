@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from edflow.iterators.model_iterator import HookedModelIterator, TFHookedModelIterator
+from edflow.iterators.tf_iterator import HookedModelIterator, TFHookedModelIterator
 from edflow.hooks import LoggingHook, CheckpointHook, RetrainHook
 from edflow.hooks import match_frequency
 from edflow.project_manager import ProjectManager
