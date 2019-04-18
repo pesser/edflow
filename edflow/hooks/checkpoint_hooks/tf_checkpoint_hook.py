@@ -1,16 +1,64 @@
 import tensorflow as tf
-import os
-import time
+from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint
 
-from edflow.hooks.hook import Hook
-from edflow.hooks.evaluation_hooks import get_checkpoint_files
-from edflow.custom_logging import get_logger
-from edflow.iterators.batches import plot_batch
 
-import signal
-import sys
+class RestoreModelHook(Hook):
+    """Restores a TensorFlow model from a checkpoint at each epoch. Can also
+    be used as a functor."""
 
-"""TensorFlow hooks useful during training."""
+    def __init__(
+        self,
+        variables,
+        checkpoint_path,
+        filter_cond=lambda c: True,
+        global_step_setter=None,
+    ):
+        """Args:
+            variables (list): tf.Variable to be loaded from the checkpoint.
+            checkpoint_path (str): Directory in which the checkpoints are
+                stored or explicit checkpoint. Ignored if used as functor.
+            filter_cond (Callable): A function used to filter files, to only
+                get the checkpoints that are wanted. Ignored if used as
+                functor.
+            global_step_setter (Callable): Callback to set global_step.
+        """
+        self.root = checkpoint_path
+        self.fcond = filter_cond
+        self.setstep = global_step_setter
+
+        self.logger = get_logger(self)
+
+        self.saver = tf.train.Saver(variables)
+
+    @property
+    def session(self):
+        if not hasattr(self, "_session"):
+            self._session = tf.get_default_session()
+        return self._session
+
+    def before_epoch(self, ep):
+        # checkpoint = tf.train.latest_checkpoint(self.root)
+        checkpoint = get_latest_checkpoint(self.root, self.fcond)
+        self(checkpoint)
+
+    def __call__(self, checkpoint):
+        self.saver.restore(self.session, checkpoint)
+        self.logger.info("Restored model from {}".format(checkpoint))
+        global_step = self.parse_global_step(checkpoint)
+        self.logger.info("Global step: {}".format(global_step))
+        if self.setstep is not None:
+            self.setstep(global_step)
+
+    @staticmethod
+    def parse_global_step(checkpoint):
+        global_step = int(checkpoint.rsplit("-", 1)[1])
+        return global_step
+
+
+# Simple renaming for consistency
+# Todo: Make the Restore op part of the model (issue #2)
+# https://bitbucket.org/jhaux/edflow/issues/2/make-a-general-model-restore-hook
+RestoreTFModelHook = RestoreModelHook
 
 
 class CheckpointHook(Hook):
@@ -84,78 +132,6 @@ class CheckpointHook(Hook):
         else:
             global_step = self.step()
         return global_step
-
-
-class LoggingHook(Hook):
-    """Supply and evaluate logging ops at an intervall of training steps."""
-
-    def __init__(
-        self,
-        scalars={},
-        histograms={},
-        images={},
-        logs={},
-        graph=None,
-        interval=100,
-        root_path="logs",
-    ):
-        """Args:
-            scalars (dict): Scalar ops.
-            histograms (dict): Histogram ops.
-            images (dict): Image ops. Note that for these no
-                tensorboard logging ist used but a custom image saver.
-            logs (dict): Logs to std out via logger.
-            graph (tf.Graph): Current graph.
-            interval (int): Intervall of training steps before logging.
-            root_path (str): Path at which the logs are stored.
-        """
-
-        scalars = [tf.summary.scalar(n, s) for n, s in scalars.items()]
-        histograms = [tf.summary.histogram(n, h) for n, h in histograms.items()]
-
-        self._has_summary = len(scalars + histograms) > 0
-        if self._has_summary:
-            summary_op = tf.summary.merge(scalars + histograms)
-        else:
-            summary_op = tf.no_op()
-
-        self.fetch_dict = {"summaries": summary_op, "logs": logs, "images": images}
-
-        self.interval = interval
-
-        self.graph = graph
-        self.root = root_path
-        self.logger = get_logger(self)
-
-    def before_epoch(self, ep):
-        if ep == 0:
-            if self.graph is None:
-                self.graph = tf.get_default_graph()
-
-            self.writer = tf.summary.FileWriter(self.root, self.graph)
-
-    def before_step(self, batch_index, fetches, feeds, batch):
-        if batch_index % self.interval == 0:
-            fetches["logging"] = self.fetch_dict
-
-    def after_step(self, batch_index, last_results):
-        if batch_index % self.interval == 0:
-            step = last_results["global_step"]
-            last_results = last_results["logging"]
-            if self._has_summary:
-                summary = last_results["summaries"]
-                self.writer.add_summary(summary, step)
-
-            logs = last_results["logs"]
-            for name in sorted(logs.keys()):
-                self.logger.info("{}: {}".format(name, logs[name]))
-
-            for name, image_batch in last_results["images"].items():
-                full_name = name + "_{:07}.png".format(step)
-                save_path = os.path.join(self.root, full_name)
-                plot_batch(image_batch, save_path)
-
-            self.logger.info("project root: {}".format(self.root))
 
 
 class RetrainHook(Hook):

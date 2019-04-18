@@ -1,9 +1,3 @@
-import tensorflow as tf
-
-try:
-    import torch
-except ImportError:
-    print("Warning: Could not import torch.")
 import time
 import os
 import re
@@ -21,6 +15,61 @@ from edflow.util import retrieve
 SAVABLES = (np.ndarray, np.int64, int, float, np.float)
 
 P = ProjectManager()
+
+
+def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
+    """Return path to name of latest checkpoint in checkpoint_root dir.
+
+    Args:
+        checkpoint_root (str): Path to where the checkpoints live.
+        filter_cond (Callable): A function used to filter files, to only
+            get the checkpoints that are wanted.
+
+    Returns:
+        str: path of the latest checkpoint. Note that for tensorflow
+            checkpoints this is not an existing file, but
+            path{.index,.meta,data*} should be
+    """
+    ckpt_root = checkpoint_root
+
+    all_files = sorted(os.listdir(ckpt_root))
+
+    # get actual files belonging to checkpoint as well as normalized name as
+    # used by tf.Saver.restore
+    checkpoint_files = list()
+    checkpoint_names = list()
+    for f in all_files:
+        if f.endswith(".ckpt"):
+            checkpoint_files.append(f)
+            checkpoint_names.append(f)
+        else:
+            # check if filename matches tensorflow checkpoint of form
+            # name.ckpt-300.index and continue with name.ckpt-300
+            match = re.match(r"(.+\.ckpt-[0-9]+)\.index$", f)
+            if match:
+                checkpoint_files.append(f)
+                checkpoint_names.append(match.group(1))
+
+    # convert to list of pairs [name, timestamp of file] to retrieve latest
+    checkpoints = []
+    for file_, name in zip(checkpoint_files, checkpoint_names):
+        file_ = os.path.join(ckpt_root, file_)
+        name = os.path.join(ckpt_root, name)
+        try:
+            mt = os.path.getmtime(file_)
+        except FileNotFoundError:
+            # checkpoint was deleted, make it infinitely old
+            mt = -float("inf")
+        checkpoints += [[name, mt]]
+    checkpoints = [ckpt for ckpt in checkpoints if filter_cond(ckpt[0])]
+
+    if len(checkpoints) > 0:
+        checkpoints = sorted(checkpoints, key=lambda pt: -pt[1])
+        latest = checkpoints[0][0]
+    else:
+        latest = None
+
+    return latest
 
 
 class WaitForCheckpointHook(Hook):
@@ -88,178 +137,8 @@ class WaitForCheckpointHook(Hook):
         self.look()
 
 
-def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
-    """Return path to name of latest checkpoint in checkpoint_root dir.
-
-    Args:
-        checkpoint_root (str): Path to where the checkpoints live.
-        filter_cond (Callable): A function used to filter files, to only
-            get the checkpoints that are wanted.
-
-    Returns:
-        str: path of the latest checkpoint. Note that for tensorflow
-            checkpoints this is not an existing file, but
-            path{.index,.meta,data*} should be
-    """
-    ckpt_root = checkpoint_root
-
-    all_files = sorted(os.listdir(ckpt_root))
-
-    # get actual files belonging to checkpoint as well as normalized name as
-    # used by tf.Saver.restore
-    checkpoint_files = list()
-    checkpoint_names = list()
-    for f in all_files:
-        if f.endswith(".ckpt"):
-            checkpoint_files.append(f)
-            checkpoint_names.append(f)
-        else:
-            # check if filename matches tensorflow checkpoint of form
-            # name.ckpt-300.index and continue with name.ckpt-300
-            match = re.match(r"(.+\.ckpt-[0-9]+)\.index$", f)
-            if match:
-                checkpoint_files.append(f)
-                checkpoint_names.append(match.group(1))
-
-    # convert to list of pairs [name, timestamp of file] to retrieve latest
-    checkpoints = []
-    for file_, name in zip(checkpoint_files, checkpoint_names):
-        file_ = os.path.join(ckpt_root, file_)
-        name = os.path.join(ckpt_root, name)
-        try:
-            mt = os.path.getmtime(file_)
-        except FileNotFoundError:
-            # checkpoint was deleted, make it infinitely old
-            mt = -float("inf")
-        checkpoints += [[name, mt]]
-    checkpoints = [ckpt for ckpt in checkpoints if filter_cond(ckpt[0])]
-
-    if len(checkpoints) > 0:
-        checkpoints = sorted(checkpoints, key=lambda pt: -pt[1])
-        latest = checkpoints[0][0]
-    else:
-        latest = None
-
-    return latest
 
 
-class RestoreModelHook(Hook):
-    """Restores a TensorFlow model from a checkpoint at each epoch. Can also
-    be used as a functor."""
-
-    def __init__(
-        self,
-        variables,
-        checkpoint_path,
-        filter_cond=lambda c: True,
-        global_step_setter=None,
-    ):
-        """Args:
-            variables (list): tf.Variable to be loaded from the checkpoint.
-            checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint. Ignored if used as functor.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted. Ignored if used as
-                functor.
-            global_step_setter (Callable): Callback to set global_step.
-        """
-        self.root = checkpoint_path
-        self.fcond = filter_cond
-        self.setstep = global_step_setter
-
-        self.logger = get_logger(self)
-
-        self.saver = tf.train.Saver(variables)
-
-    @property
-    def session(self):
-        if not hasattr(self, "_session"):
-            self._session = tf.get_default_session()
-        return self._session
-
-    def before_epoch(self, ep):
-        # checkpoint = tf.train.latest_checkpoint(self.root)
-        checkpoint = get_latest_checkpoint(self.root, self.fcond)
-        self(checkpoint)
-
-    def __call__(self, checkpoint):
-        self.saver.restore(self.session, checkpoint)
-        self.logger.info("Restored model from {}".format(checkpoint))
-        global_step = self.parse_global_step(checkpoint)
-        self.logger.info("Global step: {}".format(global_step))
-        if self.setstep is not None:
-            self.setstep(global_step)
-
-    @staticmethod
-    def parse_global_step(checkpoint):
-        global_step = int(checkpoint.rsplit("-", 1)[1])
-        return global_step
-
-
-# Simple renaming for consistency
-# Todo: Make the Restore op part of the model (issue #2)
-# https://bitbucket.org/jhaux/edflow/issues/2/make-a-general-model-restore-hook
-RestoreTFModelHook = RestoreModelHook
-
-
-class RestorePytorchModelHook(Hook):
-    """Restores a PyTorch model from a checkpoint at each epoch. Can also be
-    used as a functor."""
-
-    def __init__(
-        self,
-        model,
-        checkpoint_path,
-        filter_cond=lambda c: True,
-        global_step_setter=None,
-    ):
-        """Args:
-            model (torch.nn.Module): Model to initialize
-            checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint. Ignored if used as functor.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted. Ignored if used as
-                functor.
-            global_step_setter (Callable): Function, that the retrieved global
-                step can be passed to.
-        """
-        self.root = checkpoint_path
-        self.fcond = filter_cond
-
-        self.logger = get_logger(self)
-
-        self.model = model
-        self.global_step_setter = global_step_setter
-
-    def before_epoch(self, ep):
-        checkpoint = get_latest_checkpoint(self.root, self.fcond)
-        self(checkpoint)
-
-    def __call__(self, checkpoint):
-        self.model.load_state_dict(torch.load(checkpoint))
-        self.logger.info("Restored model from {}".format(checkpoint))
-
-        epoch, step = self.parse_checkpoint(checkpoint)
-
-        if self.global_step_setter is not None:
-            self.global_step_setter(step)
-        self.logger.info("Epoch: {}, Global step: {}".format(epoch, step))
-
-    @staticmethod
-    def parse_global_step(checkpoint):
-        return RestorePytorchModelHook.parse_checkpoint(checkpoint)[1]
-
-    @staticmethod
-    def parse_checkpoint(checkpoint):
-        e_s = os.path.basename(checkpoint).split(".")[0].split("-")
-        if len(e_s) > 1:
-            epoch = e_s[0]
-            step = e_s[1].split("_")[0]
-        else:
-            epoch = 0
-            step = e_s[0].split("_")[0]
-
-        return int(epoch), int(step)
 
 
 def strenumerate(*args, **kwargs):
@@ -412,91 +291,22 @@ def test_valid_metrictuple(metric_tuple):
     # enough checking already :)
 
 
-class MetricHook(Hook):
-    """Applies a set of given metrics to the calculated data."""
+def torch_parse_global_step(checkpoint):
+    e_s = os.path.basename(checkpoint).split(".")[0].split("-")
+    if len(e_s) > 1:
+        epoch = e_s[0]
+        step = e_s[1].split("_")[0]
+    else:
+        epoch = 0
+        step = e_s[0].split("_")[0]
 
-    def __init__(self, metrics, save_root, consider_only_first=None):
-        """Args:
-            metrics (list): List of ``MetricTuple``s of the form
-                ``(input names, output names, metric, name)``.
-                - ``input names`` are the keys corresponding to the feeds of
-                    interest, e.g. an original image.
-                - ``output names`` are the keys corresponding to the values
-                    in the results dict.
-                - ``metric`` is a ``Callable`` that accepts all inputs and
-                    outputs keys as keyword arguments
-                - ``name`` is a
-                If nested feeds or results are expected the names can be
-                passed as "path" like ``'key1_key2'`` returning
-                ``dict[key1][key2]``.
-            save_root (str): Path to where the results are stored.
-            consider_only_first (int): Metric is only evaluated on the first
-                `consider_only_first` examples.
-        """
+    epoch, step = int(epoch), int(step)
+    return step
 
-        self.metrics = metrics
 
-        self.root = save_root
-        self.logger = get_logger(self, "latest_eval")
-
-        self.max_step = consider_only_first
-
-        self.storage_dict = {}
-        self.metric_results = {}
-        for m in metrics:
-            test_valid_metrictuple(m)
-
-        self.tb_saver = tf.summary.FileWriter(self.root)
-
-    def before_epoch(self, epoch):
-        self.count = 0
-        for m in self.metrics:
-            self.metric_results[m.name] = []
-
-    def before_step(self, step, fetches, feeds, batch):
-        if self.max_step is not None and self.count >= self.max_step:
-            return
-
-        for in_names, out_names, metric, m_name in self.metrics:
-            self.storage_dict[m_name] = {}
-            for kwargs_name, name in in_names.items():
-                val = retrieve(name, batch)
-                self.storage_dict[m_name][kwargs_name] = val
-
-    def after_step(self, step, results):
-        if self.max_step is not None and self.count >= self.max_step:
-            return
-
-        for in_names, out_names, metric, m_name in self.metrics:
-            for kwargs_name, name in out_names.items():
-                val = retrieve(name, results)
-                self.storage_dict[m_name][kwargs_name] = val
-            m_res = metric(**self.storage_dict[m_name])
-            self.metric_results[m_name] += [m_res]
-
-        self.global_step = results["global_step"]
-        self.count += 1
-
-    def after_epoch(self, epoch):
-        self.logger.info("Metrics at epoch {}:".format(epoch))
-
-        mean_results = {}
-        for name, result in self.metric_results.items():
-            results = np.concatenate(result)
-            mean = np.mean(results, axis=0)
-            var = np.std(results, axis=0)
-            mean_results[name] = np.array([mean, var])
-            self.logger.info("{}: {} +- {}".format(name, mean, var))
-
-            summary = tf.Summary()
-            summary_mean = mean if len(mean.shape) == 0 else mean[0]
-            summary.value.add(tag=name, simple_value=summary_mean)
-            self.tb_saver.add_summary(summary, self.global_step)
-            self.tb_saver.flush()
-
-        name = "{:0>6d}_metrics".format(self.global_step)
-        name = os.path.join(self.root, name)
-        np.savez_compressed(name, **mean_results)
+def tf_parse_global_step(checkpoint):
+    global_step = int(checkpoint.rsplit("-", 1)[1])
+    return global_step
 
 
 def get_checkpoint_files(checkpoint_root):
@@ -516,10 +326,10 @@ def get_checkpoint_files(checkpoint_root):
             name, ext = os.path.splitext(p)
             if not ext == ".ckpt":
                 normalized = name
-                global_step = RestoreTFModelHook.parse_global_step(normalized)
+                global_step = tf_parse_global_step(normalized)
             else:
                 normalized = p
-                global_step = RestorePytorchModelHook.parse_global_step(normalized)
+                global_step = torch_parse_global_step(normalized)
             files.append(p)
             checkpoints.append(normalized)
             global_steps.append(global_step)
