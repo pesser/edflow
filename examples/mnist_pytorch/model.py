@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from edflow.iterators.model_iterator import TorchHookedModelIterator
+from edflow.iterators.torch_iterator import TorchHookedModelIterator
 
 
 class CNN(nn.Module):
