@@ -22,6 +22,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
   - source activate test-environment
   - conda install pytorch-cpu torchvision-cpu -c pytorch  
+  - pip install tensorboardX
   - python setup.py install
 
 
