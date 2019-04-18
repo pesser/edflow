@@ -56,7 +56,7 @@ class Iterator(TorchHookedModelIterator):
     def initialize(self, checkpoint=None, **kwargs):
         if checkpoint is not None:
             self.model.load_state_dict(torch.load(checkpoint))
-        self.model.cuda()
+        if torch.cuda.is_available(): self.model.cuda()
 
     def get_inputs(model, image, target):
         """
