@@ -20,8 +20,8 @@ before_install:
 
 install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
-  - conda install pytorch-cpu torchvision-cpu -c pytorch
   - source activate test-environment
+  - conda install pytorch-cpu torchvision-cpu -c pytorch  
   - python setup.py install
 
 
