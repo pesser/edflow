@@ -23,6 +23,7 @@ setup(
         "natsort",
         "pandas",
         "psutil",
+        "pytest",
     ],
     extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme"]},
     zip_safe=False,
