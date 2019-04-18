@@ -1,13 +1,15 @@
 import tensorflow as tf
 
 from edflow.iterators.tf_iterator import HookedModelIterator, TFHookedModelIterator
-from edflow.hooks import LoggingHook, CheckpointHook, RetrainHook
-from edflow.hooks import match_frequency
-from edflow.project_manager import ProjectManager
-from edflow.util import make_linear_var
 
+from edflow.hooks.hook import match_frequency
+from edflow.hooks.logging_hooks.tf_logging_hook import LoggingHook
+from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
+        CheckpointHook, RetrainHook, RestoreTFModelHook)
+from edflow.tf_util import make_linear_var
+
+from edflow.project_manager import ProjectManager
 from edflow.hooks.util_hooks import IntervalHook
-from edflow.hooks.evaluation_hooks import RestoreTFModelHook
 
 P = ProjectManager()
 

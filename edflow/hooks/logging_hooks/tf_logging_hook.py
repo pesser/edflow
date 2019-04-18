@@ -3,7 +3,7 @@ import os
 import time
 
 from edflow.hooks.hook import Hook
-from edflow.hooks.evaluation_hooks import get_checkpoint_files
+from edflow.hooks.checkpoint_hooks.common import get_checkpoint_files
 from edflow.custom_logging import get_logger
 from edflow.iterators.batches import plot_batch
 
