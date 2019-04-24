@@ -20,9 +20,15 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   source/intro
+   source/run_edflow
    source/user_guide
-   README
-   docu
+   source/dataset_and_batching
+   source/hooks
+   source/models
+   source/iterator
+   source/contributions
+   source/docu
 
 Indices and tables
 ==================

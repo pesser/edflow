@@ -1,76 +1,16 @@
-Setup
------
-
-There are two ways for setting up **EDFlow** on your system:
-
-
-#. 
-   Use PyPI:
-
-    Recommended: Install edflow into a conda environment.
-
-   .. code-block::
-
-       conda create --name myenv python=3.6
-       source activate myenv
-
-    Pull and install the current in the current directory with PyPi
-    ``pip install -e git+https://github.com/pesser/edflow.git``
-
-#. 
-   Use ``setup.py``\ :
-
-    Pull repository
-    ``git clone https://github.com/pesser/edflow.git``
-    ``cd edflow``
-    In edflow directory
-    ``python3 setup.py``
-
-Workflow
---------
-
-For more information, look into our `starter guide <link>`_.
-
-Example
--------
-
-Tensorflow
-^^^^^^^^^^
-
-Pytorch
-^^^^^^^
-
-Other
------
-
-Parameters
-^^^^^^^^^^
-
-
-* 
-  ``--config path/to/config``
-
-    yaml file with all information see [Workflow][#Workflow]
-
-* 
-  ``--checkpoint path/to/checkpoint to restore``
-
-* 
-  ``--noeval``
-    only run training
-
-* 
-  ``--retrain``
-    reset global step to zero
-
-Known Issues
-^^^^^^^^^^^^
-
-Compatibility
-^^^^^^^^^^^^^
 
 Contributions
--------------
+=============
+
+If you have any new applications that require custom hooks or iterators feel
+free to contribute at any time.
+
+``EDflow`` is continuously expanded and gains new capabilities with every use.
+Examples of models are always welcome and we are happy if want to contribute in
+any way.
+
+We are working on github and celebrate every pull request ;).
+
 
 .. image:: https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&logoColor=white
    :target: https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&logoColor=white
@@ -101,18 +41,3 @@ Contributions
    :target: https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&logoColor=white
    :alt: GitHub-Forks
  <https://github.com/pesser/edflow/network>
-
-LICENSE
--------
-
-coming soon…
-
-Authors
--------
-
-Mimo Tilbich
-
-.. image:: https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&logoColor=white
-   :target: https://img.shields.io/github/contributors/pesser/edflow.svg?logo=github&logoColor=white
-   :alt: GitHub-Contributions
- <https://github.com/pesser/edflow/graphs/contributors>
