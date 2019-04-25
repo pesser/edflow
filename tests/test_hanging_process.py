@@ -3,13 +3,16 @@ from common import run_edflow, fullname
 from edflow.iterators.model_iterator import PyHookedModelIterator
 from edflow.iterators.batches import DatasetMixin
 
+
 class Model(object):
     def __init__(self, config):
         self.config = config
 
+
 class Iterator(PyHookedModelIterator):
     def initialize(self, *args, **kwargs):
         raise Exception("TestAbort")
+
 
 class Dataset(DatasetMixin):
     def __init__(self, config):
@@ -31,7 +34,11 @@ def run_test():
     config["num_steps"] = 100
     run_edflow("0024", config)
 
+
 def test():
-    subprocess.run('python -c "from test_hanging_process import run_test; run_test()"',
-            shell = True, check = False,
-            timeout = 60)
+    subprocess.run(
+        'python -c "from test_hanging_process import run_test; run_test()"',
+        shell=True,
+        check=False,
+        timeout=60,
+    )

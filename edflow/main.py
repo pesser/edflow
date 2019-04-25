@@ -94,12 +94,12 @@ def _train(config, root, checkpoint=None, retrain=False):
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
     with make_batches(
-            dataset,
-            batch_size=config["batch_size"],
-            shuffle=True,
-            n_processes=n_processes,
-            n_prefetch=n_prefetch,
-            ) as batches:
+        dataset,
+        batch_size=config["batch_size"],
+        shuffle=True,
+        n_processes=n_processes,
+        n_prefetch=n_prefetch,
+    ) as batches:
         # get them going
         logger.info("Warm up batches.")
         next(batches)
@@ -120,7 +120,9 @@ def _train(config, root, checkpoint=None, retrain=False):
         Model = implementations["model"](config)
         if not "hook_freq" in config:
             config["hook_freq"] = 1
-        compat_kwargs = dict(hook_freq=config["hook_freq"], num_epochs=config["num_epochs"])
+        compat_kwargs = dict(
+            hook_freq=config["hook_freq"], num_epochs=config["num_epochs"]
+        )
         logger.info("Instantiating iterator.")
         Trainer = implementations["iterator"](config, root, Model, **compat_kwargs)
 
