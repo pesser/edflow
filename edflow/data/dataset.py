@@ -19,6 +19,7 @@ from chainer.dataset import DatasetMixin as DatasetMixin_
 # into the rep to avoid dependency on chainer for this one mixin - it doesnt
 # even do that much and it would provide better documentation as this is
 # actually our base class for datasets
+# TODO if we do the above -> Think about doing our own batching as well!
 
 from multiprocessing.managers import BaseManager
 import queue
