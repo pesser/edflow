@@ -71,7 +71,7 @@ autodoc_mock_imports = [
     "tqdm",
     "Pillow",
     "chainer",
-    #"numpy",
+    "numpy",
     "pandas",
     "scipy",
     "h5py",
@@ -79,11 +79,11 @@ autodoc_mock_imports = [
     "natsort",
 ]
 
-exclude_patterns = ["_build", "_templates"]
-
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
     "special-members": "__init__",
     "undoc-members": True,
 }
+
+exclude_patterns = ["_build", "_templates"]
