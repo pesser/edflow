@@ -42,6 +42,10 @@ def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=
 
     Args:
         step (float): :math:`x`
+        start: :math:`a`
+        end: :math:`b`
+        start_value: :math:`\alpha`
+        end_value: :math:`\beta`
         clip_min: Minimal value returned.
         clip_max: Maximum value returned.
 
