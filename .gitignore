@@ -4,8 +4,8 @@
 
 # Playing around stuff
 **play**
-**logs**
-**log**
+logs/
+log/
 
 # Pictures
 **.png
@@ -27,3 +27,6 @@ docs/build/*
 docs/_*
 
 .nfs*
+
+# Generated output
+examples/data

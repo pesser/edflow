@@ -23,7 +23,7 @@ import yaml  # noqa
 from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
-from edflow.hooks.evaluation_hooks import get_latest_checkpoint  # noqa
+from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
 
 
 def update_config(config, options):

@@ -1,6 +1,5 @@
 language: python
 python:
-#  - 2.7
   - 3.6
 notifications:
   email: false
@@ -18,18 +17,35 @@ before_install:
   - conda update -q conda
   - conda info -a
 
-install:
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
-  - source activate test-environment
-  - conda install pytorch-cpu torchvision-cpu -c pytorch  
-  - pip install tensorboardX
-  - python setup.py install
+install: true
 
 
 # Run test
 jobs:
   include:
-    - stage: example_tests
+    - stage: formatting
+      name: "formatting test"
+      install:
+        - pip install black
+      script:
+        - black --check .
+    - stage: tf_example_tests
+      name: "Tensorflow examples test"
+      install:
+        - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
+        - source activate test-environment
+        - python setup.py install
       script:
         - cd examples
-        - python -m pytest
+        - python -m pytest -k tf
+    - stage: torch_example_tests
+      name: "Pytorch examples test"
+      install:
+        - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+        - source activate test-environment
+        - conda install pytorch-cpu torchvision-cpu -c pytorch
+        - pip install tensorboardX
+        - python setup.py install
+      script:
+        - cd examples
+        - python -m pytest -k torch

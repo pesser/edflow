@@ -1,5 +1,3 @@
-import tensorflow as tf
-
 from edflow.custom_logging import get_default_logger
 
 
@@ -84,71 +82,6 @@ class Hook(object):
         """
 
         pass
-
-
-class Hooker(object):
-    """Probably should rename that..."""
-
-    def __init__(self, hooks, index, batch=None, session=None, logger=None):
-        """Args:
-            hooks (list): All :class:`Hook`s to be run before and after
-                this :class:`Hooker`.
-            index (int): step or epoch.
-            batch (list or dict): Feed dict when calling the hook.
-            session (tf.Session): Session object to run the :class:`Hook`s
-                with.
-            logger (logging.Logger): Logging log log logs.
-        """
-
-        if session is not None:
-            self.session = session
-        else:
-            self.session = tf.get_default_session()
-
-        self.hooks = hooks
-        self.index = index
-        self.mode = "epoch" if batch is None else "step"
-        self.feeds = batch
-
-        self.logger = logger or get_default_logger()
-
-        self.step_op_results = None
-
-    def __enter__(self):
-        """Run before-hooks."""
-        self.last_results = [None] * len(self.hooks)
-
-        for i, hook in enumerate(self.hooks):
-            method = getattr(hook, "before_{}".format(self.mode))
-
-            fetch_args = [self.index]
-            if self.mode == "step":
-                fetch_args += [self.feeds]
-
-            fetches = method(*fetch_args)
-
-            if fetches is not None:
-                self.last_results[i] = self.session.run(fetches, feed_dict=self.feeds)
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        """Run after-hooks."""
-        for i, hook in enumerate(self.hooks):
-            method = getattr(hook, "after_{}".format(self.mode))
-
-            fetch_args = [self.index]
-            if self.mode == "step":
-                fetch_args += [self.feeds, self.step_op_results]
-            fetch_args += [self.last_results[i]]
-
-            fetches = method(*fetch_args)
-
-            if fetches is not None:
-                self.session.run(fetches, feed_dict=self.feeds)
-
-    def set_step_op_results(self, results):
-        """Enter results for bookkeeping."""
-        self.step_op_results = results
 
 
 def match_frequency(global_hook_frequency, local_hook_frequency):
