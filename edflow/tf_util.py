@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def make_linear_var(
     step, start, end, start_value, end_value, clip_min=None, clip_max=None
 ):
@@ -49,5 +50,3 @@ def make_exponential_var(step, start, end, start_value, end_value, decay):
     endstep = (np.log(end_value) - np.log(start_value)) / np.log(decay)
     stepper = make_linear_var(step, start, end, startstep, endstep)
     return tf.math.pow(decay, stepper) * start_value
-
-

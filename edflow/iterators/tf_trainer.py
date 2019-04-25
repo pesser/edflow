@@ -5,7 +5,10 @@ from edflow.iterators.tf_iterator import HookedModelIterator, TFHookedModelItera
 from edflow.hooks.hook import match_frequency
 from edflow.hooks.logging_hooks.tf_logging_hook import LoggingHook
 from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
-        CheckpointHook, RetrainHook, RestoreTFModelHook)
+    CheckpointHook,
+    RetrainHook,
+    RestoreTFModelHook,
+)
 from edflow.tf_util import make_linear_var
 
 from edflow.project_manager import ProjectManager

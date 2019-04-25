@@ -137,10 +137,6 @@ class WaitForCheckpointHook(Hook):
         self.look()
 
 
-
-
-
-
 def strenumerate(*args, **kwargs):
     """Same as enumerate, but yields str(index)."""
     for i, v in enumerate(*args, **kwargs):

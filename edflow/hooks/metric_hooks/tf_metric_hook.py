@@ -1,6 +1,3 @@
-
-
-
 class MetricHook(Hook):
     """Applies a set of given metrics to the calculated data."""
 
