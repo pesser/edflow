@@ -126,7 +126,7 @@ def _train(config, root, checkpoint=None, retrain=False):
 
     logger.info("Initializing model.")
     if checkpoint is not None:
-        Trainer.initialize(checkpoint_path=checkpoint)
+        Trainer.initialize(checkpoint=checkpoint)
     else:
         Trainer.initialize()
 
