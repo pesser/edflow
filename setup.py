@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="edflow",
@@ -8,7 +8,8 @@ setup(
     author="Mimo Tilbich et al.",
     author_email="{patrick.esser, johannes.haux}" "@iwr.uni-heidelberg.de",
     license="MIT",
-    packages=["edflow"],
+    # packages=["edflow"],
+    packages=find_packages(),
     install_requires=[
         "pyyaml",
         "opencv-python",
@@ -23,6 +24,7 @@ setup(
         "natsort",
         "pandas",
         "psutil",
+        "pytest",
     ],
     extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme"]},
     zip_safe=False,
