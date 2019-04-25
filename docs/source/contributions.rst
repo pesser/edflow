@@ -9,7 +9,26 @@ free to contribute at any time.
 Examples of models are always welcome and we are happy if want to contribute in
 any way.
 
-We are working on github and celebrate every pull request ;).
+We are working on github and celebrate every pull request.
+
+Before requesting a pull please run black_ for better code style or simply add
+black_ to your pre-commit hook:
+
+0. Install black_ with
+::
+   $ pip install black
+1. Paste the following into at the top <project-root>/.git/hooks/pre-commit.sample
+::
+   # Run black on all staged files
+   staged=$(git diff --name-only --cached)
+   black $staged
+   # Add them again after formatting
+   git add $staged
+2. Rename ``pre-commit.sample`` to ``pre-commit``
+3. Make it excutable using
+::
+   $ chmod +x pre-commit
+4. Done!
 
 
 .. image:: https://img.shields.io/github/commit-activity/y/pesser/edflow.svg?logo=github&logoColor=white
@@ -41,3 +60,5 @@ We are working on github and celebrate every pull request ;).
    :target: https://img.shields.io/github/forks/pesser/edflow.svg?logo=github&logoColor=white
    :alt: GitHub-Forks
  <https://github.com/pesser/edflow/network>
+
+.. _black: https://github.com/ambv/black
