@@ -6,6 +6,5 @@ dependencies:
   - python=3.6
   - pytorch-cpu=1.0.1
   - torchvision-cpu=0.2.2   
-  - pip:
-    - tensorflow==1.12
+  - tensorflow==1.12
 
