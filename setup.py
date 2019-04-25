@@ -8,7 +8,6 @@ setup(
     author="Mimo Tilbich et al.",
     author_email="{patrick.esser, johannes.haux}" "@iwr.uni-heidelberg.de",
     license="MIT",
-    # packages=["edflow"],
     packages=find_packages(),
     install_requires=[
         "pyyaml",
