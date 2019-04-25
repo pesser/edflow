@@ -85,6 +85,10 @@ def main(opt, additional_kwargs):
     # Training
     if opt.train:
         if opt.checkpoint is not None:
+            if not os.path.exists(opt.checkpoint):
+                raise FileNotFoundError(
+                    f"The path to your given checkpoint {opt.checkpoint} does not exist."
+                )
             checkpoint = opt.checkpoint
         elif opt.project is not None:
             checkpoint = get_latest_checkpoint(P.checkpoints)
