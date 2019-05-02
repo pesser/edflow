@@ -48,8 +48,13 @@ class ProjectManager(object):
         """Make all the directories."""
 
         subdirs = ["code", "train", "eval", "ablation", "config"]
-        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [],
-                "ablation": [], "config": []}
+        subsubdirs = {
+            "code": [],
+            "train": ["checkpoints"],
+            "eval": [],
+            "ablation": [],
+            "config": [],
+        }
 
         root = ProjectManager.root
 
