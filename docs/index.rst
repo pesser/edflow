@@ -18,6 +18,7 @@ We created a user guide for you to use, have a look:
 Contents
 ========
 .. toctree::
+   :glob:
    :maxdepth: 2
 
    source/intro
@@ -28,7 +29,7 @@ Contents
    source/models
    source/iterator
    source/contributions
-   source/docu
+   source/source_files/edflow
 
 Indices and tables
 ==================
