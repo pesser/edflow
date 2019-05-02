@@ -166,8 +166,11 @@ def main(opt):
         logger.info("Terminating all processes")
         for p in processes:
             p.terminate()
-
-        raise e
+        if not isinstance(e, KeyboardInterrupt):
+            # reraise if we caught a general exception
+            # TODO: only reraise if this is not an exception of a child that
+            # was already logged above
+            raise e
     finally:
         # Landing
         for p in processes:
