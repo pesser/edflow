@@ -1,9 +1,9 @@
 import tensorflow as tf
 import os
 
-from edflow.iterators.model_iterator import HookedModelIterator, TFHookedModelIterator
-from edflow.hooks import WaitForCheckpointHook, RestoreModelHook
-from edflow.hooks.evaluation_hooks import RestoreTFModelHook
+from edflow.iterators.tf_iterator import HookedModelIterator, TFHookedModelIterator
+from edflow.hooks.checkpoint_hooks.common import WaitForCheckpointHook
+from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import RestoreTFModelHook
 from edflow.project_manager import ProjectManager
 
 
@@ -49,7 +49,7 @@ class BaseEvaluator(HookedModelIterator):
         # Prepend those hooks
         check_dir = P.checkpoints
         W = WaitForCheckpointHook(check_dir, self.model.model_name)
-        R = RestoreModelHook(restore_variables, check_dir)
+        R = RestoreTFModelHook(restore_variables, check_dir)
         self.hooks = [W, R] + self.hooks
 
     def step_ops(self):

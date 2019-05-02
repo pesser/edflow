@@ -1,4 +1,4 @@
-import os
+import os, sys
 import signal
 import tensorflow as tf
 from edflow.hooks.hook import Hook
