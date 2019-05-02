@@ -47,8 +47,9 @@ class ProjectManager(object):
     def setup(self):
         """Make all the directories."""
 
-        subdirs = ["code", "train", "eval", "ablation"]
-        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [], "ablation": []}
+        subdirs = ["code", "train", "eval", "ablation", "config"]
+        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [],
+                "ablation": [], "config": []}
 
         root = ProjectManager.root
 
@@ -76,6 +77,7 @@ class ProjectManager(object):
         name = ProjectManager.now
         if self.postfix is not None:
             name = name + "_" + self.postfix
+        ProjectManager.name = name
         ProjectManager.latest_eval = os.path.join(ProjectManager.eval, name)
         os.makedirs(ProjectManager.latest_eval)
 

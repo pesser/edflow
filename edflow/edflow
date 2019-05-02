@@ -24,6 +24,7 @@ from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
+from edflow.config import Config
 
 
 def update_config(config, options):
@@ -111,6 +112,8 @@ def main(opt):
         logger.info("Training config: {}".format(opt.train))
         logger.info(yaml.dump(config))
 
+        config = Config(**config)
+
         train_process = mp.Process(
             target=train,
             args=((config, P.train, checkpoint, opt.retrain), JQ, len(processes)),
@@ -134,6 +137,9 @@ def main(opt):
         logger.info(yaml.dump(config))
         nogpu = len(processes) > 0 or opt.nogpu
         bar_position = len(processes) + eval_idx
+
+        config = Config(**config)
+
         test_process = mp.Process(
             target=test,
             args=((config, P.latest_eval, nogpu, bar_position), JQ, len(processes)),
