@@ -262,7 +262,6 @@ class TablePrinter(object):
 
         chars = np.array(list(ref_line))
         crossings = np.where(chars == "|")[0]
-        print(crossings)
         for c in crossings:
             sep = sep[:c] + "+" + sep[c + 1 :]
             hsep = hsep[:c] + "+" + hsep[c + 1 :]
