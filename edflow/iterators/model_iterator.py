@@ -1,4 +1,4 @@
-import signal
+import signal, sys
 from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
