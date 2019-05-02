@@ -1,4 +1,4 @@
-'''When creating, training and evaluating models and/or dataset, the core
+"""When creating, training and evaluating models and/or dataset, the core
 object used is the config. It is a dict like object, which contains all
 information we want to use e.g. to compare different experiments.
 Some of these information will be used change more than others.
@@ -20,7 +20,7 @@ to get the same key more than once.
 To ensure reusability and to document, what parameters have actually been used,
 the :class:`Config`-object stores itself each time a new key is added. The
 storage location is managed by the :class:`ProjectManager`.
-'''
+"""
 
 import os
 import yaml
@@ -31,11 +31,11 @@ from edflow.project_manager import ProjectManager as P
 
 
 class Config(dict):
-    '''
+    """
     The config object works like a simple ``dict`` with the only
     differences that it adds missing default values when calling
     :method:`get()` and that it stores itself for reuse when being updated.
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         self.logger = get_logger(self)
@@ -50,43 +50,45 @@ class Config(dict):
         self.store()
 
     def get(self, key, default=None):
-        '''Tries to :method:`__getitem__` the :attr:`key` from the
+        """Tries to :method:`__getitem__` the :attr:`key` from the
         :attr:`base_dict`. If this is not possible, the :attr:`default` value
         will be added to the :attr:`base_dict`.
-        '''
+        """
         val = super().get(key, default)
         if key not in self:
-            self.logger.debug('Updating and storing config.')
+            self.logger.debug("Updating and storing config.")
             self[key] = val
             self.store()
         return val
 
     def store(self):
-        '''Stores the config at a location defined by the
-        :class:`ProjectManager`'''
-        savename = 'config-{}.yaml'.format(P.name)
+        """Stores the config at a location defined by the
+        :class:`ProjectManager`"""
+        savename = "config-{}.yaml".format(P.name)
         savepath = os.path.join(P.config, savename)
 
-        with open(savepath, 'w') as cfile:
+        with open(savepath, "w") as cfile:
             cfile.write(yaml.dump(self, default_flow_style=False))
 
-        self.logger.info('Stored config at {}'.format(savepath))
+        self.logger.info("Stored config at {}".format(savepath))
 
     def __str__(self):
         return pp2mkdtable(self)
 
 
-if __name__ == '__main__':
-    P('./logs', code_root=None)  # , postfix='ctest')
+if __name__ == "__main__":
+    P("./logs", code_root=None)  # , postfix='ctest')
 
-    pre_c = {'a': 'a', 'b': 1, 'c': 100, 'g': {'a': 100, 'b': 1}}
+    pre_c = {"a": "a", "b": 1, "c": 100, "g": {"a": 100, "b": 1}}
 
     C = Config(**pre_c)
 
-    C.get('c', 200)
-    C.get('f', 'f')
+    C.get("c", 200)
+    C.get("f", "f")
 
     print(C)
 
-    C.update({'h': 'h', 'i': 'i', 'g': 'g'})
+    C.update({"h": "h", "i": "i", "g": "g"})
     print(C)
+
+    print("Done")
