@@ -3,7 +3,10 @@ import os
 
 from edflow.iterators.tf_iterator import HookedModelIterator, TFHookedModelIterator
 from edflow.hooks.checkpoint_hooks.common import WaitForCheckpointHook
-from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import RestoreModelHook, RestoreTFModelHook
+from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
+    RestoreModelHook,
+    RestoreTFModelHook,
+)
 from edflow.project_manager import ProjectManager
 
 
