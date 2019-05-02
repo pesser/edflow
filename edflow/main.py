@@ -39,11 +39,12 @@ def traceable_process(fn, args, job_queue, idx):
         exc = Exception(trace)
         if job_queue is not None:
             job_queue.put([idx, exc, trace])
-            job_queue.close()
         else:
             raise exc
-
-    job_queue.put([idx, "Done", None])
+    else:
+        job_queue.put([idx, "Done", None])
+    finally:
+        job_queue.close()
 
 
 def traceable_function(method, ignores=None):

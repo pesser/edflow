@@ -1,7 +1,15 @@
+import signal
 from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
 from edflow.util import walk
+
+
+class ShutdownRequest(Exception):
+    """Raised when we receive a SIGTERM signal to shut down. Allows hooks to
+    perform final actions such as writing a last checkpoint."""
+
+    pass
 
 
 class PyHookedModelIterator(object):
@@ -30,6 +38,8 @@ class PyHookedModelIterator(object):
             bar_position (int): Used by tqdm to place bars at the right
                 position when using multiple Iterators in parallel.
         """
+        signal.signal(signal.SIGTERM, self._handle_sigterm)
+
         self.config = config
         self.root = root
 
@@ -66,6 +76,15 @@ class PyHookedModelIterator(object):
         feeds = walk(batch, lambda val: val)
         return feeds
 
+    def _handle_sigterm(self, signum, frame):
+        e = ShutdownRequest()
+        self._handle_exception(e)
+        sys.exit(0)
+
+    def _handle_exception(self, e):
+        for hook in self.hooks:
+            hook.at_exception(e)
+
     def iterate(self, batch_iterator):
         """Iterates over the data supplied and feeds it to the model.
 
@@ -76,9 +95,7 @@ class PyHookedModelIterator(object):
         try:
             self._iterate(batch_iterator)
         except Exception as e:
-            for hook in self.hooks:
-                hook.at_exception(e)
-
+            self._handle_exception(e)
             raise e
 
     def _iterate(self, batch_iterator):
