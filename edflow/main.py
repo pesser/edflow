@@ -93,48 +93,50 @@ def _train(config, root, checkpoint=None, retrain=False):
     logger.info("Number of training samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
-    batches = make_batches(
+    with make_batches(
         dataset,
         batch_size=config["batch_size"],
         shuffle=True,
         n_processes=n_processes,
         n_prefetch=n_prefetch,
-    )
-    # get them going
-    logger.info("Warm up batches.")
-    next(batches)
-    batches.reset()
-    logger.info("Reset batches.")
+    ) as batches:
+        # get them going
+        logger.info("Warm up batches.")
+        next(batches)
+        batches.reset()
+        logger.info("Reset batches.")
 
-    if "num_steps" in config:
-        # set number of epochs to perform at least num_steps steps
-        steps_per_epoch = len(dataset) / config["batch_size"]
-        num_epochs = config["num_steps"] / steps_per_epoch
-        config["num_epochs"] = math.ceil(num_epochs)
-    else:
-        steps_per_epoch = len(dataset) / config["batch_size"]
-        num_steps = config["num_epochs"] * steps_per_epoch
-        config["num_steps"] = math.ceil(num_steps)
+        if "num_steps" in config:
+            # set number of epochs to perform at least num_steps steps
+            steps_per_epoch = len(dataset) / config["batch_size"]
+            num_epochs = config["num_steps"] / steps_per_epoch
+            config["num_epochs"] = math.ceil(num_epochs)
+        else:
+            steps_per_epoch = len(dataset) / config["batch_size"]
+            num_steps = config["num_epochs"] * steps_per_epoch
+            config["num_steps"] = math.ceil(num_steps)
 
-    logger.info("Instantiating model.")
-    Model = implementations["model"](config)
-    if not "hook_freq" in config:
-        config["hook_freq"] = 1
-    compat_kwargs = dict(hook_freq=config["hook_freq"], num_epochs=config["num_epochs"])
-    logger.info("Instantiating iterator.")
-    Trainer = implementations["iterator"](config, root, Model, **compat_kwargs)
+        logger.info("Instantiating model.")
+        Model = implementations["model"](config)
+        if not "hook_freq" in config:
+            config["hook_freq"] = 1
+        compat_kwargs = dict(
+            hook_freq=config["hook_freq"], num_epochs=config["num_epochs"]
+        )
+        logger.info("Instantiating iterator.")
+        Trainer = implementations["iterator"](config, root, Model, **compat_kwargs)
 
-    logger.info("Initializing model.")
-    if checkpoint is not None:
-        Trainer.initialize(checkpoint_path=checkpoint)
-    else:
-        Trainer.initialize()
+        logger.info("Initializing model.")
+        if checkpoint is not None:
+            Trainer.initialize(checkpoint_path=checkpoint)
+        else:
+            Trainer.initialize()
 
-    if retrain:
-        Trainer.reset_global_step()
+        if retrain:
+            Trainer.reset_global_step()
 
-    logger.info("Iterating.")
-    Trainer.iterate(batches)
+        logger.info("Iterating.")
+        Trainer.iterate(batches)
 
 
 def _test(config, root, nogpu=False, bar_position=0):

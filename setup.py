@@ -25,7 +25,7 @@ setup(
         "psutil",
         "pytest",
     ],
-    extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme"]},
+    extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "numpy"]},
     zip_safe=False,
     scripts=["edflow/edflow", "edflow/edcache", "edflow/edlist"],
 )

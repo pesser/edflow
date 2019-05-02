@@ -1,5 +1,7 @@
 import torch
 
+from edflow.hooks.hook import Hook
+
 
 class RestorePytorchModelHook(Hook):
     """Restores a PyTorch model from a checkpoint at each epoch. Can also be

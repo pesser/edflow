@@ -161,13 +161,14 @@ class PyHookedModelIterator(object):
             fetches (list or dict): Fetches for the next session.run call.
             feeds (dict): Feeds for the next session.run call.
             results (same as fetches): Results from the last session.run call.
-            before (bool): If not obvious determines if the before_ or after_
+            before (bool): If not obvious determines if the before or after
                 methods of the hooks should be called.
 
-        Return:
+        Returns:
             If before:
-            same as fetches: Updated fetches.
-            dict: Updated feeds
+
+                test (same as fetches): Updated fetches.
+                test (dict): Updated feeds
         """
 
         is_step = fetches is not None and feeds is not None
