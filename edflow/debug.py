@@ -11,10 +11,10 @@ class DebugModel(object):
 
 
 def debug_step_op(model, *args, **kwargs):
-    if 'val' not in kwargs:
+    if "val" not in kwargs:
         return None
     else:
-        return kwargs['val']
+        return kwargs["val"]
 
 
 class DebugIterator(PyHookedModelIterator):
@@ -32,16 +32,17 @@ class DebugDataset(DatasetMixin):
 
     def get_example(self, i):
         if i < self.size:
-            return {'val': i, 'index_': i, 'other': i}
+            return {"val": i, "index_": i, "other": i}
         else:
-            raise IndexError('Out of bounds')
+            raise IndexError("Out of bounds")
 
     @property
     def labels(self):
-        if not hasattr(self, '_labels'):
-            self._labels = {k: [i for i in range(self.size)]
-                            for k in ['index_', 'other']}
+        if not hasattr(self, "_labels"):
+            self._labels = {
+                k: [i for i in range(self.size)] for k in ["index_", "other"]
+            }
         return self._labels
 
     def __len__(self):
-        return 100
+        return self.size

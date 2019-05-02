@@ -1,26 +1,31 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-setup(name='edflow',
-      version='0.1',
-      description='Our code to make videos of realisitc human motion.',
-      url='http://bitbucket.com/jhaux/edflow',
-      author='Patrick Esser, Johannes Haux, Timo Milbich',
-      author_email='{patrick.esser, johannes.haux, timo.milbich}'
-                   '@iwr.uni-heidelberg.de',
-      license='MIT',
-      packages=['edflow'],
-      install_requires=[
-          'pyyaml',
-          'opencv-python',
-          'tqdm',
-          'Pillow',
-          'chainer',
-          'numpy',
-          'scipy',
-          'h5py',
-          'scikit-learn',
-          'scikit-image',
-          'tensorboardX'
-          ],
-      zip_safe=False,
-      scripts=["edflow/edflow", "edflow/edcache"])
+setup(
+    name="edflow",
+    version="0.2",
+    description="Logistics for Deep Learning",
+    url="https://github.com/pesser/edflow",
+    author="Mimo Tilbich et al.",
+    author_email="{patrick.esser, johannes.haux}" "@iwr.uni-heidelberg.de",
+    license="MIT",
+    packages=find_packages(),
+    install_requires=[
+        "pyyaml",
+        "opencv-python",
+        "tqdm",
+        "Pillow",
+        "chainer",
+        "numpy",
+        "scipy",
+        "h5py",
+        "scikit-learn",
+        "scikit-image",
+        "natsort",
+        "pandas",
+        "psutil",
+        "pytest",
+    ],
+    extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme"]},
+    zip_safe=False,
+    scripts=["edflow/edflow", "edflow/edcache", "edflow/edlist"],
+)

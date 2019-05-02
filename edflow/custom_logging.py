@@ -16,7 +16,7 @@ class TqdmHandler(logging.StreamHandler):
 
 
 def _init_project(out_base_dir):
-    '''Sets up subdirectories given a base directory and copies all scripts.'''
+    """Sets up subdirectories given a base directory and copies all scripts."""
 
     P = ProjectManager(out_base_dir)
 
@@ -24,22 +24,25 @@ def _init_project(out_base_dir):
 
 
 def _get_logger(name, out_dir, pos=4, level=logging.INFO):
-    '''Creates a logger the way it's meant to be.'''
+    """Creates a logger the way it's meant to be."""
     # init logging
     logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
 
     if not len(logger.handlers) > 0:
         ch = TqdmHandler(pos)
         ch.setLevel(level)
-        logger.addHandler(ch)
 
-        fh = logging.FileHandler(filename=os.path.join(out_dir, 'log.txt'))
+        fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
         fh.setLevel(logging.DEBUG)
-        logger.addHandler(fh)
 
-        formatter = logging.Formatter('[%(levelname)s] [%(name)s]: %(message)s')
+        fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"
+        formatter = logging.Formatter(fmt_string)
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
+
+        logger.addHandler(ch)
+        logger.addHandler(fh)
 
     return logger
 
@@ -63,13 +66,13 @@ class LogSingleton(object):
         LogSingleton.default = which
 
     def get(self, name, which=None):
-        '''Create logger, set level.
+        """Create logger, set level.
 
         Args:
             name (str or object): Name of the logger. If not a string, the name
                 of the given object class is used.
             which (str): subdirectory in the project folder.
-        '''
+        """
         which = which or LogSingleton.default
 
         if not isinstance(name, str):
@@ -85,47 +88,47 @@ class LogSingleton(object):
         return logger
 
 
-def set_global_stdout_level(level='info'):
-    L = LogSingleton()
+def set_global_stdout_level(level="info"):
     level = getattr(logging, level.upper())
+    print("Setting Log Level to {}".format(level))
 
-    L._level = level
-    for logger in L.loggers:
+    LogSingleton._level = level
+    for logger in LogSingleton.loggers:
         logger.handlers[0].setLevel(level)
 
 
 def get_default_logger():
-    default_log_dir, default_logger = LogSingleton('logs').get('default')
+    default_log_dir, default_logger = LogSingleton("logs").get("default")
     return default_log_dir, default_logger
 
 
 def init_project(base_dir, code_root=".", postfix=None):
-    '''Must be called at the very beginning of a script.'''
+    """Must be called at the very beginning of a script."""
     P = ProjectManager(base_dir, code_root=code_root, postfix=postfix)
     LogSingleton(P.root)
     return P
 
 
 def use_project(project_dir, postfix=None):
-    '''Must be called at the very beginning of a script.'''
+    """Must be called at the very beginning of a script."""
     P = ProjectManager(given_directory=project_dir, postfix=postfix)
     LogSingleton(P.root)
     return P
 
 
-def get_logger(name, which=None, level='info'):
-    '''Creates a logger, which shares its output directory with all other
+def get_logger(name, which=None, level="info"):
+    """Creates a logger, which shares its output directory with all other
     loggers.
 
     Args:
         name (str): Name of the logger.
         which (str): Any subdirectory of the project.
-    '''
+    """
 
     L = LogSingleton(level=getattr(logging, level.upper()))
 
     if not L.exists:
-        print('Warning: LogSingleton not initialized.')
+        print("Warning: LogSingleton not initialized.")
         if not isinstance(name, str):
             name = type(name).__name__
         logging.basicConfig(level=logging.INFO)
