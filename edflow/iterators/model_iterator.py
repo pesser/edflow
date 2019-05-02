@@ -8,6 +8,7 @@ from edflow.util import walk
 class ShutdownRequest(Exception):
     """Raised when we receive a SIGTERM signal to shut down. Allows hooks to
     perform final actions such as writing a last checkpoint."""
+
     pass
 
 
