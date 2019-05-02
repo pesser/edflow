@@ -37,7 +37,7 @@ class ProjectManager(object):
             self.setup()
             self.setup_new_eval()
 
-            if given_directory is None:
+            if given_directory is None and ProjectManager.code_root is not None:
                 self.copy_code()
 
             ProjectManager.exists = True
@@ -111,7 +111,7 @@ class ProjectManager(object):
                 print(directory, filtered)
                 return filtered
 
-            shutil.copytree(src, dst, symlinks=True, ignore=ignore)
+            shutil.copytree(src, dst, symlinks=False, ignore=ignore)
 
         except shutil.Error as err:
             print(err)
