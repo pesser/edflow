@@ -30,6 +30,15 @@ from edflow.util import pp2mkdtable
 from edflow.project_manager import ProjectManager as P
 
 
+def store_config(method):
+    def wrapped_method(cls, *args, **kwargs):
+        ret_vals = method(cls, *args, **kwargs)
+        cls.store()
+        return ret_vals
+
+    return wrapped_method
+
+
 class Config(dict):
     """
     The config object works like a simple ``dict`` with the only
@@ -37,29 +46,33 @@ class Config(dict):
     :method:`get()` and that it stores itself for reuse when being updated.
     """
 
+    def __new__(cls, *args, **kwargs):
+        """Wraps all state-changing methods of :class:`Config` to store the
+        config after the change has been made.
+        """
+        for method in ["__setitem__", "__delitem__", "pop", "clear", "update", "get"]:
+            wrapped_method = store_config(getattr(Config, method))
+            setattr(Config, method, wrapped_method)
+        return super(Config, cls).__new__(cls, *args, **kwargs)
+
     def __init__(self, *args, **kwargs):
+        """Initialize the :class:`Config`-object to have its own logger."""
         self.logger = get_logger(self)
         super().__init__(*args, **kwargs)
 
-    def __setitem__(self, key, val):
-        super().__setitem__(key, val)
-        self.store()
-
-    def update(self, other):
-        super().update(other)
-        self.store()
+    def copy(self):
+        """Makes sure the returned copy is a :class:`Config` instance as
+        well"""
+        new = super().copy()
+        return Config(**new)
 
     def get(self, key, default=None):
         """Tries to :method:`__getitem__` the :attr:`key` from the
         :attr:`base_dict`. If this is not possible, the :attr:`default` value
-        will be added to the :attr:`base_dict`.
+        will be added to the :attr:`base_dict`. See also the documentation
+        for :method:`dict.setdefault`.
         """
-        val = super().get(key, default)
-        if key not in self:
-            self.logger.debug("Updating and storing config.")
-            self[key] = val
-            self.store()
-        return val
+        return super().setdefault(key, default)
 
     def store(self):
         """Stores the config at a location defined by the
@@ -68,7 +81,8 @@ class Config(dict):
         savepath = os.path.join(P.config, savename)
 
         with open(savepath, "w") as cfile:
-            cfile.write(yaml.dump(self, default_flow_style=False))
+            store_d = {k: v for k, v in self.items()}
+            cfile.write(yaml.dump(store_d, default_flow_style=False))
 
         self.logger.info("Stored config at {}".format(savepath))
 
@@ -83,6 +97,9 @@ if __name__ == "__main__":
 
     C = Config(**pre_c)
 
+    print(dir(C))
+    print(dir(pre_c))
+
     C.get("c", 200)
     C.get("f", "f")
 
@@ -91,4 +108,5 @@ if __name__ == "__main__":
     C.update({"h": "h", "i": "i", "g": "g"})
     print(C)
 
-    print("Done")
+    D = C.copy()
+    print(type(D), D.__class__.__name__)
