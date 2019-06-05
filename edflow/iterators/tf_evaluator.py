@@ -6,8 +6,10 @@ from edflow.hooks.checkpoint_hooks.common import WaitForCheckpointHook
 from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
     RestoreModelHook,
     RestoreTFModelHook,
+    RestoreCurrentCheckpointHook
 )
 from edflow.project_manager import ProjectManager
+from deprecated import deprecated
 
 
 P = ProjectManager()
@@ -61,6 +63,7 @@ class BaseEvaluator(HookedModelIterator):
 
 
 class TFBaseEvaluator(TFHookedModelIterator):
+    @deprecated(version="0.2.0", reason="Does not restore checkpoint path when provided. Use TFBaseEvaluator2 instead")
     def __init__(self, *args, **kwargs):
         kwargs["desc"] = "Eval"
         kwargs["hook_freq"] = 1
@@ -80,6 +83,44 @@ class TFBaseEvaluator(TFHookedModelIterator):
             eval_all=self.config.get("eval_all", False),
         )
         self.hooks += [waiter]
+
+    def step_ops(self):
+        return self.model.outputs
+
+
+class TFBaseEvaluator2(TFHookedModelIterator):
+    def __init__(self, *args, checkpoint_path=None, **kwargs):
+        '''
+        New Base evaluator restores given checkpoint path if provided,
+        else scans checkpoint directory for latest checkpoint and uses that
+
+        Parameters
+        ----------
+        args
+        checkpoint_path
+        kwargs
+        '''
+        kwargs['desc'] = 'Eval'
+        kwargs['hook_freq'] = 1
+        kwargs["num_epochs"] = 1
+        super().__init__(*args, **kwargs)
+
+        # wait for new checkpoint and restore
+        self.restore_variables = self.model.variables
+        if checkpoint_path:
+            restorer = RestoreCurrentCheckpointHook(variables=self.restore_variables,
+                                                    checkpoint_path=checkpoint_path,
+                                                    global_step_setter=self.set_global_step)
+            self.hooks += [restorer]
+        else:
+            restorer = RestoreTFModelHook(variables=self.restore_variables,
+                                          checkpoint_path=ProjectManager.checkpoints,
+                                          global_step_setter=self.set_global_step)
+            waiter = WaitForCheckpointHook(checkpoint_root=ProjectManager.checkpoints,
+                                           callback=restorer,
+                                           eval_all=self.config.get("eval_all", False))
+            self.hooks += [waiter]
+
 
     def step_ops(self):
         return self.model.outputs
