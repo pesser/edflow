@@ -89,20 +89,21 @@ class TFBaseEvaluator(TFHookedModelIterator):
 
 
 class TFBaseEvaluator2(TFHookedModelIterator):
-    def __init__(self, *args, checkpoint_path=None, **kwargs):
+    def __init__(self, *args, checkpoint_path=None, desc="Eval", hook_freq=1, num_epochs=1, **kwargs):
         '''
         New Base evaluator restores given checkpoint path if provided,
         else scans checkpoint directory for latest checkpoint and uses that
 
         Parameters
         ----------
-        args
-        checkpoint_path
-        kwargs
+        desc : str
+            a description for the evaluator. This description will be used during the logging.
+        hook_freq : int
+            Frequency at which hooks are evaluated.
+        num_epochs : int
+            Number of times to iterate over the data.
         '''
-        kwargs['desc'] = 'Eval'
-        kwargs['hook_freq'] = 1
-        kwargs["num_epochs"] = 1
+        kwargs.update({"desc" : desc, "hook_freq" : hook_freq, "num_epochs" : num_epochs})
         super().__init__(*args, **kwargs)
 
         # wait for new checkpoint and restore
