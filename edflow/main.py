@@ -140,7 +140,7 @@ def _train(config, root, checkpoint=None, retrain=False):
         Trainer.iterate(batches)
 
 
-def _test(config, root, nogpu=False, bar_position=0):
+def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     """Run tests. Loads model, iterator and dataset from config."""
     from edflow.iterators.batches import make_batches
 
@@ -186,6 +186,7 @@ def _test(config, root, nogpu=False, bar_position=0):
         bar_position=bar_position,
         nogpu=config["nogpu"],
         num_epochs=config["num_epochs"],
+        checkpoint_path=checkpoint
     )
     HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
 
