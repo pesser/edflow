@@ -8,6 +8,8 @@ from edflow.custom_logging import get_logger
 from edflow.iterators.batches import plot_batch
 
 import sys
+from PIL import Image, ImageDraw, ImageFont
+import numpy as np
 
 """TensorFlow hooks useful during training."""
 
@@ -24,6 +26,7 @@ class LoggingHook(Hook):
         graph=None,
         interval=100,
         root_path="logs",
+        log_images_to_tensorboard=False
     ):
         """Args:
             scalars (dict): Scalar ops.
@@ -39,9 +42,16 @@ class LoggingHook(Hook):
         scalars = [tf.summary.scalar(n, s) for n, s in scalars.items()]
         histograms = [tf.summary.histogram(n, h) for n, h in histograms.items()]
 
-        self._has_summary = len(scalars + histograms) > 0
+        if log_images_to_tensorboard:
+            im_summaries = [tf.summary.image(n, i) for n, i in images.items()]
+        else:
+            im_summaries = []
+
+
+        self._has_summary = len(scalars + histograms + im_summaries) > 0
         if self._has_summary:
-            summary_op = tf.summary.merge(scalars + histograms)
+            summary_op = tf.summary.merge(scalars + histograms + im_summaries)
+
         else:
             summary_op = tf.no_op()
 
