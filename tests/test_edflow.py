@@ -65,6 +65,7 @@ def run_edflow_cmdline(command, cwd):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         cwd=cwd,
+        timeout=60,
     )
 
 
