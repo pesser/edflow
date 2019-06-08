@@ -87,7 +87,6 @@ class Test_eval(object):
         with open(checkpoint_path, "w"):
             pass
 
-
     def test_1(self, tmpdir):
         """
         Test evaluation with providing a checkpoint and writing evaluation into new test_inference folder.
@@ -131,7 +130,6 @@ class Test_eval(object):
         # check if correct folder was created
         log_dirs = os.listdir(os.path.join(tmpdir, "logs"))
         assert any(list(filter(lambda x: "test_inference" in x, log_dirs)))
-
 
     def test_2(self, tmpdir):
         """
