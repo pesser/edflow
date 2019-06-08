@@ -40,7 +40,7 @@ class Dataset(DatasetMixin):
         self.config = config
 
     def __len__(self):
-        return 1000
+        return 1
 
     def get_example(self, i):
         return {"foo": 0}
@@ -59,7 +59,7 @@ def run_edflow_cmdline(command, cwd):
         env["CUDA_VISIBLE_DEVICES"] = "0"
     subprocess.run(
         command,
-        shell=False,
+        shell=True,
         check=True,
         env=env,
         stdout=subprocess.PIPE,
@@ -86,6 +86,7 @@ class Test_eval(object):
     def make_dummy_checkpoint(self, checkpoint_path):
         with open(checkpoint_path, "w"):
             pass
+
 
     def test_1(self, tmpdir):
         """
@@ -130,6 +131,7 @@ class Test_eval(object):
         # check if correct folder was created
         log_dirs = os.listdir(os.path.join(tmpdir, "logs"))
         assert any(list(filter(lambda x: "test_inference" in x, log_dirs)))
+
 
     def test_2(self, tmpdir):
         """
