@@ -24,7 +24,7 @@ setup(
         "pandas",
         "psutil",
         "pytest",
-        "deprecated"
+        "deprecated",
     ],
     extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "numpy"]},
     zip_safe=False,

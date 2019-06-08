@@ -189,15 +189,17 @@ class WaitForManager(Hook):
 
 
 class RestoreCurrentCheckpointHook(Hook):
-    '''Restores a TensorFlow model from a checkpoint at each epoch. Can also
-    be used as a functor.'''
+    """Restores a TensorFlow model from a checkpoint at each epoch. Can also
+    be used as a functor."""
 
-    def __init__(self,
-                 variables,
-                 checkpoint_path,
-                 filter_cond=lambda c: True,
-                 global_step_setter=None):
-        '''Args:
+    def __init__(
+        self,
+        variables,
+        checkpoint_path,
+        filter_cond=lambda c: True,
+        global_step_setter=None,
+    ):
+        """Args:
             variables (list): tf.Variable to be loaded from the checkpoint.
             checkpoint_path (str): Directory in which the checkpoints are
                 stored or explicit checkpoint. Ignored if used as functor.
@@ -205,7 +207,7 @@ class RestoreCurrentCheckpointHook(Hook):
                 get the checkpoints that are wanted. Ignored if used as
                 functor.
             global_step_setter (Callable): Callback to set global_step.
-        '''
+        """
         self.checkpoint_path = checkpoint_path
         self.fcond = filter_cond
         self.setstep = global_step_setter

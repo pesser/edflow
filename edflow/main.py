@@ -186,7 +186,7 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         bar_position=bar_position,
         nogpu=config["nogpu"],
         num_epochs=config["num_epochs"],
-        checkpoint_path=checkpoint
+        checkpoint_path=checkpoint,
     )
     HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
 
