@@ -1,5 +1,5 @@
 import pytest
-from edflow.iterators.tf_evaluator import TFBaseEvaluator
+from edflow.iterators.tf_evaluator import TFBaseEvaluator2
 from edflow.iterators.batches import DatasetMixin
 import tensorflow as tf
 import numpy as np
@@ -15,7 +15,7 @@ class Model(object):
         self.config = config
 
 
-class Iterator1(TFBaseEvaluator):
+class Iterator1(TFBaseEvaluator2):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is model.ckpt-0 """
         self.probe_checkpoint_path = kwargs["checkpoint_path"]
@@ -25,7 +25,7 @@ class Iterator1(TFBaseEvaluator):
         assert self.target_checkpoint_path in self.probe_checkpoint_path
 
 
-class Iterator2(TFBaseEvaluator):
+class Iterator2(TFBaseEvaluator2):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is None """
         self.probe_checkpoint_path = kwargs["checkpoint_path"]
