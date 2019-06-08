@@ -128,8 +128,8 @@ def main(opt):
     for eval_idx, eval_config in enumerate(opt.eval):
         if opt.checkpoint is not None:
             checkpoint = opt.checkpoint
-        elif opt.project is not None:
-            checkpoint = get_latest_checkpoint(P.checkpoints)
+        # elif opt.project is not None:
+        #     checkpoint = get_latest_checkpoint(P.checkpoints)
         else:
             checkpoint = None
         base_config = {}
