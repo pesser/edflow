@@ -213,3 +213,6 @@ class PyHookedModelIterator(object):
             The operation run at each step."""
 
         raise NotImplementedError()
+
+    def initialize(self):
+        pass
