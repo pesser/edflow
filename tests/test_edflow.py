@@ -18,21 +18,23 @@ class Model(object):
 class Iterator1(TFBaseEvaluator2):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is model.ckpt-0 """
-        self.probe_checkpoint_path = kwargs["checkpoint_path"]
-        self.target_checkpoint_path = "model.ckpt-0"
+
+    def initialize(self, checkpoint_path=None):
+        assert "model.ckpt-0" in checkpoint_path
 
     def iterate(self, batch_iterator):
-        assert self.target_checkpoint_path in self.probe_checkpoint_path
+        return None
 
 
 class Iterator2(TFBaseEvaluator2):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is None """
-        self.probe_checkpoint_path = kwargs["checkpoint_path"]
-        self.target_checkpoint_path = None
+
+    def initialize(self, checkpoint_path=None):
+        assert checkpoint_path == None
 
     def iterate(self, batch_iterator):
-        assert self.target_checkpoint_path == self.probe_checkpoint_path
+        return None
 
 
 class Dataset(DatasetMixin):
@@ -40,7 +42,7 @@ class Dataset(DatasetMixin):
         self.config = config
 
     def __len__(self):
-        return 1000
+        return 1
 
     def get_example(self, i):
         return {"foo": 0}
@@ -104,6 +106,7 @@ class Test_eval(object):
         config["dataset"] = "tests." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
+        config["n_processes"] = 1
         import yaml
 
         with open(os.path.join(tmpdir, "config.yaml"), "w") as outfile:
