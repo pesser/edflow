@@ -154,6 +154,9 @@ class HookedModelIterator(object):
         )
         return tf.global_variables_initializer()
 
+    def initialize(self):
+        pass
+
 
 class TFHookedModelIterator(PyHookedModelIterator):
     def make_feeds(self, batch):
