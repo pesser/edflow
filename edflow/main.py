@@ -190,6 +190,12 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     )
     HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
 
+    logger.info("Initializing model.")
+    if checkpoint is not None:
+        HBU_Evaluator.initialize(checkpoint_path=checkpoint)
+    else:
+        HBU_Evaluator.initialize()
+
     logger.info("Iterating")
     while True:
         HBU_Evaluator.iterate(batches)
