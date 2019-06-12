@@ -58,8 +58,6 @@ def main(opt):
                 update_config(config, opt.option)
                 impl = config["model"]
                 name = config.get("experiment_name", None)
-        # if it looks like a package path, take its root as the code dir
-        # otherwise take cwd
         else:
             config = base_config
             update_config(config, opt.option)
@@ -69,6 +67,8 @@ def main(opt):
             code_root = config["code_root"]
         else:
             path = impl.split(".")
+            # if it looks like a package path, take its root as the code dir
+            # otherwise take cwd
             if len(path) > 0:
                 code_root = path[0]
             else:
