@@ -61,12 +61,13 @@ def run_edflow_cmdline(command, cwd):
         env["CUDA_VISIBLE_DEVICES"] = "0"
     subprocess.run(
         command,
-        shell=False,
+        shell=True,
         check=True,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         cwd=cwd,
+        timeout=60,
     )
 
 
