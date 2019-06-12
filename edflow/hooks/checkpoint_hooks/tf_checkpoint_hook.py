@@ -188,53 +188,10 @@ class WaitForManager(Hook):
         self.wait()
 
 
-class RestoreCurrentCheckpointHook(Hook):
+class RestoreCurrentCheckpointHook(RestoreModelHook):
     """Restores a TensorFlow model from a checkpoint at each epoch. Can also
     be used as a functor."""
 
-    def __init__(
-        self,
-        variables,
-        checkpoint_path,
-        filter_cond=lambda c: True,
-        global_step_setter=None,
-    ):
-        """Args:
-            variables (list): tf.Variable to be loaded from the checkpoint.
-            checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint. Ignored if used as functor.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted. Ignored if used as
-                functor.
-            global_step_setter (Callable): Callback to set global_step.
-        """
-        self.checkpoint_path = checkpoint_path
-        self.fcond = filter_cond
-        self.setstep = global_step_setter
-
-        self.logger = get_logger(self)
-
-        self.saver = tf.train.Saver(variables)
-
-    @property
-    def session(self):
-        if not hasattr(self, "_session"):
-            self._session = tf.get_default_session()
-        return self._session
-
     def before_epoch(self, ep):
-        checkpoint = self.checkpoint_path
+        checkpoint = self.root
         self(checkpoint)
-
-    def __call__(self, checkpoint):
-        self.saver.restore(self.session, checkpoint)
-        self.logger.info("Restored model from {}".format(checkpoint))
-        global_step = self.parse_global_step(checkpoint)
-        self.logger.info("Global step: {}".format(global_step))
-        if self.setstep is not None:
-            self.setstep(global_step)
-
-    @staticmethod
-    def parse_global_step(checkpoint):
-        global_step = int(checkpoint.rsplit("-", 1)[1])
-        return global_step

@@ -12,6 +12,7 @@ from edflow.project_manager import ProjectManager
 
 P = ProjectManager()
 
+
 class BaseEvaluator(HookedModelIterator):
     """Runs evaluations on a test model. Adds support for continuous
     evaluation of new checkpoints."""
@@ -60,14 +61,7 @@ class BaseEvaluator(HookedModelIterator):
 
 
 class TFBaseEvaluator(TFHookedModelIterator):
-    def __init__(
-            self,
-            *args,
-            desc="Eval",
-            hook_freq=1,
-            num_epochs=1,
-            **kwargs
-    ):
+    def __init__(self, *args, desc="Eval", hook_freq=1, num_epochs=1, **kwargs):
         """
         New Base evaluator restores given checkpoint path if provided,
         else scans checkpoint directory for latest checkpoint and uses that
