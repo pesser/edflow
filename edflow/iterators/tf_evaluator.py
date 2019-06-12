@@ -77,9 +77,9 @@ class TFBaseEvaluator(TFHookedModelIterator):
         """
         kwargs.update({"desc": desc, "hook_freq": hook_freq, "num_epochs": num_epochs})
         super().__init__(*args, **kwargs)
-        self.restore_variables = self.model.variables
 
     def initialize(self, checkpoint_path=None):
+        self.restore_variables = self.model.variables
         # wait for new checkpoint and restore
         if checkpoint_path:
             restorer = RestoreCurrentCheckpointHook(

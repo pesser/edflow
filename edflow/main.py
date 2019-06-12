@@ -174,8 +174,6 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     batches.reset()
 
     logger.info("Initializing model.")
-    # currently initialize is not called here because we assume that checkpoint
-    # restoring is handled by RestoreCheckpointHook
     Model = implementations["model"](config)
 
     config["hook_freq"] = 1
@@ -186,7 +184,6 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         bar_position=bar_position,
         nogpu=config["nogpu"],
         num_epochs=config["num_epochs"],
-        checkpoint_path=checkpoint,
     )
     HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
 
