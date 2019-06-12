@@ -128,7 +128,7 @@ class Test_eval(object):
             "-n",
             "test_inference",
         ]
-        command = ' '.join(command)
+        command = " ".join(command)
         run_edflow_cmdline(command, cwd=tmpdir)
 
         # check if correct folder was created
@@ -176,7 +176,7 @@ class Test_eval(object):
             "-n",
             "test_inference",
         ]
-        command = ' '.join(command)
+        command = " ".join(command)
         run_edflow_cmdline(command, cwd=tmpdir)
 
         # check if correct folder was created
@@ -219,7 +219,7 @@ class Test_eval(object):
             "-n",
             "test_inference",
         ]
-        command = ' '.join(command)
+        command = " ".join(command)
         run_edflow_cmdline(command, cwd=tmpdir)
 
         # check if correct folder was created
