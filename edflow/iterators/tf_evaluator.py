@@ -9,11 +9,8 @@ from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
     RestoreCurrentCheckpointHook,
 )
 from edflow.project_manager import ProjectManager
-from deprecated import deprecated
-
 
 P = ProjectManager()
-
 
 class BaseEvaluator(HookedModelIterator):
     """Runs evaluations on a test model. Adds support for continuous
@@ -63,43 +60,13 @@ class BaseEvaluator(HookedModelIterator):
 
 
 class TFBaseEvaluator(TFHookedModelIterator):
-    @deprecated(
-        version="0.2.0",
-        reason="Does not restore checkpoint path when provided. Use TFBaseEvaluator2 instead",
-    )
-    def __init__(self, *args, **kwargs):
-        kwargs["desc"] = "Eval"
-        kwargs["hook_freq"] = 1
-        kwargs["num_epochs"] = 1
-        super().__init__(*args, **kwargs)
-
-        # wait for new checkpoint and restore
-        self.restore_variables = self.model.variables
-        restorer = RestoreTFModelHook(
-            variables=self.restore_variables,
-            checkpoint_path=ProjectManager.checkpoints,
-            global_step_setter=self.set_global_step,
-        )
-        waiter = WaitForCheckpointHook(
-            checkpoint_root=ProjectManager.checkpoints,
-            callback=restorer,
-            eval_all=self.config.get("eval_all", False),
-        )
-        self.hooks += [waiter]
-
-    def step_ops(self):
-        return self.model.outputs
-
-
-class TFBaseEvaluator2(TFHookedModelIterator):
     def __init__(
-        self,
-        *args,
-        checkpoint_path=None,
-        desc="Eval",
-        hook_freq=1,
-        num_epochs=1,
-        **kwargs
+            self,
+            *args,
+            desc="Eval",
+            hook_freq=1,
+            num_epochs=1,
+            **kwargs
     ):
         """
         New Base evaluator restores given checkpoint path if provided,
@@ -116,9 +83,10 @@ class TFBaseEvaluator2(TFHookedModelIterator):
         """
         kwargs.update({"desc": desc, "hook_freq": hook_freq, "num_epochs": num_epochs})
         super().__init__(*args, **kwargs)
-
-        # wait for new checkpoint and restore
         self.restore_variables = self.model.variables
+
+    def initialize(self, checkpoint_path):
+        # wait for new checkpoint and restore
         if checkpoint_path:
             restorer = RestoreCurrentCheckpointHook(
                 variables=self.restore_variables,
