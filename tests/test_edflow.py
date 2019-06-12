@@ -1,5 +1,5 @@
 import pytest
-from edflow.iterators.tf_evaluator import TFBaseEvaluator2
+from edflow.iterators.tf_evaluator import TFBaseEvaluator
 from edflow.iterators.batches import DatasetMixin
 import tensorflow as tf
 import numpy as np
@@ -15,7 +15,7 @@ class Model(object):
         self.config = config
 
 
-class Iterator1(TFBaseEvaluator2):
+class Iterator1(TFBaseEvaluator):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is model.ckpt-0 """
 
@@ -26,7 +26,7 @@ class Iterator1(TFBaseEvaluator2):
         return None
 
 
-class Iterator2(TFBaseEvaluator2):
+class Iterator2(TFBaseEvaluator):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is None """
 
