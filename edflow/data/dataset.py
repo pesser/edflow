@@ -28,6 +28,11 @@ from edflow.util import PRNGMixin
 
 
 class DatasetMixin(DatasetMixin_):
+    '''We add some additional functionality to the DatasetMixin_:
+    - 'index_': the index of the example
+    - 'index_history': the history of indices of deriving datasets
+    '''
+
     def d_msg(self, val):
         """Informs the user that val should be a dict."""
 
@@ -575,7 +580,6 @@ class LabelDataset(DatasetMixin):
 
 class ProcessedDataset(DatasetMixin):
     """A dataset with data processing applied."""
-
     def __init__(self, data, process, update=True):
         self.data = data
         self.process = process
@@ -622,7 +626,8 @@ class ExtraLabelsDataset(DatasetMixin):
     def get_example(self, i):
         """Get example and add new labels."""
         d = self.data.get_example(i)
-        new_labels = dict((k, self._new_labels[k][i]) for k in self._new_labels)
+        new_labels = dict((k, self._new_labels[k][i])
+                          for k in self._new_labels)
         d.update(new_labels)
         return d
 
@@ -647,7 +652,8 @@ class ConcatenatedDataset(DatasetMixin):
             for data_idx in range(len(self.datasets)):
                 data_length = len(self.datasets[data_idx])
                 if data_length != max_length:
-                    cycle_indices = [i % data_length for i in range(max_length)]
+                    cycle_indices = [i % data_length
+                                     for i in range(max_length)]
                     self.datasets[data_idx] = SubDataset(
                         self.datasets[data_idx], cycle_indices
                     )
