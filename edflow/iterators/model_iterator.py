@@ -214,5 +214,5 @@ class PyHookedModelIterator(object):
 
         raise NotImplementedError()
 
-    def initialize(self):
+    def initialize(self, checkpoint_path=None):
         pass

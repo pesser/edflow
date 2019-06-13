@@ -186,3 +186,12 @@ class WaitForManager(Hook):
 
     def before_epoch(self, ep):
         self.wait()
+
+
+class RestoreCurrentCheckpointHook(RestoreModelHook):
+    """Restores a TensorFlow model from a checkpoint at each epoch. Can also
+    be used as a functor."""
+
+    def before_epoch(self, ep):
+        checkpoint = self.root
+        self(checkpoint)

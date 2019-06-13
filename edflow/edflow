@@ -41,7 +41,6 @@ def main(opt):
     if opt.project is not None:
         P = use_project(opt.project, postfix=opt.name)
     else:
-        assert opt.train is not None
         # Get base or default parameters
         base_config = {}
         if opt.base is not None:
@@ -51,18 +50,24 @@ def main(opt):
                     base_config.update(yaml.load(f))
         print(base_config)
         # get path to implementation
-        with open(opt.train) as f:
+        if opt.train:
+            with open(opt.train) as f:
+                config = base_config
+                config.update(yaml.load(f))
+                update_config(config, opt.option)
+                impl = config["model"]
+                name = config.get("experiment_name", None)
+        else:
             config = base_config
-            config.update(yaml.load(f))
             update_config(config, opt.option)
             impl = config["model"]
             name = config.get("experiment_name", None)
-        # if it looks like a package path, take its root as the code dir
-        # otherwise take cwd
         if "code_root" in config:
             code_root = config["code_root"]
         else:
             path = impl.split(".")
+            # if it looks like a package path, take its root as the code dir
+            # otherwise take cwd
             if len(path) > 0:
                 code_root = path[0]
             else:
@@ -120,6 +125,12 @@ def main(opt):
     # Evaluation
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
+        if opt.checkpoint is not None:
+            checkpoint = opt.checkpoint
+        else:
+            checkpoint = None
+            if opt.project is not None:
+                checkpoint = get_latest_checkpoint(P.checkpoints)
         base_config = {}
         if opt.base is not None:
             for base in opt.base:
@@ -136,8 +147,12 @@ def main(opt):
         bar_position = len(processes) + eval_idx
         test_process = mp.Process(
             target=test,
-            args=((config, P.latest_eval, nogpu, bar_position), JQ, len(processes)),
-        )
+            args=((config,
+                   P.latest_eval,
+                   checkpoint,
+                   nogpu,
+                   bar_position),
+                  JQ, len(processes)))
         processes.append(test_process)
 
     # Take off
