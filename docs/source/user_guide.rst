@@ -1,7 +1,7 @@
 User Guide
 ==========
 
-
+Old text:
 Writing training loops and dataset classes can be fun but usually gets
 repetitive and a waste of time after having done it a few times.
 
