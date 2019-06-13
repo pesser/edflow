@@ -1,6 +1,6 @@
 
 What Happens When I Run ``EDflow``
-==================================
+**********************************
 
 When you successfully build your model start ``EDflow`` with::
     edflow -t your_model/train.yaml

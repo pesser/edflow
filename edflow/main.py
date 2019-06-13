@@ -39,11 +39,12 @@ def traceable_process(fn, args, job_queue, idx):
         exc = Exception(trace)
         if job_queue is not None:
             job_queue.put([idx, exc, trace])
-            job_queue.close()
         else:
             raise exc
-
-    job_queue.put([idx, "Done", None])
+    else:
+        job_queue.put([idx, "Done", None])
+    finally:
+        job_queue.close()
 
 
 def traceable_function(method, ignores=None):
@@ -187,6 +188,12 @@ def _test(config, root, nogpu=False, bar_position=0):
         num_epochs=config["num_epochs"],
     )
     HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
+
+    logger.info("Initializing model.")
+    if checkpoint is not None:
+        HBU_Evaluator.initialize(checkpoint_path=checkpoint)
+    else:
+        HBU_Evaluator.initialize()
 
     logger.info("Iterating")
     while True:

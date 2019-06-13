@@ -1,6 +1,6 @@
 
-Documentation
-=============
+Iterators
+=========
 
 PyIterator
 ----------

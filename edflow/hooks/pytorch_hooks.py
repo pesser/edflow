@@ -1,5 +1,4 @@
 import os
-import signal
 import sys
 
 import torch
@@ -28,9 +27,6 @@ class PyCheckpointHook(Hook):
                 saved. In any case a checkpoint is savead after each epoch.
         """
 
-        signal.signal(signal.SIGINT, self.at_exception)
-        signal.signal(signal.SIGTERM, self.at_exception)
-
         self.root = root_path
         self.interval = interval
         self.model = model
@@ -57,8 +53,6 @@ class PyCheckpointHook(Hook):
 
     def at_exception(self, *args, **kwargs):
         self.save()
-
-        sys.exit()
 
     def save(self):
         e = self.epoch

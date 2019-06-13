@@ -1,5 +1,4 @@
 import os
-import signal
 import tensorflow as tf
 from edflow.hooks.hook import Hook
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint
@@ -93,9 +92,6 @@ class CheckpointHook(Hook):
                 disk. Use 0 or None to never delete any checkpoints.
         """
 
-        signal.signal(signal.SIGINT, self.at_exception)
-        signal.signal(signal.SIGTERM, self.at_exception)
-
         self.root = root_path
         self.interval = interval
         self.step = step if step is not None else tf.train.get_global_step()
@@ -122,8 +118,6 @@ class CheckpointHook(Hook):
 
     def at_exception(self, *args, **kwargs):
         self.save()
-
-        sys.exit()
 
     def save(self):
         global_step = self.global_step()

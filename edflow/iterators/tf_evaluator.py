@@ -1,9 +1,12 @@
 import tensorflow as tf
 import os
 
-from edflow.iterators.model_iterator import HookedModelIterator, TFHookedModelIterator
-from edflow.hooks import WaitForCheckpointHook, RestoreModelHook
-from edflow.hooks.evaluation_hooks import RestoreTFModelHook
+from edflow.iterators.tf_iterator import HookedModelIterator, TFHookedModelIterator
+from edflow.hooks.checkpoint_hooks.common import WaitForCheckpointHook
+from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
+    RestoreModelHook,
+    RestoreTFModelHook,
+)
 from edflow.project_manager import ProjectManager
 
 

@@ -7,7 +7,6 @@ from edflow.hooks.checkpoint_hooks.common import get_checkpoint_files
 from edflow.custom_logging import get_logger
 from edflow.iterators.batches import plot_batch
 
-import signal
 import sys
 
 """TensorFlow hooks useful during training."""
