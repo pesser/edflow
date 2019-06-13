@@ -24,19 +24,18 @@ from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
+from edflow.config import parse_unknown_args
 
 
-def update_config(config, options):
-    if options is not None:
-        for option in options:
-            config.update(yaml.load(option))
+def update_config(config, additional_kwargs):
+    config.update(additional_kwargs)
     # single format substitution, does not support nested structures
     for k, v in config.items():
         if isinstance(v, str):
             config[k] = v.format(**config)
 
 
-def main(opt):
+def main(opt, additional_kwargs):
     # Project manager
     if opt.project is not None:
         P = use_project(opt.project, postfix=opt.name)
@@ -54,7 +53,7 @@ def main(opt):
         with open(opt.train) as f:
             config = base_config
             config.update(yaml.load(f))
-            update_config(config, opt.option)
+            update_config(config, additional_kwargs)
             impl = config["model"]
             name = config.get("experiment_name", None)
         # if it looks like a package path, take its root as the code dir
@@ -106,10 +105,10 @@ def main(opt):
         with open(opt.train) as f:
             config = base_config
             config.update(yaml.load(f))
-            update_config(config, opt.option)
+            update_config(config, additional_kwargs)
 
-        logger.info("Training config: {}".format(opt.train))
-        logger.info(yaml.dump(config))
+        logger.warn("Training config: {}".format(opt.train))
+        logger.warn(yaml.dump(config))
 
         train_process = mp.Process(
             target=train,
@@ -129,11 +128,12 @@ def main(opt):
         with open(eval_config) as f:
             config = base_config
             config.update(yaml.load(f))
-            update_config(config, opt.option)
+            update_config(config, additional_kwargs)
         logger.info("Evaluation config: {}".format(eval_config))
         logger.info(yaml.dump(config))
         nogpu = len(processes) > 0 or opt.nogpu
         bar_position = len(processes) + eval_idx
+
         test_process = mp.Process(
             target=test,
             args=((config, P.latest_eval, nogpu, bar_position), JQ, len(processes)),
@@ -214,19 +214,14 @@ if __name__ == "__main__":
         "--nogpu", action="store_true", help="disable gpu for tensorflow"
     )
     parser.add_argument(
-        "--option",
-        "-o",
-        action="append",
-        help="additional key: value options to update all config with",
-    )
-    parser.add_argument(
         "-log",
         "--log-level",
         metavar="LEVEL",
         type=str,
-        choices=["info", "debug", "critical"],
+        choices=["warn", "info", "debug", "critical"],
         default="info",
         help="Set the std-out logging level.",
     )
-    opt = parser.parse_args()
-    main(opt)
+    opt, unknown = parser.parse_known_args()
+    additional_kwargs = parse_unknown_args(unknown)
+    main(opt, additional_kwargs)
