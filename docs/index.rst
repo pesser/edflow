@@ -12,9 +12,6 @@ Quick and Dirty
 .. note::
     example of a standart mnist problem
 
-We created a user guide for you to use, have a look:
-:doc:`source/user_guide`
-
 Contents
 ========
 .. toctree::
@@ -29,7 +26,7 @@ Contents
    source/models
    source/iterator
    source/contributions
-   source/source_files/edflow
+   source/source_files/modules
 
 Indices and tables
 ==================

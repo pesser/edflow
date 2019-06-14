@@ -21,37 +21,51 @@ Workflow
 --------
 
 When you have successfully built your model your model with::
+
     edflow -t your_model/train.yaml
+
 This triggers EDFlow's signature workflow:
 
 1. The ``ProjectManager`` is initialized
+
   - It creates the folder structure, takes a snapshot of the code and keeps track directory addresses through attributes
   - It is still to decide on the best way to take the snapshot, feel free to participate and contribute_
 
 2. All processes are initialized
+
   - if ``-t`` option is given, a training process is started
   - for each ``-e`` option an evaluation process is called
 
 3. The training process
+
   - ``Logger`` is initialized
   - ``Dataset`` is initialized
   - The batches are built
   - ``model`` is initialized
+
     - #TODO initialize a dummy if no model is given
+
   - ``Trainer``/``Iterator`` is initialized
   - if ``--checkoint`` is given, load checkpoint
   - If ``--retrain`` is given, reset global step (begin training with pre-trained model)
   - ``Iterator.iterate`` is called
+
     - This is the data loop, only argument is the batched data
     - tqdm_ is called: for epoch in epochs, for batch in batches
     - initialize ``fetches``
+
       - nested ``dict``
       - leaves must be functions i.e. ``{global_step:get_global_step()}``
+
     - ``feeds`` are initialized as a copy of batch (this allows to manipulate the feed)
     - all ``hook`` s' ``before_step(global_step, fetches, feeds, batch)`` is called
+
       - ``hook`` s can add data, manipulate feeds(i.e. make numpy arrays tf objects), log batch data...
+
     - ``self.run(fetches, feeds)`` is called
+
       - every function in fetches is called with feeds as argument
+
     - ``global_step`` is incremented
     - all ``hook`` s' ``after_step(global_step, fetches, feeds, batch)`` is called
 

@@ -1,0 +1,6 @@
+# Conda environment definition to build documentation on RTD
+
+name: edflow-docs
+dependencies:
+  - python
+  - cmake
