@@ -96,12 +96,7 @@ class LoggingHook(Hook):
 
 
 class ImageOverviewHook(Hook):
-    def __init__(
-        self,
-        images={},
-        interval=100,
-        root_path="logs",
-    ):
+    def __init__(self, images={}, interval=100, root_path="logs"):
         """
         Logs an overview of all image outputs at an intervall of training steps.
         Args:
