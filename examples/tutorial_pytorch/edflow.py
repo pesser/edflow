@@ -12,25 +12,31 @@ from edflow.hooks.hook import Hook
 from edflow.hooks.checkpoint_hooks.torch_checkpoint_hook import RestorePytorchModelHook
 from edflow.project_manager import ProjectManager
 
+
 class Dataset(DatasetMixin):
     """We just initialize the same dataset as in the tutorial and only have to
     implement __len__ and get_example."""
+
     def __init__(self, config):
         self.train = not config.get("test_mode", False)
 
         transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset = torchvision.datasets.CIFAR10(root='./data', train=self.train,
-                                                download=True, transform=transform)
+            [
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
+        dataset = torchvision.datasets.CIFAR10(
+            root="./data", train=self.train, download=True, transform=transform
+        )
         self.dataset = dataset
 
     def __len__(self):
         return len(self.dataset)
 
     def get_example(self, i):
-        """edflow assumes  a dictionary containing numpy arrays for each
-        example."""
+        """edflow assumes  a dictionary containing values that can be stacked
+        by np.stack(), e.g. numpy arrays or integers."""
         x, y = self.dataset[i]
         return {"x": x.numpy(), "y": y}
 
@@ -58,7 +64,7 @@ class Net(nn.Module):
 class Model(object):
     def __init__(self, config):
         """For illustration we read `n_classes` from the config."""
-        self.net = Net(n_classes = config["n_classes"])
+        self.net = Net(n_classes=config["n_classes"])
 
     def __call__(self, x):
         return self.net(torch.tensor(x))
@@ -67,7 +73,7 @@ class Model(object):
         return self.net.parameters()
 
 
-class FinalLogHook(Hook):
+class AccuracyHook(Hook):
     def __init__(self, iterator):
         self.iterator = iterator
         self.logger = iterator.logger
@@ -80,14 +86,17 @@ class FinalLogHook(Hook):
         self.total += labels.shape[0]
         self.correct += (predicted == torch.tensor(labels)).sum().item()
 
-        if step % 50 == 0:
-            self.logger.info('Accuracy of the network on the %d step: %d %%' % (
-                step, 100 * self.correct / self.total))
+        if step % 250 == 0:
+            self.logger.info(
+                "Accuracy of the network on the %d step: %.2f %%"
+                % (step, 100 * self.correct / self.total)
+            )
 
     def after_epoch(self, epoch):
-        self.logger.info('Accuracy of the network on all test images: %d %%' % (
-            100 * self.correct / self.total))
-
+        self.logger.info(
+            "Accuracy of the network on all test images: %.2f %%"
+            % (100 * self.correct / self.total)
+        )
 
 
 class Iterator(PyHookedModelIterator):
@@ -98,32 +107,29 @@ class Iterator(PyHookedModelIterator):
         self.running_loss = 0.0
 
         self.restorer = RestorePytorchModelHook(
-                checkpoint_path = ProjectManager.checkpoints,
-                model = self.model.net)
-        # we add a hook to write checkpoints of the model each epoch or when
-        # training is interrupted by ctrl-c
+            checkpoint_path=ProjectManager.checkpoints, model=self.model.net
+        )
         if not self.config.get("test_mode", False):
+            # we add a hook to write checkpoints of the model each epoch or when
+            # training is interrupted by ctrl-c
             self.ckpt_hook = PyCheckpointHook(
-                root_path = ProjectManager.checkpoints,
-                model = self.model.net) # PyCheckpointHook expects a torch.nn.Module
+                root_path=ProjectManager.checkpoints, model=self.model.net
+            )  # PyCheckpointHook expects a torch.nn.Module
             self.hooks.append(self.ckpt_hook)
         else:
-            # during evaluation, restore latest checkpoint before each epoch
-            self.hooks.append(self.restorer)
-            self.hooks.append(FinalLogHook(self))
-                
+            # evaluate accuracy
+            self.hooks.append(AccuracyHook(self))
 
-    def initialize(self, checkpoint_path = None):
+    def initialize(self, checkpoint_path=None):
+        # restore model from checkpoint
         if checkpoint_path is not None:
             self.restorer(checkpoint_path)
-
 
     def step_ops(self):
         if self.config.get("test_mode", False):
             return self.test_op
         else:
             return self.train_op
-
 
     def train_op(self, model, x, y, **kwargs):
         """All ops to be run as step ops receive model as the first argument
@@ -144,15 +150,14 @@ class Iterator(PyHookedModelIterator):
         # print statistics
         self.running_loss += loss.item()
         i = self.get_global_step()
-        if i % 200 == 199:    # print every 200 mini-batches
+        if i % 200 == 199:  # print every 200 mini-batches
             # use the logger instead of print to obtain both console output and
             # logging to the logfile in project directory
-            self.logger.info('[%5d] loss: %.3f' %
-                    (i + 1, self.running_loss / 200))
+            self.logger.info("[%5d] loss: %.3f" % (i + 1, self.running_loss / 200))
             self.running_loss = 0.0
 
-
     def test_op(self, model, x, y, **kwargs):
+        """Here we just run the model and let the hook handle the output."""
         images, labels = x, y
         outputs = self.model(images)
         return outputs, labels
