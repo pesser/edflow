@@ -60,12 +60,14 @@ if __name__ == "__main__":
         "3.",
         "-l",
         "abc",
+        "-m",
+        "{'asd': 3.5}",
     ]
 
     print(passed)
     args, unknown = A.parse_known_args(passed)
 
-    args = parse_unknown_args(unknown)
+    unknown = parse_unknown_args(unknown)
 
     print(args)
     for k, v in unknown.items():

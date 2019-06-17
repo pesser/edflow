@@ -140,7 +140,7 @@ def _train(config, root, checkpoint=None, retrain=False):
         Trainer.iterate(batches)
 
 
-def _test(config, root, nogpu=False, bar_position=0):
+def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     """Run tests. Loads model, iterator and dataset from config."""
     from edflow.iterators.batches import make_batches
 
@@ -174,8 +174,6 @@ def _test(config, root, nogpu=False, bar_position=0):
     batches.reset()
 
     logger.info("Initializing model.")
-    # currently initialize is not called here because we assume that checkpoint
-    # restoring is handled by RestoreCheckpointHook
     Model = implementations["model"](config)
 
     config["hook_freq"] = 1

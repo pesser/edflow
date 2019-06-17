@@ -2,14 +2,20 @@
 Intro
 =====
 
-Things you have to do but don't want to do when writing your ML script:
+**EDFlow** is a training engine that is meant to safe you time and code.
+While taking snapshots of your code **EDFlow** helps you to manage data logging,
+create batches from data and run evaluation.
+All in all **EDFlow** runs all the repetitive tasks you usually cannot quite copy-and-paste.
 
-- writing the same training loops over and over again
-- take great complications in logging your variables
-- back up your code
-- save your settings for every run
-- make outputs during training readable 
+It is relatively easy to translate your current non-EDFlow learning script into an EDFlow compatible one.
+Although we do not have an auto-translation tool (yet), feel free to take look at our Tutorial_.
+This also serves as a nice practical introduction to **EDFLow**.
 
-With ``EDflow`` you don't have to do that anymore but instead concentrate on
-your model alone.
+Overall **EDFlow** allows you to recycle as much code as possible throughout your projects in the easiest possible way.
+We hope you enjoy your future with **EDFlow** :\*.
 
+Yours truly,
+Mimo Tillbich
+
+
+.. _Tutorial: tutorial
