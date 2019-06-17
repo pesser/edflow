@@ -1,4 +1,10 @@
+name: EDFlow
+type: sphinx
+base: docs/source
 python:
-   pip_install: true
-   extra_requirements:
-       - docs
+    #pip_install: true
+  setup_py_install: true
+  #extra_requirements:
+  #  - docs
+conda:
+  file: docs/rtd_conda.yml

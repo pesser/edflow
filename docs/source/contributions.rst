@@ -16,25 +16,29 @@ black
 Before requesting a pull please run black_ for better code style or simply add
 black_ to your pre-commit hook:
 
-0. Install black_ with
-::
+0. Install black_ with ::
+
    $ pip install black
-1. Paste the following into at the top <project-root>/.git/hooks/pre-commit.sample
-::
+
+1. Paste the following into at the top <project-root>/.git/hooks/pre-commit.sample::
+
    # run black on all staged files
    staged=$(git diff --name-only --cached)
    black $staged
    # add them again after formatting
    git add $staged
+
 2. Rename ``pre-commit.sample`` to ``pre-commit``
-3. Make it excutable using
-::
+3. Make it executable using::
+
    $ chmod +x pre-commit
+
 4. Done!
 
-Or run black by hand and use this command before every commit:
-::
+Or run black by hand and use this command before every commit:::
+
     black ./
+
 
 Continuous Integration
 ======================
@@ -42,6 +46,10 @@ Continuous Integration
 We use travisCI_ for continuous integration.
 You do not need to worry about as long as your code passes all tests (this includes
 a formatting test with black).
+
+.. note::
+
+    this should include an example to run the tests locally as well
 
 Documenation
 ============
@@ -54,17 +62,17 @@ It also uses all-contributors_ for honoring contributors.
 sphinx
 ------
 
-To build the documentation locally, install `sphinx` and run:
-::
+To build the documentation locally, install `sphinx` and run:::
+
     $ cd docs
     $ make html
 
-The html files are available under the then existing direcotry ``docs/_build/html/``
+The html files are available under the then existing directory ``docs/_build/html/``
 
 The docsting format which is preferred is `numpy`.
 
-We use `sphinx-apidoc` to track all files automatically:
-::
+We use `sphinx-apidoc` to track all files automatically:::
+
     $ cd docs
     $ sphinx-apidoc -o ./source/source_files ../edflow
 
@@ -74,18 +82,18 @@ all-contirbutors
 We use all-contributors locally and manage the contributors by hand.
 
 To do so, install `all-contributors` as described here (we advise you to install it inside the repo but unstage the added files).
-Then run the following command to add a contributor or contribution:
-::
+Then run the following command to add a contributor or contribution:::
+
     all-contributors add <username> <contribution>
 
-If this does not work for you (sometimes with npm the case) use:
-::
+If this does not work for you (sometimes with npm the case) use:::
+
     ./node_modules/.bin/all-contributors add <username> <contribution>
 
 Known Issues
 ------------
 
-We noticed that mocking `numpy` in ``config.py`` will not work due to some requirements when importing numpy in edflow.
+We noticed that mocking `numpy` in ``config.py`` will not work due to some requirements when importing numpy in EDFlow.
 Thus we need to require numpy when building the documentation.
 
 Locally, this means that you need to have numpy installed in your environment.
