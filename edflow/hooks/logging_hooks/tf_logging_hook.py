@@ -26,7 +26,7 @@ class LoggingHook(Hook):
         graph=None,
         interval=100,
         root_path="logs",
-        log_images_to_tensorboard=False
+        log_images_to_tensorboard=False,
     ):
         """Args:
             scalars (dict): Scalar ops.
@@ -41,6 +41,7 @@ class LoggingHook(Hook):
 
         scalars = [tf.summary.scalar(n, s) for n, s in scalars.items()]
         histograms = [tf.summary.histogram(n, h) for n, h in histograms.items()]
+        self.log_images_to_tensorboard = log_images_to_tensorboard
 
         if log_images_to_tensorboard:
             im_summaries = [tf.summary.image(n, i) for n, i in images.items()]
@@ -85,10 +86,11 @@ class LoggingHook(Hook):
             for name in sorted(logs.keys()):
                 self.logger.info("{}: {}".format(name, logs[name]))
 
-            for name, image_batch in last_results["images"].items():
-                full_name = name + "_{:07}.png".format(step)
-                save_path = os.path.join(self.root, full_name)
-                plot_batch(image_batch, save_path)
+            if not self.log_images_to_tensorboard:
+                for name, image_batch in last_results["images"].items():
+                    full_name = name + "_{:07}.png".format(step)
+                    save_path = os.path.join(self.root, full_name)
+                    plot_batch(image_batch, save_path)
 
             self.logger.info("project root: {}".format(self.root))
 
