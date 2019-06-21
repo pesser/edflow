@@ -1,7 +1,7 @@
 import tensorflow as tf
 from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import RestoreTFModelHook
 from edflow.iterators.tf_iterator import TFHookedModelIterator
-from edflow.iterators.tf_evaluator import TFBaseEvaluator2
+from edflow.iterators.tf_evaluator import TFBaseEvaluator
 from edflow.iterators.tf_trainer import TFBaseTrainer
 from edflow.project_manager import ProjectManager
 
@@ -103,7 +103,7 @@ class Trainer(TFBaseTrainer):
         return losses
 
 
-class Evaluator(TFBaseEvaluator2):
+class Evaluator(TFBaseEvaluator):
     def __init__(self, *args, **kwargs):
         kwargs[
             "num_epochs"
