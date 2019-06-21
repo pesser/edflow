@@ -52,8 +52,9 @@ def make_exponential_var(step, start, end, start_value, end_value, decay):
     stepper = make_linear_var(step, start, end, startstep, endstep)
     return tf.math.pow(decay, stepper) * start_value
 
+
 def make_var(step, var_type, options):
-    '''
+    """
 
     # usage within trainer
     grad_weight = make_var(step=self.global_step,
@@ -80,9 +81,6 @@ def make_var(step, var_type, options):
     Returns
     -------
 
-    '''
-    switch = {
-        "linear" : make_linear_var,
-        "exponential": make_exponential_var,
-    }
+    """
+    switch = {"linear": make_linear_var, "exponential": make_exponential_var}
     return switch[var_type](step=step, **options)
