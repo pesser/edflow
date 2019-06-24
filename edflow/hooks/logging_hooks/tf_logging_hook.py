@@ -120,13 +120,6 @@ class ImageOverviewHook(Hook):
         self.root = root_path
         self.logger = get_logger(self)
 
-    def before_epoch(self, ep):
-        pass
-
-    def before_step(self, batch_index, fetches, feeds, batch):
-        if batch_index % self.interval == 0:
-            pass
-
     def after_step(self, batch_index, last_results):
         if batch_index % self.interval == 0:
             step = last_results["global_step"]
