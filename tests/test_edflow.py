@@ -70,6 +70,7 @@ def run_edflow_cmdline(command, cwd):
         timeout=60,
     )
 
+
 class Test_eval(object):
     def setup_tmpdir(self, tmpdir):
         subdirs = ["code", "train", "eval", "ablation"]
@@ -87,9 +88,8 @@ class Test_eval(object):
     def make_dummy_checkpoint(self, checkpoint_path):
         with open(checkpoint_path, "w"):
             pass
-        with open('.'.join([checkpoint_path, "index"]), "w"):
+        with open(".".join([checkpoint_path, "index"]), "w"):
             pass
-
 
     def test_1(self, tmpdir):
         """
