@@ -49,6 +49,12 @@ def tile(X, rows, cols):
 
 def plot_batch(X, out_path):
     """Save batch of images tiled."""
+    canvas = batch_to_canvas(X)
+    save_image(canvas, out_path)
+
+
+def batch_to_canvas(X):
+    """convert batch of images to canvas"""
     if len(X.shape) == 5:
         # tile
         oldX = np.array(X)
@@ -63,7 +69,6 @@ def plot_batch(X, out_path):
             inx = oldX[i]
             inx = np.transpose(inx, [2, 0, 1, 3])
             X[i] = tile(inx, side, side)
-
     n_channels = X.shape[3]
     if n_channels > 4:
         X = X[:, :, :, :3]
@@ -72,7 +77,7 @@ def plot_batch(X, out_path):
     rc = math.sqrt(X.shape[0])
     rows = cols = math.ceil(rc)
     canvas = tile(X, rows, cols)
-    save_image(canvas, out_path)
+    return canvas
 
 
 class Iterator(MultiprocessIterator):

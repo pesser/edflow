@@ -231,6 +231,9 @@ class TFBaseTrainer(TFHookedModelIterator):
             images=self.img_ops,
             root_path=ProjectManager.train,
             interval=1,
+            log_images_to_tensorboard=self.config.get(
+                "log_images_to_tensorboard", False
+            ),
         )
         ihook = IntervalHook(
             [loghook],
