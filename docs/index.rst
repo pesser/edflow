@@ -26,6 +26,7 @@ Contents
    source/models
    source/iterator
    source/contributions
+   source/faq
    source/source_files/modules
 
 Indices and tables
