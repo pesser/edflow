@@ -81,8 +81,7 @@ def _train(config, root, checkpoint=None, retrain=False):
 
     LogSingleton().set_default("train")
     logger = get_logger("train")
-    logger.info("Starting Training with config:")
-    logger.info(config)
+    logger.info("Starting Training with config:\n{}".format(yaml.dump(config)))
 
     implementations = get_implementations_from_config(
         config, ["model", "iterator", "dataset"]
@@ -146,8 +145,7 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
 
     LogSingleton().set_default("latest_eval")
     logger = get_logger("test")
-    logger.info("Starting Evaluation with config")
-    logger.info(config)
+    logger.info("Starting Evaluation with config:\n{}".format(yaml.dump(config)))
 
     if "test_batch_size" in config:
         config["batch_size"] = config["test_batch_size"]
