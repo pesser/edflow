@@ -69,11 +69,9 @@ def traceable_method(ignores=None):
     return decorator
 
 
-def _save_config(config, prefix = "config"):
-    now = datetime.datetime.now().strftime(
-            "%Y-%m-%dT%H:%M:%S"
-            )
-    fname = prefix+"_"+now+".yaml"
+def _save_config(config, prefix="config"):
+    now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    fname = prefix + "_" + now + ".yaml"
     path = os.path.join(P.configs, fname)
     with open(path, "w") as f:
         f.write(yaml.dump(config))
@@ -150,7 +148,7 @@ def _train(config, root, checkpoint=None, retrain=False):
 
         # save current config
         logger.info("Starting Training with config:\n{}".format(yaml.dump(config)))
-        cpath = _save_config(config, prefix = "train")
+        cpath = _save_config(config, prefix="train")
         logger.info("Saved config at {}".format(cpath))
 
         logger.info("Iterating.")
@@ -214,7 +212,7 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     prefix = "eval"
     if bar_position > 0:
         prefix = prefix + str(bar_position)
-    cpath = _save_config(config, prefix = prefix)
+    cpath = _save_config(config, prefix=prefix)
     logger.info("Saved config at {}".format(cpath))
 
     logger.info("Iterating")
