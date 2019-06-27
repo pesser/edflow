@@ -113,8 +113,7 @@ def main(opt):
             config.update(yaml.full_load(f))
             update_config(config, opt.option)
 
-        logger.info("Training config: {}".format(opt.train))
-        logger.info(yaml.dump(config))
+        logger.info("Training config: {}\n{}".format(opt.train, yaml.dump(config)))
 
         train_process = mp.Process(
             target=train,
@@ -141,8 +140,7 @@ def main(opt):
             config = base_config
             config.update(yaml.full_load(f))
             update_config(config, opt.option)
-        logger.info("Evaluation config: {}".format(eval_config))
-        logger.info(yaml.dump(config))
+        logger.info("Evaluation config: {}\n{}".format(eval_config, yaml.dump(eval_config)))
         nogpu = len(processes) > 0 or opt.nogpu
         bar_position = len(processes) + eval_idx
         test_process = mp.Process(
