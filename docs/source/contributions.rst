@@ -41,7 +41,7 @@ Or run black by hand and use this command before every commit:::
 
 
 Continuous Integration
-======================
+----------------------
 
 We use travisCI_ for continuous integration.
 You do not need to worry about as long as your code passes all tests (this includes
@@ -52,7 +52,7 @@ a formatting test with black).
     this should include an example to run the tests locally as well
 
 Documenation
-============
+------------
 
    This is a short summary how the documentation works and how it can be built
 
@@ -60,7 +60,7 @@ The documentation uses sphinx_ and is available under readthedocs.org_.
 It also uses all-contributors_ for honoring contributors.
 
 sphinx
-------
+======
 
 To build the documentation locally, install `sphinx` and run:::
 
@@ -77,7 +77,7 @@ We use `sphinx-apidoc` to track all files automatically:::
     $ sphinx-apidoc -o ./source/source_files ../edflow
 
 all-contirbutors
-----------------
+================
 
 We use all-contributors locally and manage the contributors by hand.
 
