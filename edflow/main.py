@@ -202,7 +202,7 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
 
 def main(opt):
     with open(opt.config) as f:
-        config = yaml.load(f)
+        config = yaml.full_load(f)
 
     P = init_project("logs")
     logger = get_logger("main")
