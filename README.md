@@ -107,13 +107,22 @@ Mimo Tilbich [![GitHub-Contributions][GitHub-Contributions]](https://github.com/
 
 ## Contributors
 
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore -->
-<table><tr><td align="center"><a href="https://github.com/pesser"><img src="https://avatars3.githubusercontent.com/u/2175508?v=4" width="100px;" alt="Patrick Esser"/><br /><sub><b>Patrick Esser</b></sub></a><br /><a href="https://github.com/PEsser/edflow/commits?author=pesser" title="Code">💻</a></td><td align="center"><a href="https://github.com/jhaux"><img src="https://avatars0.githubusercontent.com/u/9572598?v=4" width="100px;" alt="Johannes Haux"/><br /><sub><b>Johannes Haux</b></sub></a><br /><a href="https://github.com/PEsser/edflow/commits?author=jhaux" title="Code">💻</a></td><td align="center"><a href="https://github.com/ArWeHei"><img src="https://avatars2.githubusercontent.com/u/46443020?v=4" width="100px;" alt="arwehei"/><br /><sub><b>arwehei</b></sub></a><br /><a href="https://github.com/PEsser/edflow/commits?author=ArWeHei" title="Documentation">📖</a></td><td align="center"><a href="https://github.com/theRealSuperMario"><img src="https://avatars0.githubusercontent.com/u/6517465?v=4" width="100px;" alt="therealsupermario"/><br /><sub><b>therealsupermario</b></sub></a><br /><a href="#example-theRealSuperMario" title="Examples">💡</a></td><td align="center"><a href="https://github.com/mritv"><img src="https://avatars1.githubusercontent.com/u/39053439?v=4" width="100px;" alt="Ritvik Marwaha"/><br /><sub><b>Ritvik Marwaha</b></sub></a><br /><a href="#example-mritv" title="Examples">💡</a></td><td align="center"><a href="https://conrad-sachweh.de"><img src="https://avatars0.githubusercontent.com/u/6422533?v=4" width="100px;" alt="Conrad Sachweh"/><br /><sub><b>Conrad Sachweh</b></sub></a><br /><a href="https://github.com/PEsser/edflow/commits?author=conrad784" title="Tests">⚠️</a></td></tr></table>
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/pesser"><img src="https://avatars3.githubusercontent.com/u/2175508?v=4" width="100px;" alt="Patrick Esser"/><br /><sub><b>Patrick Esser</b></sub></a><br /><a href="https://github.com/pesser/edflow/commits?author=pesser" title="Code">💻</a> <a href="#ideas-pesser" title="Ideas, Planning, & Feedback">🤔</a> <a href="#tutorial-pesser" title="Tutorials">✅</a></td>
+    <td align="center"><a href="https://github.com/jhaux"><img src="https://avatars0.githubusercontent.com/u/9572598?v=4" width="100px;" alt="Johannes Haux"/><br /><sub><b>Johannes Haux</b></sub></a><br /><a href="https://github.com/pesser/edflow/commits?author=jhaux" title="Code">💻</a> <a href="https://github.com/pesser/edflow/commits?author=jhaux" title="Documentation">📖</a> <a href="#ideas-jhaux" title="Ideas, Planning, & Feedback">🤔</a></td>
+    <td align="center"><a href="https://github.com/rromb"><img src="https://avatars1.githubusercontent.com/u/38811725?v=4" width="100px;" alt="rromb"/><br /><sub><b>rromb</b></sub></a><br /><a href="#tutorial-rromb" title="Tutorials">✅</a></td>
+    <td align="center"><a href="https://github.com/ArWeHei"><img src="https://avatars2.githubusercontent.com/u/46443020?v=4" width="100px;" alt="arwehei"/><br /><sub><b>arwehei</b></sub></a><br /><a href="https://github.com/pesser/edflow/commits?author=ArWeHei" title="Documentation">📖</a> <a href="#infra-ArWeHei" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="http://sandrobraun.de"><img src="https://avatars0.githubusercontent.com/u/6517465?v=4" width="100px;" alt="Sandro Braun"/><br /><sub><b>Sandro Braun</b></sub></a><br /><a href="https://github.com/pesser/edflow/commits?author=theRealSuperMario" title="Code">💻</a> <a href="#example-theRealSuperMario" title="Examples">💡</a> <a href="https://github.com/pesser/edflow/commits?author=theRealSuperMario" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://conrad-sachweh.de"><img src="https://avatars0.githubusercontent.com/u/6422533?v=4" width="100px;" alt="Conrad Sachweh"/><br /><sub><b>Conrad Sachweh</b></sub></a><br /><a href="https://github.com/pesser/edflow/commits?author=conrad784" title="Documentation">📖</a> <a href="https://github.com/pesser/edflow/commits?author=conrad784" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://github.com/mritv"><img src="https://avatars1.githubusercontent.com/u/39053439?v=4" width="100px;" alt="Ritvik Marwaha"/><br /><sub><b>Ritvik Marwaha</b></sub></a><br /><a href="#example-mritv" title="Examples">💡</a></td>
+  </tr>
+</table>
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
    source/source_files/edflow
