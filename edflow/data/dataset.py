@@ -1,8 +1,20 @@
-"""All handy dataset classes we use.
-Our Datasets (TODO usually) inherit from the `chainer.dataset.DatasetMixin`.
-Please note that we overwrite the `__getitem__` method.
-This does not change its functionality and there is not problem in not using
-our version of `DatasetMixin`.
+"""
+Datasets TLDR
+=============
+
+Datasets contain examples, which can be accessed by an index::
+
+    example = Dataset[index]
+
+Each example is annotated by labels. These can be accessed via the
+:attr:`labels` attribute of the dataset::
+
+    label = Dataset.labels[key][index]
+
+To make a working dataset you need to implement a :method:`get_example` method, which must return a ``dict``,
+a :method:`__len__` method and define the :attr:`labels` attribute, which must
+be a dict, that can be empty.
+
 """
 
 import os
@@ -28,7 +40,88 @@ from edflow.util import PRNGMixin
 
 
 class DatasetMixin(DatasetMixin_):
-    def d_msg(self, val):
+    """Our fork of the `chainer
+    <https://docs.chainer.org/en/stable/reference/datasets.html>`-``Dataset``
+    class. Every Dataset used with ``edflow`` should at some point inherit from
+    this baseclass.
+
+    Necessary and best practices
+    ============================
+
+    When implementing your own dataset you need to specify the following methods:
+       - ``__len__`` defines how many examples are in the dataset
+       - ``get_example`` returns one of those examples given an index. The
+          example must be a dictionary
+    Additionally the dataset class should specify an attribute :attr:`labels`,
+    which works like a dictionary with lists or arrays behind each keyword, that
+    have the same length as the dataset. The dictionary can also be empty if
+    you do not want to define labels.
+
+    The philosophy behind having both a :method:`get_example` method and the
+    :attr:`labels` attribute is to split the dataset into compute heavy and
+    easy parts. Labels should be quick to load at construction time, e.g. by
+    loading a ``.npy`` file or a ``.csv``. They can then be used to quickly
+    manipulate the dataset. When getting the actual example we can do the heavy
+    lifting like loading and/or manipulating images.
+
+    As one usually works with batched datasets, the compute heavy steps can be
+    hidden through parallelization. This is all done by the
+    :function:`make_batches`, which is invoked by ``edflow`` automatically.
+
+    Default Behaviour
+    -----------------
+
+    As one sometimes stacks and chains multiple levels of datasets it can
+    become cumbersome to define ``__len__``, ``get_example`` and ``labels``, if
+    all one wants to do is evaluate their respective implementations of some
+    other dataset, as can be seen in the code example below:
+
+    .. code-block:: python
+
+        SomeDerivedDataset(DatasetMixin):
+            def __init__(self):
+                self.other_data = SomeOtherDataset()
+                self.labels = self.other_data.labels
+
+            def __len__(self):
+                return len(self.other_data)
+
+            def get_example(self, idx):
+                return self.other_data[idx]
+
+    This can be omitted when defining a :attr:`data` attribute when
+    constructing the dataset. :class:`DatasetMixin` implements these methods
+    with the default behaviour to wrap around the corresponding methods of the
+    underlying :attr:`data` attribute. Thus the above example becomes
+
+    .. code-block:: python
+
+        SomeDerivedDataset(DatasetMixin):
+            def __init__(self):
+                self.data = SomeOtherDataset()
+
+    ``+`` and ``*``
+    ---------------
+
+    Sometimes you want to concatenate two datasets or multiply the length of
+    one dataset by concatenating it several times to itself. This can easily
+    be done by adding Datasets or multiplying one by an integer factor.
+
+    .. code-block:: python
+
+        A = C + B  # Adding two Datasets
+        D = 3 * A  # Multiplying two datasets
+
+    The above is equivalent to
+
+    .. code-block:: python
+
+        A = ConcatenatedDataset(C, B)  # Adding two Datasets
+        D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
+
+    """
+
+    def _d_msg(self, val):
         """Informs the user that val should be a dict."""
 
         return (
@@ -47,18 +140,18 @@ class DatasetMixin(DatasetMixin_):
             step = i.step or 1
             for idx, d in zip(range(start, stop, step), ret_dict):
                 if not isinstance(d, dict):
-                    raise ValueError(self.d_msg(d))
+                    raise ValueError(self._d_msg(d))
                 d["index_"] = idx
 
         elif isinstance(i, list) or isinstance(i, np.ndarray):
             for idx, d in zip(i, ret_dict):
                 if not isinstance(d, dict):
-                    raise ValueError(self.d_msg(d))
+                    raise ValueError(self._d_msg(d))
                 d["index_"] = idx
 
         else:
             if not isinstance(ret_dict, dict):
-                raise ValueError(self.d_msg(ret_dict))
+                raise ValueError(self._d_msg(ret_dict))
 
             ret_dict["index_"] = i
 
@@ -78,7 +171,13 @@ class DatasetMixin(DatasetMixin_):
             return super().__len__()
 
     def get_example(self, *args, **kwargs):
-        """Add default behaviour for datasets defining an attribute
+        """
+        .. note::
+
+            Please the documentation of :class:`DatasetMixin` to not be
+            confused.
+
+        Add default behaviour for datasets defining an attribute
         :attr:`data`, which in turn is a dataset. This happens often when
         stacking several datasets on top of each other.
 
@@ -824,7 +923,7 @@ class UnSequenceDataset(DatasetMixin):
     If the original dataset would be represented as a 2d numpy array the
     ``UnSequence`` version of it would be the concatenation of all its rows:
 
-    .. codeblock:: python
+    .. code-block:: python
 
         a = np.arange(12)
         seq_dataset = a.reshape([3, 4])
@@ -875,7 +974,7 @@ def getSeqDataset(config):
 
     A config passed to edflow would the look like this:
 
-    .. codeblock:: yaml
+    .. code-block:: yaml
 
         dataset: edflow.data.dataset.getSeqDataSet
         model: Some Model
