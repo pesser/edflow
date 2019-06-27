@@ -47,8 +47,8 @@ class ProjectManager(object):
     def setup(self):
         """Make all the directories."""
 
-        subdirs = ["code", "train", "eval", "ablation"]
-        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [], "ablation": []}
+        subdirs = ["code", "train", "eval", "configs"]
+        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [], "configs": []}
 
         root = ProjectManager.root
 
