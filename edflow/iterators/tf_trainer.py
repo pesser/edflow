@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 from edflow.iterators.tf_iterator import HookedModelIterator, TFHookedModelIterator
 
@@ -230,10 +231,13 @@ class TFBaseTrainer(TFHookedModelIterator):
             images=self.img_ops,
             root_path=ProjectManager.train,
             interval=1,
+            log_images_to_tensorboard=self.config.get(
+                "log_images_to_tensorboard", False
+            ),
         )
         ihook = IntervalHook(
             [loghook],
-            interval=1,
+            interval=self.config.get("start_log_freq", 1),
             modify_each=1,
             max_interval=self.config.get("log_freq", 1000),
             get_step=self.get_global_step,
@@ -293,7 +297,18 @@ class TFBaseTrainer(TFHookedModelIterator):
             opt_ops[k] = self.optimizers[k].minimize(losses[k], var_list=variables)
             print(k)
             print("============================")
-            print("\n".join([v.name for v in variables]))
+            print(
+                "\n".join(
+                    [
+                        "{:>22} {:>22} {}".format(
+                            str(v.shape.as_list()),
+                            str(np.prod(v.shape.as_list())),
+                            v.name,
+                        )
+                        for v in variables
+                    ]
+                )
+            )
             print(len(variables))
             print("============================")
         self.opt_ops = opt_ops
@@ -418,7 +433,18 @@ class TFListTrainer(TFBaseTrainer):
                 opt_ops[k] = optimizers[k].minimize(losses[k], var_list=variables)
                 print(i, k, self.get_learning_rate_multiplier(i))
                 print("============================")
-                print("\n".join([v.name for v in variables]))
+                print(
+                    "\n".join(
+                        [
+                            "{:>22} {:>22} {}".format(
+                                str(v.shape.as_list()),
+                                str(np.prod(v.shape.as_list())),
+                                v.name,
+                            )
+                            for v in variables
+                        ]
+                    )
+                )
                 print(len(variables))
                 print("============================")
 

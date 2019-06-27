@@ -77,6 +77,7 @@ class TFBaseEvaluator(TFHookedModelIterator):
         """
         kwargs.update({"desc": desc, "hook_freq": hook_freq, "num_epochs": num_epochs})
         super().__init__(*args, **kwargs)
+        self.define_graph()
 
     def initialize(self, checkpoint_path=None):
         self.restore_variables = self.model.variables
@@ -100,6 +101,9 @@ class TFBaseEvaluator(TFHookedModelIterator):
                 eval_all=self.config.get("eval_all", False),
             )
             self.hooks += [waiter]
+
+    def define_graph(self):
+        pass
 
     def step_ops(self):
         return self.model.outputs
