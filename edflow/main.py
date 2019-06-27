@@ -3,6 +3,7 @@ import importlib
 import os
 import yaml
 import math
+import datetime
 
 # ignore broken pipe errors: https://www.quora.com/How-can-you-avoid-a-broken-pipe-error-on-Python
 from signal import signal, SIGPIPE, SIG_DFL
@@ -13,6 +14,7 @@ import multiprocessing as mp
 import traceback
 
 from edflow.custom_logging import init_project, get_logger, LogSingleton
+from edflow.project_manager import ProjectManager as P
 
 
 def get_obj_from_str(string):
@@ -67,6 +69,17 @@ def traceable_method(ignores=None):
     return decorator
 
 
+def _save_config(config, prefix = "config"):
+    now = datetime.datetime.now().strftime(
+            "%Y-%m-%dT%H:%M:%S"
+            )
+    fname = prefix+"_"+now+".yaml"
+    path = os.path.join(P.configs, fname)
+    with open(path, "w") as f:
+        f.write(yaml.dump(config))
+    return path
+
+
 def train(args, job_queue, idx):
     traceable_process(_train, args, job_queue, idx)
 
@@ -81,7 +94,7 @@ def _train(config, root, checkpoint=None, retrain=False):
 
     LogSingleton().set_default("train")
     logger = get_logger("train")
-    logger.info("Starting Training with config:\n{}".format(yaml.dump(config)))
+    logger.info("Starting Training.")
 
     implementations = get_implementations_from_config(
         config, ["model", "iterator", "dataset"]
@@ -135,6 +148,11 @@ def _train(config, root, checkpoint=None, retrain=False):
         if retrain:
             Trainer.reset_global_step()
 
+        # save current config
+        logger.info("Starting Training with config:\n{}".format(yaml.dump(config)))
+        cpath = _save_config(config, prefix = "train")
+        logger.info("Saved config at {}".format(cpath))
+
         logger.info("Iterating.")
         Trainer.iterate(batches)
 
@@ -145,7 +163,7 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
 
     LogSingleton().set_default("latest_eval")
     logger = get_logger("test")
-    logger.info("Starting Evaluation with config:\n{}".format(yaml.dump(config)))
+    logger.info("Starting Evaluation.")
 
     if "test_batch_size" in config:
         config["batch_size"] = config["test_batch_size"]
@@ -190,6 +208,14 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         HBU_Evaluator.initialize(checkpoint_path=checkpoint)
     else:
         HBU_Evaluator.initialize()
+
+    # save current config
+    logger.info("Starting Evaluation with config:\n{}".format(yaml.dump(config)))
+    prefix = "eval"
+    if bar_position > 0:
+        prefix = prefix + str(bar_position)
+    cpath = _save_config(config, prefix = prefix)
+    logger.info("Saved config at {}".format(cpath))
 
     logger.info("Iterating")
     while True:
