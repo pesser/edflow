@@ -237,6 +237,24 @@ if __name__ == "__main__":
         default="info",
         help="Set the std-out logging level.",
     )
+
+    logger = get_logger("Commandline Args")
     opt, unknown = parser.parse_known_args()
     additional_kwargs = parse_unknown_args(unknown)
+
+    if "option" in additional_kwargs or "o" in additional_kwargs:
+        msg = "\n" * 2
+        msg += "=" * 20
+        msg += (
+            "\n\033[93m\033[1m\033[4mThe --option Argument is deprecated!"
+            + "\033[0m\n"
+            + "You kann now pass additional options via --key value "
+            + "pairs. This example equivalent to the old --option `key: "
+            + "value`.\n"
+            + "Passing --option `sth` is still possible, but will result"
+            + " in a config entry `config[option] = sth`.\n"
+        )
+        msg += "=" * 20
+        msg += "\n" * 2
+        logger.warn(msg)
     main(opt, additional_kwargs)
