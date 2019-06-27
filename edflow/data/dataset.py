@@ -41,7 +41,7 @@ from edflow.util import PRNGMixin
 
 class DatasetMixin(DatasetMixin_):
     """Our fork of the `chainer
-    <https://docs.chainer.org/en/stable/reference/datasets.html>`-``Dataset``
+    <https://docs.chainer.org/en/stable/reference/datasets.html>`_-``Dataset``
     class. Every Dataset used with ``edflow`` should at some point inherit from
     this baseclass.
 
@@ -52,6 +52,7 @@ class DatasetMixin(DatasetMixin_):
 
         - ``__len__`` defines how many examples are in the dataset
         - ``get_example`` returns one of those examples given an index. The example must be a dictionary
+
     Additionally the dataset class should specify an attribute :attr:`labels`,
     which works like a dictionary with lists or arrays behind each keyword, that
     have the same length as the dataset. The dictionary can also be empty if
