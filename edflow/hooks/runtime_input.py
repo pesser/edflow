@@ -40,7 +40,7 @@ class RuntimeInputHook(Hook):
         """Checks if something changed and if yes runs the callback."""
 
         try:
-            updates = yaml.load(open(self.ufile, "r"))
+            updates = yaml.full_load(open(self.ufile, "r"))
 
             if self.last_updates is not None:
                 changes = {}

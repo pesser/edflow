@@ -18,24 +18,24 @@ black_ to your pre-commit hook:
 
 0. Install black_ with ::
 
-   $ pip install black
+    $ pip install black
 
 1. Paste the following into at the top <project-root>/.git/hooks/pre-commit.sample::
 
-   # run black on all staged files
-   staged=$(git diff --name-only --cached)
-   black $staged
-   # add them again after formatting
-   git add $staged
+    # run black on all staged files
+    staged=$(git diff --name-only --cached)
+    black $staged
+    # add them again after formatting
+    git add $staged
 
 2. Rename ``pre-commit.sample`` to ``pre-commit``
 3. Make it executable using::
 
-   $ chmod +x pre-commit
+    $ chmod +x pre-commit
 
 4. Done!
 
-Or run black by hand and use this command before every commit:::
+Or run black by hand and use this command before every commit::
 
     black ./
 
@@ -44,7 +44,7 @@ Continuous Integration
 ----------------------
 
 We use travisCI_ for continuous integration.
-You do not need to worry about as long as your code passes all tests (this includes
+You do not need to worry about it as long as your code passes all tests (this includes
 a formatting test with black).
 
 .. note::
@@ -62,14 +62,18 @@ It also uses all-contributors_ for honoring contributors.
 sphinx
 ======
 
-To build the documentation locally, install `sphinx` and run:::
+To build the documentation locally, install `sphinx` ::
+
+   pip install sphinx sphinx_rtd_theme
+
+and run ::
 
     $ cd docs
     $ make html
 
 The html files are available under the then existing directory ``docs/_build/html/``
 
-The docsting format which is preferred is `numpy`.
+The preferred docsting format is `numpy <https://numpydoc.readthedocs.io/en/latest/format.html>`__.
 
 We use `sphinx-apidoc` to track all files automatically:::
 
