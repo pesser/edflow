@@ -80,7 +80,7 @@ We use `sphinx-apidoc` to track all files automatically:::
     $ cd docs
     $ sphinx-apidoc -o ./source/source_files ../edflow
 
-all-contirbutors
+all-contributors
 ================
 
 We use all-contributors locally and manage the contributors by hand.
