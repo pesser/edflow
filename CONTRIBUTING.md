@@ -49,7 +49,7 @@ All bugs are tracked as github issues.
 Always remember to be decisive when issuing bugs:
 
 - **Use a clear and descriptive title** for the issue to identify the problem.
-- **Describe the exact steps which reproduce the problem** in as many details as possible. 
+- **Describe the exact steps which reproduce the problem** in as many details as possible.
 - **Provide specific examples to demonstrate the steps**. This can be code snippets or a link to the whole project folder.
 - **Describe the behaviour you observed**
 - **Explain which behavior you expected to see instead and why.**
