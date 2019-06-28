@@ -70,6 +70,7 @@ Dataset Workflow
 
 
 A basic workflow with data in **edflow** looks like this:
+
 1. Load the raw data into some :class:`DatasetMixin` derived custom class.
 2. Use this dataset in a different class, which accepts a
    ``config``-dictionary, containing all relevant parameters, e.g. for making
@@ -93,7 +94,9 @@ the raw data.
 
 To further increase the usefulness of your datasets always add documentation
 and especially add an example, of what an example from you dataset might look
-like. This can be beautifully done using the function :function:`edflow.util.pp2mkdtable`, which formats the content of the example as markdown grid-table:
+like. This can be beautifully done using the function
+:func:`edflow.util.pp2mkdtable`, which formats the content of the example
+as markdown grid-table:
 
 .. code-block:: python
 
