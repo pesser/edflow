@@ -232,6 +232,29 @@ class DatasetMixin(DatasetMixin_):
 
         return ConcatenatedDataset(self, dset)
 
+    @property
+    def labels(self):
+        """Add default behaviour for datasets defining an attribute
+        :attr:`data`, which in turn is a dataset. This happens often when
+        stacking several datasets on top of each other.
+
+        The default behaviour now is to return ``self.data.labels``
+        if possible, and otherwise revert to the original behaviour.
+        """
+        if hasattr(self, "data"):
+            return self.data.labels
+        elif hasattr(self, "_labels"):
+            return self._labels
+        else:
+            return super().labels
+
+    @labels.setter
+    def labels(self, labels):
+        if hasattr(self, "data"):
+            self.data.labels = labels
+        else:
+            self._labels = labels
+
 
 def make_server_manager(port=63127, authkey=b"edcache"):
     inqueue = queue.Queue()
@@ -781,7 +804,10 @@ class ConcatenatedDataset(DatasetMixin):
             for i in range(1, len(self.datasets)):
                 new_labels = self.datasets[i].labels
                 for k in labels:
-                    labels[k] = labels[k] + new_labels[k]
+                    if isinstance(labels[k], np.ndarray):
+                        labels[k] = np.concatenate([labels[k], new_labels[k]])
+                    else:
+                        labels[k] = labels[k] + new_labels[k]
             self._labels = labels
         return self._labels
 
