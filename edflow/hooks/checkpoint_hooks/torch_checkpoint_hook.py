@@ -34,6 +34,8 @@ class RestorePytorchModelHook(Hook):
         self.model = model
         self.global_step_setter = global_step_setter
 
+        self.current_checkpoint = None
+
     def before_epoch(self, ep):
         checkpoint = get_latest_checkpoint(self.root, self.fcond)
         self(checkpoint)
@@ -47,6 +49,8 @@ class RestorePytorchModelHook(Hook):
         if self.global_step_setter is not None:
             self.global_step_setter(step)
         self.logger.info("Epoch: {}, Global step: {}".format(epoch, step))
+
+        self.current_checkpoint = checkpoint
 
     @staticmethod
     def parse_global_step(checkpoint):
