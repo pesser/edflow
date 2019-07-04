@@ -6,6 +6,9 @@ import math
 from matplotlib import pyplot as plt
 
 
+
+#TODO: write tests
+
 def model_arg_scope(**kwargs):
     """Create new counter and apply arg scope to all arg scoped nn
     operations."""
@@ -84,16 +87,43 @@ def partwise_conv2d(
     init_scale=1.0,
     counters={},
     init=False,
+    initdist="uniform",
     **kwargs
 ):
     """
     input: [b, h, w, parts, features]
     Each part (channel 3) has is its own bias and scale
     Uses 3D convolution internally to prevent tf.transpose
+
+    Examples
+    --------
+
+    import tensorflow as tf
+    tf.enable_eager_execution()
+
+    from pylab import *
+    from skimage import data
+    import numpy as np
+    import math
+    im = data.astronaut()
+    im = im.astype(np.float32) / 255
+    H, W, D = im.shape
+
+    b = 1
+    parts = 5
+    out_features = 1
+    features = tf.reshape(im, (b, H, W, 1, D))
+    features = tf.concat([features] * parts, axis=3)
+
+    out = partwise_conv2d(features, out_features, init=False, part_wise=True, initdist="debug")
+
+    fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+    a = np.hstack([np.squeeze(out[..., p, :]) for p in range(parts)])
+    ax.imshow(a, cmap=plt.cm.gray) # this should render the astronaut in 5 different shades of gray
+
     """
     num_filters = int(num_filters)
     name = get_name("conv2d", counters)
-    initdist = "uniform"
     with tf.variable_scope(name):
         in_channels = x.shape.as_list()[4]
         in_parts = x.shape.as_list()[3]
@@ -773,6 +803,8 @@ def hourglass_model(
     coords=False,
 ):
     """
+    A U-net or hourglass style image-to-image model with skip-connections
+
     Parameters
     ----------
     x: tensor
@@ -787,7 +819,7 @@ def hourglass_model(
     n_out : int
         number of final output feature maps of the unet. 3 for RGB
     activation: str
-        a string specifying the activation function to use. See @activate for optionis.
+        a string specifying the activation function to use. See @activate for options.
     upsample_method: list of str or str
         a str specifying the upsampling method or a list of str specifying the upsampling method for each scale individually.
         See @upsample for possible options.
@@ -841,38 +873,40 @@ def hourglass_model(
         return h
 
 
-def make_ema(init_value, value, update_ops, decay=0.99):
+def make_ema(init_value, value, decay=0.99):
     """
     apply exponential moving average to variable
 
     Parameters
     ----------
-    init_value:
-
+    init_value: float
+        initial value for moving average variable
     value: variable
         tf variable to apply update ops on
-    update_ops: list
-        list of update_ops, for example from edflow Trainer class
-    decay: decay parameter
+    decay: float
+        decay parameter
 
     Returns
     -------
     avg_value : variable with exponential moving average
+    update_ema: tensorflow update operation for exponential moving average
 
     Examples
     --------
 
-    avg_acc0 = make_ema(0.5, dis0_accuracy, self.update_ops)
+    # usage within edflow Trainer.make_loss_ops. Apply EMA to discriminator accuracy
+    avg_acc, update_ema = make_ema(0.5, dis_accuracy, decay)
+    self.update_ops.append(update_ema)
+    self.log_ops["dis_acc"] = avg_acc
+
 
     """
-    # TODO: refactor this into ema only + edflow specific update ops
     decay = tf.constant(decay, dtype=tf.float32)
     avg_value = tf.Variable(init_value, dtype=tf.float32, trainable=False)
     update_ema = tf.assign(
         avg_value, decay * avg_value + (1.0 - decay) * tf.cast(value, tf.float32)
     )
-    update_ops.append(update_ema)
-    return avg_value
+    return avg_value, update_ema
 
 
 def add_coordinates(input_tensor, with_r=False):
