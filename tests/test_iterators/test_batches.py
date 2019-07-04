@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from edflow.iterators import batches
 
+
 def test_batch_to_canvas():
     x = np.ones((9, 100, 100, 3))
     canvas = batches.batch_to_canvas(x)
