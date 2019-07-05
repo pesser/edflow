@@ -6,8 +6,8 @@ import math
 from matplotlib import pyplot as plt
 
 
+# TODO: write tests
 
-#TODO: write tests
 
 def model_arg_scope(**kwargs):
     """Create new counter and apply arg scope to all arg scoped nn
