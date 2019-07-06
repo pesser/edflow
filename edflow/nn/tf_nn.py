@@ -958,8 +958,10 @@ def add_coordinates(input_tensor, with_r=False):
     return ret
 
 
-def probs_to_mu_L(probs, scaling_factor, inv=True):  # todo maybe exponential map induces to much certainty ! low values basically ignored and only high values count!
-    '''
+def probs_to_mu_L(
+    probs, scaling_factor, inv=True
+):  # todo maybe exponential map induces to much certainty ! low values basically ignored and only high values count!
+    """
         Calculate mean and covariance for each channel of probs
         tensor of keypoint probabilites [bn, h, w, n_kp]
         mean calculated on a grid of scale [-1, 1]
@@ -1037,47 +1039,77 @@ def probs_to_mu_L(probs, scaling_factor, inv=True):  # todo maybe exponential ma
         ax[1, b].set_title("estimated_blobs")
         ax[1, b].set_axis_off()
 
-    '''
-    bn, h, w, nk = probs.get_shape().as_list()  # todo instead of calulating sequrity measure from amplitude one could alternativly calculate it by letting the network predict a extra paremeter also one could do
-    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
-    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+    """
+    bn, h, w, nk = (
+        probs.get_shape().as_list()
+    )  # todo instead of calulating sequrity measure from amplitude one could alternativly calculate it by letting the network predict a extra paremeter also one could do
+    y_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, w), [1, w]), [h, 1])
     y_t = tf.expand_dims(y_t, axis=-1)
     x_t = tf.expand_dims(x_t, axis=-1)
     meshgrid = tf.concat([y_t, x_t], axis=-1)
 
-    mu = tf.einsum('ijl,aijk->akl', meshgrid, probs)
-    mu_out_prod = tf.einsum('akm,akn->akmn', mu, mu)  # todo incosisntent ordereing of mu! compare with cross_V2
+    mu = tf.einsum("ijl,aijk->akl", meshgrid, probs)
+    mu_out_prod = tf.einsum(
+        "akm,akn->akmn", mu, mu
+    )  # todo incosisntent ordereing of mu! compare with cross_V2
 
-    mesh_out_prod = tf.einsum('ijm,ijn->ijmn', meshgrid, meshgrid)  # todo efficient (expand_dims)
-    stddev = tf.einsum('ijmn,aijk->akmn', mesh_out_prod, probs) - mu_out_prod
+    mesh_out_prod = tf.einsum(
+        "ijm,ijn->ijmn", meshgrid, meshgrid
+    )  # todo efficient (expand_dims)
+    stddev = tf.einsum("ijmn,aijk->akmn", mesh_out_prod, probs) - mu_out_prod
 
     a_sq = stddev[:, :, 0, 0]
     a_b = stddev[:, :, 0, 1]
     b_sq_add_c_sq = stddev[:, :, 1, 1]
     eps = 1e-12  # todo clean magic
 
-    a = tf.sqrt(a_sq + eps)  # Σ = L L^T Prec = Σ^-1  = L^T^-1 * L^-1  ->looking for L^-1 but first L = [[a, 0], [b, c]
+    a = tf.sqrt(
+        a_sq + eps
+    )  # Σ = L L^T Prec = Σ^-1  = L^T^-1 * L^-1  ->looking for L^-1 but first L = [[a, 0], [b, c]
     b = a_b / (a + eps)
     c = tf.sqrt(b_sq_add_c_sq - b ** 2 + eps)
     z = tf.zeros_like(a)
 
     if inv:
         det = tf.expand_dims(tf.expand_dims(a * c, axis=-1), axis=-1)
-        row_1 = tf.expand_dims(tf.concat([tf.expand_dims(c, axis=-1), tf.expand_dims(z, axis=-1)], axis=-1), axis=-2)
-        row_2 = tf.expand_dims(tf.concat([tf.expand_dims(-b, axis=-1), tf.expand_dims(a, axis=-1)], axis=-1), axis=-2)
+        row_1 = tf.expand_dims(
+            tf.concat(
+                [tf.expand_dims(c, axis=-1), tf.expand_dims(z, axis=-1)], axis=-1
+            ),
+            axis=-2,
+        )
+        row_2 = tf.expand_dims(
+            tf.concat(
+                [tf.expand_dims(-b, axis=-1), tf.expand_dims(a, axis=-1)], axis=-1
+            ),
+            axis=-2,
+        )
 
-        L_inv = scaling_factor / (det + eps) * tf.concat([row_1, row_2], axis=-2)  # L^⁻1 = 1/(ac)* [[c, 0], [-b, a]
+        L_inv = (
+            scaling_factor / (det + eps) * tf.concat([row_1, row_2], axis=-2)
+        )  # L^⁻1 = 1/(ac)* [[c, 0], [-b, a]
         return mu, L_inv
     else:
-        row_1 = tf.expand_dims(tf.concat([tf.expand_dims(a, axis=-1), tf.expand_dims(z, axis=-1)], axis=-1), axis=-2)
-        row_2 = tf.expand_dims(tf.concat([tf.expand_dims(b, axis=-1), tf.expand_dims(c, axis=-1)], axis=-1), axis=-2)
+        row_1 = tf.expand_dims(
+            tf.concat(
+                [tf.expand_dims(a, axis=-1), tf.expand_dims(z, axis=-1)], axis=-1
+            ),
+            axis=-2,
+        )
+        row_2 = tf.expand_dims(
+            tf.concat(
+                [tf.expand_dims(b, axis=-1), tf.expand_dims(c, axis=-1)], axis=-1
+            ),
+            axis=-2,
+        )
 
         L = scaling_factor * tf.concat([row_1, row_2], axis=-2)  # just L
         return mu, L
 
 
 def tf_hm(h, w, mu, L, order="exp"):
-    '''
+    """
         Returns Gaussian densitiy function based on μ and L for each batch index and part
         L is the cholesky decomposition of the covariance matrix : Σ = L L^T
     Parameters
@@ -1160,7 +1192,7 @@ def tf_hm(h, w, mu, L, order="exp"):
         ax[1, b].set_title("estimated_blobs")
         ax[1, b].set_axis_off()
 
-    '''
+    """
 
     assert len(mu.get_shape().as_list()) == 3
     assert len(L.get_shape().as_list()) == 4
@@ -1172,12 +1204,9 @@ def tf_hm(h, w, mu, L, order="exp"):
     mu = tf.reshape(mu, (b * p, 2))
     L = tf.reshape(L, (b * p, 2, 2))
 
-    mvn = tfd.MultivariateNormalTriL(
-        loc=mu,
-        scale_tril=L
-    )
-    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
-    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+    mvn = tfd.MultivariateNormalTriL(loc=mu, scale_tril=L)
+    y_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, w), [1, w]), [h, 1])
     y_t = tf.expand_dims(y_t, axis=-1)
     x_t = tf.expand_dims(x_t, axis=-1)
     meshgrid = tf.concat([y_t, x_t], axis=-1)

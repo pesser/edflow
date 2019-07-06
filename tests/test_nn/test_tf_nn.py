@@ -98,6 +98,7 @@ def test_mask2rgb():
 
 def test_blobs():
     from matplotlib import pyplot as plt
+
     tf.enable_eager_execution()
     import numpy as np
     import tensorflow.contrib.distributions as tfd
@@ -109,21 +110,18 @@ def test_blobs():
 
     var_ = 0.1
     rho = 0.5
-    cov = [[var_, rho * var_],
-           [rho * var_, var_]]
+    cov = [[var_, rho * var_], [rho * var_, var_]]
     scale = tf.cholesky(cov)
     scale = tf.stack([scale] * 3, axis=0)
     scale = tf.stack([scale] * 3, axis=0)
     scale = tf.reshape(scale, (-1, 2, 2))
 
-    mvn = tfd.MultivariateNormalTriL(
-        loc=means,
-        scale_tril=scale)
+    mvn = tfd.MultivariateNormalTriL(loc=means, scale_tril=scale)
 
     h = 100
     w = 100
-    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
-    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+    y_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, w), [1, w]), [h, 1])
     y_t = tf.expand_dims(y_t, axis=-1)
     x_t = tf.expand_dims(x_t, axis=-1)
     meshgrid = tf.concat([y_t, x_t], axis=-1)
