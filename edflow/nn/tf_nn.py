@@ -5,6 +5,8 @@ import math
 
 from matplotlib import pyplot as plt
 
+import tensorflow.contrib.distributions as tfd
+
 
 # TODO: write tests
 
@@ -954,6 +956,238 @@ def add_coordinates(input_tensor, with_r=False):
         rr = tf.sqrt(tf.square(xx_channel) + tf.square(yy_channel))
         ret = tf.concat([ret, rr], axis=-1)
     return ret
+
+
+def probs_to_mu_L(probs, scaling_factor, inv=True):  # todo maybe exponential map induces to much certainty ! low values basically ignored and only high values count!
+    '''
+        Calculate mean and covariance for each channel of probs
+        tensor of keypoint probabilites [bn, h, w, n_kp]
+        mean calculated on a grid of scale [-1, 1]
+    Parameters
+    ----------
+    probs: tensor
+        tensor of shape [b, h, w, k] where each channel along axis 3 is interpreted as an unnormalized probability density.
+    scaling_factor : tensor
+        tensor of shape [b, 1, 1, k] representing normalizing the normalizing constant of the density
+    inv: bool
+        if True, returns covariance matrix of density. Else returns inverse of covariance matrix aka precision matrix
+
+    Returns
+    -------
+    mu : tensor
+        tensor of shape [b, k, 2] representing partwise mean coordinates of x and y for each item in the batch
+    L : tensor
+        tensor of shape [b, k, 2, 2] representing partwise cholesky decomposition of covariance
+         matrix for each item in the batch.
+
+    Examples
+    --------
+
+    from matplotlib import pyplot as plt
+    tf.enable_eager_execution()
+    import numpy as np
+    import tensorflow.contrib.distributions as tfd
+
+    _means = [-0.5, 0, 0.5]
+    means = tf.ones((3, 1, 2), dtype=tf.float32) * np.array(_means).reshape((3, 1, 1))
+    means = tf.concat([means, means, means[::-1, ...]], axis=1)
+    means = tf.reshape(means, (-1, 2))
+
+    var_ = 0.1
+    rho = 0.5
+    cov = [[var_, rho * var_],
+           [rho * var_, var_]]
+    scale = tf.cholesky(cov)
+    scale = tf.stack([scale] * 3, axis=0)
+    scale = tf.stack([scale] * 3, axis=0)
+    scale = tf.reshape(scale, (-1, 2, 2))
+
+    mvn = tfd.MultivariateNormalTriL(
+        loc=means,
+        scale_tril=scale)
+
+    h = 100
+    w = 100
+    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+    y_t = tf.expand_dims(y_t, axis=-1)
+    x_t = tf.expand_dims(x_t, axis=-1)
+    meshgrid = tf.concat([y_t, x_t], axis=-1)
+    meshgrid = tf.expand_dims(meshgrid, 0)
+    meshgrid = tf.expand_dims(meshgrid, 3)  # 1, h, w, 1, 2
+
+    blob = mvn.prob(meshgrid)
+    blob = tf.reshape(blob, (100, 100, 3, 3))
+    blob = tf.transpose(blob, perm=[2, 0, 1, 3])
+
+    norm_const = np.sum(blob, axis=(1, 2), keepdims=True)
+    mu, L = nn.probs_to_mu_L(blob / norm_const, 1, inv=False)
+
+    bn, h, w, nk = blob.get_shape().as_list()
+    estimated_blob = nn.tf_hm(h, w, mu, L)
+
+    fig, ax = plt.subplots(2, 3, figsize=(9, 6))
+    for b in range(len(_means)):
+        ax[0, b].imshow(np.squeeze(blob[b, ...]))
+        ax[0, b].set_title("target_blobs")
+        ax[0, b].set_axis_off()
+
+    for b in range(len(_means)):
+        ax[1, b].imshow(np.squeeze(estimated_blob[b, ...]))
+        ax[1, b].set_title("estimated_blobs")
+        ax[1, b].set_axis_off()
+
+    '''
+    bn, h, w, nk = probs.get_shape().as_list()  # todo instead of calulating sequrity measure from amplitude one could alternativly calculate it by letting the network predict a extra paremeter also one could do
+    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+    y_t = tf.expand_dims(y_t, axis=-1)
+    x_t = tf.expand_dims(x_t, axis=-1)
+    meshgrid = tf.concat([y_t, x_t], axis=-1)
+
+    mu = tf.einsum('ijl,aijk->akl', meshgrid, probs)
+    mu_out_prod = tf.einsum('akm,akn->akmn', mu, mu)  # todo incosisntent ordereing of mu! compare with cross_V2
+
+    mesh_out_prod = tf.einsum('ijm,ijn->ijmn', meshgrid, meshgrid)  # todo efficient (expand_dims)
+    stddev = tf.einsum('ijmn,aijk->akmn', mesh_out_prod, probs) - mu_out_prod
+
+    a_sq = stddev[:, :, 0, 0]
+    a_b = stddev[:, :, 0, 1]
+    b_sq_add_c_sq = stddev[:, :, 1, 1]
+    eps = 1e-12  # todo clean magic
+
+    a = tf.sqrt(a_sq + eps)  # Σ = L L^T Prec = Σ^-1  = L^T^-1 * L^-1  ->looking for L^-1 but first L = [[a, 0], [b, c]
+    b = a_b / (a + eps)
+    c = tf.sqrt(b_sq_add_c_sq - b ** 2 + eps)
+    z = tf.zeros_like(a)
+
+    if inv:
+        det = tf.expand_dims(tf.expand_dims(a * c, axis=-1), axis=-1)
+        row_1 = tf.expand_dims(tf.concat([tf.expand_dims(c, axis=-1), tf.expand_dims(z, axis=-1)], axis=-1), axis=-2)
+        row_2 = tf.expand_dims(tf.concat([tf.expand_dims(-b, axis=-1), tf.expand_dims(a, axis=-1)], axis=-1), axis=-2)
+
+        L_inv = scaling_factor / (det + eps) * tf.concat([row_1, row_2], axis=-2)  # L^⁻1 = 1/(ac)* [[c, 0], [-b, a]
+        return mu, L_inv
+    else:
+        row_1 = tf.expand_dims(tf.concat([tf.expand_dims(a, axis=-1), tf.expand_dims(z, axis=-1)], axis=-1), axis=-2)
+        row_2 = tf.expand_dims(tf.concat([tf.expand_dims(b, axis=-1), tf.expand_dims(c, axis=-1)], axis=-1), axis=-2)
+
+        L = scaling_factor * tf.concat([row_1, row_2], axis=-2)  # just L
+        return mu, L
+
+
+def tf_hm(h, w, mu, L, order="exp"):
+    '''
+        Returns Gaussian densitiy function based on μ and L for each batch index and part
+        L is the cholesky decomposition of the covariance matrix : Σ = L L^T
+    Parameters
+    ----------
+    h : int
+        heigh ot output map
+    w : int
+        width of output map
+    mu : tensor
+        mean of gaussian part and batch item. Shape [b, p, 2]. Mean in range [-1, 1] with respect to height and width
+    L : tensor
+        cholesky decomposition of covariance matrix for each batch item and part. Shape [b, p, 2, 2]
+    order:
+
+    Returns
+    -------
+    density : tensor
+        gaussian blob for each part and batch idx. Shape [b, h, w, p]
+
+    Examples
+    --------
+
+    from matplotlib import pyplot as plt
+    tf.enable_eager_execution()
+    import numpy as np
+    import tensorflow as tf
+    import tensorflow.contrib.distributions as tfd
+
+    # create Target Blobs
+    _means = [-0.5, 0, 0.5]
+    means = tf.ones((3, 1, 2), dtype=tf.float32) * np.array(_means).reshape((3, 1, 1))
+    means = tf.concat([means, means, means[::-1, ...]], axis=1)
+    means = tf.reshape(means, (-1, 2))
+
+    var_ = 0.1
+    rho = 0.5
+    cov = [[var_, rho * var_],
+           [rho * var_, var_]]
+    scale = tf.cholesky(cov)
+    scale = tf.stack([scale] * 3, axis=0)
+    scale = tf.stack([scale] * 3, axis=0)
+    scale = tf.reshape(scale, (-1, 2, 2))
+
+    mvn = tfd.MultivariateNormalTriL(
+        loc=means,
+        scale_tril=scale)
+
+    h = 100
+    w = 100
+    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+    y_t = tf.expand_dims(y_t, axis=-1)
+    x_t = tf.expand_dims(x_t, axis=-1)
+    meshgrid = tf.concat([y_t, x_t], axis=-1)
+    meshgrid = tf.expand_dims(meshgrid, 0)
+    meshgrid = tf.expand_dims(meshgrid, 3)  # 1, h, w, 1, 2
+
+    blob = mvn.prob(meshgrid)
+    blob = tf.reshape(blob, (100, 100, 3, 3))
+    blob = tf.transpose(blob, perm=[2, 0, 1, 3])
+
+    # Estimate mean and L
+    norm_const = np.sum(blob, axis=(1, 2), keepdims=True)
+    mu, L = nn.probs_to_mu_L(blob / norm_const, 1, inv=False)
+
+    bn, h, w, nk = blob.get_shape().as_list()
+
+    # Estimate blob based on mu and L
+    estimated_blob = nn.tf_hm(h, w, mu, L)
+
+    # plot
+    fig, ax = plt.subplots(2, 3, figsize=(9, 6))
+    for b in range(len(_means)):
+        ax[0, b].imshow(np.squeeze(blob[b, ...]))
+        ax[0, b].set_title("target_blobs")
+        ax[0, b].set_axis_off()
+
+    for b in range(len(_means)):
+        ax[1, b].imshow(np.squeeze(estimated_blob[b, ...]))
+        ax[1, b].set_title("estimated_blobs")
+        ax[1, b].set_axis_off()
+
+    '''
+
+    assert len(mu.get_shape().as_list()) == 3
+    assert len(L.get_shape().as_list()) == 4
+    assert mu.get_shape().as_list()[-1] == 2
+    assert L.get_shape().as_list()[-1] == 2
+    assert L.get_shape().as_list()[-2] == 2
+
+    b, p, _ = mu.get_shape().as_list()
+    mu = tf.reshape(mu, (b * p, 2))
+    L = tf.reshape(L, (b * p, 2, 2))
+
+    mvn = tfd.MultivariateNormalTriL(
+        loc=mu,
+        scale_tril=L
+    )
+    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+    y_t = tf.expand_dims(y_t, axis=-1)
+    x_t = tf.expand_dims(x_t, axis=-1)
+    meshgrid = tf.concat([y_t, x_t], axis=-1)
+    meshgrid = tf.expand_dims(meshgrid, 0)
+    meshgrid = tf.expand_dims(meshgrid, 3)  # 1, h, w, 1, 2
+
+    probs = mvn.prob(meshgrid)
+    probs = tf.reshape(probs, (h, w, b, p))
+    probs = tf.transpose(probs, perm=[2, 0, 1, 3])  # move part axis to the back
+    return probs
 
 
 if __name__ == "__main__":
