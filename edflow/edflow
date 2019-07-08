@@ -238,7 +238,6 @@ if __name__ == "__main__":
         help="Set the std-out logging level.",
     )
 
-    logger = get_logger("Commandline Args")
     opt, unknown = parser.parse_known_args()
     additional_kwargs = parse_unknown_args(unknown)
 
@@ -256,5 +255,5 @@ if __name__ == "__main__":
         )
         msg += "=" * 20
         msg += "\n" * 2
-        logger.warn(msg)
+        print(msg)
     main(opt, additional_kwargs)
