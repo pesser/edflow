@@ -102,8 +102,19 @@ def get_default_logger():
     return default_log_dir, default_logger
 
 
+def fix_abseil():
+    # https://github.com/tensorflow/tensorflow/issues/26691#issuecomment-500369493
+    try:
+        import absl.logging
+        logging.root.removeHandler(absl.logging._absl_handler)
+        absl.logging._warn_preinit_stderr = False
+    except Exception:
+        pass
+
+
 def init_project(base_dir, code_root=".", postfix=None):
     """Must be called at the very beginning of a script."""
+    fix_abseil()
     P = ProjectManager(base_dir, code_root=code_root, postfix=postfix)
     LogSingleton(P.root)
     return P
