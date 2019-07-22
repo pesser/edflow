@@ -20,15 +20,20 @@ P = ProjectManager()
 def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
     """Return path to name of latest checkpoint in checkpoint_root dir.
 
-    Args:
-        checkpoint_root (str): Path to where the checkpoints live.
-        filter_cond (Callable): A function used to filter files, to only
-            get the checkpoints that are wanted.
+    Parameters
+    ----------
+    checkpoint_root : str
+        Path to where the checkpoints live.
+    filter_cond : Callable
+        A function used to filter files, to only
+        get the checkpoints that are wanted.
 
-    Returns:
-        str: path of the latest checkpoint. Note that for tensorflow
-            checkpoints this is not an existing file, but
-            path{.index,.meta,data*} should be
+    Returns
+    ------
+    str
+        path of the latest checkpoint. Note that for tensorflow
+        checkpoints this is not an existing file, but
+        path{.index,.meta,data*} should be
     """
     ckpt_root = checkpoint_root
 
@@ -83,18 +88,26 @@ class WaitForCheckpointHook(Hook):
         callback=None,
         eval_all=False,
     ):
-        """Args:
-            checkpoint_root (str): Path to look for checkpoints.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted.
-            interval (float): Number of seconds after which to check for a new
-                checkpoint again.
-            add_sec (float): Number of seconds to wait, after a checkpoint is
-                found, to avoid race conditions, if the checkpoint is still
-                being written at the time it's meant to be read.
-            callback (Callable): Callback called with path of found
-                checkpoint.
-            eval_all (bool): Accept all instead of just latest checkpoint.
+        """
+        Parameters
+        ----------
+        checkpoint_root : str
+            Path to look for checkpoints.
+        filter_cond : Callable
+            A function used to filter files, to only
+            get the checkpoints that are wanted.
+        interval : float
+            Number of seconds after which to check for a new
+            checkpoint again.
+        add_sec : float
+            Number of seconds to wait, after a checkpoint is
+            found, to avoid race conditions, if the checkpoint is still
+            being written at the time it's meant to be read.
+        callback : Callable
+            Callback called with path of found
+            checkpoint.
+        eval_all : bool
+            Accept all instead of just latest checkpoint.
         """
 
         self.root = checkpoint_root
@@ -189,9 +202,12 @@ class CollectorHook(Hook):
         """Given the current collected data append the new results along the
         batch dimension.
 
-        Args:
-            new_data (list or dict): data to append.
-            all_data (list or dict): data to append to.
+        Parameters
+        ----------
+        new_data : list or dict
+            data to append.
+        all_data : list or dict
+            data to append to.
         """
 
         iterator = make_iterator(new_data)
@@ -238,10 +254,14 @@ class StoreArraysHook(CollectorHook):
     def flatten_results(self, results, prefix, store_dict):
         """Recursively walk over the results dictionary and stack the data.
 
-        Args:
-            results (dict or list): Containing results.
-            prefix (str): Prepended to name when storing.
-            store_dict (dict): Flat storage dictionary.
+        Parameters
+        ----------
+        results : dict or list
+	    Containing results.
+        prefix : str
+	    Prepended to name when storing.
+        store_dict : dict
+	    Flat storage dictionary.
         """
 
         iterator = make_iterator(results)
@@ -306,8 +326,10 @@ def tf_parse_global_step(checkpoint):
 def get_checkpoint_files(checkpoint_root):
     """Return {global_step: [files,...]}.
 
-    Args:
-        checkpoint_root (str): Path to where the checkpoints live.
+    Parameters
+    ----------
+    checkpoint_root : str
+	Path to where the checkpoints live.
     """
     ckpt_root = checkpoint_root
     files = []
@@ -348,11 +370,17 @@ class KeepBestCheckpoints(Hook):
         n_keep=5,
         lower_is_better=True,
     ):
-        """Args:
-            checkpoint_root (str): Path to look for checkpoints.
-            metric_template (str): Format string to find metric file.
-            metric_key (str): Key to use from metric file.
-            n_keep (int): Maximum number of checkpoints to keep.
+        """
+        Parameters
+        ----------
+        checkpoint_root : str
+	    Path to look for checkpoints.
+        metric_template : str
+	    Format string to find metric file.
+        metric_key : str
+	    Key to use from metric file.
+        n_keep : int
+	    Maximum number of checkpoints to keep.
         """
 
         self.root = checkpoint_root
