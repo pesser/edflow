@@ -137,6 +137,11 @@ def main(opt, additional_kwargs):
             config = base_config
             config.update(yaml.full_load(f))
             update_config(config, additional_kwargs)
+        if opt.checkpoint is not None:
+            for k in ["eval_forever", "eval_all"]:
+                if k in eval_config:
+                    eval_config[k] = False
+                    logger.info("{} was disabled because you specified a checkpoint.".format(k))
         logger.info(
             "Evaluation config: {}\n{}".format(eval_config, yaml.dump(eval_config))
         )
