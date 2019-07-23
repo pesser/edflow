@@ -491,7 +491,7 @@ class CachedDataset(DatasetMixin):
                 N_examples = len(indeces)
             print("Caching {} examples.".format(N_examples))
             index_chunks = [
-                indeces[i : i + chunk_size]
+                indeces[i : i + self.chunk_size]
                 for i in range(0, len(indeces), self.chunk_size)
             ]
             for chunk in index_chunks:
