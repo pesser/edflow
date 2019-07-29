@@ -125,8 +125,11 @@ def main(opt, additional_kwargs):
     for eval_idx, eval_config in enumerate(opt.eval):
         if opt.checkpoint is not None:
             checkpoint = opt.checkpoint
+        elif opt.project is not None:
+            checkpoint = get_latest_checkpoint(P.checkpoints)
         else:
             checkpoint = None
+
         base_config = {}
         if opt.base is not None:
             for base in opt.base:
@@ -137,6 +140,11 @@ def main(opt, additional_kwargs):
             config = base_config
             config.update(yaml.full_load(f))
             update_config(config, additional_kwargs)
+        if opt.checkpoint is not None:
+            for k in ["eval_forever", "eval_all"]:
+                if k in config:
+                    config[k] = False
+                    logger.info("{} was disabled because you specified a checkpoint.".format(k))
         logger.info(
             "Evaluation config: {}\n{}".format(eval_config, yaml.dump(eval_config))
         )

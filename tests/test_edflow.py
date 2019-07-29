@@ -6,7 +6,7 @@ import numpy as np
 import subprocess
 from tensorflow.contrib.framework.python.ops import add_arg_scope, arg_scope
 import subprocess
-import os
+import os, time
 import errno, sys
 
 
@@ -15,7 +15,7 @@ class Model(object):
         self.config = config
 
 
-class Iterator1(TFBaseEvaluator):
+class Iterator_checkpoint(TFBaseEvaluator):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is model.ckpt-0 """
 
@@ -26,12 +26,33 @@ class Iterator1(TFBaseEvaluator):
         return None
 
 
-class Iterator2(TFBaseEvaluator):
+class Iterator_checkpoint_latest(TFBaseEvaluator):
+    def __init__(self, *args, **kwargs):
+        """ iterator for testing that the provided checkpoint is model.ckpt-100 """
+
+    def initialize(self, checkpoint_path=None):
+        assert "model.ckpt-100" in checkpoint_path, checkpoint_path
+
+    def iterate(self, batch_iterator):
+        return None
+
+
+class Iterator_no_checkpoint(TFBaseEvaluator):
     def __init__(self, *args, **kwargs):
         """ iterator for testing that the provided checkpoint is None """
 
     def initialize(self, checkpoint_path=None):
         assert checkpoint_path is None
+
+    def iterate(self, batch_iterator):
+        return None
+
+
+class Iterator4(TFBaseEvaluator):
+    def initialize(self, checkpoint_path=None):
+        assert "model.ckpt-0" in checkpoint_path
+        assert not self.config["eval_all"]
+        assert not self.config["eval_forever"]
 
     def iterate(self, batch_iterator):
         return None
@@ -83,6 +104,7 @@ class Test_eval(object):
         checkpoints = ["model.ckpt-0", "model.ckpt-100"]
         for c in checkpoints:
             checkpoint_path = os.path.join(sub_dir, c)
+            time.sleep(2)  # make sure they are sorted in time
             self.make_dummy_checkpoint(checkpoint_path)
 
     def make_dummy_checkpoint(self, checkpoint_path):
@@ -105,7 +127,7 @@ class Test_eval(object):
         self.setup_tmpdir(tmpdir)
         config = dict()
         config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator1)
+        config["iterator"] = "tests." + fullname(Iterator_checkpoint)
         config["dataset"] = "tests." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
@@ -152,7 +174,7 @@ class Test_eval(object):
         self.setup_tmpdir(tmpdir)
         config = dict()
         config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator1)
+        config["iterator"] = "tests." + fullname(Iterator_checkpoint)
         config["dataset"] = "tests." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
@@ -187,7 +209,7 @@ class Test_eval(object):
 
     def test_3(self, tmpdir):
         """
-        Tests evaluation without providing a checkpoint. This should NOT load any checkpoint.
+        Tests evaluation without providing a checkpoint. This should load the latest checkpoint.
 
         effectively runs
             edflow -e config.yaml -b config.yaml -p logs/trained_model -n test_inference
@@ -199,7 +221,7 @@ class Test_eval(object):
         # command = "edflow -e eval.yaml -b train.yaml -n test"
         config = dict()
         config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator2)
+        config["iterator"] = "tests." + fullname(Iterator_checkpoint_latest)
         config["dataset"] = "tests." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
@@ -218,6 +240,57 @@ class Test_eval(object):
             os.path.join("logs", "trained_model"),
             "-b",
             "config.yaml",
+            "-n",
+            "test_inference",
+        ]
+        command = " ".join(command)
+        run_edflow_cmdline(command, cwd=tmpdir)
+
+        # check if correct folder was created
+        eval_dirs = os.listdir(os.path.join(tmpdir, "logs", "trained_model", "eval"))
+        assert any(list(filter(lambda x: "test_inference" in x, eval_dirs)))
+
+    def test_4(self, tmpdir):
+        """
+        Tests evaluation with providing a checkpoint and using eval_all=True and eval_forever=True.
+        This should load not load any checkpoint.
+
+        effectively runs
+            edflow -e config.yaml -b config.yaml -c logs/trained_model/train/checkpoints/model.ckpt-0
+            -p logs/trained_model -n test_inference
+
+        and then checks if an evaluation folder "test_inference" was created in logs/trained_model/eval
+        -------
+        """
+        self.setup_tmpdir(tmpdir)
+        # command = "edflow -e eval.yaml -b train.yaml -n test"
+        config = dict()
+        config["model"] = "tests." + fullname(Model)
+        config["iterator"] = "tests." + fullname(Iterator4)
+        config["dataset"] = "tests." + fullname(Dataset)
+        config["batch_size"] = 16
+        config["num_steps"] = 100
+        config["eval_all"] = True
+        config["eval_forever"] = True
+        import yaml
+
+        with open(os.path.join(tmpdir, "config.yaml"), "w") as outfile:
+            yaml.dump(config, outfile, default_flow_style=False)
+        import shutil
+
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        command = [
+            "edflow",
+            "-e",
+            "config.yaml",
+            "-c",
+            os.path.join(
+                "logs", "trained_model", "train", "checkpoints", "model.ckpt-0"
+            ),
+            "-b",
+            "config.yaml",
+            "-p",
+            os.path.join("logs", "trained_model"),
             "-n",
             "test_inference",
         ]
