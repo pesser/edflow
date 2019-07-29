@@ -101,6 +101,7 @@ This makes working together easier for all of us.
   - :fire: `:fire:` when removing code or files
   - :green_heart: `:green_heart:` when fixing tests
   - :white_check_mark: `:white_check_mark:` when adding tests
+  - :tada: `:tada:` when adding features
 
 ### Documentation Styleguide
 
