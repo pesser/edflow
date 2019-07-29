@@ -1,0 +1,17 @@
+model: model.CNN
+iterator: model.Iterator
+
+dataset: dataset.Dataset_MNIST
+
+code_root: null
+
+
+batch_size: 30
+spatial_size: 28
+
+drop_prob: 0.0
+
+hook_freq: 1
+log_freq: 1000
+ckpt_freq: 1000
+mode: "eval"
