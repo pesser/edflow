@@ -6,7 +6,7 @@ import numpy as np
 import subprocess
 from tensorflow.contrib.framework.python.ops import add_arg_scope, arg_scope
 import subprocess
-import os
+import os, time
 import errno, sys
 
 
@@ -31,7 +31,7 @@ class Iterator_checkpoint_latest(TFBaseEvaluator):
         """ iterator for testing that the provided checkpoint is model.ckpt-100 """
 
     def initialize(self, checkpoint_path=None):
-        assert "model.ckpt-100" in checkpoint_path
+        assert "model.ckpt-100" in checkpoint_path, checkpoint_path
 
     def iterate(self, batch_iterator):
         return None
@@ -49,12 +49,6 @@ class Iterator_no_checkpoint(TFBaseEvaluator):
 
 
 class Iterator4(TFBaseEvaluator):
-    def __init__(self, *args, **kwargs):
-        """
-        iterator for testing that the provided checkpoint is model.ckpt-0
-        and eval_all = False and eval_forever = False
-        """
-
     def initialize(self, checkpoint_path=None):
         assert "model.ckpt-0" in checkpoint_path
         assert not self.config["eval_all"]
@@ -110,6 +104,7 @@ class Test_eval(object):
         checkpoints = ["model.ckpt-0", "model.ckpt-100"]
         for c in checkpoints:
             checkpoint_path = os.path.join(sub_dir, c)
+            time.sleep(2)  # make sure they are sorted in time
             self.make_dummy_checkpoint(checkpoint_path)
 
     def make_dummy_checkpoint(self, checkpoint_path):
