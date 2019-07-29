@@ -19,13 +19,13 @@ def test_eval():
         shell=True,
     )
 
-    csv_name = get_model_csv(str(output))
+    # csv_name = get_model_csv(str(output))
 
-    output = subprocess.run(
-        "cd eval_hook; pwd; edeval -c {} -cb model.empty_callback".format(csv_name),
-        shell=True,
-        check=True,
-    )
+    # output = subprocess.run(
+    #     "cd eval_hook; pwd; edeval -c {} -cb model.empty_callback".format(csv_name),
+    #     shell=True,
+    #     check=True,
+    # )
 
 
 if __name__ == "__main__":
