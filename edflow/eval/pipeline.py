@@ -3,7 +3,6 @@
 Step 1: Evaluate model on a test dataset and write out all data of interest:
     - generated image
     - latent representations
-    - the string `pesser`, 'cause it's cool!
 
 Step 2: Load the generated data in a Datafolder using the EvalDataset
 
@@ -603,6 +602,10 @@ def standalone_eval_csv_file(path_to_csv, callbacks):
 
     import importlib
     from edflow.main import get_implementations_from_config
+
+    import sys
+
+    sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
     out_data = EvalDataFolder(path_to_csv)
 
