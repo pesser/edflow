@@ -1,55 +1,86 @@
 {
-    "projectName": "edflow",
-    "projectOwner": "PEsser",
-    "repoType": "github",
-    "repoHost": "https://github.com",
-    "files": ["README.md"],
-    "imageSize": 100,
-    "commit": false,
-    "commitConvention": "none",
-    "contributors": [
-        {
-            "login": "pesser",
-            "name": "Patrick Esser",
-            "avatar_url": "https://avatars3.githubusercontent.com/u/2175508?v=4",
-            "profile": "https://github.com/pesser",
-            "contributions": ["code"],
-        },
-        {
-            "login": "jhaux",
-            "name": "Johannes Haux",
-            "avatar_url": "https://avatars0.githubusercontent.com/u/9572598?v=4",
-            "profile": "https://github.com/jhaux",
-            "contributions": ["code"],
-        },
-        {
-            "login": "ArWeHei",
-            "name": "arwehei",
-            "avatar_url": "https://avatars2.githubusercontent.com/u/46443020?v=4",
-            "profile": "https://github.com/ArWeHei",
-            "contributions": ["doc"],
-        },
-        {
-            "login": "theRealSuperMario",
-            "name": "therealsupermario",
-            "avatar_url": "https://avatars0.githubusercontent.com/u/6517465?v=4",
-            "profile": "https://github.com/theRealSuperMario",
-            "contributions": ["example"],
-        },
-        {
-            "login": "mritv",
-            "name": "Ritvik Marwaha",
-            "avatar_url": "https://avatars1.githubusercontent.com/u/39053439?v=4",
-            "profile": "https://github.com/mritv",
-            "contributions": ["example"],
-        },
-        {
-            "login": "conrad784",
-            "name": "Conrad Sachweh",
-            "avatar_url": "https://avatars0.githubusercontent.com/u/6422533?v=4",
-            "profile": "https://conrad-sachweh.de",
-            "contributions": ["test"],
-        },
-    ],
-    "contributorsPerLine": 7,
+  "projectName": "edflow",
+  "projectOwner": "pesser",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "none",
+  "contributors": [
+    {
+      "login": "pesser",
+      "name": "Patrick Esser",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/2175508?v=4",
+      "profile": "https://github.com/pesser",
+      "contributions": [
+        "code",
+        "ideas",
+        "tutorial"
+      ]
+    },
+    {
+      "login": "jhaux",
+      "name": "Johannes Haux",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/9572598?v=4",
+      "profile": "https://github.com/jhaux",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas"
+      ]
+    },
+    {
+      "login": "rromb",
+      "name": "rromb",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/38811725?v=4",
+      "profile": "https://github.com/rromb",
+      "contributions": [
+        "tutorial"
+      ]
+    },
+    {
+      "login": "ArWeHei",
+      "name": "arwehei",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/46443020?v=4",
+      "profile": "https://github.com/ArWeHei",
+      "contributions": [
+        "doc",
+        "infra"
+      ]
+    },
+    {
+      "login": "theRealSuperMario",
+      "name": "Sandro Braun",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/6517465?v=4",
+      "profile": "http://sandrobraun.de",
+      "contributions": [
+        "code",
+        "example",
+        "test"
+      ]
+    },
+    {
+      "login": "conrad784",
+      "name": "Conrad Sachweh",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/6422533?v=4",
+      "profile": "https://conrad-sachweh.de",
+      "contributions": [
+        "doc",
+        "test"
+      ]
+    },
+    {
+      "login": "mritv",
+      "name": "Ritvik Marwaha",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/39053439?v=4",
+      "profile": "https://github.com/mritv",
+      "contributions": [
+        "example"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
 }
