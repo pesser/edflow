@@ -43,7 +43,7 @@ class Iterator(PyHookedModelIterator):
         def restore(checkpoint_path):
             self.tfcheckpoint.restore(checkpoint_path)
         def save(checkpoint_path):
-            self.tfcheckpoint.save(checkpoint_path)
+            self.tfcheckpoint.write(checkpoint_path)
 
         self.ckpthook = LambdaCheckpointHook(
                 root_path = ProjectManager.checkpoints,
