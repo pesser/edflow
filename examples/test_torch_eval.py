@@ -15,14 +15,14 @@ def get_model_csv(stdout):
 def test_eval():
     """Just make sure example runs without errors."""
     output = subprocess.check_output(
-        "cd eval_hook; ls; edflow -t mnist_config.yaml -n eval_testrun --num_steps 11",
+        "edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11",
         shell=True,
     )
 
     csv_name = get_model_csv(str(output))
 
     output = subprocess.run(
-        "cd eval_hook; pwd; edeval -c {} -cb model.empty_callback".format(csv_name),
+        "edeval -c {} -cb eval_hook.model.empty_callback".format(csv_name),
         shell=True,
         check=True,
     )

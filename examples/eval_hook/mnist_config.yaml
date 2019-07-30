@@ -1,7 +1,7 @@
-model: model.CNN
-iterator: model.Iterator
+model: eval_hook.model.CNN
+iterator: eval_hook.model.Iterator
 
-dataset: dataset.Dataset_MNIST
+dataset: eval_hook.dataset.Dataset_MNIST
 
 code_root: null
 
