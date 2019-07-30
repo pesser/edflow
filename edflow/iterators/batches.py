@@ -47,13 +47,13 @@ def tile(X, rows, cols):
     return tiling
 
 
-def plot_batch(X, out_path):
+def plot_batch(X, out_path, cols=None):
     """Save batch of images tiled."""
-    canvas = batch_to_canvas(X)
+    canvas = batch_to_canvas(X, cols)
     save_image(canvas, out_path)
 
 
-def batch_to_canvas(X):
+def batch_to_canvas(X, cols=None):
     """convert batch of images to canvas"""
     if len(X.shape) == 5:
         # tile
@@ -75,7 +75,11 @@ def batch_to_canvas(X):
     if n_channels == 1:
         X = np.tile(X, [1, 1, 1, 3])
     rc = math.sqrt(X.shape[0])
-    rows = cols = math.ceil(rc)
+    if cols is None:
+        rows = cols = math.ceil(rc)
+    else:
+        cols = max(1, cols)
+        rows = math.ceil(X.shape[0] / cols)
     canvas = tile(X, rows, cols)
     return canvas
 
