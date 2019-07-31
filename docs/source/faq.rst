@@ -17,3 +17,9 @@ How do I set a random seed?
    in your batches are independent. This will add a :attr:`prng` attribute (a
    `RandomState` instance) to your class, which will be seeded differently in
    each process.
+
+How do I run tests locally?
+   We use `pytest <https://docs.pytest.org/en/latest/>`_ for our tests and you
+   can run ``pytest --ignore="examples"`` to run the general tests. To run
+   framework dependent tests and see the precise testing protocol executed by
+   `travis <https://travis-ci.org/>`_, see `.travis.yml`.

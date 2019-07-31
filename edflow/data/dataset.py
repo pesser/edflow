@@ -405,7 +405,14 @@ class CachedDataset(DatasetMixin):
 
     _legacy = True
 
-    def __init__(self, dataset, force_cache=False, keep_existing=True, _legacy=True):
+    def __init__(
+        self,
+        dataset,
+        force_cache=False,
+        keep_existing=True,
+        _legacy=True,
+        chunk_size=64,
+    ):
         """Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
@@ -428,6 +435,7 @@ class CachedDataset(DatasetMixin):
             _legacy (bool): Read from the cached Zip file. Deprecated mode.
                 Future Datasets should not write into zips as read times are
                 very long.
+            chunksize (int): Length of the index list that is sent to the worker.
         """
 
         self.force_cache = force_cache
@@ -437,6 +445,7 @@ class CachedDataset(DatasetMixin):
         self.base_dataset = dataset
         self._root = root = dataset.root
         name = dataset.name
+        self.chunk_size = chunk_size
 
         self.store_dir = os.path.join(root, "cached")
         self.store_path = os.path.join(self.store_dir, name)
@@ -504,9 +513,9 @@ class CachedDataset(DatasetMixin):
                 print("Keeping {} cached examples.".format(N_examples - len(indeces)))
                 N_examples = len(indeces)
             print("Caching {} examples.".format(N_examples))
-            chunk_size = 64
             index_chunks = [
-                indeces[i : i + chunk_size] for i in range(0, len(indeces), chunk_size)
+                indeces[i : i + self.chunk_size]
+                for i in range(0, len(indeces), self.chunk_size)
             ]
             for chunk in index_chunks:
                 inqueue.put(chunk)
