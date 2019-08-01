@@ -30,10 +30,7 @@ at all.
 
             self.model = model
 
-            dset = get_obj_from_str(config['dataset'])
-            dset = dset(config)
-
-            self.hooks += [EvalHook(dset,
+            self.hooks += [EvalHook(self.dataset,
                                     callbacks=[my_callback],
                                     meta=config,
                                     step_getter=self.get_global_step)]
@@ -153,6 +150,10 @@ class EvalHook(Hook):
 
         self.label_arrs = None
 
+    def before_step(self, step, fetches, feeds, batch):
+        """Get dataset indices from batch."""
+        self.idxs = np.array(batch["index_"], dtype=int)
+
     def after_step(self, step, last_results):
         # Attention -> This does not work with nested keys!
         # Fix it in post :)
@@ -173,14 +174,14 @@ class EvalHook(Hook):
                 memmap = np.memmap(savepath, shape=tuple(shape), mode="w+", dtype=dtype)
                 self.label_arrs[k] = memmap
 
-        idxs = np.array(last_results["step_ops"]["index_"], dtype=int)
+        idxs = self.idxs  # indices collected before_step
 
         for k in self.lks:
             # Can the inner loop be made a fancy indexing assign?
             for i, idx in enumerate(idxs):
                 self.label_arrs[k][idx] = label_vals[k][i]
 
-        path_dicts = save_output(self.save_root, last_results, self.sdks)
+        path_dicts = save_output(self.save_root, last_results, idxs, self.sdks)
 
         if self.data_frame is None:
             columns = sorted(path_dicts[list(path_dicts.keys())[0]])
@@ -222,15 +223,17 @@ class EvalHook(Hook):
         add_meta_data(csv_path, self.meta)
 
         this_script = os.path.dirname(__file__)
-        cbs = " ".join(self.cb_names)
+        if self.cb_names:
+            cbs = " ".join(self.cb_names)
+        else:
+            cbs = "<your callback>"
 
+        self.logger.info("MODEL_OUPUT_CSV {}".format(csv_path))
         self.logger.info(
             "All data has been produced. You can now also run all"
-            + " callbacks using the following commands:\n"
-            + "cd {}\n".format(this_script)
-            + "python eval_pipeline.py -c {} -cb {}".format(csv_path, cbs)
+            + " callbacks using the following command:\n"
+            + "edeval -c {} -cb {}".format(csv_path, cbs)
         )
-        self.logger.info("MODEL_OUPUT_CSV {}".format(csv_path))
 
 
 class EvalDataFolder(DatasetMixin):
@@ -286,13 +289,14 @@ def load_labels(root):
     return labels
 
 
-def save_output(root, example, sub_dir_keys=[]):
+def save_output(root, example, index, sub_dir_keys=[]):
     """Saves the ouput of some model contained in ``example`` in a reusable
     manner.
 
     Args:
         root (str): Storage directory
-        example (dict): name: datum pairs of outputs. Must contain ``index_``.
+        example (dict): name: datum pairs of outputs.
+        index (list(int)): dataset index corresponding to example.
         sub_dir_keys (list(str)): Keys found in :attr:`example`, which will be
             used to make a subirectory for the stored example. Subdirectories
             are made in a nested fashion in the order of the list. The keys
@@ -309,8 +313,6 @@ def save_output(root, example, sub_dir_keys=[]):
     """
 
     example = example["step_ops"]
-
-    index = np.array(_delget(example, "index_"), dtype=int)
 
     sub_dirs = [""] * len(index)
     for subk in sub_dir_keys:

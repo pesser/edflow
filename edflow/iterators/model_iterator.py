@@ -21,6 +21,7 @@ class PyHookedModelIterator(object):
         config,
         root,
         model,
+        dataset,
         hook_freq=100,
         num_epochs=100,
         hooks=[],
@@ -44,6 +45,7 @@ class PyHookedModelIterator(object):
         self.root = root
 
         self.model = model
+        self.dataset = dataset
         self.num_epochs = num_epochs
 
         self.hooks = hooks
