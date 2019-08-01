@@ -135,7 +135,9 @@ def _train(config, root, checkpoint=None, retrain=False):
             hook_freq=config["hook_freq"], num_epochs=config["num_epochs"]
         )
         logger.info("Instantiating iterator.")
-        Trainer = implementations["iterator"](config, root, Model, dataset = dataset, **compat_kwargs)
+        Trainer = implementations["iterator"](
+            config, root, Model, dataset=dataset, **compat_kwargs
+        )
 
         logger.info("Initializing model.")
         if checkpoint is not None:
@@ -199,7 +201,9 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         nogpu=config["nogpu"],
         num_epochs=config["num_epochs"],
     )
-    Evaluator = implementations["iterator"](config, root, Model, dataset = dataset, **compat_kwargs)
+    Evaluator = implementations["iterator"](
+        config, root, Model, dataset=dataset, **compat_kwargs
+    )
 
     logger.info("Initializing model.")
     if checkpoint is not None:

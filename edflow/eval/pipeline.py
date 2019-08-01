@@ -174,7 +174,7 @@ class EvalHook(Hook):
                 memmap = np.memmap(savepath, shape=tuple(shape), mode="w+", dtype=dtype)
                 self.label_arrs[k] = memmap
 
-        idxs = self.idxs # indices collected before_step
+        idxs = self.idxs  # indices collected before_step
 
         for k in self.lks:
             # Can the inner loop be made a fancy indexing assign?
@@ -223,15 +223,17 @@ class EvalHook(Hook):
         add_meta_data(csv_path, self.meta)
 
         this_script = os.path.dirname(__file__)
-        cbs = " ".join(self.cb_names)
+        if self.cb_names:
+            cbs = " ".join(self.cb_names)
+        else:
+            cbs = "<your callback>"
 
+        self.logger.info("MODEL_OUPUT_CSV {}".format(csv_path))
         self.logger.info(
             "All data has been produced. You can now also run all"
-            + " callbacks using the following commands:\n"
-            + "cd {}\n".format(this_script)
-            + "python eval_pipeline.py -c {} -cb {}".format(csv_path, cbs)
+            + " callbacks using the following command:\n"
+            + "edeval -c {} -cb {}".format(csv_path, cbs)
         )
-        self.logger.info("MODEL_OUPUT_CSV {}".format(csv_path))
 
 
 class EvalDataFolder(DatasetMixin):
