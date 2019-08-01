@@ -58,12 +58,27 @@ class PyHookedModelIterator(object):
         self.logger = get_logger(type(self).__name__)
 
         self._global_step = 0
+        self._batch_step = 0
+        self._epoch_step = 0
 
     def get_global_step(self, *args, **kwargs):
+        """Get the global step. The global step corresponds to the number of
+        steps the model was trained for. It is updated in each step during
+        training but not during evaluation."""
         return self._global_step
 
     def set_global_step(self, step):
+        """Set the global step. Should be done when restoring a model from a
+        checkpoint."""
         self._global_step = step
+
+    def get_batch_step(self, *args, **kwargs):
+        """Batch index of current run."""
+        return self._batch_step
+
+    def get_epoch_step(self, *args, **kwargs):
+        """Epoch index of current run."""
+        return self._epoch_step
 
     def reset_global_step(self):
         self.set_global_step(0)
@@ -117,6 +132,7 @@ class PyHookedModelIterator(object):
         for ep in trange(
             self.num_epochs, desc=desc_e, position=pos, dynamic_ncols=True
         ):
+            self._epoch_step = ep
             self.run_hooks(ep, before=True)
 
             pos = self.bar_pos + 1
@@ -124,6 +140,7 @@ class PyHookedModelIterator(object):
                 batch_iterator, desc=desc_b, position=pos, dynamic_ncols=True
             )
             for bi, batch in enumerate(iterator):
+                self._batch_step = bi
                 fetches = {"global_step": self.get_global_step, "step_ops": step_ops}
 
                 feeds = self.make_feeds(batch)
