@@ -135,7 +135,7 @@ def _train(config, root, checkpoint=None, retrain=False):
             hook_freq=config["hook_freq"], num_epochs=config["num_epochs"]
         )
         logger.info("Instantiating iterator.")
-        Trainer = implementations["iterator"](config, root, Model, **compat_kwargs)
+        Trainer = implementations["iterator"](config, root, Model, dataset = dataset, **compat_kwargs)
 
         logger.info("Initializing model.")
         if checkpoint is not None:
@@ -199,13 +199,13 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         nogpu=config["nogpu"],
         num_epochs=config["num_epochs"],
     )
-    HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
+    Evaluator = implementations["iterator"](config, root, Model, dataset = dataset, **compat_kwargs)
 
     logger.info("Initializing model.")
     if checkpoint is not None:
-        HBU_Evaluator.initialize(checkpoint_path=checkpoint)
+        Evaluator.initialize(checkpoint_path=checkpoint)
     else:
-        HBU_Evaluator.initialize()
+        Evaluator.initialize()
 
     # save current config
     logger.info("Starting Evaluation with config:\n{}".format(yaml.dump(config)))
@@ -217,6 +217,6 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
 
     logger.info("Iterating")
     while True:
-        HBU_Evaluator.iterate(batches)
+        Evaluator.iterate(batches)
         if not config.get("eval_forever", False):
             break
