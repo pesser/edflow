@@ -115,7 +115,7 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
     return results
 
 
-def retrieve(key, list_or_dict, splitval="/"):
+def retrieve(key, list_or_dict, splitval="/", default=None, pass_success=False):
     """Given a nested list or dict return the desired value at key.
 
     Args:
@@ -127,11 +127,17 @@ def retrieve(key, list_or_dict, splitval="/"):
             different depth levels in `key`.
 
     Returns:
-        The desired value :)
+        The desired value or if :attr:`default` is not ``None`` and the
+        :attr:`key` is not found returns ``default``.
+
+    Raises:
+        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
+        ``None``.
     """
 
     keys = key.split(splitval)
 
+    success = True
     try:
         visited = []
         for key in keys:
@@ -141,10 +147,200 @@ def retrieve(key, list_or_dict, splitval="/"):
                 list_or_dict = list_or_dict[int(key)]
             visited += [key]
     except Exception as e:
-        print("Key not found: {}, seen: {}".format(keys, visited))
-        raise e
+        if default is None:
+            print("Key not found: {}, seen: {}".format(keys, visited))
+            raise e
+        else:
+            list_or_dict = default 
+            success = False
 
-    return list_or_dict
+    if not pass_success:
+        return list_or_dict
+    else:
+        return list_or_dict, success
+
+
+def set_default(list_or_dict, key, default, splitval="/"):
+    """Combines :function:`retrieve` and :function:`set_value` to create the
+    behaviour of pythons ``dict.setdefault``: If ``key`` is found in
+    ``list_or_dict``, return its value, otherwise return ``default`` and add it
+    to ``list_or_dict`` at ``key``.
+
+    Parameters:
+    ===========
+        list_or_dict : list or dict
+            Possibly nested list or dictionary.  splitval (str): String that
+            defines the delimiter between keys of the different depth levels in
+            `key`.
+        key : str
+            key/to/value, path like string describing all keys necessary to
+            consider to get to the desired value. List indices can also be
+            passed here.
+        default : object
+            Value to be returned if ``key`` not in list_or_dict and set to be
+            at ``key`` in this case.
+        splitval : str
+            String that defines the delimiter between keys of the different
+            depth levels in :attr:`key`.
+
+    Returns:
+    ========
+        The desired value or if :attr:`default` is not ``None`` and the
+        :attr:`key` is not found returns ``default``.
+
+    Raises:
+    =======
+        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
+        ``None``.
+    """
+
+    ret_val = retrieve(key, list_or_dict, splitval, default)
+
+    if ret_val == default:
+        set_value(key, ret_val, list_or_dict, splitval)
+
+    return ret_val
+
+
+
+def set_value(key, val, list_or_dict, splitval="/"):
+    """Sets a value in a possibly nested list or dict object.
+
+    Parameters:
+    ===========
+
+    key : str
+        ``key/to/value``, path like string describing all keys necessary to
+        consider to get to the desired value. List indices can also be passed
+        here.
+    value : object
+        Anything you want to put behind :attr:`key`
+    list_or_dict : list or dict
+        Possibly nested list or dictionary.
+    splitval : str
+        String that defines the delimiter between keys of the different depth
+        levels in :attr:`key`.
+
+
+    Examples:
+    =========
+
+    .. codeblock:: python
+        # Overwrite Value
+        dol = {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+        set_val('a/0', 3, dol)
+
+        print(dol)
+        # {'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+        set_val('b/e', 3, dol)
+
+        print(dol)
+        # {'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 3}}
+
+        set_val('a/1/f', 3, dol)
+
+        print(dol)
+        # {'a': [3, {f: 3}], 'b': {'c': {'d': 1}, 'e': 3}}
+
+
+        # Fancy Overwriting
+        dol = {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+        set_val('e/f', 3, dol)
+
+        print(dol)
+        # {'a': [3, {f: 3}], 'b': {'c': {'d': 1}, 'e': {'f': 3}}}
+
+        set_val('e/f/1/g', 3, dol)
+
+        print(dol)
+        # {'a': [3, {f: 3}], 'b': {'c': {'d': 1}, 'e': {'f': [None, {'g': 3}]}}}
+
+
+        # Append to list
+        dol = {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+        set_val('a/2', 3, dol)
+
+        print(dol)
+        # {'a': [1, 2, 3], 'b': {'c': {'d': 1}, 'e': 2}}
+
+        set_val('a/5', 6, dol)
+
+        print(dol)
+        # {'a': [1, 2, 3, None, None, 6], 'b': {'c': {'d': 1}, 'e': 2}}
+
+
+        # Add key
+        dol = {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+        set_val('f', 3, dol)
+
+        print(dol)
+        # {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}, 'f': 3}
+
+        set_val('b/1', 3, dol)
+
+        print(dol)
+        # {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2, 1: 3}, 'f': 3}
+
+
+        # Raises Error:
+        # Appending key to list
+        # set_val('a/g', 3, dol)
+
+    """
+
+    from fastnumbers import fast_int
+
+    # Split into single keys and convert to int if possible
+    keys = [fast_int(k) for k in key.split(splitval)]
+    next_keys = keys[1:] + [None]
+
+    is_leaf = [False for k in keys]
+    is_leaf[-1] = True
+
+    next_is_leaf = is_leaf[1:] + [None]
+
+    parent = None
+    last_key = None
+    for key, leaf, next_key, next_leaf in zip(keys, is_leaf, next_keys, next_is_leaf):
+
+        if isinstance(key, str):
+            # list_or_dict must be a dict
+            if isinstance(list_or_dict, list):
+                # Not possible
+                raise ValueError('Trying to add a key to a list')
+            elif not isinstance(list_or_dict, dict) or key not in list_or_dict:
+                # Replace value based on next key -> This is only met if
+                list_or_dict[key] = {} if isinstance(next_key, str) else []
+
+        else:
+            # list_or_dict must be list
+            if isinstance(list_or_dict, list):
+                if key >= len(list_or_dict):
+                    # Append to list and pad with None
+                    n_add = key - len(list_or_dict) + 1
+                    list_or_dict += [None] * n_add
+            elif not isinstance(list_or_dict, dict):
+                if parent is None:
+                    # We are at top level
+                    list_or_dict = [None] * (key + 1)
+                else:
+                    parent[last_key] = [None] * (key + 1)
+
+        if leaf:
+            list_or_dict[key] = val
+        else:
+            if not isinstance(list_or_dict[key], (dict, list)):
+                # Replacement condition met
+                list_or_dict[key] = {} if isinstance(next_key, str) else [None] * (next_key + 1)
+
+            parent = list_or_dict
+            last_key = key
+            list_or_dict = list_or_dict[key]
 
 
 def contains_key(nested_thing, key, splitval="/"):
@@ -359,3 +555,148 @@ if __name__ == "__main__":
     print(pp2mkdtable(nested))
 
     plot_datum(nested)
+
+
+    dol = {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+    print(dol)
+    print("set_value('a/0', 3, dol)")
+    set_value('a/0', 3, dol)
+
+    print(dol)
+    print({'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 2}})
+    # {'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 2}}}
+    print('-'*10)
+
+    print(dol)
+    print("set_value('b/e', 3, dol)")
+    set_value('b/e', 3, dol)
+
+    print(dol)
+    print({'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 3}})
+    print('-'*10)
+
+    print(dol)
+    print("set_value('a/1/f', 3, dol)")
+    set_value('a/1/f', 3, dol)
+
+    print(dol)
+    print({'a': [3, {'f': 3}], 'b': {'c': {'d': 1}, 'e': 3}})
+    print('-'*10)
+
+
+    # Append to list
+    dol = {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+    print(dol)
+    print("set_value('a/2', 3, dol)")
+    set_value('a/2', 3, dol)
+
+    print(dol)
+    print({'a': [1, 2, 3], 'b': {'c': {'d': 1}, 'e': 2}})
+    print('-'*10)
+
+    print(dol)
+    print("set_value('a/5', 6, dol)")
+    set_value('a/5', 6, dol)
+
+    print(dol)
+    print({'a': [1, 2, 3, None, None, 6], 'b': {'c': {'d': 1}, 'e': 2}})
+    print('-'*10)
+
+
+    # Add key
+    dol = {'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}}
+
+    print(dol)
+    print("set_value('f', 3, dol)")
+    set_value('f', 3, dol)
+
+    print(dol)
+    print({'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2}, 'f': 3})
+    print('-'*10)
+
+    print(dol)
+    print("set_value('b/1', 3, dol)")
+    set_value('b/1', 3, dol)
+
+    print(dol)
+    print({'a': [1, 2], 'b': {'c': {'d': 1}, 'e': 2, 1: 3}, 'f': 3})
+    print('-'*10)
+
+
+    # Raises Error:
+    # Appending key to list
+    print("# print(set_value('a/g', 3, dol))  # should raise")
+    # print(set_value('a/g', 3, dol))  # should raise
+
+    # Appending key to leaf
+    print(dol)
+    print("set_value('f/a', 3, dol)")
+    set_value('f/a', 3, dol)
+    print(dol)
+    print('-'*10)
+
+    # Fancy Overwriting
+    dol = {'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': 2}
+
+    print(dol)
+    print("set_value('e/f', 3, dol)")
+    set_value('e/f', 3, dol)
+
+    print(dol)
+    print({'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': {'f': 3}})
+    print('-'*10)
+
+    print(dol)
+    print("set_value('e/f/1/g', 3, dol)")
+    set_value('e/f/1/g', 3, dol)
+
+    print(dol)
+    print({'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': {'f': [None, {'g': 3}]}})
+    print('-'*10)
+
+    # Toplevel new key
+    dol = {'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': 2}
+
+    print(dol)
+    print("set_value('h', 4, dol)")
+    set_value('h', 4, dol)
+    print(dol)
+    print({'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': 2, 'h': 4})
+    print('-'*10)
+
+    print(dol)
+    print("set_value('i/j/k', 4, dol)")
+    set_value('i/j/k', 4, dol)
+    print(dol)
+    print({'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': 2, 'h': 4, 'i': {'j': {'k': 4}}})
+    print('-'*10)
+
+    print(dol)
+    print("set_value('j/0/k', 4, dol)")
+    set_value('j/0/k', 4, dol)
+    print(dol)
+    print({'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': 2, 'h': 4, 'i': {'j': {'k': 4}}, 'j': [{'k': 4}]})
+    print('-'*10)
+
+    # Toplevel is list new key
+    dol = [{'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': 2}, 2, 3]
+
+    print(dol)
+    print("set_value('0/k', 4, dol)")
+    set_value('0/k', 4, dol)
+    print(dol)
+    ref = [{'a': [1, 2], 'b': {'c': {'d': 1}}, 'e': 2, 'k': 4}, 2, 3]
+    print(ref == dol)
+    print(ref)
+    print('-'*10)
+
+    print(dol)
+    print("set_value('0', 1, dol)")
+    set_value('0', 1, dol)
+    print(dol)
+    ref = [1, 2, 3]
+    print(ref == dol)
+    print(ref)
+    print('-'*10)
