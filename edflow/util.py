@@ -117,7 +117,7 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
 
 def retrieve(
-    key, list_or_dict, splitval="/", default=None, expand=True, pass_success=False
+    list_or_dict, key, splitval="/", default=None, expand=True, pass_success=False
 ):
     """Given a nested list or dict return the desired value at key expanding
     callable nodes if necessary and :attr:`expand` is ``True``. The expansion
@@ -125,12 +125,12 @@ def retrieve(
 
     Parameters:
     ===========
+        list_or_dict : list or dict
+            Possibly nested list or dictionary.
         key : str
             key/to/value, path like string describing all keys necessary to
             consider to get to the desired value. List indices can also be
             passed here.
-        list_or_dict : list or dict
-            Possibly nested list or dictionary.
         splitval : str
             String that defines the delimiter between keys of the
             different depth levels in `key`.
@@ -222,15 +222,15 @@ def set_default(list_or_dict, key, default, splitval="/"):
         ``None``.
     """
 
-    ret_val = retrieve(key, list_or_dict, splitval, default)
+    ret_val = retrieve(list_or_dict, key, splitval, default)
 
     if ret_val == default:
-        set_value(key, ret_val, list_or_dict, splitval)
+        set_value(list_or_dict, key, ret_val, splitval)
 
     return ret_val
 
 
-def set_value(key, val, list_or_dict, splitval="/"):
+def set_value(list_or_dict, key, val, splitval="/"):
     """Sets a value in a possibly nested list or dict object.
 
     Parameters:
@@ -257,63 +257,63 @@ def set_value(key, val, list_or_dict, splitval="/"):
         dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
 
         # Change existing entry
-        set_value("a/0", 3, dol)
+        set_value(dol, "a/0", 3)
         # {'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 2}}}
 
-        set_value("b/e", 3, dol)
+        set_value(dol, "b/e", 3)
         # {"a": [3, 2], "b": {"c": {"d": 1}, "e": 3}}
 
-        set_value("a/1/f", 3, dol)
+        set_value(dol, "a/1/f", 3)
         # {"a": [3, {"f": 3}], "b": {"c": {"d": 1}, "e": 3}}
 
         # Append to list
         dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
 
-        set_value("a/2", 3, dol)
+        set_value(dol, "a/2", 3)
         # {"a": [1, 2, 3], "b": {"c": {"d": 1}, "e": 2}}
 
-        set_value("a/5", 6, dol)
+        set_value(dol, "a/5", 6)
         # {"a": [1, 2, 3, None, None, 6], "b": {"c": {"d": 1}, "e": 2}}
 
         # Add key
         dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
-        set_value("f", 3, dol)
+        set_value(dol, "f", 3)
         # {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}, "f": 3}
 
-        set_value("b/1", 3, dol)
+        set_value(dol, "b/1", 3)
         # {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2, 1: 3}, "f": 3}
 
         # Raises Error:
         # Appending key to list
-        # set_value('a/g', 3, dol)  # should raise
+        # set_value(dol, 'a/g', 3)  # should raise
 
         # Fancy Overwriting
         dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
-        set_value("e/f", 3, dol)
+        set_value(dol, "e/f", 3)
         # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": 3}}
 
-        set_value("e/f/1/g", 3, dol)
+        set_value(dol, "e/f/1/g", 3)
         # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": [None, {"g": 3}]}}
 
         # Toplevel new key
         dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
-        set_value("h", 4, dol)
+        set_value(dol, "h", 4)
         # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4}
 
-        set_value("i/j/k", 4, dol)
+        set_value(dol, "i/j/k", 4)
         # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}}
 
-        set_value("j/0/k", 4, dol)
+        set_value(dol, "j/0/k", 4)
         # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}, "j": [{"k": 4}], }
 
         # Toplevel is list new key
         dol = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}, 2, 3]
 
-        set_value("0/k", 4, dol)
+        set_value(dol, "0/k", 4)
         # [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "k": 4}, 2, 3]
 
-        set_value("0", 1, dol)
+        set_value(dol, "0", 1)
         # [1, 2, 3]
 
     """
@@ -368,11 +368,11 @@ def set_value(key, val, list_or_dict, splitval="/"):
             list_or_dict = list_or_dict[key]
 
 
-def contains_key(nested_thing, key, splitval="/"):
+def contains_key(nested_thing, key, splitval="/", expand=True):
     """Tests if the path like key can find an object in the nested_thing.
-    Has the same signature as :function:`retrieve`."""
+    """
     try:
-        retrieve(nested_thing, key, splitval)
+        retrieve(nested_thing, key, splitval=splitval, expand=expand)
         return True
     except Exception:
         return False
@@ -584,8 +584,8 @@ if __name__ == "__main__":
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
 
     print(dol)
-    print("set_value('a/0', 3, dol)")
-    set_value("a/0", 3, dol)
+    print("set_value(dol, 'a/0', 3)")
+    set_value(dol, "a/0", 3)
 
     print(dol)
     print({"a": [3, 2], "b": {"c": {"d": 1}, "e": 2}})
@@ -593,16 +593,16 @@ if __name__ == "__main__":
     print("-" * 10)
 
     print(dol)
-    print("set_value('b/e', 3, dol)")
-    set_value("b/e", 3, dol)
+    print("set_value(dol, 'b/e', 3)")
+    set_value(dol, "b/e", 3)
 
     print(dol)
     print({"a": [3, 2], "b": {"c": {"d": 1}, "e": 3}})
     print("-" * 10)
 
     print(dol)
-    print("set_value('a/1/f', 3, dol)")
-    set_value("a/1/f", 3, dol)
+    print("set_value(dol, 'a/1/f', 3)")
+    set_value(dol, "a/1/f", 3)
 
     print(dol)
     print({"a": [3, {"f": 3}], "b": {"c": {"d": 1}, "e": 3}})
@@ -612,16 +612,16 @@ if __name__ == "__main__":
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
 
     print(dol)
-    print("set_value('a/2', 3, dol)")
-    set_value("a/2", 3, dol)
+    print("set_value(dol, 'a/2', 3)")
+    set_value(dol, "a/2", 3)
 
     print(dol)
     print({"a": [1, 2, 3], "b": {"c": {"d": 1}, "e": 2}})
     print("-" * 10)
 
     print(dol)
-    print("set_value('a/5', 6, dol)")
-    set_value("a/5", 6, dol)
+    print("set_value(dol, 'a/5', 6)")
+    set_value(dol, "a/5", 6)
 
     print(dol)
     print({"a": [1, 2, 3, None, None, 6], "b": {"c": {"d": 1}, "e": 2}})
@@ -631,16 +631,16 @@ if __name__ == "__main__":
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
 
     print(dol)
-    print("set_value('f', 3, dol)")
-    set_value("f", 3, dol)
+    print("set_value(dol, 'f', 3)")
+    set_value(dol, "f", 3)
 
     print(dol)
     print({"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}, "f": 3})
     print("-" * 10)
 
     print(dol)
-    print("set_value('b/1', 3, dol)")
-    set_value("b/1", 3, dol)
+    print("set_value(dol, 'b/1', 3)")
+    set_value(dol, "b/1", 3)
 
     print(dol)
     print({"a": [1, 2], "b": {"c": {"d": 1}, "e": 2, 1: 3}, "f": 3})
@@ -648,13 +648,13 @@ if __name__ == "__main__":
 
     # Raises Error:
     # Appending key to list
-    print("# print(set_value('a/g', 3, dol))  # should raise")
-    # print(set_value('a/g', 3, dol))  # should raise
+    print("# print(set_value(dol, 'a/g', 3))  # should raise")
+    # print(set_value(dol, 'a/g', 3))  # should raise
 
     # Appending key to leaf
     print(dol)
-    print("set_value('f/a', 3, dol)")
-    set_value("f/a", 3, dol)
+    print("set_value(dol, 'f/a', 3)")
+    set_value(dol, "f/a", 3)
     print(dol)
     print("-" * 10)
 
@@ -662,16 +662,16 @@ if __name__ == "__main__":
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
     print(dol)
-    print("set_value('e/f', 3, dol)")
-    set_value("e/f", 3, dol)
+    print("set_value(dol, 'e/f', 3)")
+    set_value(dol, "e/f", 3)
 
     print(dol)
     print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": 3}})
     print("-" * 10)
 
     print(dol)
-    print("set_value('e/f/1/g', 3, dol)")
-    set_value("e/f/1/g", 3, dol)
+    print("set_value(dol, 'e/f/1/g', 3)")
+    set_value(dol, "e/f/1/g", 3)
 
     print(dol)
     print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": [None, {"g": 3}]}})
@@ -681,22 +681,22 @@ if __name__ == "__main__":
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
     print(dol)
-    print("set_value('h', 4, dol)")
-    set_value("h", 4, dol)
+    print("set_value(dol, 'h', 4)")
+    set_value(dol, "h", 4)
     print(dol)
     print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4})
     print("-" * 10)
 
     print(dol)
-    print("set_value('i/j/k', 4, dol)")
-    set_value("i/j/k", 4, dol)
+    print("set_value(dol, 'i/j/k', 4)")
+    set_value(dol, "i/j/k", 4)
     print(dol)
     print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}})
     print("-" * 10)
 
     print(dol)
-    print("set_value('j/0/k', 4, dol)")
-    set_value("j/0/k", 4, dol)
+    print("set_value(dol, 'j/0/k', 4)")
+    set_value(dol, "j/0/k", 4)
     print(dol)
     print(
         {
@@ -714,8 +714,8 @@ if __name__ == "__main__":
     dol = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}, 2, 3]
 
     print(dol)
-    print("set_value('0/k', 4, dol)")
-    set_value("0/k", 4, dol)
+    print("set_value(dol, '0/k', 4)")
+    set_value(dol, "0/k", 4)
     print(dol)
     ref = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "k": 4}, 2, 3]
     print(ref == dol)
@@ -723,8 +723,8 @@ if __name__ == "__main__":
     print("-" * 10)
 
     print(dol)
-    print("set_value('0', 1, dol)")
-    set_value("0", 1, dol)
+    print("set_value(dol, '0', 1)")
+    set_value(dol, "0", 1)
     print(dol)
     ref = [1, 2, 3]
     print(ref == dol)

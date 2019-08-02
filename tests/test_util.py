@@ -1,6 +1,6 @@
 import pytest
 
-from edflow.util import set_value, retrieve, walk, set_default
+from edflow.util import set_value, retrieve, walk, set_default, contains_key
 
 
 # ================= set_value ====================
@@ -9,22 +9,22 @@ from edflow.util import set_value, retrieve, walk, set_default
 def test_set_value_fail():
     with pytest.raises(Exception):
         dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
-        set_value("a/g", 3, dol)  # should raise
+        set_value(dol, "a/g", 3)  # should raise
 
 
 def test_set_value():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
     ref = {"a": [3, 2], "b": {"c": {"d": 1}, "e": 2}}
 
-    set_value("a/0", 3, dol)
+    set_value(dol, "a/0", 3)
     assert dol == ref
 
     ref = {"a": [3, 2], "b": {"c": {"d": 1}, "e": 3}}
 
-    set_value("b/e", 3, dol)
+    set_value(dol, "b/e", 3)
     assert dol == ref
 
-    set_value("a/1/f", 3, dol)
+    set_value(dol, "a/1/f", 3)
 
     ref = {"a": [3, {"f": 3}], "b": {"c": {"d": 1}, "e": 3}}
     assert dol == ref
@@ -32,22 +32,22 @@ def test_set_value():
 
 def test_append_to_list():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
-    set_value("a/2", 3, dol)
+    set_value(dol, "a/2", 3)
     ref = {"a": [1, 2, 3], "b": {"c": {"d": 1}, "e": 2}}
     assert dol == ref
 
-    set_value("a/5", 6, dol)
+    set_value(dol, "a/5", 6)
     ref = {"a": [1, 2, 3, None, None, 6], "b": {"c": {"d": 1}, "e": 2}}
     assert dol == ref
 
 
 def test_add_key():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
-    set_value("f", 3, dol)
+    set_value(dol, "f", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}, "f": 3}
     assert dol == ref
 
-    set_value("b/1", 3, dol)
+    set_value(dol, "b/1", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2, 1: 3}, "f": 3}
     assert dol == ref
 
@@ -55,11 +55,11 @@ def test_add_key():
 def test_fancy_overwriting():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
-    set_value("e/f", 3, dol)
+    set_value(dol, "e/f", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": 3}}
     assert ref == dol
 
-    set_value("e/f/1/g", 3, dol)
+    set_value(dol, "e/f/1/g", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": [None, {"g": 3}]}}
     assert ref == dol
 
@@ -67,15 +67,15 @@ def test_fancy_overwriting():
 def test_top_is_dict():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
-    set_value("h", 4, dol)
+    set_value(dol, "h", 4)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4}
     assert ref == dol
 
-    set_value("i/j/k", 4, dol)
+    set_value(dol, "i/j/k", 4)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}}
     assert ref == dol
 
-    set_value("j/0/k", 4, dol)
+    set_value(dol, "j/0/k", 4)
     ref = {
         "a": [1, 2],
         "b": {"c": {"d": 1}},
@@ -90,11 +90,11 @@ def test_top_is_dict():
 def test_top_is_list():
     dol = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}, 2, 3]
 
-    set_value("0/k", 4, dol)
+    set_value(dol, "0/k", 4)
     ref = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "k": 4}, 2, 3]
     assert ref == dol
 
-    set_value("0", 1, dol)
+    set_value(dol, "0", 1)
     ref = [1, 2, 3]
     assert ref == dol
 
@@ -105,15 +105,15 @@ def test_top_is_list():
 def test_retrieve():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
-    val = retrieve("a", dol)
+    val = retrieve(dol, "a")
     ref = [1, 2]
     assert val == ref
 
-    val = retrieve("a/0", dol)
+    val = retrieve(dol, "a/0")
     ref = 1
     assert val == ref
 
-    val = retrieve("b/c/d", dol)
+    val = retrieve(dol, "b/c/d")
     ref = 1
     assert val == ref
 
@@ -122,13 +122,13 @@ def test_retrieve_default():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
     ref = "abc"
 
-    val = retrieve("f", dol, default="abc")
+    val = retrieve(dol, "f", default="abc")
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc")
+    val = retrieve(dol, "a/4", default="abc")
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc")
+    val = retrieve(dol, "b/c/e", default="abc")
     assert val == ref
 
 
@@ -136,38 +136,38 @@ def test_retrieve_fail():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
     with pytest.raises(Exception):
-        val = retrieve("f", dol)
+        val = retrieve(dol, "f")
 
     with pytest.raises(Exception):
-        val = retrieve("a/4", dol)
+        val = retrieve(dol, "a/4")
 
     with pytest.raises(Exception):
-        val = retrieve("b/c/e", dol)
+        val = retrieve(dol, "b/c/e")
 
 
 def test_retrieve_pass_success():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
     ref = "abc", False
 
-    val = retrieve("f", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "f", default="abc", pass_success=True)
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "a/4", default="abc", pass_success=True)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "b/c/e", default="abc", pass_success=True)
     assert val == ref
 
     ref = [1, 2], True
-    val = retrieve("a", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "a", default="abc", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "a/0", default="abc", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("b/c/d", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "b/c/d", default="abc", pass_success=True)
     assert val == ref
 
 
@@ -175,22 +175,22 @@ def test_retrieve_pass_success_fail():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
     with pytest.raises(Exception):
-        retrieve("f", dol, pass_success=True)
+        retrieve(dol, "f", pass_success=True)
     with pytest.raises(Exception):
-        retrieve("a/4", dol, pass_success=True)
+        retrieve(dol, "a/4", pass_success=True)
     with pytest.raises(Exception):
-        retrieve("b/c/e", dol, pass_success=True)
+        retrieve(dol, "b/c/e", pass_success=True)
 
     ref = [1, 2], True
-    val = retrieve("a", dol, pass_success=True)
+    val = retrieve(dol, "a", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, pass_success=True)
+    val = retrieve(dol, "a/0", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("b/c/d", dol, pass_success=True)
+    val = retrieve(dol, "b/c/d", pass_success=True)
     assert val == ref
 
 
@@ -200,15 +200,15 @@ def test_retrieve_pass_success_fail():
 def test_retrieve_ef():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
-    val = retrieve("a", dol, expand=False)
+    val = retrieve(dol, "a", expand=False)
     ref = [1, 2]
     assert val == ref
 
-    val = retrieve("a/0", dol, expand=False)
+    val = retrieve(dol, "a/0", expand=False)
     ref = 1
     assert val == ref
 
-    val = retrieve("b/c/d", dol, expand=False)
+    val = retrieve(dol, "b/c/d", expand=False)
     ref = 1
     assert val == ref
 
@@ -217,13 +217,13 @@ def test_retrieve_default_ef():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
     ref = "abc"
 
-    val = retrieve("f", dol, default="abc", expand=False)
+    val = retrieve(dol, "f", default="abc", expand=False)
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc", expand=False)
+    val = retrieve(dol, "a/4", default="abc", expand=False)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", expand=False)
+    val = retrieve(dol, "b/c/e", default="abc", expand=False)
     assert val == ref
 
 
@@ -231,38 +231,38 @@ def test_retrieve_fail_ef():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
     with pytest.raises(Exception):
-        val = retrieve("f", dol, expand=False)
+        val = retrieve(dol, "f", expand=False)
 
     with pytest.raises(Exception):
-        val = retrieve("a/4", dol, expand=False)
+        val = retrieve(dol, "a/4", expand=False)
 
     with pytest.raises(Exception):
-        val = retrieve("b/c/e", dol, expand=False)
+        val = retrieve(dol, "b/c/e", expand=False)
 
 
 def test_retrieve_pass_success_ef():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
     ref = "abc", False
 
-    val = retrieve("f", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "f", default="abc", pass_success=True, expand=False)
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "a/4", default="abc", pass_success=True, expand=False)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "b/c/e", default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = [1, 2], True
-    val = retrieve("a", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "a", default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "a/0", default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("b/c/d", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "b/c/d", default="abc", pass_success=True, expand=False)
     assert val == ref
 
 
@@ -270,22 +270,22 @@ def test_retrieve_pass_success_fail_ef():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
     with pytest.raises(Exception):
-        retrieve("f", dol, pass_success=True, expand=False)
+        retrieve(dol, "f", pass_success=True, expand=False)
     with pytest.raises(Exception):
-        retrieve("a/4", dol, pass_success=True, expand=False)
+        retrieve(dol, "a/4", pass_success=True, expand=False)
     with pytest.raises(Exception):
-        retrieve("b/c/e", dol, pass_success=True, expand=False)
+        retrieve(dol, "b/c/e", pass_success=True, expand=False)
 
     ref = [1, 2], True
-    val = retrieve("a", dol, pass_success=True, expand=False)
+    val = retrieve(dol, "a", pass_success=True, expand=False)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, pass_success=True, expand=False)
+    val = retrieve(dol, "a/0", pass_success=True, expand=False)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("b/c/d", dol, pass_success=True, expand=False)
+    val = retrieve(dol, "b/c/d", pass_success=True, expand=False)
     assert val == ref
 
 
@@ -303,15 +303,15 @@ def callable_leave():
 def test_retrieve_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
 
-    val = retrieve("a", dol)
+    val = retrieve(dol, "a")
     ref = [1, 2]
     assert val == ref
 
-    val = retrieve("a/0", dol)
+    val = retrieve(dol, "a/0")
     ref = 1
     assert val == ref
 
-    val = retrieve("b/c/d", dol)
+    val = retrieve(dol, "b/c/d")
     ref = 1
     assert val == ref
 
@@ -324,13 +324,13 @@ def test_retrieve_default_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
     ref = "abc"
 
-    val = retrieve("f", dol, default="abc")
+    val = retrieve(dol, "f", default="abc")
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc")
+    val = retrieve(dol, "a/4", default="abc")
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc")
+    val = retrieve(dol, "b/c/e", default="abc")
     assert val == ref
 
 
@@ -338,38 +338,38 @@ def test_retrieve_fail_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
 
     with pytest.raises(Exception):
-        val = retrieve("f", dol)
+        val = retrieve(dol, "f")
 
     with pytest.raises(Exception):
-        val = retrieve("a/4", dol)
+        val = retrieve(dol, "a/4")
 
     with pytest.raises(Exception):
-        val = retrieve("b/c/e", dol)
+        val = retrieve(dol, "b/c/e")
 
 
 def test_retrieve_pass_success_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
     ref = "abc", False
 
-    val = retrieve("f", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "f", default="abc", pass_success=True)
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "a/4", default="abc", pass_success=True)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "b/c/e", default="abc", pass_success=True)
     assert val == ref
 
     ref = [1, 2], True
-    val = retrieve("a", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "a", default="abc", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "a/0", default="abc", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("b/c/d", dol, default="abc", pass_success=True)
+    val = retrieve(dol, "b/c/d", default="abc", pass_success=True)
     assert val == ref
 
 
@@ -377,22 +377,22 @@ def test_retrieve_pass_success_fail_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
 
     with pytest.raises(Exception):
-        retrieve("f", dol, pass_success=True)
+        retrieve(dol, "f", pass_success=True)
     with pytest.raises(Exception):
-        retrieve("a/4", dol, pass_success=True)
+        retrieve(dol, "a/4", pass_success=True)
     with pytest.raises(Exception):
-        retrieve("b/c/e", dol, pass_success=True)
+        retrieve(dol, "b/c/e", pass_success=True)
 
     ref = [1, 2], True
-    val = retrieve("a", dol, pass_success=True)
+    val = retrieve(dol, "a", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, pass_success=True)
+    val = retrieve(dol, "a/0", pass_success=True)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("b/c/d", dol, pass_success=True)
+    val = retrieve(dol, "b/c/d", pass_success=True)
     assert val == ref
 
 
@@ -402,29 +402,29 @@ def test_retrieve_pass_success_fail_callable():
 def test_retrieve_ef_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
 
-    val = retrieve("a", dol, expand=False)
+    val = retrieve(dol, "a", expand=False)
     ref = [1, 2]
     assert val == ref
 
-    val = retrieve("a/0", dol, expand=False)
+    val = retrieve(dol, "a/0", expand=False)
     ref = 1
     assert val == ref
 
     with pytest.raises(Exception):
-        val = retrieve("b/c/d", dol, expand=False)
+        val = retrieve(dol, "b/c/d", expand=False)
 
 
 def test_retrieve_default_ef_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
     ref = "abc"
 
-    val = retrieve("f", dol, default="abc", expand=False)
+    val = retrieve(dol, "f", default="abc", expand=False)
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc", expand=False)
+    val = retrieve(dol, "a/4", default="abc", expand=False)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", expand=False)
+    val = retrieve(dol, "b/c/e", default="abc", expand=False)
     assert val == ref
 
 
@@ -432,38 +432,38 @@ def test_retrieve_fail_ef_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
 
     with pytest.raises(Exception):
-        val = retrieve("f", dol, expand=False)
+        val = retrieve(dol, "f", expand=False)
 
     with pytest.raises(Exception):
-        val = retrieve("a/4", dol, expand=False)
+        val = retrieve(dol, "a/4", expand=False)
 
     with pytest.raises(Exception):
-        val = retrieve("b/c/e", dol, expand=False)
+        val = retrieve(dol, "b/c/e", expand=False)
 
 
 def test_retrieve_pass_success_ef_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
     ref = "abc", False
 
-    val = retrieve("f", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "f", default="abc", pass_success=True, expand=False)
     assert val == ref
 
-    val = retrieve("a/4", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "a/4", default="abc", pass_success=True, expand=False)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "b/c/e", default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = [1, 2], True
-    val = retrieve("a", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "a", default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "a/0", default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = "abc", False
-    val = retrieve("b/c/d", dol, default="abc", pass_success=True, expand=False)
+    val = retrieve(dol, "b/c/d", default="abc", pass_success=True, expand=False)
     assert val == ref
 
 
@@ -471,22 +471,22 @@ def test_retrieve_pass_success_fail_ef_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
 
     with pytest.raises(Exception):
-        retrieve("f", dol, pass_success=True, expand=False)
+        retrieve(dol, "f", pass_success=True, expand=False)
     with pytest.raises(Exception):
-        retrieve("a/4", dol, pass_success=True, expand=False)
+        retrieve(dol, "a/4", pass_success=True, expand=False)
     with pytest.raises(Exception):
-        retrieve("b/c/e", dol, pass_success=True, expand=False)
+        retrieve(dol, "b/c/e", pass_success=True, expand=False)
 
     ref = [1, 2], True
-    val = retrieve("a", dol, pass_success=True, expand=False)
+    val = retrieve(dol, "a", pass_success=True, expand=False)
     assert val == ref
 
     ref = 1, True
-    val = retrieve("a/0", dol, pass_success=True, expand=False)
+    val = retrieve(dol, "a/0", pass_success=True, expand=False)
     assert val == ref
 
     with pytest.raises(Exception):
-        val = retrieve("b/c/d", dol, pass_success=True, expand=False)
+        val = retrieve(dol, "b/c/d", pass_success=True, expand=False)
 
 
 # ====================== walk ====================
@@ -561,3 +561,31 @@ def test_set_default_key_not_contained():
 
     assert dol == ref
     assert val == "new"
+
+
+# =================== set_default ================
+
+
+def test_contains_key():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    assert contains_key(dol, "a")
+    assert contains_key(dol, "b/c/d")
+    assert not contains_key(dol, "b/c/f")
+    assert not contains_key(dol, "f")
+
+
+def test_contains_key_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    assert contains_key(dol, "a", expand=True)
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
+    assert contains_key(dol, "a", expand=False)
+    assert contains_key(dol, "b/c/d", expand=True)
+    assert contains_key(dol, "b/c/d", expand=False)  # now its expanded
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
+    assert not contains_key(dol, "b/c/d", expand=False)
+    assert not contains_key(dol, "b/c/f", expand=True)
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
+    assert not contains_key(dol, "b/c/f", expand=False)
+    assert not contains_key(dol, "f", expand=True)
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
+    assert not contains_key(dol, "f", expand=False)

@@ -47,7 +47,7 @@ class RuntimeInputHook(Hook):
 
                 def is_changed(key, val, changes=changes):
                     if contains_key(key, updates):
-                        other_val = retrieve(key, updates)
+                        other_val = retrieve(updates, key)
 
                         change = np.any(val != other_val)
                     else:
