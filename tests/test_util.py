@@ -250,8 +250,7 @@ def test_retrieve_pass_success_ef():
     val = retrieve("a/4", dol, default="abc", pass_success=True, expand=False)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", pass_success=True,
-            expand=False)
+    val = retrieve("b/c/e", dol, default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = [1, 2], True
@@ -263,8 +262,7 @@ def test_retrieve_pass_success_ef():
     assert val == ref
 
     ref = 1, True
-    val = retrieve("b/c/d", dol, default="abc", pass_success=True,
-            expand=False)
+    val = retrieve("b/c/d", dol, default="abc", pass_success=True, expand=False)
     assert val == ref
 
 
@@ -453,8 +451,7 @@ def test_retrieve_pass_success_ef_callable():
     val = retrieve("a/4", dol, default="abc", pass_success=True, expand=False)
     assert val == ref
 
-    val = retrieve("b/c/e", dol, default="abc", pass_success=True,
-            expand=False)
+    val = retrieve("b/c/e", dol, default="abc", pass_success=True, expand=False)
     assert val == ref
 
     ref = [1, 2], True
@@ -466,8 +463,7 @@ def test_retrieve_pass_success_ef_callable():
     assert val == ref
 
     ref = "abc", False
-    val = retrieve("b/c/d", dol, default="abc", pass_success=True,
-            expand=False)
+    val = retrieve("b/c/d", dol, default="abc", pass_success=True, expand=False)
     assert val == ref
 
 

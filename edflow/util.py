@@ -116,7 +116,9 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
     return results
 
 
-def retrieve(key, list_or_dict, splitval="/", default=None, expand=True, pass_success=False):
+def retrieve(
+    key, list_or_dict, splitval="/", default=None, expand=True, pass_success=False
+):
     """Given a nested list or dict return the desired value at key expanding
     callable nodes if necessary and :attr:`expand` is ``True``. The expansion
     is done in-place.
@@ -158,7 +160,9 @@ def retrieve(key, list_or_dict, splitval="/", default=None, expand=True, pass_su
         for key in keys:
             if callable(list_or_dict):
                 if not expand:
-                    raise ValueError("Trying to get past callable node with expand=False.")
+                    raise ValueError(
+                        "Trying to get past callable node with expand=False."
+                    )
                 list_or_dict = list_or_dict()
                 parent[last_key] = list_or_dict
             last_key = key
