@@ -577,15 +577,15 @@ def test_contains_key():
 def test_contains_key_callable():
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}
     assert contains_key(dol, "a", expand=True)
-    dol = {"a": [1, 2], "b": callable_leave, "e": 2} # reset
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
     assert contains_key(dol, "a", expand=False)
     assert contains_key(dol, "b/c/d", expand=True)
     assert contains_key(dol, "b/c/d", expand=False)  # now its expanded
-    dol = {"a": [1, 2], "b": callable_leave, "e": 2} # reset
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
     assert not contains_key(dol, "b/c/d", expand=False)
     assert not contains_key(dol, "b/c/f", expand=True)
-    dol = {"a": [1, 2], "b": callable_leave, "e": 2} # reset
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
     assert not contains_key(dol, "b/c/f", expand=False)
     assert not contains_key(dol, "f", expand=True)
-    dol = {"a": [1, 2], "b": callable_leave, "e": 2} # reset
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
     assert not contains_key(dol, "f", expand=False)
