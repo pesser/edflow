@@ -73,6 +73,7 @@ class FashionMNIST(edu.DatasetMixin):
 
     def _preprocess_example(self, example):
         example["image"] = example["image"] / 127.5 - 1.0
+        example["image"] = example["image"][:,:,None].astype(np.float32)
 
     def get_example(self, i):
         example = self._load_example(i)

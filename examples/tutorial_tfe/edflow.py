@@ -97,7 +97,6 @@ class Iterator(PyHookedModelIterator):
     def train_op(self, model, **kwargs):
         # get inputs and add channel axis to image
         inputs, labels = kwargs["image"], kwargs["class"]
-        inputs = inputs[:,:,:,None].astype(np.float32)
 
         # compute loss
         with tf.GradientTape() as tape:
@@ -119,6 +118,5 @@ class Iterator(PyHookedModelIterator):
     def test_op(self, model, **kwargs):
         """Here we just run the model and let the hook handle the output."""
         inputs, labels = kwargs["image"], kwargs["class"]
-        inputs = inputs[:,:,:,None].astype(np.float32)
         outputs = self.model(inputs)
         return outputs, labels
