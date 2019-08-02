@@ -9,22 +9,22 @@ from edflow.util import set_value, retrieve, walk, set_default, contains_key
 def test_set_value_fail():
     with pytest.raises(Exception):
         dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
-        set_value("a/g", 3, dol)  # should raise
+        set_value(dol, "a/g", 3)  # should raise
 
 
 def test_set_value():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
     ref = {"a": [3, 2], "b": {"c": {"d": 1}, "e": 2}}
 
-    set_value("a/0", 3, dol)
+    set_value(dol, "a/0", 3)
     assert dol == ref
 
     ref = {"a": [3, 2], "b": {"c": {"d": 1}, "e": 3}}
 
-    set_value("b/e", 3, dol)
+    set_value(dol, "b/e", 3)
     assert dol == ref
 
-    set_value("a/1/f", 3, dol)
+    set_value(dol, "a/1/f", 3)
 
     ref = {"a": [3, {"f": 3}], "b": {"c": {"d": 1}, "e": 3}}
     assert dol == ref
@@ -32,22 +32,22 @@ def test_set_value():
 
 def test_append_to_list():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
-    set_value("a/2", 3, dol)
+    set_value(dol, "a/2", 3)
     ref = {"a": [1, 2, 3], "b": {"c": {"d": 1}, "e": 2}}
     assert dol == ref
 
-    set_value("a/5", 6, dol)
+    set_value(dol, "a/5", 6)
     ref = {"a": [1, 2, 3, None, None, 6], "b": {"c": {"d": 1}, "e": 2}}
     assert dol == ref
 
 
 def test_add_key():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
-    set_value("f", 3, dol)
+    set_value(dol, "f", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}, "f": 3}
     assert dol == ref
 
-    set_value("b/1", 3, dol)
+    set_value(dol, "b/1", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2, 1: 3}, "f": 3}
     assert dol == ref
 
@@ -55,11 +55,11 @@ def test_add_key():
 def test_fancy_overwriting():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
-    set_value("e/f", 3, dol)
+    set_value(dol, "e/f", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": 3}}
     assert ref == dol
 
-    set_value("e/f/1/g", 3, dol)
+    set_value(dol, "e/f/1/g", 3)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": [None, {"g": 3}]}}
     assert ref == dol
 
@@ -67,15 +67,15 @@ def test_fancy_overwriting():
 def test_top_is_dict():
     dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
 
-    set_value("h", 4, dol)
+    set_value(dol, "h", 4)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4}
     assert ref == dol
 
-    set_value("i/j/k", 4, dol)
+    set_value(dol, "i/j/k", 4)
     ref = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}}
     assert ref == dol
 
-    set_value("j/0/k", 4, dol)
+    set_value(dol, "j/0/k", 4)
     ref = {
         "a": [1, 2],
         "b": {"c": {"d": 1}},
@@ -90,11 +90,11 @@ def test_top_is_dict():
 def test_top_is_list():
     dol = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}, 2, 3]
 
-    set_value("0/k", 4, dol)
+    set_value(dol, "0/k", 4)
     ref = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "k": 4}, 2, 3]
     assert ref == dol
 
-    set_value("0", 1, dol)
+    set_value(dol, "0", 1)
     ref = [1, 2, 3]
     assert ref == dol
 
