@@ -11,9 +11,9 @@ import edflow.datasets.utils as edu
 
 def read_mnist_file(path):
     # https://gist.github.com/tylerneylon/ce60e8a06e7506ac45788443f7269e40
-    with gzip.open(path, 'rb') as f:
-        zero, data_type, dims = struct.unpack('>HBB', f.read(4))
-        shape = tuple(struct.unpack('>I', f.read(4))[0] for d in range(dims))
+    with gzip.open(path, "rb") as f:
+        zero, data_type, dims = struct.unpack(">HBB", f.read(4))
+        shape = tuple(struct.unpack(">I", f.read(4))[0] for d in range(dims))
         return np.fromstring(f.read(), dtype=np.uint8).reshape(shape)
 
 
@@ -22,12 +22,13 @@ class MNIST(edu.DatasetMixin):
     # CVDF mirror of http://yann.lecun.com/exdb/mnist/
     URL = "https://storage.googleapis.com/cvdf-datasets/mnist/"
     FILES = dict(
-            TRAIN_DATA = "train-images-idx3-ubyte.gz",
-            TRAIN_LABELS = "train-labels-idx1-ubyte.gz",
-            TEST_DATA = "t10k-images-idx3-ubyte.gz",
-            TEST_LABELS = "t10k-labels-idx1-ubyte.gz")
+        TRAIN_DATA="train-images-idx3-ubyte.gz",
+        TRAIN_LABELS="train-labels-idx1-ubyte.gz",
+        TEST_DATA="t10k-images-idx3-ubyte.gz",
+        TEST_LABELS="t10k-labels-idx1-ubyte.gz",
+    )
 
-    def __init__(self, config = None):
+    def __init__(self, config=None):
         self.config = config or dict()
         self.logger = edu.get_logger(self)
         self._prepare()
@@ -40,8 +41,10 @@ class MNIST(edu.DatasetMixin):
             # prep
             self.logger.info("Preparing dataset {} in {}".format(self.NAME, self.root))
             root = Path(self.root)
-            urls = dict((v, urllib.parse.urljoin(self.URL, v)) for k, v in self.FILES.items())
-            local_files = edu.download_urls(urls, target_dir = root)
+            urls = dict(
+                (v, urllib.parse.urljoin(self.URL, v)) for k, v in self.FILES.items()
+            )
+            local_files = edu.download_urls(urls, target_dir=root)
             data = dict()
             for k, v in local_files.items():
                 data[k] = read_mnist_file(v)
@@ -52,7 +55,9 @@ class MNIST(edu.DatasetMixin):
     def _load(self):
         with open(self._data_path, "rb") as f:
             self._data = pickle.load(f)
-        split = "test" if self.config.get("test_mode", False) else "train"  # default split
+        split = (
+            "test" if self.config.get("test_mode", False) else "train"
+        )  # default split
         if self.NAME in self.config:
             split = self.config[self.NAME].get("split", split)
         assert split in ["train", "test"]
@@ -74,7 +79,7 @@ class MNIST(edu.DatasetMixin):
 
     def _preprocess_example(self, example):
         example["image"] = example["image"] / 127.5 - 1.0
-        example["image"] = example["image"][:,:,None].astype(np.float32)
+        example["image"] = example["image"][:, :, None].astype(np.float32)
 
     def get_example(self, i):
         example = self._load_example(i)
@@ -83,6 +88,7 @@ class MNIST(edu.DatasetMixin):
 
     def __len__(self):
         return self._length
+
 
 if __name__ == "__main__":
     print("train")

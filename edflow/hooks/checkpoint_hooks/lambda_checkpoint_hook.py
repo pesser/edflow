@@ -13,8 +13,9 @@ class LambdaCheckpointHook(Hook):
         global_step_setter,
         save,
         restore,
-        interval = None,
-        modelname = "model"):
+        interval=None,
+        modelname="model",
+    ):
         """Args:
         """
         self.root = root_path

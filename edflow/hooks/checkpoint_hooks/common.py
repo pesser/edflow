@@ -46,7 +46,7 @@ def get_latest_checkpoint(checkpoint_root, filter_cond=lambda c: True):
             # check if filename matches tensorflow index file of form
             # name.ckpt-300.index and continue with name.ckpt-300
             checkpoint_files.append(f)
-            checkpoint_names.append(f[:-len(".index")])
+            checkpoint_names.append(f[: -len(".index")])
 
     # convert to list of pairs [name, timestamp of file] to retrieve latest
     checkpoints = []
