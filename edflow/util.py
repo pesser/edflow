@@ -117,7 +117,7 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
 
 def retrieve(
-    key, list_or_dict, splitval="/", default=None, expand=True, pass_success=False
+    list_or_dict, key, splitval="/", default=None, expand=True, pass_success=False
 ):
     """Given a nested list or dict return the desired value at key expanding
     callable nodes if necessary and :attr:`expand` is ``True``. The expansion
@@ -125,12 +125,12 @@ def retrieve(
 
     Parameters:
     ===========
+        list_or_dict : list or dict
+            Possibly nested list or dictionary.
         key : str
             key/to/value, path like string describing all keys necessary to
             consider to get to the desired value. List indices can also be
             passed here.
-        list_or_dict : list or dict
-            Possibly nested list or dictionary.
         splitval : str
             String that defines the delimiter between keys of the
             different depth levels in `key`.
@@ -222,7 +222,7 @@ def set_default(list_or_dict, key, default, splitval="/"):
         ``None``.
     """
 
-    ret_val = retrieve(key, list_or_dict, splitval, default)
+    ret_val = retrieve(list_or_dict, key, splitval, default)
 
     if ret_val == default:
         set_value(key, ret_val, list_or_dict, splitval)
@@ -368,11 +368,11 @@ def set_value(key, val, list_or_dict, splitval="/"):
             list_or_dict = list_or_dict[key]
 
 
-def contains_key(nested_thing, key, splitval="/"):
+def contains_key(nested_thing, key, splitval="/", expand=True):
     """Tests if the path like key can find an object in the nested_thing.
-    Has the same signature as :function:`retrieve`."""
+    """
     try:
-        retrieve(nested_thing, key, splitval)
+        retrieve(nested_thing, key, splitval=splitval, expand=expand)
         return True
     except Exception:
         return False

@@ -49,7 +49,7 @@ class MetricHook(Hook):
         for in_names, out_names, metric, m_name in self.metrics:
             self.storage_dict[m_name] = {}
             for kwargs_name, name in in_names.items():
-                val = retrieve(name, batch)
+                val = retrieve(batch, name)
                 self.storage_dict[m_name][kwargs_name] = val
 
     def after_step(self, step, results):
@@ -58,7 +58,7 @@ class MetricHook(Hook):
 
         for in_names, out_names, metric, m_name in self.metrics:
             for kwargs_name, name in out_names.items():
-                val = retrieve(name, results)
+                val = retrieve(results, name)
                 self.storage_dict[m_name][kwargs_name] = val
             m_res = metric(**self.storage_dict[m_name])
             self.metric_results[m_name] += [m_res]
