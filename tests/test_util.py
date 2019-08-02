@@ -138,8 +138,10 @@ def test_retrieve_fail():
     with pytest.raises(Exception):
         val = retrieve("f", dol)
 
+    with pytest.raises(Exception):
         val = retrieve("a/4", dol)
 
+    with pytest.raises(Exception):
         val = retrieve("b/c/e", dol)
 
 
@@ -174,7 +176,9 @@ def test_retrieve_pass_success_fail():
 
     with pytest.raises(Exception):
         retrieve("f", dol, pass_success=True)
+    with pytest.raises(Exception):
         retrieve("a/4", dol, pass_success=True)
+    with pytest.raises(Exception):
         retrieve("b/c/e", dol, pass_success=True)
 
     ref = [1, 2], True
@@ -188,6 +192,305 @@ def test_retrieve_pass_success_fail():
     ref = 1, True
     val = retrieve("b/c/d", dol, pass_success=True)
     assert val == ref
+
+
+# -------------------- retrieve with expand=False ------------------
+
+
+def test_retrieve_ef():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+
+    val = retrieve("a", dol, expand=False)
+    ref = [1, 2]
+    assert val == ref
+
+    val = retrieve("a/0", dol, expand=False)
+    ref = 1
+    assert val == ref
+
+    val = retrieve("b/c/d", dol, expand=False)
+    ref = 1
+    assert val == ref
+
+
+def test_retrieve_default_ef():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    ref = "abc"
+
+    val = retrieve("f", dol, default="abc", expand=False)
+    assert val == ref
+
+    val = retrieve("a/4", dol, default="abc", expand=False)
+    assert val == ref
+
+    val = retrieve("b/c/e", dol, default="abc", expand=False)
+    assert val == ref
+
+
+def test_retrieve_fail_ef():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+
+    with pytest.raises(Exception):
+        val = retrieve("f", dol, expand=False)
+
+    with pytest.raises(Exception):
+        val = retrieve("a/4", dol, expand=False)
+
+    with pytest.raises(Exception):
+        val = retrieve("b/c/e", dol, expand=False)
+
+
+def test_retrieve_pass_success_ef():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    ref = "abc", False
+
+    val = retrieve("f", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    val = retrieve("a/4", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    val = retrieve("b/c/e", dol, default="abc", pass_success=True,
+            expand=False)
+    assert val == ref
+
+    ref = [1, 2], True
+    val = retrieve("a", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("a/0", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("b/c/d", dol, default="abc", pass_success=True,
+            expand=False)
+    assert val == ref
+
+
+def test_retrieve_pass_success_fail_ef():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+
+    with pytest.raises(Exception):
+        retrieve("f", dol, pass_success=True, expand=False)
+    with pytest.raises(Exception):
+        retrieve("a/4", dol, pass_success=True, expand=False)
+    with pytest.raises(Exception):
+        retrieve("b/c/e", dol, pass_success=True, expand=False)
+
+    ref = [1, 2], True
+    val = retrieve("a", dol, pass_success=True, expand=False)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("a/0", dol, pass_success=True, expand=False)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("b/c/d", dol, pass_success=True, expand=False)
+    assert val == ref
+
+
+# -------------------- retrieve with callable leaves ------------------
+
+
+def nested_leave():
+    return {"d": 1}
+
+
+def callable_leave():
+    return {"c": nested_leave}
+
+
+def test_retrieve_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+
+    val = retrieve("a", dol)
+    ref = [1, 2]
+    assert val == ref
+
+    val = retrieve("a/0", dol)
+    ref = 1
+    assert val == ref
+
+    val = retrieve("b/c/d", dol)
+    ref = 1
+    assert val == ref
+
+    # test in-place modification
+    ref_dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    assert dol == ref_dol
+
+
+def test_retrieve_default_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    ref = "abc"
+
+    val = retrieve("f", dol, default="abc")
+    assert val == ref
+
+    val = retrieve("a/4", dol, default="abc")
+    assert val == ref
+
+    val = retrieve("b/c/e", dol, default="abc")
+    assert val == ref
+
+
+def test_retrieve_fail_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+
+    with pytest.raises(Exception):
+        val = retrieve("f", dol)
+
+    with pytest.raises(Exception):
+        val = retrieve("a/4", dol)
+
+    with pytest.raises(Exception):
+        val = retrieve("b/c/e", dol)
+
+
+def test_retrieve_pass_success_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    ref = "abc", False
+
+    val = retrieve("f", dol, default="abc", pass_success=True)
+    assert val == ref
+
+    val = retrieve("a/4", dol, default="abc", pass_success=True)
+    assert val == ref
+
+    val = retrieve("b/c/e", dol, default="abc", pass_success=True)
+    assert val == ref
+
+    ref = [1, 2], True
+    val = retrieve("a", dol, default="abc", pass_success=True)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("a/0", dol, default="abc", pass_success=True)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("b/c/d", dol, default="abc", pass_success=True)
+    assert val == ref
+
+
+def test_retrieve_pass_success_fail_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+
+    with pytest.raises(Exception):
+        retrieve("f", dol, pass_success=True)
+    with pytest.raises(Exception):
+        retrieve("a/4", dol, pass_success=True)
+    with pytest.raises(Exception):
+        retrieve("b/c/e", dol, pass_success=True)
+
+    ref = [1, 2], True
+    val = retrieve("a", dol, pass_success=True)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("a/0", dol, pass_success=True)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("b/c/d", dol, pass_success=True)
+    assert val == ref
+
+
+# -------------------- retrieve with callable and expand=False ------------------
+
+
+def test_retrieve_ef_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+
+    val = retrieve("a", dol, expand=False)
+    ref = [1, 2]
+    assert val == ref
+
+    val = retrieve("a/0", dol, expand=False)
+    ref = 1
+    assert val == ref
+
+    with pytest.raises(Exception):
+        val = retrieve("b/c/d", dol, expand=False)
+
+
+def test_retrieve_default_ef_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    ref = "abc"
+
+    val = retrieve("f", dol, default="abc", expand=False)
+    assert val == ref
+
+    val = retrieve("a/4", dol, default="abc", expand=False)
+    assert val == ref
+
+    val = retrieve("b/c/e", dol, default="abc", expand=False)
+    assert val == ref
+
+
+def test_retrieve_fail_ef_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+
+    with pytest.raises(Exception):
+        val = retrieve("f", dol, expand=False)
+
+    with pytest.raises(Exception):
+        val = retrieve("a/4", dol, expand=False)
+
+    with pytest.raises(Exception):
+        val = retrieve("b/c/e", dol, expand=False)
+
+
+def test_retrieve_pass_success_ef_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    ref = "abc", False
+
+    val = retrieve("f", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    val = retrieve("a/4", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    val = retrieve("b/c/e", dol, default="abc", pass_success=True,
+            expand=False)
+    assert val == ref
+
+    ref = [1, 2], True
+    val = retrieve("a", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("a/0", dol, default="abc", pass_success=True, expand=False)
+    assert val == ref
+
+    ref = "abc", False
+    val = retrieve("b/c/d", dol, default="abc", pass_success=True,
+            expand=False)
+    assert val == ref
+
+
+def test_retrieve_pass_success_fail_ef_callable():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+
+    with pytest.raises(Exception):
+        retrieve("f", dol, pass_success=True, expand=False)
+    with pytest.raises(Exception):
+        retrieve("a/4", dol, pass_success=True, expand=False)
+    with pytest.raises(Exception):
+        retrieve("b/c/e", dol, pass_success=True, expand=False)
+
+    ref = [1, 2], True
+    val = retrieve("a", dol, pass_success=True, expand=False)
+    assert val == ref
+
+    ref = 1, True
+    val = retrieve("a/0", dol, pass_success=True, expand=False)
+    assert val == ref
+
+    with pytest.raises(Exception):
+        val = retrieve("b/c/d", dol, pass_success=True, expand=False)
 
 
 # ====================== walk ====================

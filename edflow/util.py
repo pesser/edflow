@@ -116,22 +116,34 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
     return results
 
 
-def retrieve(key, list_or_dict, splitval="/", default=None, pass_success=False):
-    """Given a nested list or dict return the desired value at key.
+def retrieve(key, list_or_dict, splitval="/", default=None, expand=True, pass_success=False):
+    """Given a nested list or dict return the desired value at key expanding
+    callable nodes if necessary and :attr:`expand` is ``True``. The expansion
+    is done in-place.
 
-    Args:
-        key (str): key/to/value, path like string describing all keys
-            necessary to consider to get to the desired value. List indices
-            can also be passed here.
-        list_or_dict (list or dict): Possibly nested list or dictionary.
-        splitval (str): String that defines the delimiter between keys of the
+    Parameters:
+    ===========
+        key : str
+            key/to/value, path like string describing all keys necessary to
+            consider to get to the desired value. List indices can also be
+            passed here.
+        list_or_dict : list or dict
+            Possibly nested list or dictionary.
+        splitval : str
+            String that defines the delimiter between keys of the
             different depth levels in `key`.
+        default : obj
+            Value returned if :attr:`key` is not found.
+        expand : bool
+            Whether to expand callable nodes on the path or not.
 
     Returns:
+    ========
         The desired value or if :attr:`default` is not ``None`` and the
         :attr:`key` is not found returns ``default``.
 
     Raises:
+    =======
         Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
         ``None``.
     """
@@ -141,11 +153,22 @@ def retrieve(key, list_or_dict, splitval="/", default=None, pass_success=False):
     success = True
     try:
         visited = []
+        parent = None
+        last_key = None
         for key in keys:
+            if callable(list_or_dict):
+                if not expand:
+                    raise ValueError("Trying to get past callable node with expand=False.")
+                list_or_dict = list_or_dict()
+                parent[last_key] = list_or_dict
+            last_key = key
+            parent = list_or_dict
+
             if isinstance(list_or_dict, dict):
                 list_or_dict = list_or_dict[key]
             else:
                 list_or_dict = list_or_dict[int(key)]
+
             visited += [key]
     except Exception as e:
         if default is None:
