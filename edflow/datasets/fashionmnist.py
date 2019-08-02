@@ -28,6 +28,7 @@ class FashionMNIST(edu.DatasetMixin):
 
     def __init__(self, config = None):
         self.config = config or dict()
+        self.logger = edu.get_logger(self)
         self._prepare()
         self._load()
 
@@ -36,6 +37,7 @@ class FashionMNIST(edu.DatasetMixin):
         self._data_path = Path(self.root).joinpath("data.p")
         if not edu.is_prepared(self.root):
             # prep
+            self.logger.info("Preparing dataset {} in {}".format(self.NAME, self.root))
             root = Path(self.root)
             urls = dict((v, urllib.parse.urljoin(self.URL, v)) for k, v in self.FILES.items())
             local_files = edu.download_urls(urls, target_dir = root)
@@ -49,10 +51,11 @@ class FashionMNIST(edu.DatasetMixin):
     def _load(self):
         with open(self._data_path, "rb") as f:
             self._data = pickle.load(f)
-        split = "train" # default split
+        split = "test" if self.config.get("test_mode", False) else "train"  # default split
         if self.NAME in self.config:
             split = self.config[self.NAME].get("split", split)
         assert split in ["train", "test"]
+        self.logger.info("Using split: {}".format(split))
         if split == "test":
             self._images = self._data[self.FILES["TEST_DATA"]]
             self._labels = self._data[self.FILES["TEST_LABELS"]]
