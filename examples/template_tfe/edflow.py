@@ -1,6 +1,7 @@
 import functools
 from edflow.iterators.model_iterator import PyHookedModelIterator
 from edflow.hooks.checkpoint_hooks.lambda_checkpoint_hook import LambdaCheckpointHook
+from edflow.eval.pipeline import EvalHook
 from edflow.project_manager import ProjectManager
 import tensorflow as tf
 import tensorflow.keras as tfk
@@ -99,7 +100,12 @@ class TemplateIterator(PyHookedModelIterator):
             self.hooks.append(self.ckpthook)
         else:
             # evaluate
-            self.evalhook = None # TODO
+            self._eval_op = self.config.get("eval_op", "step_ops/eval_op")
+            self.evalhook = EvalHook(
+                    dataset = self.dataset,
+                    step_getter = self.get_global_step,
+                    keypath = self._eval_op,
+                    meta = self.config)
             self.hooks.append(self.evalhook)
             self._train_ops = []
             self._log_ops = []
@@ -198,6 +204,24 @@ class Iterator(TemplateIterator):
                         "acc": acc}}
 
         def eval_op():
-            return {"outputs": outputs, "labels": labels, "loss": loss}
+            return {"outputs": np.array(outputs), "loss": np.array(loss)[:,None]}
 
         return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
+
+
+def acc_callback(root, data_in, data_out, config):
+    from tqdm import trange
+    logger = get_logger("acc_callback")
+    correct = 0
+    seen = 0
+    loss = 0.0
+    for i in trange(len(data_in)):
+        labels = data_in[i]["class"]
+        outputs = data_out[i]["outputs"]
+        loss = data_out[i]["loss"].squeeze()
+
+        prediction = np.argmax(outputs, axis = 0)
+        correct += labels == prediction
+        loss += loss
+    logger.info("Loss: {}".format(loss / len(data_in)))
+    logger.info("Accuracy: {}".format(correct / len(data_in)))
