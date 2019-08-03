@@ -82,7 +82,7 @@ import inspect
 import re
 
 from edflow.data.util import adjust_support
-from edflow.util import walk
+from edflow.util import walk, retrieve
 from edflow.data.dataset import DatasetMixin, CsvDataset, ProcessedDataset
 from edflow.project_manager import ProjectManager as P
 from edflow.hooks.hook import Hook
@@ -103,6 +103,7 @@ class EvalHook(Hook):
         callbacks=[],
         meta=None,
         step_getter=None,
+        keypath="step_ops"
     ):
         """
         Parameters
@@ -127,6 +128,8 @@ class EvalHook(Hook):
                 ``yaml``. Usually the ``edflow`` config.
             step_getter : Callable
                 Function which returns the global step as ``int``.
+            keypath : str
+                Path in result which will be stored.
         """
         self.logger = get_logger(self)
 
@@ -140,6 +143,7 @@ class EvalHook(Hook):
         self.meta = meta
 
         self.gs = step_getter
+        self.keypath = keypath
 
     def before_epoch(self, epoch):
         self.data_frame = None
@@ -181,7 +185,12 @@ class EvalHook(Hook):
             for i, idx in enumerate(idxs):
                 self.label_arrs[k][idx] = label_vals[k][i]
 
-        path_dicts = save_output(self.save_root, last_results, idxs, self.sdks)
+        path_dicts = save_output(
+                root = self.save_root,
+                example = last_results,
+                index = idxs,
+                sub_dir_keys = self.sdks,
+                keypath = self.keypath)
 
         if self.data_frame is None:
             columns = sorted(path_dicts[list(path_dicts.keys())[0]])
@@ -289,7 +298,7 @@ def load_labels(root):
     return labels
 
 
-def save_output(root, example, index, sub_dir_keys=[]):
+def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
     """Saves the ouput of some model contained in ``example`` in a reusable
     manner.
 
@@ -312,7 +321,9 @@ def save_output(root, example, index, sub_dir_keys=[]):
         the file system you are saving data on.
     """
 
-    example = example["step_ops"]
+    example = retrieve(example, keypath)
+    if callable(example):
+        example = example()
 
     sub_dirs = [""] * len(index)
     for subk in sub_dir_keys:
@@ -388,7 +399,7 @@ def _delget(d, k):
 
 def save_example(savepath, datum):
     """Manages the writing process of a single datum: (1) Determine type,
-    (2) Choos saver, (3) save.
+    (2) Choose saver, (3) save.
 
     Args:
         savepath (str): Where to save. Must end with `.{}` to put in the
@@ -436,7 +447,7 @@ def load_by_heuristic(path):
         return txt_loader(path)
     else:
         raise ValueError(
-            "Cannot load file with extenstion `{}` at {}".format(ext, path)
+            "Cannot load file with extension `{}` at {}".format(ext, path)
         )
 
 
