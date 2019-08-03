@@ -55,6 +55,8 @@ Next you run your evaluation on your data using your favourite edflow command.
 
     edflow -n myexperiment -e the_config.yaml -p path_to_project
 
+"git add/rm <conflicted_files>", then run "git rebase --continue".
+
 This will create a new evaluation folder inside your project's eval directory.
 Inside this folder everything returned by your step ops is stored. In the case
 above this would mean your outputs would be stored as
@@ -479,6 +481,8 @@ def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
     """
 
     example = retrieve(example, keypath)
+    if callable(example):
+        example = example()
 
     sub_dirs = [""] * len(index)
     for subk in sub_dir_keys:
@@ -601,7 +605,6 @@ def save_example(savepath, datum):
 
     Returns
     -------
-
     """
 
     saver, ending = determine_saver(datum)
@@ -663,7 +666,10 @@ def load_by_heuristic(path):
     elif ext == ".txt":
         return txt_loader(path)
     else:
-        raise ValueError("Cannot load file with extension `{}` at {}".format(ext, path))
+
+        raise ValueError(
+            "Cannot load file with extension `{}` at {}".format(ext, path)
+        )
 
 
 def decompose_name(name):
