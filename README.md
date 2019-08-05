@@ -166,18 +166,6 @@ num_steps: 30000
 [INFO] [LoggingHook]: mean_loss: 2.256807565689087
 [INFO] [LoggingHook]: min_loss: 2.2113394737243652
 [INFO] [LoggingHook]: project root: logs/2019-08-05T18:55:20_hello_tfe/train
-[INFO] [LoggingHook]: global_step: 2
-[INFO] [LoggingHook]: acc: 0.25
-[INFO] [LoggingHook]: max_loss: 2.36808180809021
-[INFO] [LoggingHook]: mean_loss: 2.2369155883789062
-[INFO] [LoggingHook]: min_loss: 2.1708223819732666
-[INFO] [LoggingHook]: project root: logs/2019-08-05T18:55:20_hello_tfe/train
-[INFO] [LoggingHook]: global_step: 4
-[INFO] [LoggingHook]: acc: 0.25
-[INFO] [LoggingHook]: max_loss: 2.3816423416137695
-[INFO] [LoggingHook]: mean_loss: 2.2866263389587402
-[INFO] [LoggingHook]: min_loss: 2.1256136894226074
-[INFO] [LoggingHook]: project root: logs/2019-08-05T18:55:20_hello_tfe/train
 ...
 ```
 
@@ -299,7 +287,7 @@ $ edflow --help
 usage: edflow [-h] [-n description]
               [-b [base_config.yaml [base_config.yaml ...]]] [-t config.yaml]
               [-e [config.yaml [config.yaml ...]]] [-p PROJECT]
-              [-c CHECKPOINT] [-r] [--nogpu] [-log LEVEL]
+              [-c CHECKPOINT] [-r] [-log LEVEL]
 
 optional arguments:
   -h, --help            show this help message and exit
