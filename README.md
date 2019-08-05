@@ -9,7 +9,7 @@ A framework independent engine for training and evaluating in batches.
     2. [Pytorch](#Pytorch)
     3. [TensorFlow Graph-Building](#TensorFlow-Graph-Building)
 3. [Documentation](#Documentation)
-4. [Command-Line Parameters](#Command-Line Parameters)
+4. [Command-Line Parameters](#Command-Line-Parameters)
 5. [Contributions](#Contributions)
 6. [LICENSE](#LICENSE)
 7. [Authors](#Authors)
@@ -187,7 +187,7 @@ project root at `logs/2019-08-05T18:55:20_hello_tfe/`. By default checkpoint
 are written after each epoch, or when an exception is encountered, including
 a `KeyboardInterrupt`. The checkpoint frequency can be adjusted with a
 `ckpt_freq: <frequency>` entry in the config file. All config file entries can
-also be specified on the command line as `--ckpt_freq <frequency>`.
+also be specified on the command line as, e.g., `--ckpt_freq <frequency>`.
 
 Use `CTRL-C` to interrupt the training:
 
@@ -294,7 +294,7 @@ For more information, look into our [documentation](https://edflow.readthedocs.i
 
 ## Command-Line Parameters
     
-```bash
+```
 $ edflow --help
 usage: edflow [-h] [-n description]
               [-b [base_config.yaml [base_config.yaml ...]]] [-t config.yaml]
