@@ -3,13 +3,13 @@
 A framework independent engine for training and evaluating in batches.
 
 ## Table of Contents
-1. [Setup](#Setup)
-2. [Workflow](#Workflow)
-3. [Example](#Example)
-4. [Other](#Other)
-    1. [Parameters](#Parameters)
-    2. [Known Issues](#Known-Issues)
-    3. [Compatibility](#Compatibility)
+1. [Installation](#Installation)
+2. [Getting Started](#Getting-Started)
+    1. [TensorFlow Eager](#TensorFlow-Eager)
+    2. [Pytorch](#Pytorch)
+    3. [TensorFlow Graph-Building](#TensorFlow-Graph-Building)
+3. [Documentation](#Documentation)
+4. [Command-Line Parameters](#Command-Line Parameters)
 5. [Contributions](#Contributions)
 6. [LICENSE](#LICENSE)
 7. [Authors](#Authors)
@@ -21,21 +21,259 @@ A framework independent engine for training and evaluating in batches.
     pip install .
 
 
-## Getting started
+## Getting Started
 
 
     cd examples
 
 
-### TensorFlow eager
+### TensorFlow Eager
 
+You provide an implementation of a model and an iterator and use `edflow` to
+train and evaluate your model. An example can be found in
+`template_tfe/edflow.py`:
 
 ```python
+import functools
+import tensorflow as tf
+
+tf.enable_eager_execution()
+import tensorflow.keras as tfk
+import numpy as np
+from edflow import TemplateIterator, get_logger
+
+
+class Model(tfk.Model):
+    def __init__(self, config):
+        super().__init__()
+        self.conv1 = tfk.layers.Conv2D(filters=6, kernel_size=5)
+        self.pool = tfk.layers.MaxPool2D(pool_size=2, strides=2)
+        self.conv2 = tfk.layers.Conv2D(filters=16, kernel_size=5)
+        self.fc1 = tfk.layers.Dense(units=120)
+        self.fc2 = tfk.layers.Dense(units=84)
+        self.fc3 = tfk.layers.Dense(units=config["n_classes"])
+
+        input_shape = (config["batch_size"], 28, 28, 1)
+        self.build(input_shape)
+
+    def call(self, x):
+        x = self.pool(tf.nn.relu(self.conv1(x)))
+        x = self.pool(tf.nn.relu(self.conv2(x)))
+        x = tf.reshape(x, [tf.shape(x)[0], -1])
+        x = tf.nn.relu(self.fc1(x))
+        x = tf.nn.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+
+class Iterator(TemplateIterator):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # loss and optimizer
+        self.criterion = functools.partial(
+            tfk.losses.sparse_categorical_crossentropy, from_logits=True
+        )
+        self.optimizer = tf.train.MomentumOptimizer(learning_rate=0.001, momentum=0.9)
+        # to save and restore
+        self.tfcheckpoint = tf.train.Checkpoint(
+            model=self.model, optimizer=self.optimizer
+        )
+
+    def save(self, checkpoint_path):
+        self.tfcheckpoint.write(checkpoint_path)
+
+    def restore(self, checkpoint_path):
+        self.tfcheckpoint.restore(checkpoint_path)
+
+    def step_op(self, model, **kwargs):
+        # get inputs
+        inputs, labels = kwargs["image"], kwargs["class"]
+
+        # compute loss
+        with tf.GradientTape() as tape:
+            outputs = model(inputs)
+            loss = self.criterion(y_true=labels, y_pred=outputs)
+            mean_loss = tf.reduce_mean(loss)
+
+        def train_op():
+            grads = tape.gradient(mean_loss, model.trainable_variables)
+            self.optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+        def log_op():
+            acc = np.mean(np.argmax(outputs, axis=1) == labels)
+            min_loss = np.min(loss)
+            max_loss = np.max(loss)
+            return {
+                "images": {"inputs": inputs},
+                "scalars": {
+                    "min_loss": min_loss,
+                    "max_loss": max_loss,
+                    "mean_loss": mean_loss,
+                    "acc": acc,
+                },
+            }
+
+        def eval_op():
+            return {"outputs": np.array(outputs), "loss": np.array(loss)[:, None]}
+
+        return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
 ```
 
+Specify your parameters in a `yaml` config file, e.g.
+`template_tfe/config.yaml`:
+
+```yaml
+dataset: edflow.datasets.fashionmnist.FashionMNIST
+model: template_tfe.edflow.Model
+iterator: template_tfe.edflow.Iterator
+batch_size: 4
+num_epochs: 2
+
+n_classes: 10
+```
+
+To start training, use the `-t/--train <config>` command-line option and,
+optionally, the `-n/--name <name>` option to more easily find your experiments
+later on:
 
 
-### TensorFlow graph-building
+```
+$ edflow -t template_tfe/config.yaml -n hello_tfe
+[INFO] [train]: Starting Training.
+[INFO] [train]: Instantiating dataset.
+[INFO] [FashionMNIST]: Using split: train
+[INFO] [train]: Number of training samples: 60000
+[INFO] [train]: Warm up batches.
+[INFO] [train]: Reset batches.
+[INFO] [train]: Instantiating model.
+[INFO] [train]: Instantiating iterator.
+[INFO] [train]: Initializing model.
+[INFO] [train]: Starting Training with config:
+batch_size: 4
+dataset: edflow.datasets.fashionmnist.FashionMNIST
+hook_freq: 1
+iterator: template_tfe.edflow.Iterator
+model: template_tfe.edflow.Model
+n_classes: 10
+num_epochs: 2
+num_steps: 30000
+
+[INFO] [train]: Saved config at logs/2019-08-05T18:55:20_hello_tfe/configs/train_2019-08-05T18:55:26.yaml
+[INFO] [train]: Iterating.
+[INFO] [LoggingHook]: global_step: 0
+[INFO] [LoggingHook]: acc: 0.25
+[INFO] [LoggingHook]: max_loss: 2.3287339210510254
+[INFO] [LoggingHook]: mean_loss: 2.256807565689087
+[INFO] [LoggingHook]: min_loss: 2.2113394737243652
+[INFO] [LoggingHook]: project root: logs/2019-08-05T18:55:20_hello_tfe/train
+[INFO] [LoggingHook]: global_step: 2
+[INFO] [LoggingHook]: acc: 0.25
+[INFO] [LoggingHook]: max_loss: 2.36808180809021
+[INFO] [LoggingHook]: mean_loss: 2.2369155883789062
+[INFO] [LoggingHook]: min_loss: 2.1708223819732666
+[INFO] [LoggingHook]: project root: logs/2019-08-05T18:55:20_hello_tfe/train
+[INFO] [LoggingHook]: global_step: 4
+[INFO] [LoggingHook]: acc: 0.25
+[INFO] [LoggingHook]: max_loss: 2.3816423416137695
+[INFO] [LoggingHook]: mean_loss: 2.2866263389587402
+[INFO] [LoggingHook]: min_loss: 2.1256136894226074
+[INFO] [LoggingHook]: project root: logs/2019-08-05T18:55:20_hello_tfe/train
+...
+```
+
+edflow shows the progress of your training and scalar logging values. The log
+file, log outputs and checkpoints can be found in the `train` folder of the
+project root at `logs/2019-08-05T18:55:20_hello_tfe/`. By default checkpoint
+are written after each epoch, or when an exception is encountered, including
+a `KeyboardInterrupt`. The checkpoint frequency can be adjusted with a
+`ckpt_freq: <frequency>` entry in the config file. All config file entries can
+also be specified on the command line as `--ckpt_freq <frequency>`.
+
+Use `CTRL-C` to interrupt the training:
+
+
+    [INFO] [LambdaCheckpointHook]: Saved model to logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
+
+To resume training, run
+
+
+    edflow -t template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/
+
+
+It will load the last checkpoint in the project folder and continue training
+and logging into the same folder.
+This lets you easily adjust parameters without having to start training from
+scratch, e.g.
+
+
+    edflow -t template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ --batch_size 32
+
+
+will continue with an increased batch size. Instead of loading the latest
+checkpoint, you can load a specific checkpoint by adding `-c <path to
+checkpoint>`:
+
+
+    edflow -t template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ -c logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
+
+
+Evaluation mode will write all outputs of `eval_op` to disk and prepare them
+for consumption by your evaluation functions. Just replace `-t` by `-e`:
+
+
+    edflow -e template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ -c logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
+
+
+If `-c` is not specified, it will evaluate the latest checkpoint. The
+evaluation mode will finish with
+
+```
+[INFO] [EvalHook]: All data has been produced. You can now also run all callbacks using the following command:
+edeval -c logs/2019-08-05T18:55:20_hello_tfe/eval/2019-08-05T19:22:23/1207/model_output.csv -cb <your callback>
+```
+
+Your callbacks will get the path to the evaluation folder, the input dataset as
+seen by your model, an output dataset which contains the corresponding outputs
+of your model and the config used for evaluation. `template_tfe/edflow.py`
+contains an example callback computing the average loss and accuracy:
+
+```python
+def acc_callback(root, data_in, data_out, config):
+    from tqdm import trange
+
+    logger = get_logger("acc_callback")
+    correct = 0
+    seen = 0
+    loss = 0.0
+    for i in trange(len(data_in)):
+        labels = data_in[i]["class"]
+        outputs = data_out[i]["outputs"]
+        loss = data_out[i]["loss"].squeeze()
+
+        prediction = np.argmax(outputs, axis=0)
+        correct += labels == prediction
+        loss += loss
+    logger.info("Loss: {}".format(loss / len(data_in)))
+    logger.info("Accuracy: {}".format(correct / len(data_in)))
+```
+
+which can be executed with:
+
+
+```
+$ edeval -c logs/2019-08-05T18:55:20_hello_tfe/eval/2019-08-05T19:22:23/1207/model_output.csv -cb template_tfe.edflow.acc_callback
+...
+INFO:acc_callback:Loss: 0.00013115551471710204
+INFO:acc_callback:Accuracy: 0.7431
+```
+
+### Pytorch
+
+    cd examples
+    edflow -t mnist_pytorch/mnist_config.yaml -n hello_pytorch
+
+
+### TensorFlow Graph-Building
 
 edflow supports graph-based execution, e.g.
 
@@ -47,11 +285,6 @@ execution, support for TensorFlow's 1.x graph
 building will fade away.
 
 
-### Pytorch
-
-    cd examples
-    edflow -t mnist_pytorch/mnist_config.yaml -n hello_pytorch
-
 
 
 ## Documentation
@@ -59,7 +292,7 @@ building will fade away.
 For more information, look into our [documentation](https://edflow.readthedocs.io/en/latest/).
 
 
-## `edflow` command-line parameters
+## Command-Line Parameters
     
 ```bash
 $ edflow --help
@@ -86,7 +319,6 @@ optional arguments:
   -c CHECKPOINT, --checkpoint CHECKPOINT
                         path to existing checkpoint
   -r, --retrain         reset global step
-  --nogpu               disable gpu for tensorflow
   -log LEVEL, --log-level LEVEL
                         Set the std-out logging level.
 ```
