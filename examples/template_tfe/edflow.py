@@ -1,5 +1,6 @@
 import functools
 import tensorflow as tf
+
 tf.enable_eager_execution()
 import tensorflow.keras as tfk
 import numpy as np
@@ -63,24 +64,28 @@ class Iterator(TemplateIterator):
             self.optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
         def log_op():
-            acc = np.mean(np.argmax(outputs, axis = 1) == labels)
+            acc = np.mean(np.argmax(outputs, axis=1) == labels)
             min_loss = np.min(loss)
             max_loss = np.max(loss)
-            return {"images": {"inputs": inputs},
-                    "scalars": {
-                        "min_loss": min_loss,
-                        "max_loss": max_loss,
-                        "mean_loss": mean_loss,
-                        "acc": acc}}
+            return {
+                "images": {"inputs": inputs},
+                "scalars": {
+                    "min_loss": min_loss,
+                    "max_loss": max_loss,
+                    "mean_loss": mean_loss,
+                    "acc": acc,
+                },
+            }
 
         def eval_op():
-            return {"outputs": np.array(outputs), "loss": np.array(loss)[:,None]}
+            return {"outputs": np.array(outputs), "loss": np.array(loss)[:, None]}
 
         return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
 
 
 def acc_callback(root, data_in, data_out, config):
     from tqdm import trange
+
     logger = get_logger("acc_callback")
     correct = 0
     seen = 0
@@ -90,7 +95,7 @@ def acc_callback(root, data_in, data_out, config):
         outputs = data_out[i]["outputs"]
         loss = data_out[i]["loss"].squeeze()
 
-        prediction = np.argmax(outputs, axis = 0)
+        prediction = np.argmax(outputs, axis=0)
         correct += labels == prediction
         loss += loss
     logger.info("Loss: {}".format(loss / len(data_in)))

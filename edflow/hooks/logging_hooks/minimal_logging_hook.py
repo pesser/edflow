@@ -4,15 +4,12 @@ from edflow.custom_logging import get_logger
 from edflow.iterators.batches import plot_batch
 import os
 
+
 class LoggingHook(Hook):
     """Minimal implementation of a logging hook. Can be easily extended by
     adding handlers."""
-    def __init__(
-        self,
-        paths,
-        interval,
-        root_path,
-    ):
+
+    def __init__(self, paths, interval, root_path):
         """Args:
             paths (list(str)): List of key-paths to logging outputs. Will be
                 expanded so they can be evaluated lazily.
@@ -23,9 +20,7 @@ class LoggingHook(Hook):
         self.interval = interval
         self.root = root_path
         self.logger = get_logger(self)
-        self.handlers = {
-                "images": self.log_images,
-                "scalars": self.log_scalars}
+        self.handlers = {"images": self.log_images, "scalars": self.log_scalars}
 
     def after_step(self, batch_index, last_results):
         if batch_index % self.interval == 0:
@@ -33,7 +28,9 @@ class LoggingHook(Hook):
             self.logger.info("global_step: {}".format(self._step))
             for path in self.paths:
                 for k in self.handlers:
-                    handler_results = retrieve(last_results, path+"/"+k, default = dict())
+                    handler_results = retrieve(
+                        last_results, path + "/" + k, default=dict()
+                    )
                     self.handlers[k](handler_results)
             self.logger.info("project root: {}".format(self.root))
 

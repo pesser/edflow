@@ -10,6 +10,7 @@ from edflow.util import retrieve
 class TemplateIterator(PyHookedModelIterator):
     """A specialization of PyHookedModelIterator which adds reasonable default
     behaviour. Subclasses should implement `save`, `restore` and `step_op`."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # wrap save and restore into a LambdaCheckpointHook
@@ -27,10 +28,8 @@ class TemplateIterator(PyHookedModelIterator):
             self._log_ops = self.config.get("log_ops", ["step_ops/log_op"])
             # logging
             self.loghook = LoggingHook(
-                    paths=self._log_ops,
-                    root_path=ProjectManager.train,
-                    interval=1,
-                    )
+                paths=self._log_ops, root_path=ProjectManager.train, interval=1
+            )
             # wrap it in interval hook
             self.ihook = IntervalHook(
                 [self.loghook],
@@ -46,10 +45,11 @@ class TemplateIterator(PyHookedModelIterator):
             # evaluate
             self._eval_op = self.config.get("eval_op", "step_ops/eval_op")
             self.evalhook = EvalHook(
-                    dataset = self.dataset,
-                    step_getter = self.get_global_step,
-                    keypath = self._eval_op,
-                    meta = self.config)
+                dataset=self.dataset,
+                step_getter=self.get_global_step,
+                keypath=self._eval_op,
+                meta=self.config,
+            )
             self.hooks.append(self.evalhook)
             self._train_ops = []
             self._log_ops = []

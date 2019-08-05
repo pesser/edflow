@@ -103,7 +103,7 @@ class EvalHook(Hook):
         callbacks=[],
         meta=None,
         step_getter=None,
-        keypath="step_ops"
+        keypath="step_ops",
     ):
         """
         Parameters
@@ -186,11 +186,12 @@ class EvalHook(Hook):
                 self.label_arrs[k][idx] = label_vals[k][i]
 
         path_dicts = save_output(
-                root = self.save_root,
-                example = last_results,
-                index = idxs,
-                sub_dir_keys = self.sdks,
-                keypath = self.keypath)
+            root=self.save_root,
+            example=last_results,
+            index=idxs,
+            sub_dir_keys=self.sdks,
+            keypath=self.keypath,
+        )
 
         if self.data_frame is None:
             columns = sorted(path_dicts[list(path_dicts.keys())[0]])
@@ -446,9 +447,7 @@ def load_by_heuristic(path):
     elif ext == ".txt":
         return txt_loader(path)
     else:
-        raise ValueError(
-            "Cannot load file with extension `{}` at {}".format(ext, path)
-        )
+        raise ValueError("Cannot load file with extension `{}` at {}".format(ext, path))
 
 
 def decompose_name(name):
