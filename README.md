@@ -1,6 +1,6 @@
-# EDFlow - Evaluation Driven workFlow
+# edflow
 
-A small framework for training and evaluating tensorflow models by Mimo Tilbich.
+A framework independent engine for training and evaluating in batches.
 
 ## Table of Contents
 1. [Setup](#Setup)
@@ -14,41 +14,37 @@ A small framework for training and evaluating tensorflow models by Mimo Tilbich.
 6. [LICENSE](#LICENSE)
 7. [Authors](#Authors)
 
-## Setup
-Clone this repository:
+## Installation
 
     git clone https://github.com/pesser/edflow.git
     cd edflow
-
-We provide different [conda](https://conda.io) environments in the folder
-`environments`:
-
-- `edflow_tf_cu9.yaml`: Use if you have `CUDA>=9` available and
-  want to use tensorflow.
-- `edflow_pt_cu9.yaml`: Use if you have `CUDA>=9` available and
-  want to use pytorch.
-- `edflow_cpu`: Use if you don't have a `CUDA>=9` GPU available.
-
-Choose an appropriate environment and execute
-
-    conda env create -f environments/<env>.yaml
-    conda activate <env>
-    pip install -e .
-
-where `<env>` is one of the `yaml` files described above.
+    pip install .
 
 
-## Workflow
-
-For more information, look into our [documentation](https://edflow.readthedocs.io/en/latest/).
+## Getting started
 
 
-## Example
+    cd examples
 
-### Tensorflow
+
+### TensorFlow eager
+
+
+```python
+```
+
+
+
+### TensorFlow graph-building
+
+edflow supports graph-based execution, e.g.
 
     cd examples
     edflow -t mnist_tf/train.yaml -n hello_tensorflow
+
+With TensorFlow 2.x going eager by default and TensorFlow 1.x supporting eager
+execution, support for TensorFlow's 1.x graph
+building will fade away.
 
 
 ### Pytorch
@@ -57,24 +53,44 @@ For more information, look into our [documentation](https://edflow.readthedocs.i
     edflow -t mnist_pytorch/mnist_config.yaml -n hello_pytorch
 
 
-## Other
 
-### Parameters
-- `--config path/to/config`
+## Documentation
 
-    yaml file with all information see [Workflow][#Workflow]
+For more information, look into our [documentation](https://edflow.readthedocs.io/en/latest/).
 
-- `--checkpoint path/to/checkpoint to restore`
 
-- `--noeval`
-    only run training
+## `edflow` command-line parameters
+    
+```bash
+$ edflow --help
+usage: edflow [-h] [-n description]
+              [-b [base_config.yaml [base_config.yaml ...]]] [-t config.yaml]
+              [-e [config.yaml [config.yaml ...]]] [-p PROJECT]
+              [-c CHECKPOINT] [-r] [--nogpu] [-log LEVEL]
 
-- `--retrain`
-    reset global step to zero
+optional arguments:
+  -h, --help            show this help message and exit
+  -n description, --name description
+                        postfix of log directory.
+  -b [base_config.yaml [base_config.yaml ...]], --base [base_config.yaml [base_config.yaml ...]]
+                        Path to base config. Any parameter in here is
+                        overwritten by the train of eval config. Useful e.g.
+                        for model parameters, which stay constant between
+                        trainings and evaluations.
+  -t config.yaml, --train config.yaml
+                        path to training config
+  -e [config.yaml [config.yaml ...]], --eval [config.yaml [config.yaml ...]]
+                        path to evaluation configs
+  -p PROJECT, --project PROJECT
+                        path to existing project
+  -c CHECKPOINT, --checkpoint CHECKPOINT
+                        path to existing checkpoint
+  -r, --retrain         reset global step
+  --nogpu               disable gpu for tensorflow
+  -log LEVEL, --log-level LEVEL
+                        Set the std-out logging level.
+```
 
-### Known Issues
-
-### Compatibility
 
 ## Contributions
 [![GitHub-Commits][GitHub-Commits]](https://github.com/pesser/edflow/graphs/commit-activity)
