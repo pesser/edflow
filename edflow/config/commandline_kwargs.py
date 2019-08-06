@@ -1,4 +1,22 @@
 import ast
+from edflow.util import set_value, walk, retrieve
+
+
+def update_config(config, additional_kwargs):
+    """additional_kwargs are added in order of the keys' length, e.g. 'a'
+    is overriden by 'a/b'."""
+    keys = sorted(additional_kwargs.keys())
+    for k in keys:
+        set_value(config, k, additional_kwargs[k])
+
+    def replace(k):
+        if isinstance(k, str) and k[0] == "{" and k[-1] == "}":
+            k_ = k[1:-1].strip()
+            return retrieve(config, k_, default=k)
+        else:
+            return k
+
+    walk(config, replace, inplace=True)
 
 
 def parse_unknown_args(unknown):

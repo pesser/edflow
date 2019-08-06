@@ -24,15 +24,7 @@ from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
-from edflow.config import parse_unknown_args
-
-
-def update_config(config, additional_kwargs):
-    config.update(additional_kwargs)
-    # single format substitution, does not support nested structures
-    for k, v in config.items():
-        if isinstance(v, str):
-            config[k] = v.format(**config)
+from edflow.config import parse_unknown_args, update_config
 
 
 def main(opt, additional_kwargs):

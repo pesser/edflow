@@ -47,7 +47,7 @@ class PyCheckpointHook(Hook):
         self.save()
 
     def after_step(self, step, last_results):
-        self.step = retrieve("global_step", last_results)
+        self.step = retrieve(last_results, "global_step")
         if self.interval is not None and step % self.interval == 0:
             self.save()
 
@@ -113,15 +113,15 @@ class PyLoggingHook(Hook):
             step = last_results["global_step"]
 
             for key in self.scalar_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
                 self.tb_logger.add_scalar(key, value, step)
 
             for key in self.histogram_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
                 self.tb_logger.add_histogram(key, value, step)
 
             for key in self.image_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
 
                 name = key.split("/")[-1]
                 full_name = name + "_{:07}.png".format(step)
@@ -129,7 +129,7 @@ class PyLoggingHook(Hook):
                 plot_batch(value, save_path)
 
             for key in self.log_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
                 self.logger.info("{}: {}".format(key, value))
 
 

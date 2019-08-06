@@ -25,6 +25,7 @@ setup(
         "psutil",
         "pytest",
         "deprecated",
+        "fastnumbers",
     ],
     extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "numpy"]},
     zip_safe=False,

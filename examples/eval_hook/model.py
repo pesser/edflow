@@ -63,13 +63,10 @@ class Iterator(TorchHookedModelIterator):
         self.model = model
         self.config = config
 
-        dset = get_obj_from_str(config["dataset"])
-        dset = dset(config)
-
         self.hooks += [ToNumpyHook()]
         self.hooks += [
             EvalHook(
-                dset,
+                self.dataset,
                 ["target"],
                 callbacks=[empty_callback],
                 meta=config,
@@ -83,19 +80,18 @@ class Iterator(TorchHookedModelIterator):
         if torch.cuda.is_available():
             self.model.cuda()
 
-    def eval_op(self, model, image, target, index_=None):
+    def eval_op(self, model, image, target, **kwargs):
         """
         Takes care of the training step.
         :param model: The model used.
         :param image: The input image.
         :param target: The target class.
-        :param index_: Required parameter. # TODO: Check if it's needed. If yes, then check why it's needed.
         :return:
         """
 
         output = model(image)
 
-        return {"generated": output, "index_": index_, "target": target}
+        return {"generated": output, "target": target}
 
     def step_ops(self):
         """
