@@ -13,12 +13,15 @@ class RuntimeInputHook(Hook):
     a callback function."""
 
     def __init__(self, update_file, callback):
-        """Args:
-            update_file (str): path/to/yaml-file containing the parameters of
-                interest.
-            callback (Callable): Each time something changes in the update_file
-                this function is called with the content of the file as
-                argument.
+        """
+        Parameters
+        ----------
+        update_file : str
+            path/to/yaml-file containing the parameters of interest.
+        callback : Callable
+            Each time something changes in the update_file
+            this function is called with the content of the file as
+            argument.
         """
 
         self.logger = get_logger(self)
