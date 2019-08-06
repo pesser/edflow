@@ -136,7 +136,7 @@ class DatasetMixin(DatasetMixin_):
             "{}".format(type(val))
         )
 
-    @traceable_method(ignores=[BrokenPipeError])
+    # @traceable_method(ignores=[BrokenPipeError])
     def __getitem__(self, i):
         ret_dict = super().__getitem__(i)
 
@@ -149,17 +149,26 @@ class DatasetMixin(DatasetMixin_):
                     raise ValueError(self._d_msg(d))
                 d["index_"] = idx
 
+                if self.append_labels:
+                    d.update({k: v[idx] for k, v in self.labels.items()})
+
         elif isinstance(i, list) or isinstance(i, np.ndarray):
             for idx, d in zip(i, ret_dict):
                 if not isinstance(d, dict):
                     raise ValueError(self._d_msg(d))
                 d["index_"] = idx
 
+                if self.append_labels:
+                    d.update({k: v[idx] for k, v in self.labels.items()})
+
         else:
             if not isinstance(ret_dict, dict):
                 raise ValueError(self._d_msg(ret_dict))
 
             ret_dict["index_"] = i
+
+            if self.append_labels:
+                ret_dict.update({k: v[i] for k, v in self.labels.items()})
 
         return ret_dict
 
@@ -254,6 +263,16 @@ class DatasetMixin(DatasetMixin_):
             self.data.labels = labels
         else:
             self._labels = labels
+
+    @property
+    def append_labels(self):
+        if not hasattr(self, '_append_labels'):
+            self._append_labels = False
+        return self._append_labels
+
+    @append_labels.setter
+    def append_labels(self, value):
+        self._append_labels = value
 
 
 def make_server_manager(port=63127, authkey=b"edcache"):
@@ -660,7 +679,7 @@ class SubDataset(DatasetMixin):
     """A subset of a given dataset."""
 
     def __init__(self, data, subindices):
-        self.data = data
+        self.base_data = data
         self.subindices = subindices
         try:
             len(self.subindices)
@@ -672,7 +691,7 @@ class SubDataset(DatasetMixin):
         """Get example and process. Wrapped to make sure stacktrace is
         printed in case something goes wrong and we are in a
         MultiprocessIterator."""
-        return self.data[self.subindices[i]]
+        return self.base_data[self.subindices[i]]
 
     def __len__(self):
         return len(self.subindices)
@@ -682,9 +701,12 @@ class SubDataset(DatasetMixin):
         # relay if data is cached
         if not hasattr(self, "_labels"):
             self._labels = dict()
-            labels = self.data.labels
-            for k in labels:
-                self._labels[k] = [labels[k][i] for i in self.subindices]
+            all_labels = self.base_data.labels
+            for key, labels in all_labels.items():
+                if isinstance(labels, np.ndarray):
+                    self._labels[key] = labels[self.subindices]
+                else:
+                    self._labels[key] = [labels[i] for i in self.subindices]
         return self._labels
 
 
@@ -732,11 +754,6 @@ class ProcessedDataset(DatasetMixin):
 
     def __len__(self):
         return len(self.data)
-
-    @property
-    def labels(self):
-        # relay if data is cached
-        return self.data.labels
 
 
 class ExtraLabelsDataset(DatasetMixin):
