@@ -125,6 +125,40 @@ class DatasetMixin(DatasetMixin_):
         A = ConcatenatedDataset(C, B)  # Adding two Datasets
         D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
 
+    Labels in the example `dict`
+    ----------------------------
+
+    Oftentimes it is good to store and load some values as lables as it can
+    increase performance and decrease storage size, e.g. when storing scalar
+    values. If you need these values to be returned by the :func:`get_example`
+    method, simply activate this behaviour by setting the attribute
+    :attr:`append_labels` to ``True``.
+
+    .. code-block:: python
+
+        SomeDerivedDataset(DatasetMixin):
+            def __init__(self):
+                self.labels = {'a': [1, 2, 3]}
+                self.append_labels = True
+
+            def get_example(self, idx):
+                return {'a' : idx**2, 'b': idx}
+
+            def __len__(self):
+                return 3
+
+        S = SomeDerivedDataset()
+        a = S[2]
+        print(a)  # {'a': 3, 'b': 2}
+
+        S.append_labels = False
+        a = S[2]
+        print(a)  # {'a': 4, 'b': 2}
+
+    Labels are appended to your example, after all code is executed from your
+    :attr:`get_example` method. Thus, if there are keys in your labels, which
+    can also be found in the examples, the label entries will override the 
+    values in you example, as can be seen in the example above.
     """
 
     def _d_msg(self, val):

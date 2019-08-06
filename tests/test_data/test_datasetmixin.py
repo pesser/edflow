@@ -40,6 +40,14 @@ def test_dset_mxin_app_labels():
     with pytest.raises(Exception):
         ex[100]
 
+    D.append_labels = False
+    ex = D[0]
+    assert 'l' not in ex
+    assert 'a' in ex
+
+    with pytest.raises(Exception):
+        ex[100]
+
 
 def test_dset_mxin_data_attr():
     class MyDset(DatasetMixin):
