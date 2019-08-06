@@ -8,31 +8,20 @@ from fastnumbers import fast_int
 
 
 def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=1.0):
-    r"""
-    Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
+    r"""Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
     :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
 
-    Parameters
-    ----------
-    step : int
-        :math:`x`
-    start : float
-        :math:`a`
-    end : float
-        :math:`b`
-    start_value : float
-        :math:`\alpha`
-    end_value : float
-        :math:`\beta`
-    clip_min : float
-        Minimal value returned.
-    clip_max : float
-        Maximum value returned.
+    Args:
+        step (float): :math:`x`
+        start: :math:`a`
+        end: :math:`b`
+        start_value: :math:`\alpha`
+        end_value: :math:`\beta`
+        clip_min: Minimal value returned.
+        clip_max: Maximum value returned.
 
-    Returns
-    -------
-    :math:`y` : float
-
+    Returns:
+        float: :math:`y`
     """
     linear = (end_value - start_value) / (end - start) * (
         float(step) - start
@@ -41,49 +30,42 @@ def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=
 
 
 def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
-    """
-    Walk a nested list and/or dict recursively and call fn on all non
+    """Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
     Example
     -------
 
-    .. code-block:: python
+    .. codeblock:: python
 
-        dol = {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
+    dol = {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
 
-        def fn(val):
-            return val**2
+    def fn(val):
+        return val**2
 
-        result = walk(dol, fn)
-        print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
-        print(dol)  # {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
+    result = walk(dol, fn)
+    print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
+    print(dol)  # {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
 
-        result = walk(dol, fn, inplace=True)
-        print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
-        print(dol)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
+    result = walk(dol, fn, inplace=True)
+    print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
+    print(dol)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
 
-    Parameters
-    ----------
-    dict_or_list : dict or list
-        Possibly nested list or dictionary.
-    fn : Callable
-        Applied to each leave of the nested list_dict-object.
-    inplace : bool
-        If False, a new object with the same structure
-        and the results of fn at the leaves is created. If True the leaves
-        are replaced by the results of fn.
-    pass_key : bool
-        Also passes the key or index of the leave element to
-        ``fn``.
-    prev_key : str
-        If ``pass_key == True`` keys of parent nodes are passed
-        to calls of ``walk`` on child nodes to accumulate the keys.
 
-    Returns
-    -------
-    The resulting nested list-dict-object with the results of
-    fn at its leaves. : dict or list
+    Args:
+        dict_or_list (dict or list): Possibly nested list or dictionary.
+        fn (Callable): Applied to each leave of the nested list_dict-object.
+        inplace (bool): If False, a new object with the same structure
+            and the results of fn at the leaves is created. If True the leaves
+            are replaced by the results of fn.
+        pass_key (bool): Also passes the key or index of the leave element to
+            ``fn``.
+        prev_key (str): If ``pass_key == True`` keys of parent nodes are passed
+            to calls of ``walk`` on child nodes to accumulate the keys.
+
+    Returns:
+        dict or list: The resulting nested list-dict-object with the results of
+            fn at its leaves.
     """
 
     if not pass_key:
@@ -137,7 +119,7 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
 class KeyNotFoundError(Exception):
     def __init__(self, cause):
-        self.cause = cause
+        self.cause = casue
 
 
 def retrieve(
@@ -184,11 +166,9 @@ def retrieve(
         for key in keys:
             if callable(list_or_dict):
                 if not expand:
-                    raise KeyNotFoundError(
-                        ValueError(
-                            "Trying to get past callable node with expand=False."
-                        )
-                    )
+                    raise KeyNotFoundError(ValueError(
+                        "Trying to get past callable node with expand=False."
+                        ))
                 list_or_dict = list_or_dict()
                 parent[last_key] = list_or_dict
             last_key = key
@@ -203,10 +183,6 @@ def retrieve(
                 raise KeyNotFoundError(e)
 
             visited += [key]
-        # final expansion of retrieved value
-        if expand and callable(list_or_dict):
-            list_or_dict = list_or_dict()
-            parent[last_key] = list_or_dict
     except KeyNotFoundError as e:
         if default is None:
             print("Key not found: {}, seen: {}".format(keys, visited))
@@ -402,8 +378,7 @@ def set_value(list_or_dict, key, val, splitval="/"):
 
 
 def contains_key(nested_thing, key, splitval="/", expand=True):
-    """
-    Tests if the path like key can find an object in the nested_thing.
+    """Tests if the path like key can find an object in the nested_thing.
     """
     try:
         retrieve(nested_thing, key, splitval=splitval, expand=expand)
@@ -415,10 +390,8 @@ def contains_key(nested_thing, key, splitval="/", expand=True):
 def strenumerate(iterable):
     """Works just as enumerate, but the returned index is a string.
 
-    Parameters
-    ----------
-    iterable : Iterable
-        An (guess what) iterable object.
+    Args:
+        iterable (Iterable): An (guess what) iterable object.
     """
 
     for i, val in enumerate(iterable):
@@ -540,13 +513,10 @@ class TablePrinter(object):
 def pprint_str(nested_thing, heuristics=None):
     """Formats nested objects as string and tries to give relevant information.
 
-    Parameters
-    ----------
-    nested_thing : dict or list
-        Some nested object.
-    heuristics : Callable
-        If given this should produce the string, which
-        is printed as description of a leaf object.
+    Args:
+        nested_thing (dict or list): Some nested object.
+        heuristics (Callable): If given this should produce the string, which
+            is printed as description of a leaf object.
     """
 
     if heuristics is None:
@@ -567,13 +537,10 @@ def pprint_str(nested_thing, heuristics=None):
 def pprint(nested_thing, heuristics=None):
     """Prints nested objects and tries to give relevant information.
 
-    Parameters
-    ----------
-    nested_thing : dict or list
-        Some nested object.
-    heuristics : Callable
-        If given this should produce the string, which
-        is printed as description of a leaf object.
+    Args:
+        nested_thing (dict or list): Some nested object.
+        heuristics (Callable): If given this should produce the string, which
+            is printed as description of a leaf object.
     """
     print(pprint_str(nested_thing, heuristics))
 
