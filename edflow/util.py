@@ -136,7 +136,7 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
 class KeyNotFoundError(Exception):
     def __init__(self, cause):
-        self.cause = casue
+        self.cause = cause
 
 
 def retrieve(
