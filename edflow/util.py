@@ -4,23 +4,35 @@ better catorgory than util."""
 import numpy as np
 import os
 import pickle
+from fastnumbers import fast_int
 
 
 def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=1.0):
-    r"""Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
+    r"""
+    Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
     :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
 
-    Args:
-        step (float): :math:`x`
-        start: :math:`a`
-        end: :math:`b`
-        start_value: :math:`\alpha`
-        end_value: :math:`\beta`
-        clip_min: Minimal value returned.
-        clip_max: Maximum value returned.
+    Parameters
+    ----------
+    step : int
+        :math:`x`
+    start : float
+        :math:`a`
+    end : float
+        :math:`b`
+    start_value : float
+        :math:`\alpha`
+    end_value : float
+        :math:`\beta`
+    clip_min : float
+        Minimal value returned.
+    clip_max : float
+        Maximum value returned.
 
-    Returns:
-        float: :math:`y`
+    Returns
+    -------
+    :math:`y` : float
+
     """
     linear = (end_value - start_value) / (end - start) * (
         float(step) - start
@@ -29,41 +41,48 @@ def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=
 
 
 def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
-    """Walk a nested list and/or dict recursively and call fn on all non
+    """
+    Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
     Example:
 
-    .. codeblock:: python
+    .. code-block:: python
 
-    dol = {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
+        dol = {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
 
-    def fn(val):
-        return val**2
+        def fn(val):
+            return val**2
 
-    result = walk(dol, fn)
-    print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
-    print(dol)  # {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
+        result = walk(dol, fn)
+        print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
+        print(dol)  # {'a': [1, 2], 'b': {'c': 3, 'd': 4}}
 
-    result = walk(dol, fn, inplace=True)
-    print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
-    print(dol)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
+        result = walk(dol, fn, inplace=True)
+        print(result)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
+        print(dol)  # {'a': [1, 4], 'b': {'c': 9, 'd': 16}}
 
+    Parameters
+    ----------
+    dict_or_list : dict or list
+        Possibly nested list or dictionary.
+    fn : Callable
+        Applied to each leave of the nested list_dict-object.
+    inplace : bool
+        If False, a new object with the same structure
+        and the results of fn at the leaves is created. If True the leaves
+        are replaced by the results of fn.
+    pass_key : bool
+        Also passes the key or index of the leave element to
+        ``fn``.
+    prev_key : str
+        If ``pass_key == True`` keys of parent nodes are passed
+        to calls of ``walk`` on child nodes to accumulate the keys.
 
-    Args:
-        dict_or_list (dict or list): Possibly nested list or dictionary.
-        fn (Callable): Applied to each leave of the nested list_dict-object.
-        inplace (bool): If False, a new object with the same structure
-            and the results of fn at the leaves is created. If True the leaves
-            are replaced by the results of fn.
-        pass_key (bool): Also passes the key or index of the leave element to
-            ``fn``.
-        prev_key (str): If ``pass_key == True`` keys of parent nodes are passed
-            to calls of ``walk`` on child nodes to accumulate the keys.
-
-    Returns:
-        dict or list: The resulting nested list-dict-object with the results of
-            fn at its leaves.
+    Returns
+    -------
+    The resulting nested list-dict-object with the results of
+    fn at its leaves. : dict or list
     """
 
     if not pass_key:
@@ -115,43 +134,264 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
     return results
 
 
-def retrieve(key, list_or_dict, splitval="/"):
-    """Given a nested list or dict return the desired value at key.
+def retrieve(
+    list_or_dict, key, splitval="/", default=None, expand=True, pass_success=False
+):
+    """Given a nested list or dict return the desired value at key expanding
+    callable nodes if necessary and :attr:`expand` is ``True``. The expansion
+    is done in-place.
 
-    Args:
-        key (str): key/to/value, path like string describing all keys
-            necessary to consider to get to the desired value. List indices
-            can also be passed here.
-        list_or_dict (list or dict): Possibly nested list or dictionary.
-        splitval (str): String that defines the delimiter between keys of the
+    Parameters:
+    ===========
+        list_or_dict : list or dict
+            Possibly nested list or dictionary.
+        key : str
+            key/to/value, path like string describing all keys necessary to
+            consider to get to the desired value. List indices can also be
+            passed here.
+        splitval : str
+            String that defines the delimiter between keys of the
             different depth levels in `key`.
+        default : obj
+            Value returned if :attr:`key` is not found.
+        expand : bool
+            Whether to expand callable nodes on the path or not.
 
     Returns:
-        The desired value :)
+    ========
+        The desired value or if :attr:`default` is not ``None`` and the
+        :attr:`key` is not found returns ``default``.
+
+    Raises:
+    =======
+        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
+        ``None``.
     """
 
     keys = key.split(splitval)
 
+    success = True
     try:
         visited = []
+        parent = None
+        last_key = None
         for key in keys:
+            if callable(list_or_dict):
+                if not expand:
+                    raise ValueError(
+                        "Trying to get past callable node with expand=False."
+                    )
+                list_or_dict = list_or_dict()
+                parent[last_key] = list_or_dict
+            last_key = key
+            parent = list_or_dict
+
             if isinstance(list_or_dict, dict):
                 list_or_dict = list_or_dict[key]
             else:
                 list_or_dict = list_or_dict[int(key)]
+
             visited += [key]
     except Exception as e:
-        print("Key not found: {}, seen: {}".format(keys, visited))
-        raise e
+        if default is None:
+            print("Key not found: {}, seen: {}".format(keys, visited))
+            raise e
+        else:
+            list_or_dict = default
+            success = False
 
-    return list_or_dict
+    if not pass_success:
+        return list_or_dict
+    else:
+        return list_or_dict, success
 
 
-def contains_key(nested_thing, key, splitval="/"):
-    """Tests if the path like key can find an object in the nested_thing.
-    Has the same signature as :function:`retrieve`."""
+def set_default(list_or_dict, key, default, splitval="/"):
+    """Combines :function:`retrieve` and :function:`set_value` to create the
+    behaviour of pythons ``dict.setdefault``: If ``key`` is found in
+    ``list_or_dict``, return its value, otherwise return ``default`` and add it
+    to ``list_or_dict`` at ``key``.
+
+    Parameters:
+    ===========
+        list_or_dict : list or dict
+            Possibly nested list or dictionary.  splitval (str): String that
+            defines the delimiter between keys of the different depth levels in
+            `key`.
+        key : str
+            key/to/value, path like string describing all keys necessary to
+            consider to get to the desired value. List indices can also be
+            passed here.
+        default : object
+            Value to be returned if ``key`` not in list_or_dict and set to be
+            at ``key`` in this case.
+        splitval : str
+            String that defines the delimiter between keys of the different
+            depth levels in :attr:`key`.
+
+    Returns:
+    ========
+        The desired value or if :attr:`default` is not ``None`` and the
+        :attr:`key` is not found returns ``default``.
+
+    Raises:
+    =======
+        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
+        ``None``.
+    """
+
+    ret_val = retrieve(list_or_dict, key, splitval, default)
+
+    if ret_val == default:
+        set_value(list_or_dict, key, ret_val, splitval)
+
+    return ret_val
+
+
+def set_value(list_or_dict, key, val, splitval="/"):
+    """Sets a value in a possibly nested list or dict object.
+
+    Parameters:
+    ===========
+
+    key : str
+        ``key/to/value``, path like string describing all keys necessary to
+        consider to get to the desired value. List indices can also be passed
+        here.
+    value : object
+        Anything you want to put behind :attr:`key`
+    list_or_dict : list or dict
+        Possibly nested list or dictionary.
+    splitval : str
+        String that defines the delimiter between keys of the different depth
+        levels in :attr:`key`.
+
+
+    Examples:
+    =========
+
+    .. codeblock:: python
+
+        dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
+
+        # Change existing entry
+        set_value(dol, "a/0", 3)
+        # {'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 2}}}
+
+        set_value(dol, "b/e", 3)
+        # {"a": [3, 2], "b": {"c": {"d": 1}, "e": 3}}
+
+        set_value(dol, "a/1/f", 3)
+        # {"a": [3, {"f": 3}], "b": {"c": {"d": 1}, "e": 3}}
+
+        # Append to list
+        dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
+
+        set_value(dol, "a/2", 3)
+        # {"a": [1, 2, 3], "b": {"c": {"d": 1}, "e": 2}}
+
+        set_value(dol, "a/5", 6)
+        # {"a": [1, 2, 3, None, None, 6], "b": {"c": {"d": 1}, "e": 2}}
+
+        # Add key
+        dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
+        set_value(dol, "f", 3)
+        # {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}, "f": 3}
+
+        set_value(dol, "b/1", 3)
+        # {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2, 1: 3}, "f": 3}
+
+        # Raises Error:
+        # Appending key to list
+        # set_value(dol, 'a/g', 3)  # should raise
+
+        # Fancy Overwriting
+        dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+
+        set_value(dol, "e/f", 3)
+        # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": 3}}
+
+        set_value(dol, "e/f/1/g", 3)
+        # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": [None, {"g": 3}]}}
+
+        # Toplevel new key
+        dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+        set_value(dol, "h", 4)
+        # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4}
+
+        set_value(dol, "i/j/k", 4)
+        # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}}
+
+        set_value(dol, "j/0/k", 4)
+        # {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}, "j": [{"k": 4}], }
+
+        # Toplevel is list new key
+        dol = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}, 2, 3]
+
+        set_value(dol, "0/k", 4)
+        # [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "k": 4}, 2, 3]
+
+        set_value(dol, "0", 1)
+        # [1, 2, 3]
+
+    """
+
+    # Split into single keys and convert to int if possible
+    keys = [fast_int(k) for k in key.split(splitval)]
+    next_keys = keys[1:] + [None]
+
+    is_leaf = [False for k in keys]
+    is_leaf[-1] = True
+
+    next_is_leaf = is_leaf[1:] + [None]
+
+    parent = None
+    last_key = None
+    for key, leaf, next_key, next_leaf in zip(keys, is_leaf, next_keys, next_is_leaf):
+
+        if isinstance(key, str):
+            # list_or_dict must be a dict
+            if isinstance(list_or_dict, list):
+                # Not possible
+                raise ValueError("Trying to add a key to a list")
+            elif not isinstance(list_or_dict, dict) or key not in list_or_dict:
+                # Replace value based on next key -> This is only met if
+                list_or_dict[key] = {} if isinstance(next_key, str) else []
+
+        else:
+            # list_or_dict must be list
+            if isinstance(list_or_dict, list):
+                if key >= len(list_or_dict):
+                    # Append to list and pad with None
+                    n_add = key - len(list_or_dict) + 1
+                    list_or_dict += [None] * n_add
+            elif not isinstance(list_or_dict, dict):
+                if parent is None:
+                    # We are at top level
+                    list_or_dict = [None] * (key + 1)
+                else:
+                    parent[last_key] = [None] * (key + 1)
+
+        if leaf:
+            list_or_dict[key] = val
+        else:
+            if not isinstance(list_or_dict[key], (dict, list)):
+                # Replacement condition met
+                list_or_dict[key] = (
+                    {} if isinstance(next_key, str) else [None] * (next_key + 1)
+                )
+
+            parent = list_or_dict
+            last_key = key
+            list_or_dict = list_or_dict[key]
+
+
+def contains_key(nested_thing, key, splitval="/", expand=True):
+    """
+    Tests if the path like key can find an object in the nested_thing.
+    """
     try:
-        retrieve(nested_thing, key, splitval)
+        retrieve(nested_thing, key, splitval=splitval, expand=expand)
         return True
     except Exception:
         return False
@@ -160,8 +400,10 @@ def contains_key(nested_thing, key, splitval="/"):
 def strenumerate(iterable):
     """Works just as enumerate, but the returned index is a string.
 
-    Args:
-        iterable (Iterable): An (guess what) iterable object.
+    Parameters
+    ----------
+    iterable : Iterable
+        An (guess what) iterable object.
     """
 
     for i, val in enumerate(iterable):
@@ -283,10 +525,13 @@ class TablePrinter(object):
 def pprint_str(nested_thing, heuristics=None):
     """Formats nested objects as string and tries to give relevant information.
 
-    Args:
-        nested_thing (dict or list): Some nested object.
-        heuristics (Callable): If given this should produce the string, which
-            is printed as description of a leaf object.
+    Parameters
+    ----------
+    nested_thing : dict or list
+        Some nested object.
+    heuristics : Callable
+        If given this should produce the string, which
+        is printed as description of a leaf object.
     """
 
     if heuristics is None:
@@ -307,10 +552,13 @@ def pprint_str(nested_thing, heuristics=None):
 def pprint(nested_thing, heuristics=None):
     """Prints nested objects and tries to give relevant information.
 
-    Args:
-        nested_thing (dict or list): Some nested object.
-        heuristics (Callable): If given this should produce the string, which
-            is printed as description of a leaf object.
+    Parameters
+    ----------
+    nested_thing : dict or list
+        Some nested object.
+    heuristics : Callable
+        If given this should produce the string, which
+        is printed as description of a leaf object.
     """
     print(pprint_str(nested_thing, heuristics))
 
@@ -359,3 +607,153 @@ if __name__ == "__main__":
     print(pp2mkdtable(nested))
 
     plot_datum(nested)
+
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
+
+    print(dol)
+    print("set_value(dol, 'a/0', 3)")
+    set_value(dol, "a/0", 3)
+
+    print(dol)
+    print({"a": [3, 2], "b": {"c": {"d": 1}, "e": 2}})
+    # {'a': [3, 2], 'b': {'c': {'d': 1}, 'e': 2}}}
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, 'b/e', 3)")
+    set_value(dol, "b/e", 3)
+
+    print(dol)
+    print({"a": [3, 2], "b": {"c": {"d": 1}, "e": 3}})
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, 'a/1/f', 3)")
+    set_value(dol, "a/1/f", 3)
+
+    print(dol)
+    print({"a": [3, {"f": 3}], "b": {"c": {"d": 1}, "e": 3}})
+    print("-" * 10)
+
+    # Append to list
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
+
+    print(dol)
+    print("set_value(dol, 'a/2', 3)")
+    set_value(dol, "a/2", 3)
+
+    print(dol)
+    print({"a": [1, 2, 3], "b": {"c": {"d": 1}, "e": 2}})
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, 'a/5', 6)")
+    set_value(dol, "a/5", 6)
+
+    print(dol)
+    print({"a": [1, 2, 3, None, None, 6], "b": {"c": {"d": 1}, "e": 2}})
+    print("-" * 10)
+
+    # Add key
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
+
+    print(dol)
+    print("set_value(dol, 'f', 3)")
+    set_value(dol, "f", 3)
+
+    print(dol)
+    print({"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}, "f": 3})
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, 'b/1', 3)")
+    set_value(dol, "b/1", 3)
+
+    print(dol)
+    print({"a": [1, 2], "b": {"c": {"d": 1}, "e": 2, 1: 3}, "f": 3})
+    print("-" * 10)
+
+    # Raises Error:
+    # Appending key to list
+    print("# print(set_value(dol, 'a/g', 3))  # should raise")
+    # print(set_value(dol, 'a/g', 3))  # should raise
+
+    # Appending key to leaf
+    print(dol)
+    print("set_value(dol, 'f/a', 3)")
+    set_value(dol, "f/a", 3)
+    print(dol)
+    print("-" * 10)
+
+    # Fancy Overwriting
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+
+    print(dol)
+    print("set_value(dol, 'e/f', 3)")
+    set_value(dol, "e/f", 3)
+
+    print(dol)
+    print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": 3}})
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, 'e/f/1/g', 3)")
+    set_value(dol, "e/f/1/g", 3)
+
+    print(dol)
+    print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": {"f": [None, {"g": 3}]}})
+    print("-" * 10)
+
+    # Toplevel new key
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+
+    print(dol)
+    print("set_value(dol, 'h', 4)")
+    set_value(dol, "h", 4)
+    print(dol)
+    print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4})
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, 'i/j/k', 4)")
+    set_value(dol, "i/j/k", 4)
+    print(dol)
+    print({"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "h": 4, "i": {"j": {"k": 4}}})
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, 'j/0/k', 4)")
+    set_value(dol, "j/0/k", 4)
+    print(dol)
+    print(
+        {
+            "a": [1, 2],
+            "b": {"c": {"d": 1}},
+            "e": 2,
+            "h": 4,
+            "i": {"j": {"k": 4}},
+            "j": [{"k": 4}],
+        }
+    )
+    print("-" * 10)
+
+    # Toplevel is list new key
+    dol = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}, 2, 3]
+
+    print(dol)
+    print("set_value(dol, '0/k', 4)")
+    set_value(dol, "0/k", 4)
+    print(dol)
+    ref = [{"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2, "k": 4}, 2, 3]
+    print(ref == dol)
+    print(ref)
+    print("-" * 10)
+
+    print(dol)
+    print("set_value(dol, '0', 1)")
+    set_value(dol, "0", 1)
+    print(dol)
+    ref = [1, 2, 3]
+    print(ref == dol)
+    print(ref)
+    print("-" * 10)

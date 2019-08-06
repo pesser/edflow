@@ -5,22 +5,27 @@ class MetricHook(Hook):
     """Applies a set of given metrics to the calculated data."""
 
     def __init__(self, metrics, save_root, consider_only_first=None):
-        """Args:
-            metrics (list): List of ``MetricTuple``s of the form
-                ``(input names, output names, metric, name)``.
-                - ``input names`` are the keys corresponding to the feeds of
-                    interest, e.g. an original image.
-                - ``output names`` are the keys corresponding to the values
-                    in the results dict.
-                - ``metric`` is a ``Callable`` that accepts all inputs and
-                    outputs keys as keyword arguments
+        """
+        Parameters
+        ----------
+        metrics : list
+	    List of ``MetricTuple``s of the form
+            ``: input names, output names, metric, name)``. \n
+                - | ``input names`` are the keys corresponding to the feeds of
+                  | interest, e.g. an original image. \n
+                - | ``output names`` are the keys corresponding to the values
+                  | in the results dict.\n
+                - | ``metric`` is a ``Callable`` that accepts all inputs and
+                  | outputs keys as keyword arguments\n
                 - ``name`` is a
-                If nested feeds or results are expected the names can be
-                passed as "path" like ``'key1_key2'`` returning
-                ``dict[key1][key2]``.
-            save_root (str): Path to where the results are stored.
-            consider_only_first (int): Metric is only evaluated on the first
-                `consider_only_first` examples.
+
+            If nested feeds or results are expected the names can be
+            passed as "path" like ``'key1_key2'`` returning
+            ``dict[key1][key2]``.
+        save_root : str
+	    Path to where the results are stored.
+        consider_only_first : int
+	    Metric is only evaluated on the first `consider_only_first` examples.
         """
 
         self.metrics = metrics
@@ -49,7 +54,7 @@ class MetricHook(Hook):
         for in_names, out_names, metric, m_name in self.metrics:
             self.storage_dict[m_name] = {}
             for kwargs_name, name in in_names.items():
-                val = retrieve(name, batch)
+                val = retrieve(batch, name)
                 self.storage_dict[m_name][kwargs_name] = val
 
     def after_step(self, step, results):
@@ -58,7 +63,7 @@ class MetricHook(Hook):
 
         for in_names, out_names, metric, m_name in self.metrics:
             for kwargs_name, name in out_names.items():
-                val = retrieve(name, results)
+                val = retrieve(results, name)
                 self.storage_dict[m_name][kwargs_name] = val
             m_res = metric(**self.storage_dict[m_name])
             self.metric_results[m_name] += [m_res]

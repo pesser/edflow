@@ -5,9 +5,12 @@ from edflow.hooks.pytorch_hooks import DataPrepHook
 class TorchHookedModelIterator(PyHookedModelIterator):
     """
     Iterator class for framework PyTorch, inherited from PyHookedModelIterator.
-    Args:
-        transform (bool): If the batches are to be transformed to pytorch tensors. Should be true even if your input
-                    is already pytorch tensors!
+
+    Parameters
+    ----------
+    transform : bool
+        If the batches are to be transformed to pytorch tensors.
+        Should be true even if your input is already pytorch tensors!
     """
 
     def __init__(self, *args, transform=True, **kwargs):

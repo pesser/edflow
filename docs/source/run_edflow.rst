@@ -3,7 +3,7 @@ What Happens When I Run EDflow
 
 
 ``config``
----------
+----------
 At the heart of every training or evaluation is the **config** file.
 It is a ``dict`` that contains the keywords and values you specify in train.yaml.
 Some keys are mandatory, like:
@@ -29,7 +29,7 @@ This triggers EDFlow's signature workflow:
 1. The ``ProjectManager`` is initialized
 
   - It creates the folder structure, takes a snapshot of the code and keeps track directory addresses through attributes
-  - It is still to decide on the best way to take the snapshot, feel free to participate and contribute_
+  - It is still to decide on the best way to take the snapshot, feel free to participate and :doc:`contribute <./contributions>`
 
 2. All processes are initialized
 
@@ -51,7 +51,7 @@ This triggers EDFlow's signature workflow:
   - ``Iterator.iterate`` is called
 
     - This is the data loop, only argument is the batched data
-    - tqdm_ is called: for epoch in epochs, for batch in batches
+    - `tqdm tqdm.github.io` is called: for epoch in epochs, for batch in batches
     - initialize ``fetches``
 
       - nested ``dict``
