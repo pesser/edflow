@@ -30,3 +30,7 @@ docs/_*
 
 # Generated output
 examples/data
+
+#json files
+package.json
+yarn.lock
