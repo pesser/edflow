@@ -171,7 +171,7 @@ num_steps: 30000
 
 edflow shows the progress of your training and scalar logging values. The log
 file, log outputs and checkpoints can be found in the `train` folder of the
-project root at `logs/2019-08-05T18:55:20_hello_tfe/`. By default checkpoint
+project root at `logs/2019-08-05T18:55:20_hello_tfe/`. By default, checkpoints
 are written after each epoch, or when an exception is encountered, including
 a `KeyboardInterrupt`. The checkpoint frequency can be adjusted with a
 `ckpt_freq: <frequency>` entry in the config file. All config file entries can

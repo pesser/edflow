@@ -5,6 +5,7 @@ from edflow.hooks.util_hooks import IntervalHook
 from edflow.eval.pipeline import EvalHook
 from edflow.project_manager import ProjectManager
 from edflow.util import retrieve
+from edflow.main import get_obj_from_str
 
 
 class TemplateIterator(PyHookedModelIterator):
@@ -44,11 +45,16 @@ class TemplateIterator(PyHookedModelIterator):
         else:
             # evaluate
             self._eval_op = self.config.get("eval_op", "step_ops/eval_op")
+            self._eval_callbacks=self.config.get("eval_callbacks", list())
+            if not isinstance(self._eval_callbacks, list):
+                self._eval_callbacks = [self._eval_callbacks]
+            self._eval_callbacks=[get_obj_from_str(name) for name in self._eval_callbacks]
             self.evalhook = EvalHook(
                 dataset=self.dataset,
                 step_getter=self.get_global_step,
                 keypath=self._eval_op,
                 meta=self.config,
+                callbacks=self._eval_callbacks,
             )
             self.hooks.append(self.evalhook)
             self._train_ops = []
