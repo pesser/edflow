@@ -32,13 +32,14 @@ class Iterator(TemplateIterator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # loss and optimizer
-        self.criterion = nn.CrossEntropyLoss(reduction='none')
+        self.criterion = nn.CrossEntropyLoss(reduction="none")
         self.optimizer = optim.SGD(self.model.parameters(), lr=0.001, momentum=0.9)
 
     def save(self, checkpoint_path):
         state = {
-                "model": self.model.state_dict(),
-                "optimizer": self.optimizer.state_dict()}
+            "model": self.model.state_dict(),
+            "optimizer": self.optimizer.state_dict(),
+        }
         torch.save(state, checkpoint_path)
 
     def restore(self, checkpoint_path):
@@ -50,8 +51,8 @@ class Iterator(TemplateIterator):
         # get inputs
         inputs, labels = kwargs["image"], kwargs["class"]
         inputs = torch.tensor(inputs)
-        inputs = inputs.transpose(2,3).transpose(1,2)
-        labels = torch.tensor(labels, dtype = torch.long)
+        inputs = inputs.transpose(2, 3).transpose(1, 2)
+        labels = torch.tensor(labels, dtype=torch.long)
 
         # compute loss
         outputs = model(inputs)
@@ -64,7 +65,9 @@ class Iterator(TemplateIterator):
             self.optimizer.step()
 
         def log_op():
-            acc = np.mean(np.argmax(outputs.detach().numpy(), axis=1) == labels.detach().numpy())
+            acc = np.mean(
+                np.argmax(outputs.detach().numpy(), axis=1) == labels.detach().numpy()
+            )
             min_loss = np.min(loss.detach().numpy())
             max_loss = np.max(loss.detach().numpy())
             return {
@@ -78,7 +81,10 @@ class Iterator(TemplateIterator):
             }
 
         def eval_op():
-            return {"outputs": np.array(outputs.detach().numpy()), "loss": np.array(loss.detach().numpy())[:, None]}
+            return {
+                "outputs": np.array(outputs.detach().numpy()),
+                "loss": np.array(loss.detach().numpy())[:, None],
+            }
 
         return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
 
