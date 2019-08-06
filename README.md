@@ -132,6 +132,7 @@ num_epochs: 2
 n_classes: 10
 ```
 
+#### Train
 To start training, use the `-t/--train <config>` command-line option and,
 optionally, the `-n/--name <name>` option to more easily find your experiments
 later on:
@@ -177,6 +178,7 @@ a `KeyboardInterrupt`. The checkpoint frequency can be adjusted with a
 `ckpt_freq: <frequency>` entry in the config file. All config file entries can
 also be specified on the command line as, e.g., `--ckpt_freq <frequency>`.
 
+#### Interrupt and Resume
 Use `CTRL-C` to interrupt the training:
 
 
@@ -205,6 +207,7 @@ checkpoint>`:
     edflow -t template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ -c logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
 
 
+#### Evaluate
 Evaluation mode will write all outputs of `eval_op` to disk and prepare them
 for consumption by your evaluation functions. Just replace `-t` by `-e`:
 
@@ -354,6 +357,14 @@ class Iterator(TemplateIterator):
 ```
 
 You can experiment with it in the exact same way as [above](#TensorFlow-Eager).
+For example, to [start training](#Train) run:
+
+
+    edflow -t template_tfe/config.yaml -n hello_pytorch
+
+
+See also [interrupt and resume](#interrupt-and-resume) and
+[evaluation](#Evaluate).
 
 
 ### TensorFlow Graph-Building
