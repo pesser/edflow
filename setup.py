@@ -6,7 +6,7 @@ setup(
     description="Logistics for Deep Learning",
     url="https://github.com/pesser/edflow",
     author="Mimo Tilbich et al.",
-    author_email="{patrick.esser, johannes.haux}" "@iwr.uni-heidelberg.de",
+    author_email="patrick.esser@iwr.uni-heidelberg.de, johannes.haux@iwr.uni-heidelberg.de",
     license="MIT",
     packages=find_packages(),
     install_requires=[
