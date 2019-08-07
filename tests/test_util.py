@@ -513,6 +513,28 @@ def test_retrieve_propagates_exception():
         val = retrieve(dol, "b/c/d", default=0)
 
 
+def test_retrieve_callable_leaves():
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    val = retrieve(dol, "b")
+
+    # make sure expansion is returned
+    assert val == callable_leave()
+
+    # make sure expansion was done in-place
+    assert dol["b"] == callable_leave()
+
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    val = retrieve(dol, "b/c")
+    # make sure expansion is returned
+    assert val == nested_leave()
+    # make sure expansion was done in-place
+    assert dol["b"]["c"] == nested_leave()
+
+    dol = {"a": [1, 2], "b": callable_leave, "e": 2}
+    val = retrieve(dol, "b/c/d")
+    assert val == 1
+
+
 # ====================== walk ====================
 
 
