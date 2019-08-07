@@ -489,6 +489,30 @@ def test_retrieve_pass_success_fail_ef_callable():
         val = retrieve(dol, "b/c/d", pass_success=True, expand=False)
 
 
+def failing_leave():
+    raise Exception()
+    return {"c": nested_leave}
+
+
+class CustomException(Exception):
+    pass
+
+
+def custom_leave():
+    raise CustomException()
+    return {"c": nested_leave}
+
+
+def test_retrieve_propagates_exception():
+    dol = {"a": [1, 2], "b": failing_leave, "e": 2}
+    with pytest.raises(Exception):
+        val = retrieve(dol, "b/c/d", default=0)
+
+    dol = {"a": [1, 2], "b": custom_leave, "e": 2}
+    with pytest.raises(CustomException):
+        val = retrieve(dol, "b/c/d", default=0)
+
+
 # ====================== walk ====================
 
 
