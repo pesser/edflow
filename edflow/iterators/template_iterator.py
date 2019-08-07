@@ -2,7 +2,7 @@ from edflow.iterators.model_iterator import PyHookedModelIterator
 from edflow.hooks.checkpoint_hooks.lambda_checkpoint_hook import LambdaCheckpointHook
 from edflow.hooks.logging_hooks.minimal_logging_hook import LoggingHook
 from edflow.hooks.util_hooks import IntervalHook
-from edflow.eval.pipeline import EvalHook
+from edflow.eval.pipeline import TemplateEvalHook
 from edflow.project_manager import ProjectManager
 from edflow.util import retrieve
 from edflow.main import get_obj_from_str
@@ -51,7 +51,7 @@ class TemplateIterator(PyHookedModelIterator):
             self._eval_callbacks = [
                 get_obj_from_str(name) for name in self._eval_callbacks
             ]
-            self.evalhook = EvalHook(
+            self.evalhook = TemplateEvalHook(
                 dataset=self.dataset,
                 step_getter=self.get_global_step,
                 keypath=self._eval_op,

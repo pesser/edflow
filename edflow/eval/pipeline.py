@@ -246,6 +246,31 @@ class EvalHook(Hook):
         )
 
 
+class TemplateEvalHook(EvalHook):
+    """EvalHook that disables itself when the eval op returns None."""
+    def before_epoch(self, *args, **kwargs):
+        self._active = True
+        super().before_epoch(*args, **kwargs)
+
+    def before_step(self, *args, **kwargs):
+        if self._active:
+            super().before_step(*args, **kwargs)
+
+    def after_step(self, step, last_results):
+        if retrieve(last_results, self.keypath) is None:
+            self._active = False
+        if self._active:
+            super().after_step(step, last_results)
+
+    def after_epoch(self, *args, **kwargs):
+        if self._active:
+            super().after_epoch(*args, **kwargs)
+
+    def at_exception(self, *args, **kwargs):
+        if self._active:
+            super().at_exception(*args, **kwargs)
+
+
 class EvalDataFolder(DatasetMixin):
     def __init__(self, root, show_bar=False):
         er = EvalReader(root)
@@ -323,8 +348,6 @@ def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
     """
 
     example = retrieve(example, keypath)
-    if callable(example):
-        example = example()
 
     sub_dirs = [""] * len(index)
     for subk in sub_dir_keys:
