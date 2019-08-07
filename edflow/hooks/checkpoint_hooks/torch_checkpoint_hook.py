@@ -16,15 +16,19 @@ class RestorePytorchModelHook(Hook):
         filter_cond=lambda c: True,
         global_step_setter=None,
     ):
-        """Args:
-            model (torch.nn.Module): Model to initialize
-            checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint. Ignored if used as functor.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted. Ignored if used as
-                functor.
-            global_step_setter (Callable): Function, that the retrieved global
-                step can be passed to.
+        """
+        Parameters
+        ----------
+        model : torch.nn.Module
+	    Model to initialize
+        checkpoint_path : str
+	    Directory in which the checkpoints are
+            stored or explicit checkpoint. Ignored if used as functor.
+        filter_cond : Callable
+	    A function used to filter files, to only get the checkpoints that
+            are wanted. Ignored if used as functor.
+        global_step_setter : Callable
+	    Function, that the retrieved global step can be passed to.
         """
         self.root = checkpoint_path
         self.fcond = filter_cond

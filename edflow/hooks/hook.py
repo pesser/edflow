@@ -77,7 +77,7 @@ class Hook(object):
 
         Args:
             exception (Exception): The exception which is being raised. Will
-                be raised again after all :method:`at_eception` calls have
+                be raised again after all :meth:`at_eception` calls have
                 been handled.
         """
 

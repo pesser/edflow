@@ -45,6 +45,7 @@ Advanced Data Sets
 ------------------
 .. If you fancy more complex data sets i.e. triplets for metric learning or
    sequences of video frames, take a look at these advanced data set classes:
+
 There is a wealth of Dataset manipulation classes, which almost all manipulate
 the base dataset by manipulating the indices passed to the dataset.
 
@@ -54,20 +55,18 @@ the base dataset by manipulating the indices passed to the dataset.
 - ExampleConcatenatedDataset
 
 More exist, but the above are the ones used most as a recent survey has
-shown[#1]_.
+shown [#1]_.
 
 .. [#1] Johannes Haux: I use SubDataset, SequenceDataset, ConcatenatedDataset,
    ExampleConcatenatedDataset. The rest I do not use.
-
 
 Dataset Workflow
 ----------------
 
 .. warning::
 
-    Dataset, which are specified in the edflow config must accept one
+    Datasets, which are specified in the edflow config, must accept one
     positional argument ``config``!
-
 
 A basic workflow with data in **edflow** looks like this:
 
@@ -114,15 +113,11 @@ as markdown grid-table:
     with open('output.md', 'w+') as example_file:
         example_file.write(nicely_formatted_string)
 
-
-
 :class:`SubDataset`
-------------------
+-------------------
 Given a dataset and an arbitrary list
 of indices, which must be in the range ``[0, len(dataset_]``, it will change
 the way the indices are interpreted.
-
-
 
 .. - LabelDataset
 .. - CachedDataset

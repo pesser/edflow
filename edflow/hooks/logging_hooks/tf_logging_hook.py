@@ -28,15 +28,24 @@ class LoggingHook(Hook):
         root_path="logs",
         log_images_to_tensorboard=False,
     ):
-        """Args:
-            scalars (dict): Scalar ops.
-            histograms (dict): Histogram ops.
-            images (dict): Image ops. Note that for these no
-                tensorboard logging ist used but a custom image saver.
-            logs (dict): Logs to std out via logger.
-            graph (tf.Graph): Current graph.
-            interval (int): Intervall of training steps before logging.
-            root_path (str): Path at which the logs are stored.
+        """
+        Parameters
+        ----------
+        scalars : dict
+	    Scalar ops.
+        histograms : dict
+	    Histogram ops.
+        images : dict
+	    Image ops. Note that for these no
+            tensorboard logging ist used but a custom image saver.
+        logs : dict
+	    Logs to std out via logger.
+        graph : tf.Graph
+	    Current graph.
+        interval : int
+	    Intervall of training steps before logging.
+        root_path : str
+	    Path at which the logs are stored.
         """
 
         scalars = [tf.summary.scalar(n, s) for n, s in scalars.items()]
@@ -99,15 +108,24 @@ class ImageOverviewHook(Hook):
     def __init__(self, images={}, interval=100, root_path="logs"):
         """
         Logs an overview of all image outputs at an intervall of training steps.
-        Args:
-            scalars (dict): Scalar ops.
-            histograms (dict): Histogram ops.
-            images (dict): Image ops. Note that for these no
-                tensorboard logging ist used but a custom image saver.
-            logs (dict): Logs to std out via logger.
-            graph (tf.Graph): Current graph.
-            interval (int): Intervall of training steps before logging.
-            root_path (str): Path at which the logs are stored.
+
+        Parameters
+        ----------
+        scalars : dict
+	    Scalar ops.
+        histograms : dict
+	    Histogram ops.
+        images : dict
+	    Image ops. Note that for these no
+            tensorboard logging ist used but a custom image saver.
+        logs : dict
+	    Logs to std out via logger.
+        graph : tf.Graph
+	    Current graph.
+        interval : int
+	    Intervall of training steps before logging.
+        root_path : str
+	    Path at which the logs are stored.
         """
 
         summary_op = tf.no_op()

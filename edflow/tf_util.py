@@ -5,20 +5,31 @@ import numpy as np
 def make_linear_var(
     step, start, end, start_value, end_value, clip_min=None, clip_max=None
 ):
-    r"""Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
+    r"""
+    Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
     :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
 
-    Args:
-        step (tf.Tensor): :math:`x`
-        start: :math:`a`
-        end: :math:`b`
-        start_value: :math:`\alpha`
-        end_value: :math:`\beta`
-        clip_min: Minimal value returned.
-        clip_max: Maximum value returned.
+    Parameters
+    ----------
+    step : tf.Tensor
+        :math:`x`
+    start : int
+        :math:`a`
+    end : int
+        :math:`b`
+    start_value : float
+        :math:`\alpha`
+    end_value : float
+        :math:`\beta`
+    clip_min : int
+        Minimal value returned.
+    clip_max : int
+        Maximum value returned.
 
-    Returns:
-        tf.Tensor: :math:`y`
+    Returns
+    -------
+    :math:`y` : tf.Tensor
+
     """
 
     if clip_min is None:
@@ -32,19 +43,29 @@ def make_linear_var(
 
 
 def make_exponential_var(step, start, end, start_value, end_value, decay):
-    r"""Exponential from :math:`(a, \alpha)` to :math:`(b, \beta)` with decay
+    r"""
+    Exponential from :math:`(a, \alpha)` to :math:`(b, \beta)` with decay
     rate decay.
 
-    Args:
-        step (tf.Tensor): :math:`x`
-        start: :math:`a`
-        end: :math:`b`
-        start_value: :math:`\alpha`
-        end_value: :math:`\beta`
-        decay: Decay rate
+    Parameters
+    ----------
+    step : tf.Tensor
+        :math:`x`
+    start : int
+        :math:`a`
+    end : int
+        :math:`b`
+    start_value : float
+        :math:`\alpha`
+    end_value : float
+        :math:`\beta`
+    decay : int
+        Decay rate
 
-    Returns:
-        tf.Tensor: :math:`y`
+    Returns
+    -------
+    :math:`y` : tf.Tensor
+
     """
 
     startstep = start
@@ -55,22 +76,23 @@ def make_exponential_var(step, start, end, start_value, end_value, decay):
 
 def make_var(step, var_type, options):
     """
-
     # usage within trainer
     grad_weight = make_var(step=self.global_step,
     var_type=self.config["grad_weight"]["var_type"],
     options=self.config["grad_weight"]["options"])
 
     # within yaml file
-    grad_weight:
-      var_type: linear
-      options:
-        start:      50000
-        end:        60000
-        start_value:  0.0
-        end_value: 1.0
-        clip_min: 1.0e-6
-        clip_max: 1.0
+    .. code-block::
+
+        grad_weight:
+          var_type: linear
+          options:
+            start:      50000
+            end:        60000
+            start_value:  0.0
+            end_value: 1.0
+            clip_min: 1.0e-6
+            clip_max: 1.0
 
     Parameters
     ----------
@@ -80,6 +102,7 @@ def make_var(step, var_type, options):
 
     Returns
     -------
+    :math:`y` : tf.Tensor
 
     """
     switch = {"linear": make_linear_var, "exponential": make_exponential_var}
