@@ -248,6 +248,7 @@ class EvalHook(Hook):
 
 class TemplateEvalHook(EvalHook):
     """EvalHook that disables itself when the eval op returns None."""
+
     def before_epoch(self, *args, **kwargs):
         self._active = True
         super().before_epoch(*args, **kwargs)
