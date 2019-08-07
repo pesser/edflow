@@ -202,6 +202,10 @@ def retrieve(
                 raise KeyNotFoundError(e)
 
             visited += [key]
+        # final expansion of retrieved value
+        if expand and callable(list_or_dict):
+            list_or_dict = list_or_dict()
+            parent[last_key] = list_or_dict
     except KeyNotFoundError as e:
         if default is None:
             print("Key not found: {}, seen: {}".format(keys, visited))
