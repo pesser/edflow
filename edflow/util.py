@@ -45,7 +45,8 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
     Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
-    Example:
+    Example
+    -------
 
     .. code-block:: python
 
