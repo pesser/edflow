@@ -11,11 +11,14 @@ class ProjectManager(object):
 
     def __init__(self, base=None, given_directory=None, code_root=".", postfix=None):
         """
-        Args:
-            base (str): Top level directory, where all experiments live.
-            given_directory (str): If not None, this will be used to get all
-                relevant paths.
-            code_root (str): Path to where the code lives.
+        Parameters
+        ----------
+        base : str
+	    Top level directory, where all experiments live.
+        given_directory : str
+	    If not None, this will be used to get all relevant paths.
+        code_root : str
+	    Path to where the code lives.
 
         """
 

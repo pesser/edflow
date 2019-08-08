@@ -3,7 +3,6 @@ import numpy as np
 
 from edflow.iterators.tf_iterator import TFHookedModelIterator
 
-from edflow.hooks.hook import match_frequency
 from edflow.hooks.logging_hooks.tf_logging_hook import LoggingHook
 from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
     CheckpointHook,
