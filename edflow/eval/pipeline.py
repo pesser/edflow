@@ -274,9 +274,10 @@ class EvalDataFolder(DatasetMixin):
             csv_data = CsvDataset(csv_path, comment="#")
             self.data = ProcessedDataset(csv_data, er)
         except pd.errors.EmptyDataError as e:
-            print(e)
             exemplar_labels = self.labels[sorted(self.labels.keys())[0]]
             self.data = EmptyDataset(len(exemplar_labels), self.labels)
+
+        self.append_labels = True
 
 
 class EmptyDataset(DatasetMixin):
