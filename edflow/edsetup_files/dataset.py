@@ -37,4 +37,10 @@ class Dataset(DatasetMixin, PRNGMixin):
         return example
 
     def __len__(self):
+        """
+        Returns the length of the dataset.
+        Returns
+        -------
+        An integer equal to the length of the dataset.
+        """
         return self.num_example
