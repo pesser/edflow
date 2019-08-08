@@ -44,6 +44,7 @@ jobs:
         - pip install tensorboardX
         - python setup.py install
       script:
+        - python -c "import skimage" # fix failing test due to static tls loading
         - pytest --ignore=examples # use pytest instead of python -m pytest
     - stage: tf_example_tests
       name: "Tensorflow examples test"
