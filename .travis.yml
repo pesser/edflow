@@ -29,6 +29,12 @@ jobs:
         - pip install black
       script:
         - black --check .
+    - stage: documentation
+      name: "documentation test"
+      install:
+        - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy
+      script:
+        - sphinx-build -W -v -b html docs/ docs/_build/
     - stage: general_tests
       name: "General Tests"
       install:

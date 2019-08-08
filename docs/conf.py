@@ -38,6 +38,7 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
+    "sphinxcontrib.apidoc",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -70,6 +71,7 @@ autodoc_mock_imports = [
     "opencv-python",
     "tqdm",
     "Pillow",
+    "PIL",
     "chainer",
     "matplotlib",
     "pandas",
@@ -77,6 +79,8 @@ autodoc_mock_imports = [
     "h5py",
     "skimage",
     "natsort",
+    "fastnumbers",
+    "cv2",
 ]
 
 autodoc_default_options = {
@@ -87,3 +91,13 @@ autodoc_default_options = {
 }
 
 exclude_patterns = ["_build", "_templates"]
+
+# Napoleon settings
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+
+# apidoc settings
+apidoc_module_dir = "../edflow"
+apidoc_output_dir = "source/source_files"
+# apidoc_excluded_paths = ['tests']
+# apidoc_separate_modules = True

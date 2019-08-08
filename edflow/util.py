@@ -45,7 +45,8 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
     Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
 
-    Example:
+    Example
+    -------
 
     .. code-block:: python
 
@@ -146,8 +147,8 @@ def retrieve(
     callable nodes if necessary and :attr:`expand` is ``True``. The expansion
     is done in-place.
 
-    Parameters:
-    ===========
+    Parameters
+    ----------
         list_or_dict : list or dict
             Possibly nested list or dictionary.
         key : str
@@ -162,13 +163,13 @@ def retrieve(
         expand : bool
             Whether to expand callable nodes on the path or not.
 
-    Returns:
-    ========
+    Returns
+    -------
         The desired value or if :attr:`default` is not ``None`` and the
         :attr:`key` is not found returns ``default``.
 
-    Raises:
-    =======
+    Raises
+    ------
         Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
         ``None``.
     """
@@ -221,13 +222,13 @@ def retrieve(
 
 
 def set_default(list_or_dict, key, default, splitval="/"):
-    """Combines :function:`retrieve` and :function:`set_value` to create the
+    """Combines :func:`retrieve` and :func:`set_value` to create the
     behaviour of pythons ``dict.setdefault``: If ``key`` is found in
     ``list_or_dict``, return its value, otherwise return ``default`` and add it
     to ``list_or_dict`` at ``key``.
 
-    Parameters:
-    ===========
+    Parameters
+    ----------
         list_or_dict : list or dict
             Possibly nested list or dictionary.  splitval (str): String that
             defines the delimiter between keys of the different depth levels in
@@ -243,13 +244,13 @@ def set_default(list_or_dict, key, default, splitval="/"):
             String that defines the delimiter between keys of the different
             depth levels in :attr:`key`.
 
-    Returns:
-    ========
+    Returns
+    -------
         The desired value or if :attr:`default` is not ``None`` and the
         :attr:`key` is not found returns ``default``.
 
-    Raises:
-    =======
+    Raises
+    ------
         Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
         ``None``.
     """
@@ -265,8 +266,8 @@ def set_default(list_or_dict, key, default, splitval="/"):
 def set_value(list_or_dict, key, val, splitval="/"):
     """Sets a value in a possibly nested list or dict object.
 
-    Parameters:
-    ===========
+    Parameters
+    ----------
 
     key : str
         ``key/to/value``, path like string describing all keys necessary to
@@ -281,10 +282,10 @@ def set_value(list_or_dict, key, val, splitval="/"):
         levels in :attr:`key`.
 
 
-    Examples:
-    =========
+    Examples
+    --------
 
-    .. codeblock:: python
+    .. code-block:: python
 
         dol = {"a": [1, 2], "b": {"c": {"d": 1}, "e": 2}}
 
