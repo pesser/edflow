@@ -29,6 +29,12 @@ jobs:
         - pip install black
       script:
         - black --check .
+    - stage: documentation
+      name: "documentation test"
+      install:
+        - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy
+      script:
+        - sphinx-build -W -v -b html docs/ docs/_build/
     - stage: general_tests
       name: "General Tests"
       install:
@@ -38,6 +44,7 @@ jobs:
         - pip install tensorboardX
         - python setup.py install
       script:
+        - python -c "import skimage" # fix failing test due to static tls loading
         - pytest --ignore=examples # use pytest instead of python -m pytest
     - stage: tf_example_tests
       name: "Tensorflow examples test"
