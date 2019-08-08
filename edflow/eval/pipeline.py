@@ -50,6 +50,7 @@ at all.
 Next you run your evaluation on your data using your favourite edflow command.
 
 .. code-block:: bash
+
     edflow -n myexperiment -e the_config.yaml -p path_to_project
 
 This will create a new evaluation folder inside your project's eval directory.
@@ -74,7 +75,8 @@ Should you want to run evaluations on the generated data after it has been
 generated, you can run the ``edeval`` command while specifying the path
 to the model outputs csv and the callbacks you want to run.
 
-.. codeblock:: bash
+.. code-block:: bash
+
     edeval -c path/to/model_outputs.csv -cb callback1 callback2
 
 If at some point you need to specify new parameters in your config or change
@@ -427,7 +429,6 @@ def save_output(root, example, index, sub_dir_keys=[]):
     -------
     dict
         Name: path pairs of the saved ouputs.
-        .. WARNING::
     dict
         Name: path pairs of the saved ouputs.
         .. WARNING::

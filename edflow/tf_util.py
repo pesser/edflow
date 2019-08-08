@@ -124,6 +124,7 @@ def make_staircase_var(
     Returns
     -------
     :math:`y` : tf.Tensor
+
     """
     stair_case = (
         stair_factor ** ((tf.cast(step, tf.float32) - start) // step_size) * start_value
@@ -155,13 +156,19 @@ def make_periodic_wrapper(step_function):
 
 def make_var(step, var_type, options):
     r"""
+    Example
+    -------
     usage within trainer
+
+    .. code-block:: python
 
         grad_weight = make_var(step=self.global_step,
         var_type=self.config["grad_weight"]["var_type"],
         options=self.config["grad_weight"]["options"])
 
     within yaml file
+
+    .. code-block:: yaml
 
         grad_weight:
           var_type: linear
