@@ -170,7 +170,6 @@ class DatasetMixin(DatasetMixin_):
             "{}".format(type(val))
         )
 
-    # @traceable_method(ignores=[BrokenPipeError])
     def __getitem__(self, i):
         ret_dict = super().__getitem__(i)
 
