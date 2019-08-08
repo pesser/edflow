@@ -29,13 +29,7 @@ def test_eval():
 
 
 def test_eval_with_additional_kwargs():
-    """Make sure example runs without errors while adding more kwargs.
-
-    1. edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11
-    2. edeval -c csv_name -cb eval_hook.model.empty_callback --batch_size 16
-    3. edeval -c csv_name -cb eval_hook.model.empty_callback --not_in_there TEST
-    """
-
+    """Just make sure example runs without errors while adding more kwargs."""
     output = subprocess.check_output(
         "edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11",
         shell=True,
