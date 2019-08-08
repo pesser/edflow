@@ -30,13 +30,26 @@ class Hook(object):
 
                 hook.after_step(i, results)
             hook.after_epoch(epoch)
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def before_epoch(self, epoch):
         """Called before each epoch.
 
-        Args:
-            epoch (int): Index of epoch that just started.
+        Parameters
+        ----------
+        epoch : int
+            Index of epoch that just started.
+
+        Returns
+        -------
+
         """
 
         pass
@@ -44,11 +57,20 @@ class Hook(object):
     def before_step(self, step, fetches, feeds, batch):
         """Called before each step. Can update any feeds and fetches.
 
-        Args:
-            step (int): Current training step.
-            fetches (list or dict): Fetches for the next session.run call.
-            feeds (dict): Data used at this step.
-            batch (list or dict): All data available at this step.
+        Parameters
+        ----------
+        step : int
+            Current training step.
+        fetches : list or dict
+            Fetches for the next session.run call.
+        feeds : dict
+            Data used at this step.
+        batch : list or dict
+            All data available at this step.
+
+        Returns
+        -------
+
         """
 
         pass
@@ -56,9 +78,16 @@ class Hook(object):
     def after_step(self, step, last_results):
         """Called after each step.
 
-        Args:
-            step (int): Current training step.
-            last_results (list): Results from last time this hook was called.
+        Parameters
+        ----------
+        step : int
+            Current training step.
+        last_results : list
+            Results from last time this hook was called.
+
+        Returns
+        -------
+
         """
 
         pass
@@ -66,8 +95,14 @@ class Hook(object):
     def after_epoch(self, epoch):
         """Called after each epoch.
 
-        Args:
-            epoch (int): Index of epoch that just ended.
+        Parameters
+        ----------
+        epoch : int
+            Index of epoch that just ended.
+
+        Returns
+        -------
+
         """
 
         pass
@@ -75,34 +110,21 @@ class Hook(object):
     def at_exception(self, exception):
         """Called when an exception is raised.
 
-        Args:
-            exception (Exception): The exception which is being raised. Will
-                be raised again after all :meth:`at_eception` calls have
-                been handled.
+        Parameters
+        ----------
+        exception :
+
+
+        Returns
+        -------
+
+        Raises
+        ------
+        be
+            raised again after all
+        been
+            handled
+
         """
 
         pass
-
-
-def match_frequency(global_hook_frequency, local_hook_frequency):
-    r"""Given the global frequency at which hooks are evaluated matches the
-    local frequency at which a hook wants to be evaluated s.t. it will
-    be at least the global frequency or an integer multiple of it.
-
-    Args:
-        global_hook_frequency (int): Step frequency :math:`f_g` at which hooks
-            are called.
-        local_hook_frequency (int): Step frequency :math:`f_l` at which hook
-            wants to be called.
-
-    Returns:
-        int: Matching new frequency :math:`f` for the hook, with
-            :math:`f =
-            \begin{cases}
-            f_g &\text{if}\; f_l \leq f_g \\
-            \left\lfloor \frac{f_l}{f_g}\right\rfloor\cdot f_g &\text{else}
-            \end{cases}`.
-    """
-
-    n = max(1, local_hook_frequency // global_hook_frequency)
-    return n * global_hook_frequency

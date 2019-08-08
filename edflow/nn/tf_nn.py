@@ -261,7 +261,8 @@ def conv2d(
     **kwargs
 ):
     """
-        A 2D convolution.
+    A 2D convolution.
+
     Parameters
     ----------
     x: tensor
@@ -282,11 +283,12 @@ def conv2d(
         if True, the input has to be [N, H, W, Parts, C]. The convolution will get an additional scale and bias per part
     coords: bool
         if True, will use coordConv (2018ACS_liuIntriguingFailingConvolutionalNeuralNetworks)
-    kwargs
+    \**kwargs
 
-    Returns tensor
-        convolved input
+    Returns
     -------
+    tensor
+        convolved input
 
     """
     if coords:
@@ -403,13 +405,15 @@ def downsample(x, num_units):
 
     Returns
     -------
+
     """
     return conv2d(x, num_units, stride=[2, 2])
 
 
 def upsample(x, num_units, method="subpixel"):
     """
-        2D upsampling layer.
+    2D upsampling layer.
+
     Parameters
     ----------
     x: tensor
@@ -421,8 +425,9 @@ def upsample(x, num_units, method="subpixel"):
         Subpixel means that every upsampled pixel gets its own filter.
 
     Returns
-        upsampled input
     -------
+        upsampled input
+
     """
     xs = x.shape.as_list()
     if method == "conv_transposed":
@@ -809,9 +814,9 @@ def hourglass_model(
 
     Parameters
     ----------
-    x: tensor
+    x : tensor
         input tensor to unet
-    config: list
+    config : list
         a list of ints specifying the number of feature maps on each scale of the unet in the downsampling path
         for the upsampling path, the list will be reversed
         For example [32, 64] will use 32 channels on scale 0 (without downsampling) and 64 channels on scale 1
@@ -820,17 +825,16 @@ def hourglass_model(
         how many extra res blocks to use at the bottleneck
     n_out : int
         number of final output feature maps of the unet. 3 for RGB
-    activation: str
+    activation : str
         a string specifying the activation function to use. See @activate for options.
-    upsample_method: list of str or str
+    upsample_method : list of str or str
         a str specifying the upsampling method or a list of str specifying the upsampling method for each scale individually.
         See @upsample for possible options.
-    coords: True
+    coords : True
         if coord conv should be used.
 
     Returns
     -------
-
 
     Examples
     --------
@@ -843,8 +847,7 @@ def hourglass_model(
     activation = "leaky_relu"
     coords = False
 
-    unet = make_model("unet", hourglass_model,
-                      config=config, extra_resnets= extra_resnets, upsample_method=upsample_method, activation=activation)
+    unet = make_model("unet", hourglass_model, config=config, extra_resnets= extra_resnets, upsample_method=upsample_method, activation=activation)
     y = unet(x)
 
     # plotting the output should look random because we did not train anything
@@ -962,9 +965,10 @@ def probs_to_mu_L(
     probs, scaling_factor, inv=True
 ):  # todo maybe exponential map induces to much certainty ! low values basically ignored and only high values count!
     """
-        Calculate mean and covariance for each channel of probs
-        tensor of keypoint probabilites [bn, h, w, n_kp]
-        mean calculated on a grid of scale [-1, 1]
+    Calculate mean and covariance for each channel of probs
+    tensor of keypoint probabilites [bn, h, w, n_kp]
+    mean calculated on a grid of scale [-1, 1]
+
     Parameters
     ----------
     probs: tensor
@@ -982,62 +986,63 @@ def probs_to_mu_L(
         tensor of shape [b, k, 2, 2] representing partwise cholesky decomposition of covariance
          matrix for each item in the batch.
 
-    Examples
-    --------
+    Example
+    -------
 
-    from matplotlib import pyplot as plt
-    tf.enable_eager_execution()
-    import numpy as np
-    import tensorflow.contrib.distributions as tfd
+    .. code-block:: python
 
-    _means = [-0.5, 0, 0.5]
-    means = tf.ones((3, 1, 2), dtype=tf.float32) * np.array(_means).reshape((3, 1, 1))
-    means = tf.concat([means, means, means[::-1, ...]], axis=1)
-    means = tf.reshape(means, (-1, 2))
+        from matplotlib import pyplot as plt
+        tf.enable_eager_execution()
+        import numpy as np
+        import tensorflow.contrib.distributions as tfd
 
-    var_ = 0.1
-    rho = 0.5
-    cov = [[var_, rho * var_],
-           [rho * var_, var_]]
-    scale = tf.cholesky(cov)
-    scale = tf.stack([scale] * 3, axis=0)
-    scale = tf.stack([scale] * 3, axis=0)
-    scale = tf.reshape(scale, (-1, 2, 2))
+        _means = [-0.5, 0, 0.5]
+        means = tf.ones((3, 1, 2), dtype=tf.float32) * np.array(_means).reshape((3, 1, 1))
+        means = tf.concat([means, means, means[::-1, ...]], axis=1)
+        means = tf.reshape(means, (-1, 2))
 
-    mvn = tfd.MultivariateNormalTriL(
-        loc=means,
-        scale_tril=scale)
+        var_ = 0.1
+        rho = 0.5
+        cov = [[var_, rho * var_], [rho * var_, var_]]
+        scale = tf.cholesky(cov)
+        scale = tf.stack([scale] * 3, axis=0)
+        scale = tf.stack([scale] * 3, axis=0)
+        scale = tf.reshape(scale, (-1, 2, 2))
 
-    h = 100
-    w = 100
-    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
-    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
-    y_t = tf.expand_dims(y_t, axis=-1)
-    x_t = tf.expand_dims(x_t, axis=-1)
-    meshgrid = tf.concat([y_t, x_t], axis=-1)
-    meshgrid = tf.expand_dims(meshgrid, 0)
-    meshgrid = tf.expand_dims(meshgrid, 3)  # 1, h, w, 1, 2
+        mvn = tfd.MultivariateNormalTriL(
+            loc=means,
+            scale_tril=scale)
 
-    blob = mvn.prob(meshgrid)
-    blob = tf.reshape(blob, (100, 100, 3, 3))
-    blob = tf.transpose(blob, perm=[2, 0, 1, 3])
+        h = 100
+        w = 100
+        y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
+        x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+        y_t = tf.expand_dims(y_t, axis=-1)
+        x_t = tf.expand_dims(x_t, axis=-1)
+        meshgrid = tf.concat([y_t, x_t], axis=-1)
+        meshgrid = tf.expand_dims(meshgrid, 0)
+        meshgrid = tf.expand_dims(meshgrid, 3)  # 1, h, w, 1, 2
 
-    norm_const = np.sum(blob, axis=(1, 2), keepdims=True)
-    mu, L = nn.probs_to_mu_L(blob / norm_const, 1, inv=False)
+        blob = mvn.prob(meshgrid)
+        blob = tf.reshape(blob, (100, 100, 3, 3))
+        blob = tf.transpose(blob, perm=[2, 0, 1, 3])
 
-    bn, h, w, nk = blob.get_shape().as_list()
-    estimated_blob = nn.tf_hm(h, w, mu, L)
+        norm_const = np.sum(blob, axis=(1, 2), keepdims=True)
+        mu, L = nn.probs_to_mu_L(blob / norm_const, 1, inv=False)
 
-    fig, ax = plt.subplots(2, 3, figsize=(9, 6))
-    for b in range(len(_means)):
-        ax[0, b].imshow(np.squeeze(blob[b, ...]))
-        ax[0, b].set_title("target_blobs")
-        ax[0, b].set_axis_off()
+        bn, h, w, nk = blob.get_shape().as_list()
+        estimated_blob = nn.tf_hm(h, w, mu, L)
 
-    for b in range(len(_means)):
-        ax[1, b].imshow(np.squeeze(estimated_blob[b, ...]))
-        ax[1, b].set_title("estimated_blobs")
-        ax[1, b].set_axis_off()
+        fig, ax = plt.subplots(2, 3, figsize=(9, 6))
+        for b in range(len(_means)):
+            ax[0, b].imshow(np.squeeze(blob[b, ...]))
+            ax[0, b].set_title("target_blobs")
+            ax[0, b].set_axis_off()
+
+        for b in range(len(_means)):
+            ax[1, b].imshow(np.squeeze(estimated_blob[b, ...]))
+            ax[1, b].set_title("estimated_blobs")
+            ax[1, b].set_axis_off()
 
     """
     bn, h, w, nk = (
@@ -1110,8 +1115,9 @@ def probs_to_mu_L(
 
 def tf_hm(h, w, mu, L, order="exp"):
     """
-        Returns Gaussian densitiy function based on μ and L for each batch index and part
-        L is the cholesky decomposition of the covariance matrix : Σ = L L^T
+    Returns Gaussian densitiy function based on μ and L for each batch index and part
+    L is the cholesky decomposition of the covariance matrix : Σ = L L^T
+
     Parameters
     ----------
     h : int
@@ -1129,68 +1135,70 @@ def tf_hm(h, w, mu, L, order="exp"):
     density : tensor
         gaussian blob for each part and batch idx. Shape [b, h, w, p]
 
-    Examples
-    --------
+    Example
+    -------
 
-    from matplotlib import pyplot as plt
-    tf.enable_eager_execution()
-    import numpy as np
-    import tensorflow as tf
-    import tensorflow.contrib.distributions as tfd
+    .. code-block:: python
 
-    # create Target Blobs
-    _means = [-0.5, 0, 0.5]
-    means = tf.ones((3, 1, 2), dtype=tf.float32) * np.array(_means).reshape((3, 1, 1))
-    means = tf.concat([means, means, means[::-1, ...]], axis=1)
-    means = tf.reshape(means, (-1, 2))
+        from matplotlib import pyplot as plt
+        tf.enable_eager_execution()
+        import numpy as np
+        import tensorflow as tf
+        import tensorflow.contrib.distributions as tfd
 
-    var_ = 0.1
-    rho = 0.5
-    cov = [[var_, rho * var_],
-           [rho * var_, var_]]
-    scale = tf.cholesky(cov)
-    scale = tf.stack([scale] * 3, axis=0)
-    scale = tf.stack([scale] * 3, axis=0)
-    scale = tf.reshape(scale, (-1, 2, 2))
+        # create Target Blobs
+        _means = [-0.5, 0, 0.5]
+        means = tf.ones((3, 1, 2), dtype=tf.float32) * np.array(_means).reshape((3, 1, 1))
+        means = tf.concat([means, means, means[::-1, ...]], axis=1)
+        means = tf.reshape(means, (-1, 2))
 
-    mvn = tfd.MultivariateNormalTriL(
-        loc=means,
-        scale_tril=scale)
+        var_ = 0.1
+        rho = 0.5
+        cov = [[var_, rho * var_],
+               [rho * var_, var_]]
+        scale = tf.cholesky(cov)
+        scale = tf.stack([scale] * 3, axis=0)
+        scale = tf.stack([scale] * 3, axis=0)
+        scale = tf.reshape(scale, (-1, 2, 2))
 
-    h = 100
-    w = 100
-    y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
-    x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
-    y_t = tf.expand_dims(y_t, axis=-1)
-    x_t = tf.expand_dims(x_t, axis=-1)
-    meshgrid = tf.concat([y_t, x_t], axis=-1)
-    meshgrid = tf.expand_dims(meshgrid, 0)
-    meshgrid = tf.expand_dims(meshgrid, 3)  # 1, h, w, 1, 2
+        mvn = tfd.MultivariateNormalTriL(
+            loc=means,
+            scale_tril=scale)
 
-    blob = mvn.prob(meshgrid)
-    blob = tf.reshape(blob, (100, 100, 3, 3))
-    blob = tf.transpose(blob, perm=[2, 0, 1, 3])
+        h = 100
+        w = 100
+        y_t = tf.tile(tf.reshape(tf.linspace(-1., 1., h), [h, 1]), [1, w])
+        x_t = tf.tile(tf.reshape(tf.linspace(-1., 1., w), [1, w]), [h, 1])
+        y_t = tf.expand_dims(y_t, axis=-1)
+        x_t = tf.expand_dims(x_t, axis=-1)
+        meshgrid = tf.concat([y_t, x_t], axis=-1)
+        meshgrid = tf.expand_dims(meshgrid, 0)
+        meshgrid = tf.expand_dims(meshgrid, 3)  # 1, h, w, 1, 2
 
-    # Estimate mean and L
-    norm_const = np.sum(blob, axis=(1, 2), keepdims=True)
-    mu, L = nn.probs_to_mu_L(blob / norm_const, 1, inv=False)
+        blob = mvn.prob(meshgrid)
+        blob = tf.reshape(blob, (100, 100, 3, 3))
+        blob = tf.transpose(blob, perm=[2, 0, 1, 3])
 
-    bn, h, w, nk = blob.get_shape().as_list()
+        # Estimate mean and L
+        norm_const = np.sum(blob, axis=(1, 2), keepdims=True)
+        mu, L = nn.probs_to_mu_L(blob / norm_const, 1, inv=False)
 
-    # Estimate blob based on mu and L
-    estimated_blob = nn.tf_hm(h, w, mu, L)
+        bn, h, w, nk = blob.get_shape().as_list()
 
-    # plot
-    fig, ax = plt.subplots(2, 3, figsize=(9, 6))
-    for b in range(len(_means)):
-        ax[0, b].imshow(np.squeeze(blob[b, ...]))
-        ax[0, b].set_title("target_blobs")
-        ax[0, b].set_axis_off()
+        # Estimate blob based on mu and L
+        estimated_blob = nn.tf_hm(h, w, mu, L)
 
-    for b in range(len(_means)):
-        ax[1, b].imshow(np.squeeze(estimated_blob[b, ...]))
-        ax[1, b].set_title("estimated_blobs")
-        ax[1, b].set_axis_off()
+        # plot
+        fig, ax = plt.subplots(2, 3, figsize=(9, 6))
+        for b in range(len(_means)):
+            ax[0, b].imshow(np.squeeze(blob[b, ...]))
+            ax[0, b].set_title("target_blobs")
+            ax[0, b].set_axis_off()
+
+        for b in range(len(_means)):
+            ax[1, b].imshow(np.squeeze(estimated_blob[b, ...]))
+            ax[1, b].set_title("estimated_blobs")
+            ax[1, b].set_axis_off()
 
     """
 
