@@ -115,28 +115,43 @@ def main(opt, additional_kwargs):
     # Evaluation
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
-        if opt.checkpoint is not None:
-            checkpoint = opt.checkpoint
-        elif opt.project is not None:
-            checkpoint = get_latest_checkpoint(P.checkpoints)
-        else:
-            checkpoint = None
-
         base_config = {}
         if opt.base is not None:
             for base in opt.base:
                 with open(base) as f:
                     base_config.update(yaml.full_load(f))
-        # get path to implementation
         with open(eval_config) as f:
             config = base_config
             config.update(yaml.full_load(f))
             update_config(config, additional_kwargs)
+
+        disable_eval_all = disable_eval_forever = False
         if opt.checkpoint is not None:
-            for k in ["eval_forever", "eval_all"]:
-                if k in config:
-                    config[k] = False
-                    logger.info("{} was disabled because you specified a checkpoint.".format(k))
+            checkpoint = opt.checkpoint
+            disable_eval_all = disable_eval_forever = True
+        elif opt.project is not None:
+            if any([config.get("eval_all", False), config.get("eval_forever", False)]):
+                checkpoint = None
+            else:
+                checkpoint = get_latest_checkpoint(P.checkpoints)
+                disable_eval_all = disable_eval_forever = True
+        else:
+            checkpoint = None
+
+        if disable_eval_all:
+            config.update({"eval_all": False})
+            logger.info(
+                "{} was disabled because you specified a checkpoint.".format("eval_all")
+            )
+
+        if disable_eval_forever:
+            config.update({"eval_forever": False})
+            logger.info(
+                "{} was disabled because you specified a checkpoint.".format(
+                    "eval_forever"
+                )
+            )
+
         logger.info(
             "Evaluation config: {}\n{}".format(eval_config, yaml.dump(eval_config))
         )
