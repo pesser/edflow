@@ -84,7 +84,8 @@ existing ones, you can do so exactly like you would when running the ``edflow``
 command. Simply pass the parameters you want to add/change via the commandline
 like this:
 
-.. codeblock:: bash
+.. code-block:: bash
+
     edeval -c path/to/model_outputs.csv -cb callback1 --key1 val1 --key/path/2 val2
 
 .. warning::
@@ -903,8 +904,8 @@ def standalone_eval_csv_file(path_to_csv, callbacks, additional_kwargs={}):
     """Runs all given callbacks on the data in the :class:`EvalDataFolder`
     constructed from the given csv.abs
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     path_to_csv : str
         Path to the csv file.
     callbacks : list(str or Callable)
@@ -914,9 +915,9 @@ def standalone_eval_csv_file(path_to_csv, callbacks, additional_kwargs={}):
         Keypath-value pairs added to the config, which is extracted from
         the ``model_outputs.csv``.
 
-    Returns:
-    --------
-        The collected outputs of the callbacks.
+    Returns
+    -------
+    The collected outputs of the callbacks.
 
     """
 
