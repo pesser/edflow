@@ -31,13 +31,19 @@ class PyHookedModelIterator(object):
     ):
         """Constructor.
 
-        Args:
-            model (object): Model class.
-            num_epochs (int): Number of times to iterate over the data.
-            hooks (list): List containing :class:`Hook` instances.
-            hook_freq (int): Frequency at which hooks are evaluated.
-            bar_position (int): Used by tqdm to place bars at the right
-                position when using multiple Iterators in parallel.
+        Parameters
+        ----------
+        model : object
+	    Model class.
+        num_epochs : int
+	    Number of times to iterate over the data.
+        hooks : list
+	    List containing :class:`Hook` instances.
+        hook_freq : int
+	    Frequency at which hooks are evaluated.
+        bar_position : int
+	    Used by tqdm to place bars at the right
+            position when using multiple Iterators in parallel.
         """
         signal.signal(signal.SIGTERM, self._handle_sigterm)
 
@@ -105,8 +111,10 @@ class PyHookedModelIterator(object):
     def iterate(self, batch_iterator):
         """Iterates over the data supplied and feeds it to the model.
 
-        Args:
-            batch_iterator (Iterable): Iterable returning training data.
+        Parameters
+        ----------
+        batch_iterator : Iterable
+	    Iterable returning training data.
         """
 
         try:
@@ -118,8 +126,10 @@ class PyHookedModelIterator(object):
     def _iterate(self, batch_iterator):
         """Iterates over the data supplied and feeds it to the model.
 
-        Args:
-            batch_iterator (Iterable): Iterable returning training data.
+        Parameters
+        ----------
+        batch_iterator : Iterable
+	    Iterable returning training data.
         """
 
         step_ops = self.step_ops()
@@ -164,12 +174,17 @@ class PyHookedModelIterator(object):
     def run(self, fetches, feed_dict):
         """Runs all fetch ops and stores the results.
 
-        Args:
-            fetches (dict): name: Callable pairs.
-            feed_dict (dict): Passed as kwargs to all fetch ops
+        Parameters
+        ----------
+        fetches : dict
+	    name: Callable pairs.
+        feed_dict : dict
+	    Passed as kwargs to all fetch ops
 
-        Returns:
-            dict: name: results pairs.
+        Returns
+        -------
+        dict
+            name: results pairs.
         """
 
         def fn(fetch_fn):
@@ -185,20 +200,27 @@ class PyHookedModelIterator(object):
         """Run all hooks and manage their stuff. The passed arguments determine
         which method of the hooks is called.
 
-        Args:
-            index (int): Current epoch or batch index. This is not necessarily
-                the global training step.
-            fetches (list or dict): Fetches for the next session.run call.
-            feeds (dict): Feeds for the next session.run call.
-            results (same as fetches): Results from the last session.run call.
-            before (bool): If not obvious determines if the before or after
-                methods of the hooks should be called.
+        Parameters
+        ----------
+        index : int
+	    Current epoch or batch index. This is not necessarily
+            the global training step.
+        fetches : list or dict
+	    Fetches for the next session.run call.
+        feeds : dict
+	    Feeds for the next session.run call.
+        results : same as fetches
+	    Results from the last session.run call.
+        before : bool
+	    If not obvious determines if the before or after
+            methods of the hooks should be called.
 
-        Returns:
-            If before:
-
-                test (same as fetches): Updated fetches.
-                test (dict): Updated feeds
+        Returns
+        -------
+        test : same as fetches
+	    Updated fetches.
+        test : dict
+	    Updated feeds
         """
 
         is_step = fetches is not None and feeds is not None
@@ -222,7 +244,8 @@ class PyHookedModelIterator(object):
     def step_ops(self):
         """Defines ops that are called at each step.
 
-        Returns:
+        Returns
+        -------
             The operation run at each step."""
 
         raise NotImplementedError()
