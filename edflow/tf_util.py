@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import pprint
 
 
 def make_linear_var(
@@ -203,6 +202,7 @@ if __name__ == "__main__":
 
     sns.set()
     from matplotlib import pyplot as plt
+    import pprint
 
     N = 10000
     t = tf.range(0, N)
