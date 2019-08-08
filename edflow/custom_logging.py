@@ -68,10 +68,13 @@ class LogSingleton(object):
     def get(self, name, which=None):
         """Create logger, set level.
 
-        Args:
-            name (str or object): Name of the logger. If not a string, the name
-                of the given object class is used.
-            which (str): subdirectory in the project folder.
+        Parameters
+        ----------
+        name : str or object
+	    Name of the logger. If not a string, the name
+            of the given object class is used.
+        which : str
+	    subdirectory in the project folder.
         """
         which = which or LogSingleton.default
 
@@ -132,9 +135,12 @@ def get_logger(name, which=None, level="info"):
     """Creates a logger, which shares its output directory with all other
     loggers.
 
-    Args:
-        name (str): Name of the logger.
-        which (str): Any subdirectory of the project.
+    Parameters
+    ----------
+    name : str
+        Name of the logger.
+    which : str
+        Any subdirectory of the project.
     """
 
     L = LogSingleton(level=getattr(logging, level.upper()))

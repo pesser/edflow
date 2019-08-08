@@ -1,0 +1,11 @@
+dataset: dataset.Dataset
+iterator: iterator.Iterator
+model: model.Model
+
+# for the iterator
+batch_size: 10
+num_epochs: 1
+
+# Data
+feature_dimension: 10
+num_example: 1000

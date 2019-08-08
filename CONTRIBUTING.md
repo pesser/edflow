@@ -2,6 +2,11 @@
 
 The following is a set of guidelines for contributing to edflow. These are mostly guidelines, not rules. Use your best judgment on when to apply them and always be nice to each other :heart:.
 
+> ### code-block
+> In your docstring write **``.. code-block:: <language>``**, when showing examples.
+>
+> This comment is right here, because everyone seems to do it wrong.
+  
 #### Table Of Contents
 
 [Code of Conduct](#code-of-conduct)
