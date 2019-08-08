@@ -72,7 +72,7 @@ class TemplateIterator(PyHookedModelIterator):
     def run(self, fetches, feed_dict):
         results = super().run(fetches, feed_dict)
         for train_op in self._train_ops:
-            retrieve(results, train_op)()
+            retrieve(results, train_op)
         return results
 
     def save(self, checkpoint_path):
