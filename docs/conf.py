@@ -77,6 +77,7 @@ autodoc_mock_imports = [
     "h5py",
     "skimage",
     "natsort",
+    "fastnumbers",
 ]
 
 autodoc_default_options = {
@@ -87,3 +88,7 @@ autodoc_default_options = {
 }
 
 exclude_patterns = ["_build", "_templates"]
+
+# Napoleon settings
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
