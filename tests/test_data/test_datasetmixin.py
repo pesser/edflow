@@ -67,10 +67,10 @@ def test_dset_mxin_data_attr():
         ex[100]
 
     lbs = D.labels
-    l = lbs["lbl1"][0]
+    l = lbs["label1"][0]
 
     with pytest.raises(Exception):
-        lbs["lbl1"][100]
+        lbs["label1"][100]
 
 
 def test_dset_mxin_data_attr_app_labels():
@@ -84,19 +84,19 @@ def test_dset_mxin_data_attr_app_labels():
     assert "val" in ex
     assert "other" in ex
     assert "index_" in ex
-    assert "lbl1" in ex
-    assert "lbl2" in ex
+    assert "label1" in ex
+    assert "label2" in ex
 
     with pytest.raises(Exception):
         ex[100]
 
     lbs = D.labels
-    l = lbs["lbl1"][0]
-    l = lbs["lbl2"][0]
+    l = lbs["label1"][0]
+    l = lbs["label2"][0]
 
     with pytest.raises(Exception):
-        lbs["lbl1"][100]
-        lbs["lbl2"][100]
+        lbs["label1"][100]
+        lbs["label2"][100]
 
 
 def test_dset_mxin_ops():
