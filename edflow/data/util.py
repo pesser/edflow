@@ -15,10 +15,14 @@ def flow2hsv(flow):
     """Given a Flowmap of shape ``[W, H, 2]`` calculates an hsv image,
     showing the relative magnitude and direction of the optical flow.
 
-    Args:
-        flow (np.array): Optical flow with shape ``[W, H, 2]``.
-    Returns:
-        np.array: Containing the hsv data.
+    Parameters
+    ---------
+    flow : np.array
+	Optical flow with shape ``[W, H, 2]``.
+    Returns
+    -------
+    np.array
+        Containing the hsv data.
     """
 
     # prepare array - value is always at max
@@ -45,11 +49,15 @@ def hsv2rgb(hsv):
 def flow2rgb(flow):
     """converts a flow field to an rgb color image.
 
-    Args:
-        flow (np.array): optical flow with shape ``[W, H, 2]``.
-    Returns:
-        np.array: Containing the rgb data. Color indicates orientation,
-            intensity indicates magnitude.
+    Parameters
+    ---------
+    flow : np.array
+	optical flow with shape ``[W, H, 2]``.
+    Returns
+    -------
+    np.array
+	Containing the rgb data. Color indicates orientation,
+        intensity indicates magnitude.
     """
 
     return hsv2rgb(flow2hsv(flow))
@@ -63,13 +71,17 @@ def get_support(image):
     has been properly constructed, this function will estimate the support of
     the given :attr:`image`.
 
-    Args:
-        image (np.ndarray): Some properly constructed image like array. No
-            assumptions need to be made about the shape of the image, we
-            simply assme each value is some color value.
+    Parameters
+    ---------
+    image : np.ndarray
+	Some properly constructed image like array. No
+        assumptions need to be made about the shape of the image, we
+        simply assme each value is some color value.
 
-    Returns:
-        str: The support. Either '0->1', '-1->1' or '0->255'
+    Returns
+    -------
+    str
+	The support. Either '0->1', '-1->1' or '0->255'
     """
 
     if image.min() < 0:
@@ -95,21 +107,28 @@ def sup_str_to_num(support_str):
 def adjust_support(image, future_support, current_support=None, clip=False):
     """Will adjust the support of all color values in :attr:`image`.
 
-    Args:
-        image (np.ndarray): Array containing color values. Make sure this is
-            properly constructed.
-        future_support (str): The support this array is supposed to have after
-            the transformation. Must be one of '-1->1', '0->1', or '0->255'.
-        current_support (str): The support of the colors currentl in
-            :attr:`image`. If not given it will be estimated by
-            :function:`get_support`.
-        clip (bool): By default the return values in image are simply coming
-            from a linear transform, thus the actual support might be larger
-            than the requested interval. If set to ``True`` the returned
-            array will be cliped to ``future_support``.
+    Parameters
+    ---------
+    image : np.ndarray
+	Array containing color values. Make sure this is
+        properly constructed.
+    future_support : str
+	The support this array is supposed to have after
+        the transformation. Must be one of '-1->1', '0->1', or '0->255'.
+    current_support : str
+	The support of the colors currentl in
+        :attr:`image`. If not given it will be estimated by
+        :func:`get_support`.
+    clip : bool
+	By default the return values in image are simply coming
+        from a linear transform, thus the actual support might be larger
+        than the requested interval. If set to ``True`` the returned
+        array will be cliped to ``future_support``.
 
-    Returns:
-        same type as image: The given :attr:`image` with transformed support.
+    Returns
+    -------
+    same type as image
+        The given :attr:`image` with transformed support.
     """
 
     if current_support is None:
@@ -160,7 +179,7 @@ def add_im_info(image, ax):
 
 
 def im_fn(key, im, ax):
-    """Plot an image. Used by :function:`plot_datum`."""
+    """Plot an image. Used by :func:`plot_datum`."""
     if im.shape[-1] == 1:
         im = np.squeeze(im)
 
@@ -172,19 +191,19 @@ def im_fn(key, im, ax):
 
 def heatmap_fn(key, im, ax):
     """Assumes that heatmap shape is [H, W, N]. Used by
-    :function:`plot_datum`."""
+    :func:`plot_datum`."""
     im = np.mean(im, axis=-1)
     im_fn(key, im, ax)
 
 
 def flow_fn(key, im, ax):
-    """Plot an flow. Used by :function:`plot_datum`."""
+    """Plot an flow. Used by :func:`plot_datum`."""
     im = flow2rgb(im)
     im_fn(key, im, ax)
 
 
 def other_fn(key, obj, ax):
-    """Print some text about the object. Used by :function:`plot_datum`."""
+    """Print some text about the object. Used by :func:`plot_datum`."""
     text = "{}: {} - {}".format(key, type(obj), obj)
     ax.axis("off")
     # ax.imshow(np.ones([10, 100]))
@@ -200,7 +219,7 @@ PLOT_FUNCTIONS = {
 
 
 def default_heuristic(key, obj):
-    """Determines the kind of an object. Used by :function:`plot_datum`."""
+    """Determines the kind of an object. Used by :func:`plot_datum`."""
     if isinstance(obj, np.ndarray):
         if len(obj.shape) > 3 or len(obj.shape) < 2:
             # This is no image -> Maybe later implement sequence fn
@@ -226,15 +245,21 @@ def plot_datum(
     If heuristics is given, this determines how each leaf datum is converted
     to something plottable.
 
-    Args:
-        nested_thing (dict or list): Some nested object.
-        savename (str): ``Path/to/the/plot.png``.
-        heuristics (Callable): If given this should produce a string specifying
-            the kind of data of the leaf. If ``None`` determinde automatically.
-            See :function:`default_heuristic`.
-        plt_functions (dict of Callables): Maps a ``kind`` to a function which
-            can plot it. Each callable must be able to receive a the key, the
-            leaf object and the Axes to plot it in.
+    Parameters
+    ---------
+    nested_thing : dict or list
+	Some nested object.
+    savename : str
+	``Path/to/the/plot.png``.
+    heuristics : Callable
+	If given this should produce a string specifying
+        the kind of data of the leaf. If ``None`` determinde automatically.
+        See :func:`default_heuristic`.
+    plt_functions : dict of Callables
+	Maps a ``kind`` to a function which
+        can plot it. Each callable must be able to receive a the key, the
+        leaf object and the Axes to plot it in.
+
     """
 
     class Plotter(object):

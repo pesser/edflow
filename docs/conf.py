@@ -71,7 +71,7 @@ autodoc_mock_imports = [
     "tqdm",
     "Pillow",
     "chainer",
-    "numpy",
+    "matplotlib",
     "pandas",
     "scipy",
     "h5py",

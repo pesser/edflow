@@ -9,10 +9,14 @@ from tensorflow.contrib.keras.api.keras import backend as K
 
 def preprocess_input(x):
     """Preprocesses a tensor encoding a batch of images.
-    # Arguments
-        x: input tensor, 4D in [-1,1]
-    # Returns
-        Preprocessed tensor.
+    Parameters
+    ----------
+    x : tf.Tenser
+        input tensor, 4D in [-1,1]
+    Returns
+    -------
+    Preprocessed tensor : tf.Tensor
+
     """
     # from [-1, 1] to [0,255.0]
     x = (x + 1.0) / 2.0 * 255.0
