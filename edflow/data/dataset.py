@@ -60,6 +60,8 @@ class DatasetMixin(DatasetMixin_):
         - ``__len__`` defines how many examples are in the dataset
         - ``get_example`` returns one of those examples given an index. The example must be a dictionary
 
+    **Labels**
+
     Additionally the dataset class should specify an attribute :attr:`labels`,
     which works like a dictionary with lists or arrays behind each keyword, that
     have the same length as the dataset. The dictionary can also be empty if
@@ -71,6 +73,8 @@ class DatasetMixin(DatasetMixin_):
     loading a ``.npy`` file or a ``.csv``. They can then be used to quickly
     manipulate the dataset. When getting the actual example we can do the heavy
     lifting like loading and/or manipulating images.
+
+    **Batching**
 
     As one usually works with batched datasets, the compute heavy steps can be
     hidden through parallelization. This is all done by the
@@ -107,6 +111,9 @@ class DatasetMixin(DatasetMixin_):
             def __init__(self):
                 self.data = SomeOtherDataset()
 
+    If ``self.data`` has a :attr:`labels` attribute, labels of the derived
+    dataset will be taken from ``self.data``.
+
     **``+`` and ``*``**
 
     Sometimes you want to concatenate two datasets or multiply the length of
@@ -125,56 +132,12 @@ class DatasetMixin(DatasetMixin_):
         A = ConcatenatedDataset(C, B)  # Adding two Datasets
         D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
 
-    Labels in the example `dict`
-    ----------------------------
+    **Labels in the example ``dict``**
 
     Oftentimes it is good to store and load some values as lables as it can
     increase performance and decrease storage size, e.g. when storing scalar
     values. If you need these values to be returned by the :func:`get_example`
     method, simply activate this behaviour by setting the attribute
-    :attr:`append_labels` to ``True``.
-
-    .. code-block:: python
-
-        SomeDerivedDataset(DatasetMixin):
-            def __init__(self):
-                self.labels = {'a': [1, 2, 3]}
-                self.append_labels = True
-
-            def get_example(self, idx):
-                return {'a' : idx**2, 'b': idx}
-
-            def __len__(self):
-                return 3
-
-        S = SomeDerivedDataset()
-        a = S[2]
-        print(a)  # {'a': 3, 'b': 2}
-
-        S.append_labels = False
-        a = S[2]
-        print(a)  # {'a': 4, 'b': 2}
-
-    Labels are appended to your example, after all code is executed from your
-    :attr:`get_example` method. Thus, if there are keys in your labels, which
-    can also be found in the examples, the label entries will override the
-    values in you example, as can be seen in the example above.
-    """
-
-    def _d_msg(self, val):
-        """Informs the user that val should be a dict."""
-
-        return (
-            "The edflow version of DatasetMixin requires the "
-            "`get_example` method to return a `dict`. Yours returned a "
-            "{}".format(type(val))
-        )
-
-    # @traceable_method(ignores=[BrokenPipeError])
-    def __getitem__(self, i):
-        ret_dict = super().__getitem__(i)
-
-        # print(self.append_labels)
 
         if isinstance(i, slice):
             start = i.start or 0
@@ -184,31 +147,28 @@ class DatasetMixin(DatasetMixin_):
                 if not isinstance(d, dict):
                     raise ValueError(self._d_msg(d))
                 d["index_"] = idx
-
-                if self.append_labels:
-                    labels = {k: v[idx] for k, v in self.labels.items()}
-                    d.update(labels)
+                self._maybe_append_labels(d, idx)
 
         elif isinstance(i, list) or isinstance(i, np.ndarray):
             for idx, d in zip(i, ret_dict):
                 if not isinstance(d, dict):
                     raise ValueError(self._d_msg(d))
                 d["index_"] = idx
-
-                if self.append_labels:
-                    labels = {k: v[idx] for k, v in self.labels.items()}
-                    d.update(labels)
+                self._maybe_append_labels(d, idx)
 
         else:
             if not isinstance(ret_dict, dict):
                 raise ValueError(self._d_msg(ret_dict))
 
             ret_dict["index_"] = i
-            if self.append_labels:
-                labels = {k: v[i] for k, v in self.labels.items()}
-                ret_dict.update(labels)
+            self._maybe_append_labels(ret_dict, i)
 
         return ret_dict
+
+    def _maybe_append_labels(self, datum, index):
+        if self.append_labels:
+            labels = {k: v[index] for k, v in self.labels.items()}
+            datum.update(labels)
 
     def __len__(self):
         """Add default behaviour for datasets defining an attribute
@@ -292,7 +252,7 @@ class DatasetMixin(DatasetMixin_):
         :attr:`data`, which in turn is a dataset. This happens often when
         stacking several datasets on top of each other.
 
-        The default behaviour now is to return ``self.data.labels``
+        The default behaviour is to return ``self.data.labels``
         if possible, and otherwise revert to the original behaviour.
         """
         if hasattr(self, "data"):
