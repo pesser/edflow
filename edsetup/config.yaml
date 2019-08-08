@@ -2,6 +2,9 @@ dataset: edsetup.dataset.Dataset
 iterator: edsetup.iterator.Iterator
 model: edsetup.model.Model
 
+# for the iterator
+batch_size: 10
+num_epochs: 5
 
 # Data
 feature_dimension: 10

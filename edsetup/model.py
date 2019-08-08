@@ -3,5 +3,5 @@ class Model(object):
         super().__init__()
         self.config = config
 
-    def forward(self, x):
+    def __call__(self, x):
         return x
