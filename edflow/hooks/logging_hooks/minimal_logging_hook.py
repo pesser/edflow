@@ -10,11 +10,16 @@ class LoggingHook(Hook):
     adding handlers."""
 
     def __init__(self, paths, interval, root_path):
-        """Args:
-            paths (list(str)): List of key-paths to logging outputs. Will be
-                expanded so they can be evaluated lazily.
-            interval (int): Intervall of training steps before logging.
-            root_path (str): Path at which the logs are stored.
+        """
+        Parameters
+        ----------
+        paths : list(str)
+            List of key-paths to logging outputs. Will be
+            expanded so they can be evaluated lazily.
+        interval : int
+            Intervall of training steps before logging.
+        root_path : str
+            Path at which the logs are stored.
         """
         self.paths = paths
         self.interval = interval

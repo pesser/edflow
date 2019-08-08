@@ -587,7 +587,8 @@ def _delget(d, k):
 
 
 def save_example(savepath, datum):
-    """Manages the writing process of a single datum: (1) Determine type,
+    """
+    Manages the writing process of a single datum: (1) Determine type,
     (2) Choose saver, (3) save.
 
     Parameters
