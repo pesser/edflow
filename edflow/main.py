@@ -3,6 +3,7 @@ import importlib
 import os
 import yaml
 import math
+import datetime
 
 # ignore broken pipe errors: https://www.quora.com/How-can-you-avoid-a-broken-pipe-error-on-Python
 from signal import signal, SIGPIPE, SIG_DFL
@@ -13,6 +14,7 @@ import multiprocessing as mp
 import traceback
 
 from edflow.custom_logging import init_project, get_logger, LogSingleton
+from edflow.project_manager import ProjectManager as P
 
 
 def get_obj_from_str(string):
@@ -39,11 +41,12 @@ def traceable_process(fn, args, job_queue, idx):
         exc = Exception(trace)
         if job_queue is not None:
             job_queue.put([idx, exc, trace])
-            job_queue.close()
         else:
             raise exc
-
-    job_queue.put([idx, "Done", None])
+    else:
+        job_queue.put([idx, "Done", None])
+    finally:
+        job_queue.close()
 
 
 def traceable_function(method, ignores=None):
@@ -66,6 +69,15 @@ def traceable_method(ignores=None):
     return decorator
 
 
+def _save_config(config, prefix="config"):
+    now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    fname = prefix + "_" + now + ".yaml"
+    path = os.path.join(P.configs, fname)
+    with open(path, "w") as f:
+        f.write(yaml.dump(config))
+    return path
+
+
 def train(args, job_queue, idx):
     traceable_process(_train, args, job_queue, idx)
 
@@ -80,8 +92,7 @@ def _train(config, root, checkpoint=None, retrain=False):
 
     LogSingleton().set_default("train")
     logger = get_logger("train")
-    logger.info("Starting Training with config:")
-    logger.info(config)
+    logger.info("Starting Training.")
 
     implementations = get_implementations_from_config(
         config, ["model", "iterator", "dataset"]
@@ -93,58 +104,66 @@ def _train(config, root, checkpoint=None, retrain=False):
     logger.info("Number of training samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
-    batches = make_batches(
+    with make_batches(
         dataset,
         batch_size=config["batch_size"],
         shuffle=True,
         n_processes=n_processes,
         n_prefetch=n_prefetch,
-    )
-    # get them going
-    logger.info("Warm up batches.")
-    next(batches)
-    batches.reset()
-    logger.info("Reset batches.")
+    ) as batches:
+        # get them going
+        logger.info("Warm up batches.")
+        next(batches)
+        batches.reset()
+        logger.info("Reset batches.")
 
-    if "num_steps" in config:
-        # set number of epochs to perform at least num_steps steps
-        steps_per_epoch = len(dataset) / config["batch_size"]
-        num_epochs = config["num_steps"] / steps_per_epoch
-        config["num_epochs"] = math.ceil(num_epochs)
-    else:
-        steps_per_epoch = len(dataset) / config["batch_size"]
-        num_steps = config["num_epochs"] * steps_per_epoch
-        config["num_steps"] = math.ceil(num_steps)
+        if "num_steps" in config:
+            # set number of epochs to perform at least num_steps steps
+            steps_per_epoch = len(dataset) / config["batch_size"]
+            num_epochs = config["num_steps"] / steps_per_epoch
+            config["num_epochs"] = math.ceil(num_epochs)
+        else:
+            steps_per_epoch = len(dataset) / config["batch_size"]
+            num_steps = config["num_epochs"] * steps_per_epoch
+            config["num_steps"] = math.ceil(num_steps)
 
-    logger.info("Instantiating model.")
-    Model = implementations["model"](config)
-    if not "hook_freq" in config:
-        config["hook_freq"] = 1
-    compat_kwargs = dict(hook_freq=config["hook_freq"], num_epochs=config["num_epochs"])
-    logger.info("Instantiating iterator.")
-    Trainer = implementations["iterator"](config, root, Model, **compat_kwargs)
+        logger.info("Instantiating model.")
+        Model = implementations["model"](config)
+        if not "hook_freq" in config:
+            config["hook_freq"] = 1
+        compat_kwargs = dict(
+            hook_freq=config["hook_freq"], num_epochs=config["num_epochs"]
+        )
+        logger.info("Instantiating iterator.")
+        Trainer = implementations["iterator"](
+            config, root, Model, dataset=dataset, **compat_kwargs
+        )
 
-    logger.info("Initializing model.")
-    if checkpoint is not None:
-        Trainer.initialize(checkpoint=checkpoint)
-    else:
-        Trainer.initialize()
+        logger.info("Initializing model.")
+        if checkpoint is not None:
+            Trainer.initialize(checkpoint_path=checkpoint)
+        else:
+            Trainer.initialize()
 
-    if retrain:
-        Trainer.reset_global_step()
+        if retrain:
+            Trainer.reset_global_step()
 
-    logger.info("Iterating.")
-    Trainer.iterate(batches)
+        # save current config
+        logger.info("Starting Training with config:\n{}".format(yaml.dump(config)))
+        cpath = _save_config(config, prefix="train")
+        logger.info("Saved config at {}".format(cpath))
+
+        logger.info("Iterating.")
+        Trainer.iterate(batches)
 
 
-def _test(config, root, nogpu=False, bar_position=0):
+def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     """Run tests. Loads model, iterator and dataset from config."""
     from edflow.iterators.batches import make_batches
 
     LogSingleton().set_default("latest_eval")
     logger = get_logger("test")
-    logger.info("Starting Evaluation with config")
-    logger.info(config)
+    logger.info("Starting Evaluation.")
 
     if "test_batch_size" in config:
         config["batch_size"] = config["test_batch_size"]
@@ -171,8 +190,6 @@ def _test(config, root, nogpu=False, bar_position=0):
     batches.reset()
 
     logger.info("Initializing model.")
-    # currently initialize is not called here because we assume that checkpoint
-    # restoring is handled by RestoreCheckpointHook
     Model = implementations["model"](config)
 
     config["hook_freq"] = 1
@@ -184,65 +201,26 @@ def _test(config, root, nogpu=False, bar_position=0):
         nogpu=config["nogpu"],
         num_epochs=config["num_epochs"],
     )
-    HBU_Evaluator = implementations["iterator"](config, root, Model, **compat_kwargs)
+    Evaluator = implementations["iterator"](
+        config, root, Model, dataset=dataset, **compat_kwargs
+    )
+
+    logger.info("Initializing model.")
+    if checkpoint is not None:
+        Evaluator.initialize(checkpoint_path=checkpoint)
+    else:
+        Evaluator.initialize()
+
+    # save current config
+    logger.info("Starting Evaluation with config:\n{}".format(yaml.dump(config)))
+    prefix = "eval"
+    if bar_position > 0:
+        prefix = prefix + str(bar_position)
+    cpath = _save_config(config, prefix=prefix)
+    logger.info("Saved config at {}".format(cpath))
 
     logger.info("Iterating")
     while True:
-        HBU_Evaluator.iterate(batches)
+        Evaluator.iterate(batches)
         if not config.get("eval_forever", False):
             break
-
-
-def main(opt):
-    with open(opt.config) as f:
-        config = yaml.load(f)
-
-    P = init_project("logs")
-    logger = get_logger("main")
-    logger.info(opt)
-    logger.info(yaml.dump(config))
-    logger.info(P)
-
-    if opt.noeval:
-        train(config, P.train, opt.checkpoint, opt.retrain)
-    else:
-        train_process = mp.Process(
-            target=train, args=(config, P.train, opt.checkpoint, opt.retrain)
-        )
-        test_process = mp.Process(target=test, args=(config, P.latest_eval, True))
-
-        processes = [train_process, test_process]
-
-        try:
-            for p in processes:
-                p.start()
-
-            for p in processes:
-                p.join()
-
-        except KeyboardInterrupt:
-            logger.info("Terminating all processes")
-            for p in processes:
-                p.terminate()
-        finally:
-            logger.info("Finished")
-
-
-if __name__ == "__main__":
-    default_log_dir = os.path.join(os.getcwd(), "log")
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True, help="path to config")
-    parser.add_argument("--checkpoint", help="path to checkpoint to restore")
-    parser.add_argument(
-        "--noeval", action="store_true", default=False, help="only run training"
-    )
-    parser.add_argument(
-        "--retrain",
-        action="store_true",
-        default=False,
-        help="reset global_step to zero",
-    )
-
-    opt = parser.parse_args()
-    main(opt)

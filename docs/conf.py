@@ -38,7 +38,6 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "sphinx.ext.autosummary",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -72,7 +71,7 @@ autodoc_mock_imports = [
     "tqdm",
     "Pillow",
     "chainer",
-    "numpy",
+    "matplotlib",
     "pandas",
     "scipy",
     "h5py",
@@ -80,12 +79,11 @@ autodoc_mock_imports = [
     "natsort",
 ]
 
-autosummary_generate = True
-exclude_patterns = ["_build", "_templates"]
-
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
     "special-members": "__init__",
     "undoc-members": True,
 }
+
+exclude_patterns = ["_build", "_templates"]

@@ -1,7 +1,15 @@
+import signal, sys
 from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
 from edflow.util import walk
+
+
+class ShutdownRequest(Exception):
+    """Raised when we receive a SIGTERM signal to shut down. Allows hooks to
+    perform final actions such as writing a last checkpoint."""
+
+    pass
 
 
 class PyHookedModelIterator(object):
@@ -13,6 +21,7 @@ class PyHookedModelIterator(object):
         config,
         root,
         model,
+        dataset,
         hook_freq=100,
         num_epochs=100,
         hooks=[],
@@ -30,10 +39,13 @@ class PyHookedModelIterator(object):
             bar_position (int): Used by tqdm to place bars at the right
                 position when using multiple Iterators in parallel.
         """
+        signal.signal(signal.SIGTERM, self._handle_sigterm)
+
         self.config = config
         self.root = root
 
         self.model = model
+        self.dataset = dataset
         self.num_epochs = num_epochs
 
         self.hooks = hooks
@@ -46,12 +58,27 @@ class PyHookedModelIterator(object):
         self.logger = get_logger(type(self).__name__)
 
         self._global_step = 0
+        self._batch_step = 0
+        self._epoch_step = 0
 
     def get_global_step(self, *args, **kwargs):
+        """Get the global step. The global step corresponds to the number of
+        steps the model was trained for. It is updated in each step during
+        training but not during evaluation."""
         return self._global_step
 
     def set_global_step(self, step):
+        """Set the global step. Should be done when restoring a model from a
+        checkpoint."""
         self._global_step = step
+
+    def get_batch_step(self, *args, **kwargs):
+        """Batch index of current run."""
+        return self._batch_step
+
+    def get_epoch_step(self, *args, **kwargs):
+        """Epoch index of current run."""
+        return self._epoch_step
 
     def reset_global_step(self):
         self.set_global_step(0)
@@ -66,6 +93,15 @@ class PyHookedModelIterator(object):
         feeds = walk(batch, lambda val: val)
         return feeds
 
+    def _handle_sigterm(self, signum, frame):
+        e = ShutdownRequest()
+        self._handle_exception(e)
+        sys.exit(0)
+
+    def _handle_exception(self, e):
+        for hook in self.hooks:
+            hook.at_exception(e)
+
     def iterate(self, batch_iterator):
         """Iterates over the data supplied and feeds it to the model.
 
@@ -76,9 +112,7 @@ class PyHookedModelIterator(object):
         try:
             self._iterate(batch_iterator)
         except Exception as e:
-            for hook in self.hooks:
-                hook.at_exception(e)
-
+            self._handle_exception(e)
             raise e
 
     def _iterate(self, batch_iterator):
@@ -98,6 +132,7 @@ class PyHookedModelIterator(object):
         for ep in trange(
             self.num_epochs, desc=desc_e, position=pos, dynamic_ncols=True
         ):
+            self._epoch_step = ep
             self.run_hooks(ep, before=True)
 
             pos = self.bar_pos + 1
@@ -105,6 +140,7 @@ class PyHookedModelIterator(object):
                 batch_iterator, desc=desc_b, position=pos, dynamic_ncols=True
             )
             for bi, batch in enumerate(iterator):
+                self._batch_step = bi
                 fetches = {"global_step": self.get_global_step, "step_ops": step_ops}
 
                 feeds = self.make_feeds(batch)
@@ -121,12 +157,6 @@ class PyHookedModelIterator(object):
                     "num_steps", float("inf")
                 ):
                     self.logger.info("Done with epoch")
-                    self.logger.info(
-                        "is_new_epoch: {}".format(batch_iterator.is_new_epoch)
-                    )
-                    gs = self.get_global_step()
-                    ns = self.config.get("num_steps", float("inf"))
-                    self.logger.info("gs > ns: {} ({} >= {})".format(gs >= ns, gs, ns))
                     batch_iterator.reset()
                     break
             self.run_hooks(ep, before=False)
@@ -161,13 +191,14 @@ class PyHookedModelIterator(object):
             fetches (list or dict): Fetches for the next session.run call.
             feeds (dict): Feeds for the next session.run call.
             results (same as fetches): Results from the last session.run call.
-            before (bool): If not obvious determines if the before_ or after_
+            before (bool): If not obvious determines if the before or after
                 methods of the hooks should be called.
 
-        Return:
+        Returns:
             If before:
-            same as fetches: Updated fetches.
-            dict: Updated feeds
+
+                test (same as fetches): Updated fetches.
+                test (dict): Updated feeds
         """
 
         is_step = fetches is not None and feeds is not None
@@ -195,3 +226,6 @@ class PyHookedModelIterator(object):
             The operation run at each step."""
 
         raise NotImplementedError()
+
+    def initialize(self, checkpoint_path=None):
+        pass

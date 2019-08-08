@@ -10,11 +10,13 @@ class ProjectManager(object):
     exists = False
 
     def __init__(self, base=None, given_directory=None, code_root=".", postfix=None):
-        """Args:
+        """
+        Args:
             base (str): Top level directory, where all experiments live.
             given_directory (str): If not None, this will be used to get all
                 relevant paths.
             code_root (str): Path to where the code lives.
+
         """
 
         self.postfix = postfix
@@ -37,7 +39,7 @@ class ProjectManager(object):
             self.setup()
             self.setup_new_eval()
 
-            if given_directory is None:
+            if given_directory is None and ProjectManager.code_root is not None:
                 self.copy_code()
 
             ProjectManager.exists = True
@@ -47,8 +49,8 @@ class ProjectManager(object):
     def setup(self):
         """Make all the directories."""
 
-        subdirs = ["code", "train", "eval", "ablation"]
-        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [], "ablation": []}
+        subdirs = ["code", "train", "eval", "configs"]
+        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [], "configs": []}
 
         root = ProjectManager.root
 
@@ -111,7 +113,7 @@ class ProjectManager(object):
                 print(directory, filtered)
                 return filtered
 
-            shutil.copytree(src, dst, symlinks=True, ignore=ignore)
+            shutil.copytree(src, dst, symlinks=False, ignore=ignore)
 
         except shutil.Error as err:
             print(err)

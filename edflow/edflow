@@ -24,45 +24,41 @@ from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
 from edflow.custom_logging import set_global_stdout_level  # noqa
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
+from edflow.config import parse_unknown_args, update_config
 
 
-def update_config(config, options):
-    if options is not None:
-        for option in options:
-            config.update(yaml.load(option))
-    # single format substitution, does not support nested structures
-    for k, v in config.items():
-        if isinstance(v, str):
-            config[k] = v.format(**config)
-
-
-def main(opt):
+def main(opt, additional_kwargs):
     # Project manager
     if opt.project is not None:
         P = use_project(opt.project, postfix=opt.name)
     else:
-        assert opt.train is not None
         # Get base or default parameters
         base_config = {}
         if opt.base is not None:
             for base in opt.base:
                 print(base)
                 with open(base) as f:
-                    base_config.update(yaml.load(f))
+                    base_config.update(yaml.full_load(f))
         print(base_config)
         # get path to implementation
-        with open(opt.train) as f:
+        if opt.train:
+            with open(opt.train) as f:
+                config = base_config
+                config.update(yaml.full_load(f))
+                update_config(config, additional_kwargs)
+                impl = config["model"]
+                name = config.get("experiment_name", None)
+        else:
             config = base_config
-            config.update(yaml.load(f))
-            update_config(config, opt.option)
+            update_config(config, additional_kwargs)
             impl = config["model"]
             name = config.get("experiment_name", None)
-        # if it looks like a package path, take its root as the code dir
-        # otherwise take cwd
         if "code_root" in config:
             code_root = config["code_root"]
         else:
             path = impl.split(".")
+            # if it looks like a package path, take its root as the code dir
+            # otherwise take cwd
             if len(path) > 0:
                 code_root = path[0]
             else:
@@ -100,16 +96,15 @@ def main(opt):
             for base in opt.base:
                 print(base)
                 with open(base) as f:
-                    base_config.update(yaml.load(f))
+                    base_config.update(yaml.full_load(f))
         print(base_config)
         # get path to implementation
         with open(opt.train) as f:
             config = base_config
-            config.update(yaml.load(f))
-            update_config(config, opt.option)
+            config.update(yaml.full_load(f))
+            update_config(config, additional_kwargs)
 
-        logger.info("Training config: {}".format(opt.train))
-        logger.info(yaml.dump(config))
+        logger.info("Training config: {}\n{}".format(opt.train, yaml.dump(config)))
 
         train_process = mp.Process(
             target=train,
@@ -120,23 +115,41 @@ def main(opt):
     # Evaluation
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
+        if opt.checkpoint is not None:
+            checkpoint = opt.checkpoint
+        elif opt.project is not None:
+            checkpoint = get_latest_checkpoint(P.checkpoints)
+        else:
+            checkpoint = None
+
         base_config = {}
         if opt.base is not None:
             for base in opt.base:
                 with open(base) as f:
-                    base_config.update(yaml.load(f))
+                    base_config.update(yaml.full_load(f))
         # get path to implementation
         with open(eval_config) as f:
             config = base_config
-            config.update(yaml.load(f))
-            update_config(config, opt.option)
-        logger.info("Evaluation config: {}".format(eval_config))
-        logger.info(yaml.dump(config))
+            config.update(yaml.full_load(f))
+            update_config(config, additional_kwargs)
+        if opt.checkpoint is not None:
+            for k in ["eval_forever", "eval_all"]:
+                if k in config:
+                    config[k] = False
+                    logger.info("{} was disabled because you specified a checkpoint.".format(k))
+        logger.info(
+            "Evaluation config: {}\n{}".format(eval_config, yaml.dump(eval_config))
+        )
         nogpu = len(processes) > 0 or opt.nogpu
         bar_position = len(processes) + eval_idx
+
         test_process = mp.Process(
             target=test,
-            args=((config, P.latest_eval, nogpu, bar_position), JQ, len(processes)),
+            args=(
+                (config, P.latest_eval, checkpoint, nogpu, bar_position),
+                JQ,
+                len(processes),
+            ),
         )
         processes.append(test_process)
 
@@ -166,8 +179,11 @@ def main(opt):
         logger.info("Terminating all processes")
         for p in processes:
             p.terminate()
-
-        raise e
+        if not isinstance(e, KeyboardInterrupt):
+            # reraise if we caught a general exception
+            # TODO: only reraise if this is not an exception of a child that
+            # was already logged above
+            raise e
     finally:
         # Landing
         for p in processes:
@@ -211,19 +227,31 @@ if __name__ == "__main__":
         "--nogpu", action="store_true", help="disable gpu for tensorflow"
     )
     parser.add_argument(
-        "--option",
-        "-o",
-        action="append",
-        help="additional key: value options to update all config with",
-    )
-    parser.add_argument(
         "-log",
         "--log-level",
         metavar="LEVEL",
         type=str,
-        choices=["info", "debug", "critical"],
+        choices=["warn", "info", "debug", "critical"],
         default="info",
         help="Set the std-out logging level.",
     )
-    opt = parser.parse_args()
-    main(opt)
+
+    opt, unknown = parser.parse_known_args()
+    additional_kwargs = parse_unknown_args(unknown)
+
+    if "option" in additional_kwargs or "o" in additional_kwargs:
+        msg = "\n" * 2
+        msg += "=" * 20
+        msg += (
+            "\n\033[93m\033[1m\033[4mThe --option Argument is deprecated!"
+            + "\033[0m\n"
+            + "You kann now pass additional options via --key value "
+            + "pairs. This example equivalent to the old --option `key: "
+            + "value`.\n"
+            + "Passing --option `sth` is still possible, but will result"
+            + " in a config entry `config[option] = sth`.\n"
+        )
+        msg += "=" * 20
+        msg += "\n" * 2
+        print(msg)
+    main(opt, additional_kwargs)

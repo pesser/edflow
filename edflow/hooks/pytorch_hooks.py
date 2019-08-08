@@ -1,5 +1,4 @@
 import os
-import signal
 import sys
 
 import torch
@@ -20,16 +19,20 @@ class PyCheckpointHook(Hook):
     checkpoint."""
 
     def __init__(self, root_path, model, modelname="model", interval=None):
-        """Args:
-            root_path (str): Path to where the checkpoints are stored.
-            model (nn.Module): Model to checkpoint.
-            modelname (str): Prefix for checkpoint files.
-            interval (int): Number of iterations after which a checkpoint is
-                saved. In any case a checkpoint is savead after each epoch.
         """
+        Parameters
+        ----------
+        root_path : str
+            Path to where the checkpoints are stored.
+        model : nn.Module
+            Model to checkpoint.
+        modelname : str
+            Prefix for checkpoint files.
+        interval : int
+            Number of iterations after which a checkpoint is
+            saved. In any case a checkpoint is savead after each epoch.
 
-        signal.signal(signal.SIGINT, self.at_exception)
-        signal.signal(signal.SIGTERM, self.at_exception)
+        """
 
         self.root = root_path
         self.interval = interval
@@ -51,14 +54,12 @@ class PyCheckpointHook(Hook):
         self.save()
 
     def after_step(self, step, last_results):
-        self.step = retrieve("global_step", last_results)
+        self.step = retrieve(last_results, "global_step")
         if self.interval is not None and step % self.interval == 0:
             self.save()
 
     def at_exception(self, *args, **kwargs):
         self.save()
-
-        sys.exit()
 
     def save(self):
         e = self.epoch
@@ -83,16 +84,26 @@ class PyLoggingHook(Hook):
         interval=100,
         root_path="logs",
     ):
-        """Args:
-            log_ops (list): Ops to run at logging time.
-            scalars (dict): Scalar ops.
-            histograms (dict): Histogram ops.
-            images (dict): Image ops. Note that for these no
-                tensorboard logging ist used but a custom image saver.
-            logs (dict): Logs to std out via logger.
-            graph (tf.Graph): Current graph.
-            interval (int): Intervall of training steps before logging.
-            root_path (str): Path at which the logs are stored.
+        """
+        Parameters
+        ----------
+        log_ops : list
+	    Ops to run at logging time.
+        scalars : dict
+	    Scalar ops.
+        histograms : dict
+            Histogram ops.
+        images : dict
+	    Image ops. Note that for these no
+            tensorboard logging ist used but a custom image saver.
+        logs : dict
+	    Logs to std out via logger.
+        graph : tf.Graph
+	    Current graph.
+        interval : int
+	    Intervall of training steps before logging.
+        root_path : str
+	    Path at which the logs are stored.
         """
 
         self.log_ops = log_ops
@@ -119,15 +130,15 @@ class PyLoggingHook(Hook):
             step = last_results["global_step"]
 
             for key in self.scalar_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
                 self.tb_logger.add_scalar(key, value, step)
 
             for key in self.histogram_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
                 self.tb_logger.add_histogram(key, value, step)
 
             for key in self.image_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
 
                 name = key.split("/")[-1]
                 full_name = name + "_{:07}.png".format(step)
@@ -135,7 +146,7 @@ class PyLoggingHook(Hook):
                 plot_batch(value, save_path)
 
             for key in self.log_keys:
-                value = retrieve(key, last_results)
+                value = retrieve(last_results, key)
                 self.logger.info("{}: {}".format(key, value))
 
 
@@ -199,11 +210,17 @@ class DataPrepHook(ToFromTorchHook):
     def before_step(self, step, fetches, feeds, batch):
         """
         Steps taken before the training step.
-        :param step: Training step.
-        :param fetches: Fetches for the next session.run call.
-        :param feeds: Feeds for the next session.run call.
-        :param batch: The batch to be iterated over.
-        :return:
+        Parameters
+        ----------
+        step
+            Training step.
+        fetches
+            Fetches for the next session.run call.
+        feeds
+            Feeds for the next session.run call.
+        batch
+            The batch to be iterated over.
+
         """
 
         def to_image(obj):
@@ -222,9 +239,13 @@ class DataPrepHook(ToFromTorchHook):
     def after_step(self, step, results):
         """
         Steps taken after the training step.
-        :param step: Training step.
-        :param results: Result of the session.
-        :return:
+        Parameters
+        ----------
+        step
+            Training step.
+        results
+            Result of the session.
+
         """
         super().after_step(step, results)
 

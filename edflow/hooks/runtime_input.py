@@ -13,12 +13,15 @@ class RuntimeInputHook(Hook):
     a callback function."""
 
     def __init__(self, update_file, callback):
-        """Args:
-            update_file (str): path/to/yaml-file containing the parameters of
-                interest.
-            callback (Callable): Each time something changes in the update_file
-                this function is called with the content of the file as
-                argument.
+        """
+        Parameters
+        ----------
+        update_file : str
+            path/to/yaml-file containing the parameters of interest.
+        callback : Callable
+            Each time something changes in the update_file
+            this function is called with the content of the file as
+            argument.
         """
 
         self.logger = get_logger(self)
@@ -40,14 +43,14 @@ class RuntimeInputHook(Hook):
         """Checks if something changed and if yes runs the callback."""
 
         try:
-            updates = yaml.load(open(self.ufile, "r"))
+            updates = yaml.full_load(open(self.ufile, "r"))
 
             if self.last_updates is not None:
                 changes = {}
 
                 def is_changed(key, val, changes=changes):
                     if contains_key(key, updates):
-                        other_val = retrieve(key, updates)
+                        other_val = retrieve(updates, key)
 
                         change = np.any(val != other_val)
                     else:

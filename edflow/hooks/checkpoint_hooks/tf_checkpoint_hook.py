@@ -1,5 +1,4 @@
 import os
-import signal
 import tensorflow as tf
 from edflow.hooks.hook import Hook
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint
@@ -17,14 +16,19 @@ class RestoreModelHook(Hook):
         filter_cond=lambda c: True,
         global_step_setter=None,
     ):
-        """Args:
-            variables (list): tf.Variable to be loaded from the checkpoint.
-            checkpoint_path (str): Directory in which the checkpoints are
-                stored or explicit checkpoint. Ignored if used as functor.
-            filter_cond (Callable): A function used to filter files, to only
-                get the checkpoints that are wanted. Ignored if used as
-                functor.
-            global_step_setter (Callable): Callback to set global_step.
+        """
+        Parameters
+        ----------
+        variables : list
+	    tf.Variable to be loaded from the checkpoint.
+        checkpoint_path : str
+	    Directory in which the checkpoints are
+            stored or explicit checkpoint. Ignored if used as functor.
+        filter_cond : Callable
+	    A function used to filter files, to only get the checkpoints that
+            are wanted. Ignored if used as functor.
+        global_step_setter : Callable
+	    Callback to set global_step.
         """
         self.root = checkpoint_path
         self.fcond = filter_cond
@@ -79,22 +83,28 @@ class CheckpointHook(Hook):
         interval=None,
         max_to_keep=5,
     ):
-        """Args:
-            root_path (str): Path to where the checkpoints are stored.
-            variables (list): List of all variables to keep track of.
-            session (tf.Session): Session instance for saver.
-            modelname (str): Used to name the checkpoint.
-            step (tf.Tensor or callable): Step op, that can be evaluated
-                (i,.e. a tf.Tensor or a python callable returning the step as
-                an integer).
-            interval (int): Number of iterations after which a checkpoint is
-                saved. If None, a checkpoint is saved after each epoch.
-            max_to_keep (int): Maximum number of checkpoints to keep on
-                disk. Use 0 or None to never delete any checkpoints.
         """
+        Parameters
+        ----------
+        root_path : str
+	    Path to where the checkpoints are stored.
+        variables : list
+	    List of all variables to keep track of.
+        session : tf.Session
+	    Session instance for saver.
+        modelname : str
+	    Used to name the checkpoint.
+        step : tf.Tensor or callable
+	    Step op, that can be evaluated: i,.e. a tf.Tensor or a python
+            callable returning the step as an integer).
+        interval : int
+	    Number of iterations after which a checkpoint is
+            saved. If None, a checkpoint is saved after each epoch.
+        max_to_keep : int
+	    Maximum number of checkpoints to keep on
+            disk. Use 0 or None to never delete any checkpoints.
 
-        signal.signal(signal.SIGINT, self.at_exception)
-        signal.signal(signal.SIGTERM, self.at_exception)
+        """
 
         self.root = root_path
         self.interval = interval
@@ -122,8 +132,6 @@ class CheckpointHook(Hook):
 
     def at_exception(self, *args, **kwargs):
         self.save()
-
-        sys.exit()
 
     def save(self):
         global_step = self.global_step()
@@ -165,11 +173,16 @@ class WaitForManager(Hook):
     """Wait to make sure checkpoints are not overflowing."""
 
     def __init__(self, checkpoint_root, max_n, interval=5):
-        """Args:
-            checkpoint_root (str): Path to look for checkpoints.
-            max_n (int): Wait as long as there are more than max_n ckpts.
-            interval (float): Number of seconds after which to check for number
-                of checkpoints again.
+        """
+        Parameters
+        ----------
+        checkpoint_root : str
+	    Path to look for checkpoints.
+        max_n : int
+	    Wait as long as there are more than max_n ckpts.
+        interval : float
+	    Number of seconds after which to check for number
+            of checkpoints again.
         """
 
         self.root = checkpoint_root
@@ -192,3 +205,12 @@ class WaitForManager(Hook):
 
     def before_epoch(self, ep):
         self.wait()
+
+
+class RestoreCurrentCheckpointHook(RestoreModelHook):
+    """Restores a TensorFlow model from a checkpoint at each epoch. Can also
+    be used as a functor."""
+
+    def before_epoch(self, ep):
+        checkpoint = self.root
+        self(checkpoint)

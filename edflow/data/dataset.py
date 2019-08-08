@@ -1,8 +1,25 @@
-"""All handy dataset classes we use.
-Our Datasets (TODO usually) inherit from the `chainer.dataset.DatasetMixin`.
-Please note that we overwrite the `__getitem__` method.
-This does not change its functionality and there is not problem in not using
-our version of `DatasetMixin`.
+"""
+Datasets TLDR
+=============
+
+Datasets contain examples, which can be accessed by an index::
+
+    example = Dataset[index]
+
+Each example is annotated by labels. These can be accessed via the
+:attr:`labels` attribute of the dataset::
+
+    label = Dataset.labels[key][index]
+
+To make a working dataset you need to implement a :meth:`get_example` method, which must return a ``dict``,
+a :meth:`__len__` method and define the :attr:`labels` attribute, which must
+be a dict, that can be empty.
+
+.. warning::
+
+    Dataset, which are specified in the edflow config must accept one
+    positional argument ``config``!
+
 """
 
 import os
@@ -28,7 +45,89 @@ from edflow.util import PRNGMixin
 
 
 class DatasetMixin(DatasetMixin_):
-    def d_msg(self, val):
+    """Our fork of the `chainer
+    <https://docs.chainer.org/en/stable/reference/datasets.html>`_-``Dataset``
+    class. Every Dataset used with ``edflow`` should at some point inherit from
+    this baseclass.
+
+    Notes
+    -----
+
+    **Necessary and best practices**
+
+    When implementing your own dataset you need to specify the following methods:
+
+        - ``__len__`` defines how many examples are in the dataset
+        - ``get_example`` returns one of those examples given an index. The example must be a dictionary
+
+    Additionally the dataset class should specify an attribute :attr:`labels`,
+    which works like a dictionary with lists or arrays behind each keyword, that
+    have the same length as the dataset. The dictionary can also be empty if
+    you do not want to define labels.
+
+    The philosophy behind having both a :meth:`get_example` method and the
+    :attr:`labels` attribute is to split the dataset into compute heavy and
+    easy parts. Labels should be quick to load at construction time, e.g. by
+    loading a ``.npy`` file or a ``.csv``. They can then be used to quickly
+    manipulate the dataset. When getting the actual example we can do the heavy
+    lifting like loading and/or manipulating images.
+
+    As one usually works with batched datasets, the compute heavy steps can be
+    hidden through parallelization. This is all done by the
+    :func:`make_batches`, which is invoked by ``edflow`` automatically.
+
+    **Default Behaviour**
+
+    As one sometimes stacks and chains multiple levels of datasets it can
+    become cumbersome to define ``__len__``, ``get_example`` and ``labels``, if
+    all one wants to do is evaluate their respective implementations of some
+    other dataset, as can be seen in the code example below:
+
+    .. code-block:: python
+
+        SomeDerivedDataset(DatasetMixin):
+            def __init__(self):
+                self.other_data = SomeOtherDataset()
+                self.labels = self.other_data.labels
+
+            def __len__(self):
+                return len(self.other_data)
+
+            def get_example(self, idx):
+                return self.other_data[idx]
+
+    This can be omitted when defining a :attr:`data` attribute when
+    constructing the dataset. :class:`DatasetMixin` implements these methods
+    with the default behaviour to wrap around the corresponding methods of the
+    underlying :attr:`data` attribute. Thus the above example becomes
+
+    .. code-block:: python
+
+        SomeDerivedDataset(DatasetMixin):
+            def __init__(self):
+                self.data = SomeOtherDataset()
+
+    **``+`` and ``*``**
+
+    Sometimes you want to concatenate two datasets or multiply the length of
+    one dataset by concatenating it several times to itself. This can easily
+    be done by adding Datasets or multiplying one by an integer factor.
+
+    .. code-block:: python
+
+        A = C + B  # Adding two Datasets
+        D = 3 * A  # Multiplying two datasets
+
+    The above is equivalent to
+
+    .. code-block:: python
+
+        A = ConcatenatedDataset(C, B)  # Adding two Datasets
+        D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
+
+    """
+
+    def _d_msg(self, val):
         """Informs the user that val should be a dict."""
 
         return (
@@ -47,18 +146,18 @@ class DatasetMixin(DatasetMixin_):
             step = i.step or 1
             for idx, d in zip(range(start, stop, step), ret_dict):
                 if not isinstance(d, dict):
-                    raise ValueError(self.d_msg(d))
+                    raise ValueError(self._d_msg(d))
                 d["index_"] = idx
 
         elif isinstance(i, list) or isinstance(i, np.ndarray):
             for idx, d in zip(i, ret_dict):
                 if not isinstance(d, dict):
-                    raise ValueError(self.d_msg(d))
+                    raise ValueError(self._d_msg(d))
                 d["index_"] = idx
 
         else:
             if not isinstance(ret_dict, dict):
-                raise ValueError(self.d_msg(ret_dict))
+                raise ValueError(self._d_msg(ret_dict))
 
             ret_dict["index_"] = i
 
@@ -78,7 +177,13 @@ class DatasetMixin(DatasetMixin_):
             return super().__len__()
 
     def get_example(self, *args, **kwargs):
-        """Add default behaviour for datasets defining an attribute
+        """
+        .. note::
+
+            Please the documentation of :class:`DatasetMixin` to not be
+            confused.
+
+        Add default behaviour for datasets defining an attribute
         :attr:`data`, which in turn is a dataset. This happens often when
         stacking several datasets on top of each other.
 
@@ -93,12 +198,16 @@ class DatasetMixin(DatasetMixin_):
     def __mul__(self, val):
         """Returns a ConcatenatedDataset of multiples of itself.
 
-        Args:
-            val (int): How many times do you want this dataset stacked?
+        Parameters
+        ----------
+        val : int
+            How many times do you want this dataset stacked?
 
-        Returns:
-            ConcatenatedDataset: A dataset of ``val``-times the length as
-                ``self``.
+        Returns
+        -------
+        ConcatenatedDataset
+            A dataset of ``val``-times the length as ``self``.
+
         """
 
         assert isinstance(val, int), "Datasets can only be multiplied by ints"
@@ -115,12 +224,15 @@ class DatasetMixin(DatasetMixin_):
     def __add__(self, dset):
         """Concatenates self with the other dataset :attr:`dset`.
 
-        Args:
-            dset (DatasetMixin): Another dataset to be concatenated behind
-                ``self``.
+        Parameters
+        ----------
+        dset : DatasetMixin
+            Another dataset to be concatenated behind ``self``.
 
-        Returns:
-            ConcatenatedDataset: A dataset of form ``[self, dset]``.
+        Returns
+        -------
+        ConcatenatedDataset
+            A dataset of form ``[self, dset]``.
         """
 
         assert isinstance(dset, DatasetMixin), "Can only add DatasetMixins"
@@ -160,13 +272,18 @@ def pickle_and_queue(
 ):
     """Parallelizable function to retrieve and queue examples from a Dataset.
 
-    Args:
-        dataset_factory (() -> chainer.DatasetMixin): A dataset factory, with
-            methods described in :class:`CachedDataset`.
-        indeces (list): List of indeces, used to retrieve samples from dataset.
-        queue (mp.Queue): Queue to put the samples in.
-        naming_template (str): Formatable string, which defines the name of
-            the stored file given its index.
+    Parameters
+    ----------
+    dataset_factory : chainer.DatasetMixin
+        A dataset factory, with methods described in :class:`CachedDataset`.
+    indeces : list
+        List of indeces, used to retrieve samples from dataset.
+    queue : mp.Queue
+        Queue to put the samples in.
+    naming_template : str
+        Formatable string, which defines the name of the stored file given
+        its index.
+
     """
     pbar = tqdm()
     dataset = dataset_factory()
@@ -277,29 +394,42 @@ class CachedDataset(DatasetMixin):
 
     _legacy = True
 
-    def __init__(self, dataset, force_cache=False, keep_existing=True, _legacy=True):
+    def __init__(
+        self,
+        dataset,
+        force_cache=False,
+        keep_existing=True,
+        _legacy=True,
+        chunk_size=64,
+    ):
         """Given a dataset class, stores all examples in the dataset, if this
         has not yet happened.
 
-        Args:
-            dataset (object): Dataset class which defines the following
-                methods:
-                    - `root`: returns the path to the raw data
-                    - `name`: returns the name of the dataset -> best be unique
-                    - `__len__`: number of examples in the dataset
-                    - `__getitem__`: returns a sindle datum
-                    - `in_memory_keys`: returns all keys, that are stored
-                        alongside the dataset, in a `labels.p` file. This
-                        allows to retrive labels more quickly and can be used
-                        to filter the data more easily.
-            force_cache (bool): If True the dataset is cached even if an
-                existing, cached version is overwritten.
-            keep_existing (bool): If True, existing entries in cache will
-                not be recomputed and only non existing examples are
-                appended to the cache. Useful if caching was interrupted.
-            _legacy (bool): Read from the cached Zip file. Deprecated mode.
-                Future Datasets should not write into zips as read times are
-                very long.
+        Parameters
+        ----------
+        dataset : object
+            Dataset class which defines the following methods: \n
+            - `root`: returns the path to the raw data \n
+            - `name`: returns the name of the dataset -> best be unique \n
+            - `__len__`: number of examples in the dataset \n
+            - `__getitem__`: returns a sindle datum \n
+            - `in_memory_keys`: returns all keys, that are stored \n
+            alongside the dataset, in a `labels.p` file. This
+            allows to retrive labels more quickly and can be used
+            to filter the data more easily.
+        force_cache : bool
+            If True the dataset is cached even if an existing, cached version
+            is overwritten.
+        keep_existing : bool
+            If True, existing entries in cache will not be recomputed and only
+            non existing examples are appended to the cache. Useful if caching
+            was interrupted.
+        _legacy : bool
+            Read from the cached Zip file. Deprecated mode.
+            Future Datasets should not write into zips as read times are
+            very long.
+        chunksize : int
+            Length of the index list that is sent to the worker.
         """
 
         self.force_cache = force_cache
@@ -309,6 +439,7 @@ class CachedDataset(DatasetMixin):
         self.base_dataset = dataset
         self._root = root = dataset.root
         name = dataset.name
+        self.chunk_size = chunk_size
 
         self.store_dir = os.path.join(root, "cached")
         self.store_path = os.path.join(self.store_dir, name)
@@ -376,9 +507,9 @@ class CachedDataset(DatasetMixin):
                 print("Keeping {} cached examples.".format(N_examples - len(indeces)))
                 N_examples = len(indeces)
             print("Caching {} examples.".format(N_examples))
-            chunk_size = 64
             index_chunks = [
-                indeces[i : i + chunk_size] for i in range(0, len(indeces), chunk_size)
+                indeces[i : i + self.chunk_size]
+                for i in range(0, len(indeces), self.chunk_size)
             ]
             for chunk in index_chunks:
                 inqueue.put(chunk)
@@ -684,16 +815,16 @@ class ConcatenatedDataset(DatasetMixin):
 class ExampleConcatenatedDataset(DatasetMixin):
     """Concatenates a list of datasets along the example axis.
     .. Warning:: Docu is wrong!
-    E.g.:
-        dset1 = [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}, ...]
-        dset2 = [{'a': 6, 'b': 7}, {'a': 8, 'b': 9}, ...]
+    E.g.: \n
+    \tdset1 = [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}, ...] \n
+    \tdset2 = [{'a': 6, 'b': 7}, {'a': 8, 'b': 9}, ...] \n
 
-        dset_conc = ExampleConcatenatedDataset(dset1, dset2)
-        print(dset_conc[0])
-        # {'a_0': 1, 'a_1': 6,
-        #  'b_0': 2, 'b_1': 7,
-        #  'a': ['a_0', 'a_1'],
-        #  'b': ['b_0', 'b_1']}
+    \tdset_conc = ExampleConcatenatedDataset(dset1, dset2) \n
+    \tprint(dset_conc[0]) \n
+    \t# {'a_0': 1, 'a_1': 6, \n
+    \t#  'b_0': 2, 'b_1': 7, \n
+    \t#  'a': ['a_0', 'a_1'], \n
+    \t#  'b': ['b_0', 'b_1']} \n
 
     The new keys (e.g. `a_0, a_1`) are numbered in the order they are taken
     from datasets. Additionally, the original, shared key is preserved and
@@ -701,9 +832,12 @@ class ExampleConcatenatedDataset(DatasetMixin):
     """
 
     def __init__(self, *datasets):
-        """Args:
-            *datasets (DatasetMixin): All the datasets to concatenate. Each
-                dataset must return a dict as example!
+        """
+        Parameters
+        ----------
+        *datasets : DatasetMixin
+            All the datasets to concatenate. Each dataset must return a dict
+            as example!
         """
         assert np.all(np.equal(len(datasets[0]), [len(d) for d in datasets]))
         self.datasets = datasets
@@ -768,11 +902,15 @@ class SequenceDataset(DatasetMixin):
     """
 
     def __init__(self, dataset, length, step=1):
-        """Args:
-            dataset (DatasetMixin): Dataset from which single frame examles
-                are taken.
-            length (int): Length of the returned sequences in frames.
-            step (int): Step between returned frames. Must be `>= 1`.
+        """
+        Parameters
+        ----------
+        dataset : DatasetMixin
+            Dataset from which single frame examples are taken.
+        length : int
+            Length of the returned sequences in frames.
+        step : int
+            Step between returned frames. Must be `>= 1`.
 
         This dataset will have `len(dataset) - length * step` examples.
         """
@@ -824,7 +962,7 @@ class UnSequenceDataset(DatasetMixin):
     If the original dataset would be represented as a 2d numpy array the
     ``UnSequence`` version of it would be the concatenation of all its rows:
 
-    .. codeblock:: python
+    .. code-block:: python
 
         a = np.arange(12)
         seq_dataset = a.reshape([3, 4])
@@ -875,7 +1013,7 @@ def getSeqDataset(config):
 
     A config passed to edflow would the look like this:
 
-    .. codeblock:: yaml
+    .. code-block:: yaml
 
         dataset: edflow.data.dataset.getSeqDataSet
         model: Some Model
@@ -890,13 +1028,17 @@ def getSeqDataset(config):
     :class:`SequenceDataset` together with ``length`` and ``step`` to
     make the actually used dataset.
 
-    Args:
-        config (dict): An edflow config, with at least the keys
+    Parameters
+    ----------
+    config : dict
+	An edflow config, with at least the keys
             ``seqdataset`` and nested inside it ``dataset``, ``seq_length`` and
             ``seq_step``.
 
-    Returns:
-        :class:`SequenceDataset`: A Sequence Dataset based on the basedataset.
+    Returns
+    -------
+    :class:`SequenceDataset`
+        A Sequence Dataset based on the basedataset.
     """
 
     ks = "seqdataset"
@@ -928,17 +1070,20 @@ def JoinedDataset(dataset, key, n_joins):
 
 def getDebugDataset(config):
     """Loads a dataset from the config and makes ist reasonably small.
-    The config syntax works as in :function:`getSeqDataset`. See there for
+    The config syntax works as in :func:`getSeqDataset`. See there for
     more extensive documentation.
 
-    Args:
-        config (dict): An edflow config, with at least the keys
+    Parameters
+    ----------
+    config : dict
+	An edflow config, with at least the keys
             ``debugdataset`` and nested inside it ``dataset``,
             ``debug_length``, defining the basedataset and its size.
 
-    Returns:
-        :class:`SubDataset`: A dataset based on the basedataset of the specifed
-            length.
+    Returns
+    -------
+    :class:`SubDataset`:
+        A dataset based on the basedataset of the specifed length.
     """
 
     ks = "debugdataset"
@@ -954,10 +1099,15 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
     """
 
     def __init__(self, dataset, key, n_joins):
-        """Args:
-            dataset: Dataset to join in.
-            key: Key to join on. Must be in dataset labels.
-            n_joins: Number of examples to join.
+        """
+    Parameters
+    ----------
+    dataset
+	Dataset to join in.
+    key
+	Key to join on. Must be in dataset labels.
+    n_joins
+	Number of examples to join.
         """
         self.dataset = dataset
         self.key = key
@@ -1023,20 +1173,26 @@ class DataFolder(DatasetMixin):
         legacy=True,
         show_bar=False,
     ):
-        """Args:
-            image_root (str): Root containing the files of interest.
-            read_fn (Callable): Given the path to a file, returns the datum as
-                a dict.
-            label_fn (Callable): Given the path to a file, returns a dict of
-                labels. If ``label_fn`` returns ``None``, this file is ignored.
-            sort_keys (list): A hierarchy of keys by which the data in this
-                Dataset are sorted.
-            in_memory_keys (list): keys which will be collected from examples
-                when the dataset is cached.
-            legacy (bool): Use the old read ethod, where only the path to the
-                current file is passed to the reader. The new version will
-                see all labels, that have been previously collected.
-            show_bar (bool): Show a loading bar when loading labels.
+        """
+        Parameters
+        ----------
+        image_root : str
+            Root containing the files of interest.
+        read_fn : Callable
+            Given the path to a file, returns the datum as a dict.
+        label_fn : Callable
+            Given the path to a file, returns a dict of
+            labels. If ``label_fn`` returns ``None``, this file is ignored.
+        sort_keys : list
+            A hierarchy of keys by which the data in this Dataset are sorted.
+        in_memory_keys : list
+            keys which will be collected from examples when the dataset is cached.
+        legacy : bool
+            Use the old read ethod, where only the path to the
+            current file is passed to the reader. The new version will
+            see all labels, that have been previously collected.
+        show_bar : bool
+            Show a loading bar when loading labels.
         """
 
         self.root = image_root
@@ -1112,12 +1268,15 @@ class CsvDataset(DatasetMixin):
     """
 
     def __init__(self, csv_root, **pandas_kwargs):
-        """Args:
-            csv_root (str): Path/to/the/csv containing all datapoints. The
-                first line in the file should contain the names for the
-                attributes in the corresponding columns.
-                pandas_kwargs (kwargs): Passed to :function:`pandas.read_csv`
-                    when loading the csv file.
+        """
+        Parameters
+        ----------
+        csv_root : str
+            Path/to/the/csv containing all datapoints. The
+            first line in the file should contain the names for the
+            attributes in the corresponding columns.
+        pandas_kwargs : kwargs
+            Passed to :func:`pandas.read_csv` when loading the csv file.
         """
 
         self.root = csv_root
