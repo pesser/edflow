@@ -138,6 +138,46 @@ class DatasetMixin(DatasetMixin_):
     increase performance and decrease storage size, e.g. when storing scalar
     values. If you need these values to be returned by the :func:`get_example`
     method, simply activate this behaviour by setting the attribute
+    :attr:`append_labels` to ``True``.
+
+    .. code-block:: python
+
+        SomeDerivedDataset(DatasetMixin):
+            def __init__(self):
+                self.labels = {'a': [1, 2, 3]}
+                self.append_labels = True
+
+            def get_example(self, idx):
+                return {'a' : idx**2, 'b': idx}
+
+            def __len__(self):
+                return 3
+
+        S = SomeDerivedDataset()
+        a = S[2]
+        print(a)  # {'a': 3, 'b': 2}
+
+        S.append_labels = False
+        a = S[2]
+        print(a)  # {'a': 4, 'b': 2}
+
+    Labels are appended to your example, after all code is executed from your
+    :attr:`get_example` method. Thus, if there are keys in your labels, which
+    can also be found in the examples, the label entries will override the
+    values in you example, as can be seen in the example above.
+    """
+
+    def _d_msg(self, val):
+        """Informs the user that val should be a dict."""
+
+        return (
+            "The edflow version of DatasetMixin requires the "
+            "`get_example` method to return a `dict`. Yours returned a "
+            "{}".format(type(val))
+        )
+
+    def __getitem__(self, i):
+        ret_dict = super().__getitem__(i)
 
         if isinstance(i, slice):
             start = i.start or 0
