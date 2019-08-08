@@ -28,3 +28,8 @@ def test_tf_batch_to_canvas():
     x = tf.convert_to_tensor(x)
     canvas = batches.tf_batch_to_canvas(x)
     assert canvas.shape == (1, 300, 300, 1)
+
+    x = np.ones((9, 100, 100, 1, 1))
+    x = tf.convert_to_tensor(x)
+    with pytest.raises(ValueError, match="input tensor has more than 4 dimensions."):
+        canvas = batches.tf_batch_to_canvas(x)
