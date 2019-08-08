@@ -1,15 +1,15 @@
 """To produce consistent results we adopt the following pipeline:
 
-Step 1: Evaluate model on a test dataset and write out all data of interest:
+**Step 1:** Evaluate model on a test dataset and write out all data of interest:
     - generated image
     - latent representations
 
-Step 2: Load the generated data in a Datafolder using the EvalDataset
+**Step 2:** Load the generated data in a Datafolder using the EvalDataset
 
-Step 3: Pass both the test Dataset and the Datafolder to the evaluation scripts
+**Step 3:** Pass both the test Dataset and the Datafolder to the evaluation scripts
 
 Sometime in the future:
-(Step 4): Generate a report:
+**(Step 4):** Generate a report:
     - latex tables
     - paths to videos
     - plots
@@ -19,6 +19,9 @@ Sometime in the future:
 The pipeline is easily setup: In you Iterator (Trainer or Evaluator) add
 the EvalHook and as many callbacks as you like. You can also pass no callback
 at all.
+
+.. warning::
+    To use the output with ``edeval`` you must set ``meta=config``.
 
 .. codeblock:: python
     from edflow.eval.pipeline import EvalHook
@@ -32,7 +35,7 @@ at all.
 
             self.hooks += [EvalHook(self.dataset,
                                     callbacks=[my_callback],
-                                    meta=config,
+                                    meta=config,  # Must be specified for edeval
                                     step_getter=self.get_global_step)]
 
         def eval_op(self, inputs):
@@ -71,6 +74,20 @@ to the model outputs csv and the callbacks you want to run.
 
 .. codeblock:: bash
     edeval -c path/to/model_outputs.csv -cb callback1 callback2
+
+If at some point you need to specify new parameters in your config or change
+existing ones, you can do so exactly like you would when running the ``edflow``
+command. Simply pass the parameters you want to add/change via the commandline
+like this:
+
+.. codeblock:: bash
+    edeval -c path/to/model_outputs.csv -cb callback1 --key1 val1 --key/path/2 val2
+
+.. warning::
+    Changing config parameters from the commandline adds some dangers to the
+    eval worklow: E.g. you can change parameters which determine the
+    construction of the generating dataset, which potentially breaks the
+    mapping between inputs and outputs.
 """
 
 import os
@@ -105,8 +122,12 @@ class EvalHook(Hook):
         step_getter=None,
     ):
         """
+        .. warning::
+            To work with ``edeval`` you **must** specify ``meta=config`` when
+            instantiating the EvalHook.
+
         Parameters
-        ==========
+        ----------
             dataset : DatasetMixin
                 The Dataset used for creating the new data.
             sub_dir_keys : list(str)
@@ -253,9 +274,10 @@ class EvalDataFolder(DatasetMixin):
             csv_data = CsvDataset(csv_path, comment="#")
             self.data = ProcessedDataset(csv_data, er)
         except pd.errors.EmptyDataError as e:
-            print(e)
             exemplar_labels = self.labels[sorted(self.labels.keys())[0]]
             self.data = EmptyDataset(len(exemplar_labels), self.labels)
+
+        self.append_labels = True
 
 
 class EmptyDataset(DatasetMixin):
@@ -589,21 +611,29 @@ def txt_loader(path):
     return data
 
 
-def standalone_eval_csv_file(path_to_csv, callbacks):
+def standalone_eval_csv_file(path_to_csv, callbacks, additional_kwargs={}):
     """Runs all given callbacks on the data in the :class:`EvalDataFolder`
     constructed from the given csv.abs
 
-    Arguments:
-        path_to_csv (str): Path to the csv file.
-        callbacks (list(str or Callable)): Import commands used to construct
-        the functions applied to the Data extracted from :attr:`path_to_csv`.
+    Parameters:
+    -----------
+        path_to_csv : str
+            Path to the csv file.
+        callbacks : list(str or Callable)
+            Import commands used to construct the functions applied to the Data
+            extracted from :attr:`path_to_csv`.
+        additional_kwargs : dict
+            Keypath-value pairs added to the config, which is extracted from
+            the ``model_outputs.csv``.
 
     Returns:
+    --------
         The collected outputs of the callbacks.
     """
 
     import importlib
     from edflow.main import get_implementations_from_config
+    from edflow.config import update_config
 
     import sys
 
@@ -612,6 +642,7 @@ def standalone_eval_csv_file(path_to_csv, callbacks):
     out_data = EvalDataFolder(path_to_csv)
 
     config = read_meta_data(path_to_csv)
+    update_config(config, additional_kwargs)
 
     dataset_str = config["dataset"]
     impl = get_implementations_from_config(config, ["dataset"])

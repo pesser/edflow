@@ -2,6 +2,7 @@
 
 import argparse
 from edflow.eval.pipeline import standalone_eval_csv_file
+from edflow.config import parse_unknown_args
 
 A = argparse.ArgumentParser(
     description="""
@@ -35,6 +36,7 @@ A.add_argument(
     "standalone evaluation.",
 )
 
-args = A.parse_args()
+args, unknown = A.parse_known_args()
+additional_kwargs = parse_unknown_args(unknown)
 
-standalone_eval_csv_file(args.csv, args.callback)
+standalone_eval_csv_file(args.csv, args.callback, additional_kwargs)
