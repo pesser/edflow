@@ -6,23 +6,21 @@ import math
 
 
 def tf_batch_to_canvas(X, cols: int = None):
-    """
-    reshape a batch of images into a grid canvas to form a single image.
+    """reshape a batch of images into a grid canvas to form a single image.
 
     Parameters
     ----------
-    X: Tensor
+    X : Tensor
         Batch of images to format. [N, H, W, C]-shaped
-    cols: int
-        how many columns the grid should have. If None, a square grid will be created.
+    cols : int
+
+    cols: int :
+         (Default value = None)
+
     Returns
     -------
-    image_grid: Tensor
+    image_grid : Tensor
         Tensor representing the image grid. [1, HH, WW, C]-shaped
-
-    Raises
-    ------
-        ValueError: The input tensor must be 4 dimensional
 
     Examples
     --------
@@ -57,21 +55,35 @@ def tf_batch_to_canvas(X, cols: int = None):
 # shamelessly copied from https://github.com/tensorflow/tensorflow/blob/r1.14/tensorflow/contrib/gan/python/eval/python/eval_utils_impl.py#L34-L80
 def image_grid(input_tensor, grid_shape, image_shape=(32, 32), num_channels=3):
     """Arrange a minibatch of images into a grid to form a single image.
-    Args:
-      input_tensor: Tensor. Minibatch of images to format, either 4D
-          ([batch size, height, width, num_channels]) or flattened
-          ([batch size, height * width * num_channels]).
-      grid_shape: Sequence of int. The shape of the image grid,
-          formatted as [grid_height, grid_width].
-      image_shape: Sequence of int. The shape of a single image,
-          formatted as [image_height, image_width].
-      num_channels: int. The number of channels in an image.
-    Returns:
-      Tensor representing a single image in which the input images have been
-      arranged into a grid.
-    Raises:
-      ValueError: The grid shape and minibatch size don't match, or the image
-          shape and number of channels are incompatible with the input tensor.
+
+    Parameters
+    ----------
+    input_tensor :
+        Tensor. Minibatch of images to format, either 4D
+        ([batch size, height, width, num_channels]) or flattened
+        ([batch size, height * width * num_channels]).
+    grid_shape :
+        Sequence of int. The shape of the image grid,
+        formatted as [grid_height, grid_width].
+    image_shape :
+        Sequence of int. The shape of a single image,
+        formatted as [image_height, image_width]. (Default value = (32)
+    32) :
+
+    num_channels :
+         (Default value = 3)
+
+    Returns
+    -------
+
+        Tensor representing a single image in which the input images have been
+
+    Raises
+    ------
+    ValueError
+        The grid shape and minibatch size don't match, or the image
+        shape and number of channels are incompatible with the input tensor.
+
     """
     if grid_shape[0] * grid_shape[1] != int(input_tensor.shape[0]):
         raise ValueError(
