@@ -33,7 +33,7 @@ class Dataset(DatasetMixin, PRNGMixin):
         inputs = self.inputs[idx]
         labels = self.labels[idx]
 
-        example = {"inputs" : inputs, "labels" : labels}
+        example = {"inputs": inputs, "labels": labels}
         return example
 
     def __len__(self):

@@ -6,7 +6,7 @@ import yaml
 from edflow import edsetup_files
 
 
-def create_edflow_project(project_name, replace: bool=False, **kwargs):
+def create_edflow_project(project_name, replace: bool = False, **kwargs):
     """
     Creates a fresh new project directory with all the needed skeletons which are edflow compatible.
 
@@ -19,12 +19,16 @@ def create_edflow_project(project_name, replace: bool=False, **kwargs):
 
     """
     if os.path.exists(project_name) and not replace:
-        raise IsADirectoryError(f"Directory: {project_name} already exists. Provide a different name for the project "
-                                "OR set replace to True")
+        raise IsADirectoryError(
+            f"Directory: {project_name} already exists. Provide a different name for the project "
+            "OR set replace to True"
+        )
     os.mkdir(project_name)
     parent_source = edsetup_files.__file__.replace("__init__.py", "")
 
-    destination_config = os.path.join(project_name, kwargs.get("config_path", "config.yaml"))
+    destination_config = os.path.join(
+        project_name, kwargs.get("config_path", "config.yaml")
+    )
     source_config = os.path.join(parent_source, "config.yaml")
 
     with open(source_config, "r+") as source_config_file:
@@ -41,21 +45,35 @@ def create_edflow_project(project_name, replace: bool=False, **kwargs):
 
         destination_training_files.append(destination_path)
 
-    training_files_to_module = [parameter.replace("/", ".").replace("py", "") for parameter in destination_training_files]
-    training_classes = [file_name.replace(project_name, "").strip(".").capitalize() for file_name in training_files_to_module]
+    training_files_to_module = [
+        parameter.replace("/", ".").replace("py", "")
+        for parameter in destination_training_files
+    ]
+    training_classes = [
+        file_name.replace(project_name, "").strip(".").capitalize()
+        for file_name in training_files_to_module
+    ]
 
-    full_address_to_class = [file + class_name for file, class_name in zip(training_files_to_module, training_classes)]
-    training_parameters_dict = dict(zip(["model", "dataset", "iterator"], full_address_to_class))
+    full_address_to_class = [
+        file + class_name
+        for file, class_name in zip(training_files_to_module, training_classes)
+    ]
+    training_parameters_dict = dict(
+        zip(["model", "dataset", "iterator"], full_address_to_class)
+    )
     source_config_dict.update(training_parameters_dict)
 
     with open(destination_config, "w+") as new_config_file:
         yaml.dump(source_config_dict, new_config_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", metavar="project_name", type=str, default="edflow_project")
+    parser.add_argument(
+        "-n", metavar="project_name", type=str, default="edflow_project"
+    )
     args = parser.parse_args()
 
     project_name = args.n

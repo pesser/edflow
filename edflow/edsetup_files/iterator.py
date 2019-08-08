@@ -5,6 +5,7 @@ class Iterator(TemplateIterator):
     """
     Clean iterator skeleton for initialization.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -56,10 +57,7 @@ class Iterator(TemplateIterator):
             -------
             A dictionary whose values are to be logged.
             """
-            return {
-                "inputs": inputs,
-                "labels": labels,
-            }
+            return {"inputs": inputs, "labels": labels}
 
         def eval_op():
             """
@@ -68,8 +66,6 @@ class Iterator(TemplateIterator):
             -------
             A dictionary with values to be evaluated.
             """
-            return {
-                "outputs": outputs,
-            }
+            return {"outputs": outputs}
 
         return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
