@@ -1,0 +1,7 @@
+dataset: edflow.datasets.fashionmnist.FashionMNIST
+model: template_tfe.edflow.Model
+iterator: template_tfe.edflow.Iterator
+batch_size: 4
+num_epochs: 2
+
+n_classes: 10
