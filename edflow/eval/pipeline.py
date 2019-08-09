@@ -667,9 +667,7 @@ def load_by_heuristic(path):
         return txt_loader(path)
     else:
 
-        raise ValueError(
-            "Cannot load file with extension `{}` at {}".format(ext, path)
-        )
+        raise ValueError("Cannot load file with extension `{}` at {}".format(ext, path))
 
 
 def decompose_name(name):
