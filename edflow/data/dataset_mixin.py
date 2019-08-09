@@ -1,4 +1,5 @@
 from chainer.dataset import DatasetMixin as DatasetMixin_
+import numpy as np
 
 
 class DatasetMixin(DatasetMixin_):
@@ -275,3 +276,93 @@ class DatasetMixin(DatasetMixin_):
     @append_labels.setter
     def append_labels(self, value):
         self._append_labels = value
+
+
+# We need this here to avoid circular imports
+class ConcatenatedDataset(DatasetMixin):
+    """A dataset which concatenates given datasets."""
+
+    def __init__(self, *datasets, balanced=False):
+        """
+        Parameters
+        ----------
+        *datasets : DatasetMixin
+            All datasets we want to concatenate
+        balanced : bool
+            If ``True`` all datasets are padded to the length of the longest
+            dataset. Padding is done in a cycled fashion.
+        """
+        self.datasets = list(datasets)
+        self.lengths = [len(d) for d in self.datasets]
+        self.boundaries = np.cumsum(self.lengths)
+        self.balanced = balanced
+        if self.balanced:
+            max_length = np.max(self.lengths)
+            for data_idx in range(len(self.datasets)):
+                data_length = len(self.datasets[data_idx])
+                if data_length != max_length:
+                    cycle_indices = [i % data_length for i in range(max_length)]
+                    self.datasets[data_idx] = SubDataset(
+                        self.datasets[data_idx], cycle_indices
+                    )
+        self.lengths = [len(d) for d in self.datasets]
+        self.boundaries = np.cumsum(self.lengths)
+
+    def get_example(self, i):
+        """Get example and add dataset index to it."""
+        did = np.where(i < self.boundaries)[0][0]
+        if did > 0:
+            local_i = i - self.boundaries[did - 1]
+        else:
+            local_i = i
+        example = self.datasets[did][local_i]
+        example["dataset_index_"] = did
+        return example
+
+    def __len__(self):
+        return sum(self.lengths)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        if not hasattr(self, "_labels"):
+            labels = dict(self.datasets[0].labels)
+            for i in range(1, len(self.datasets)):
+                new_labels = self.datasets[i].labels
+                for k in labels:
+                    labels[k] = labels[k] + new_labels[k]
+            self._labels = labels
+        return self._labels
+
+
+# Need this here to avoid circular imports
+class SubDataset(DatasetMixin):
+    """A subset of a given dataset."""
+
+    def __init__(self, data, subindices):
+        self.data = data
+        self.subindices = subindices
+        try:
+            len(self.subindices)
+        except TypeError:
+            print("Expected a list of subindices.")
+            raise
+
+    def get_example(self, i):
+        """Get example and process. Wrapped to make sure stacktrace is
+        printed in case something goes wrong and we are in a
+        MultiprocessIterator."""
+        return self.data[self.subindices[i]]
+
+    def __len__(self):
+        return len(self.subindices)
+
+    @property
+    def labels(self):
+        # relay if data is cached
+        if not hasattr(self, "_labels"):
+            self._labels = dict()
+            labels = self.data.labels
+            for k in labels:
+                self._labels[k] = [labels[k][i] for i in self.subindices]
+        return self._labels

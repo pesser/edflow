@@ -1,5 +1,6 @@
 from edflow.data.dataset import DatasetMixin
 import pandas as pd
+import numpy as np
 
 
 class CsvDataset(DatasetMixin):

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="edflow",
-    version="0.2",
+    version="0.2.1",
     description="Logistics for Deep Learning",
     url="https://github.com/pesser/edflow",
     author="Mimo Tilbich et al.",

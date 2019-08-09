@@ -1,4 +1,6 @@
 from edflow.data.dataset_mixin import DatasetMixin
+from edflow.data.agnostics.subdataset import SubDataset
+from edflow.data.agnostics.concatenated import ExampleConcatenatedDataset
 import numpy as np
 
 
@@ -18,7 +20,7 @@ class SequenceDataset(DatasetMixin):
     the example from the sequentialized dataset.
     """
 
-    def __init__(self, dataset, length, step=1, fid_key='fid'):
+    def __init__(self, dataset, length, step=1, fid_key="fid"):
         """
         Parameters
         ----------
