@@ -63,12 +63,12 @@ class FashionMNIST(edu.DatasetMixin):
         self.logger.info("Using split: {}".format(split))
         if split == "test":
             self._images = self._data[self.FILES["TEST_DATA"]]
-            self._labels = self._data[self.FILES["TEST_LABELS"]]
+            self._data_labels = self._data[self.FILES["TEST_LABELS"]]
         else:
             self._images = self._data[self.FILES["TRAIN_DATA"]]
-            self._labels = self._data[self.FILES["TRAIN_LABELS"]]
-        self.labels = {"class": self._labels, "image": self._images}
-        self._length = self._labels.shape[0]
+            self._data_labels = self._data[self.FILES["TRAIN_LABELS"]]
+        self.labels = {"class": self._data_labels, "image": self._images}
+        self._length = self._data_labels.shape[0]
 
     def _load_example(self, i):
         example = dict()
