@@ -1,8 +1,0 @@
-dataset: edsetup.dataset.Dataset
-iterator: edsetup.iterator.Iterator
-model: edsetup.model.Model
-
-
-# Data
-feature_dimension: 10
-num_example: 1000
