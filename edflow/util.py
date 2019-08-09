@@ -166,9 +166,11 @@ def retrieve(
         for key in keys:
             if callable(list_or_dict):
                 if not expand:
-                    raise KeyNotFoundError(ValueError(
-                        "Trying to get past callable node with expand=False."
-                        ))
+                    raise KeyNotFoundError(
+                        ValueError(
+                            "Trying to get past callable node with expand=False."
+                        )
+                    )
                 list_or_dict = list_or_dict()
                 parent[last_key] = list_or_dict
             last_key = key

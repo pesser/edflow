@@ -1,0 +1,33 @@
+Metadata-Version: 2.1
+Name: edflow
+Version: 0.2
+Summary: Logistics for Deep Learning
+Home-page: https://github.com/pesser/edflow
+Author: Mimo Tilbich et al.
+Author-email: patrick.esser@iwr.uni-heidelberg.de, johannes.haux@iwr.uni-heidelberg.de
+License: MIT
+Platform: UNKNOWN
+Requires-Dist: pyyaml
+Requires-Dist: opencv-python
+Requires-Dist: tqdm
+Requires-Dist: Pillow
+Requires-Dist: chainer
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: h5py
+Requires-Dist: scikit-learn
+Requires-Dist: scikit-image
+Requires-Dist: natsort
+Requires-Dist: pandas
+Requires-Dist: psutil
+Requires-Dist: pytest
+Requires-Dist: deprecated
+Requires-Dist: fastnumbers
+Provides-Extra: docs
+Requires-Dist: sphinx (>=1.4) ; extra == 'docs'
+Requires-Dist: sphinx-rtd-theme ; extra == 'docs'
+Requires-Dist: numpy ; extra == 'docs'
+
+UNKNOWN
+
+
