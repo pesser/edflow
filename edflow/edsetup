@@ -3,7 +3,7 @@
 import os
 import shutil
 import yaml
-from edflow import edsetup_files
+import edflow
 
 
 def create_edflow_project(project_name, replace: bool = False, **kwargs):
@@ -24,7 +24,9 @@ def create_edflow_project(project_name, replace: bool = False, **kwargs):
             "OR set replace to True"
         )
     os.mkdir(project_name)
-    parent_source = edsetup_files.__file__.replace("__init__.py", "")
+    parent_source = os.path.join(
+        edflow.__file__.replace("__init__.py", ""), "edsetup_files"
+    )
 
     destination_config = os.path.join(
         project_name, kwargs.get("config_path", "config.yaml")
