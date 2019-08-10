@@ -8,7 +8,8 @@ setup(
     author="Mimo Tilbich et al.",
     author_email="patrick.esser@iwr.uni-heidelberg.de, johannes.haux@iwr.uni-heidelberg.de",
     license="MIT",
-    packages=find_packages(),
+    packages=find_packages("edsetup"),
+    package_data={"edsetup": ["*.yaml", "*.py"]},
     install_requires=[
         "pyyaml",
         "opencv-python",
