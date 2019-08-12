@@ -9,6 +9,7 @@ setup(
     author_email="patrick.esser@iwr.uni-heidelberg.de, johannes.haux@iwr.uni-heidelberg.de",
     license="MIT",
     packages=find_packages(),
+    package_data={"": ["*.yaml"]},
     install_requires=[
         "pyyaml",
         "opencv-python",
@@ -29,5 +30,11 @@ setup(
     ],
     extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "numpy"]},
     zip_safe=False,
-    scripts=["edflow/edflow", "edflow/edcache", "edflow/edlist", "edflow/edeval"],
+    scripts=[
+        "edflow/edflow",
+        "edflow/edcache",
+        "edflow/edlist",
+        "edflow/edeval",
+        "edflow/edsetup",
+    ],
 )
