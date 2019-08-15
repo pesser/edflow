@@ -305,7 +305,8 @@ def pop_from_nested_structure(
 def key_not_found_handling(current_item, default, e, keys, success, visited):
     if default is None:
         print("Key not found: {}, seen: {}".format(keys, visited))
-        raise e.cause
+        # raise e.cause
+        raise KeyNotFoundError(e)
     else:
         current_item = default
         success = False

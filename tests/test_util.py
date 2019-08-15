@@ -1,8 +1,15 @@
 import pytest
 import copy
-from edflow.util import set_value, retrieve, walk, set_default, contains_key
+from edflow.util import (
+    set_value,
+    retrieve,
+    walk,
+    set_default,
+    contains_key,
+    KeyNotFoundError,
+)
 from edflow import util
-
+from itertools import product
 
 # ================= set_value ====================
 
@@ -15,23 +22,97 @@ def test_pop_value_from_key():
     assert expected_value == popped_value
 
 
-def test_pop_from_nested_structure():
-    collection = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
-    key = "a"
-    expected_value = [1, 2]
-    expected_collection = copy.deepcopy(collection)
-    expected_collection.pop("a", None)
-    popped_value = util.pop_from_nested_structure(collection, key)
-    assert expected_value == popped_value
-    assert set(collection.keys()).difference(expected_collection.keys()) == set([])
+def pytest_generate_tests(metafunc):
+    # called once per each test class
+    # http://doc.pytest.org/en/latest/example/parametrize.html
+    if metafunc.cls is not None:
+        funcarglist = metafunc.cls.params[metafunc.function.__name__]
+        argnames = metafunc.cls.argnames
+        metafunc.parametrize(argnames, funcarglist)
 
+
+def make_collection():
     collection = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
-    key = "b/c/d"
-    expected_collection = copy.deepcopy(collection)
-    expected_value = expected_collection["b"]["c"].pop("d", None)
-    popped_value = util.pop_from_nested_structure(collection, key)
-    assert expected_value == popped_value
-    assert set(collection.keys()).difference(expected_collection.keys()) == set([])
+    return collection
+
+
+class Test_pop_from_nested_structure:
+    argnames = ("collection", "key", "expected_value")
+    params = {
+        "test_pop_from_nested_structure": [
+            (make_collection(), "a", [1, 2]),
+            (make_collection(), "b/c/d", 1),
+            (make_collection(), "a/0", 1),
+        ],
+        "test_default": [
+            (make_collection(), "f", "abc"),
+            (make_collection(), "a/4", "abc"),
+            (make_collection(), "b/c/e", "abc"),
+        ],
+        "test_raise_keyNotFoundError": [
+            (make_collection(), "f", None),
+            (make_collection(), "a/4", None),
+            (make_collection(), "b/c/e", None),
+        ],
+        "test_pass_success": [
+            (make_collection(), "f", ("abc", False)),
+            (make_collection(), "a/4", ("abc", False)),
+            (make_collection(), "b/c/e", ("abc", False)),
+            (make_collection(), "a", ([1, 2], True)),
+            (make_collection(), "a/0", (1, True)),
+            (make_collection(), "b/c/d", (1, True)),
+        ],
+        "test_raise_keyNotFoundError_pass_success": [
+            (make_collection(), "f", None),
+            (make_collection(), "a/4", None),
+            (make_collection(), "b/c/e", None),
+        ],
+        "test_pass_sucess_default": [
+            (make_collection(), "a", ([1, 2], True)),
+            (make_collection(), "a/0", (1, True)),
+            (make_collection(), "b/c/d", (1, True)),
+        ],
+    }
+
+    def test_pop_from_nested_structure(self, collection, key, expected_value):
+        popped_value = util.pop_from_nested_structure(collection, key)
+        assert expected_value == popped_value
+
+    def test_default(self, collection, key, expected_value):
+        popped_value = util.pop_from_nested_structure(collection, key, default="abc")
+        assert expected_value == popped_value
+
+    def test_raise_keyNotFoundError(self, collection, key, expected_value):
+        with pytest.raises(KeyNotFoundError) as exc_info:
+            util.pop_from_nested_structure(collection, key)
+
+    def test_pass_success(self, collection, key, expected_value):
+        popped_value = util.pop_from_nested_structure(
+            collection, key, default="abc", pass_success=True
+        )
+        assert expected_value == popped_value
+
+    def test_raise_keyNotFoundError_pass_success(self, collection, key, expected_value):
+        with pytest.raises(KeyNotFoundError) as exc_info:
+            util.pop_from_nested_structure(collection, key, pass_success=True)
+
+    def test_pass_sucess_default(self, collection, key, expected_value):
+        popped_value = util.pop_from_nested_structure(
+            collection, key, default="abc", pass_success=True
+        )
+        assert expected_value == popped_value
+
+
+def test_keyNotFoundError():
+    with pytest.raises(KeyNotFoundError) as exc_info:
+        raise KeyNotFoundError("test")
+
+    with pytest.raises(KeyNotFoundError) as exc_info:
+        try:
+            a = {"a": "b"}
+            a.pop("c")
+        except (KeyError, IndexError) as e:
+            raise KeyNotFoundError(e)
 
 
 def test_set_value_fail():
