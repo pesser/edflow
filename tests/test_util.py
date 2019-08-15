@@ -36,10 +36,10 @@ def make_collection():
     return collection
 
 
-class Test_pop_from_nested_structure:
+class Test_pop_keypath:
     argnames = ("collection", "key", "expected_value")
     params = {
-        "test_pop_from_nested_structure": [
+        "test_pop_keypath": [
             (make_collection(), "a", [1, 2]),
             (make_collection(), "b/c/d", 1),
             (make_collection(), "a/0", 1),
@@ -74,30 +74,30 @@ class Test_pop_from_nested_structure:
         ],
     }
 
-    def test_pop_from_nested_structure(self, collection, key, expected_value):
-        popped_value = util.pop_from_nested_structure(collection, key)
+    def test_pop_keypath(self, collection, key, expected_value):
+        popped_value = util.pop_keypath(collection, key)
         assert expected_value == popped_value
 
     def test_default(self, collection, key, expected_value):
-        popped_value = util.pop_from_nested_structure(collection, key, default="abc")
+        popped_value = util.pop_keypath(collection, key, default="abc")
         assert expected_value == popped_value
 
     def test_raise_keyNotFoundError(self, collection, key, expected_value):
         with pytest.raises(KeyNotFoundError) as exc_info:
-            util.pop_from_nested_structure(collection, key)
+            util.pop_keypath(collection, key)
 
     def test_pass_success(self, collection, key, expected_value):
-        popped_value = util.pop_from_nested_structure(
+        popped_value = util.pop_keypath(
             collection, key, default="abc", pass_success=True
         )
         assert expected_value == popped_value
 
     def test_raise_keyNotFoundError_pass_success(self, collection, key, expected_value):
         with pytest.raises(KeyNotFoundError) as exc_info:
-            util.pop_from_nested_structure(collection, key, pass_success=True)
+            util.pop_keypath(collection, key, pass_success=True)
 
     def test_pass_sucess_default(self, collection, key, expected_value):
-        popped_value = util.pop_from_nested_structure(
+        popped_value = util.pop_keypath(
             collection, key, default="abc", pass_success=True
         )
         assert expected_value == popped_value

@@ -78,7 +78,7 @@ class Iterator(TemplateIterator):
             }
 
         def eval_op():
-            return {"outputs": np.array(outputs), "loss": np.array(loss)[:, None]}
+            return {"outputs": np.array(outputs), "labels": {"loss": np.array(loss)}}
 
         return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
 
@@ -89,14 +89,16 @@ def acc_callback(root, data_in, data_out, config):
     logger = get_logger("acc_callback")
     correct = 0
     seen = 0
-    loss = 0.0
+    loss1 = np.mean(data_out.labels['loss'])
+    loss2 = 0.0
     for i in trange(len(data_in)):
         labels = data_in[i]["class"]
         outputs = data_out[i]["outputs"]
-        loss = data_out[i]["loss"].squeeze()
+        loss = data_out[i]["loss"]
 
         prediction = np.argmax(outputs, axis=0)
         correct += labels == prediction
-        loss += loss
-    logger.info("Loss: {}".format(loss / len(data_in)))
+        loss2 += loss
+    logger.info("Loss1: {}".format(loss1))
+    logger.info("Loss2: {}".format(loss2 / len(data_in)))
     logger.info("Accuracy: {}".format(correct / len(data_in)))

@@ -106,7 +106,7 @@ import inspect
 import re
 
 from edflow.data.util import adjust_support
-from edflow.util import walk, retrieve
+from edflow.util import walk, retrieve, pop_keypath
 from edflow.data.dataset import DatasetMixin, CsvDataset, ProcessedDataset
 from edflow.project_manager import ProjectManager as P
 from edflow.hooks.hook import Hook
@@ -123,7 +123,7 @@ class EvalHook(Hook):
         self,
         dataset,
         sub_dir_keys=[],
-        label_keys=[],
+        label_key=None,
         callbacks=[],
         meta=None,
         step_getter=None,
@@ -165,7 +165,7 @@ class EvalHook(Hook):
         self.logger.info("{}".format(self.cbacks))
         self.cb_names = [inspect.getmodule(c).__name__ for c in self.cbacks]
         self.sdks = sub_dir_keys
-        self.lks = label_keys
+        self.lk = label_key
         self.data_in = dataset
 
         self.meta = meta
@@ -227,28 +227,33 @@ class EvalHook(Hook):
         -------
 
         """
-        # Attention -> This does not work with nested keys!
-        # Fix it in post :)
-        label_vals = {k: _delget(last_results["step_ops"], k) for k in self.lks}
+
+        if self.lk is not None:
+            label_vals = pop_keypath(last_results,
+                                     self.lk,
+                                     default={})
+        else:
+            label_vals = {}
 
         if self.label_arrs is None:
             self.label_arrs = {}
-            for k in self.lks:
+            for k in label_vals.keys():
                 example = label_vals[k][0]
                 ex_shape = list(np.shape(example))
                 shape = [len(self.data_in)] + ex_shape
                 s = "x".join([str(s) for s in shape])
                 dtype = d = example.dtype
 
+                k_ = k.replace("/", "--")
                 savepath = os.path.join(
-                    self.save_root, "{}-*-{}-*-{}.npy".format(k, s, d)
+                    self.save_root, "{}-*-{}-*-{}.npy".format(k_, s, d)
                 )
                 memmap = np.memmap(savepath, shape=tuple(shape), mode="w+", dtype=dtype)
                 self.label_arrs[k] = memmap
 
         idxs = self.idxs  # indices collected before_step
 
-        for k in self.lks:
+        for k in label_vals.keys():
             # Can the inner loop be made a fancy indexing assign?
             for i, idx in enumerate(idxs):
                 self.label_arrs[k][idx] = label_vals[k][i]
@@ -376,8 +381,6 @@ class EvalDataFolder(DatasetMixin):
             csv_path = root
             root = os.path.dirname(root)
 
-        self.labels = load_labels(os.path.join(root, "model_outputs"))
-
         # Capture the case that only labels have been written out
         try:
             csv_data = CsvDataset(csv_path, comment="#")
@@ -385,6 +388,9 @@ class EvalDataFolder(DatasetMixin):
         except pd.errors.EmptyDataError as e:
             exemplar_labels = self.labels[sorted(self.labels.keys())[0]]
             self.data = EmptyDataset(len(exemplar_labels), self.labels)
+
+        labels = load_labels(os.path.join(root, "model_outputs"))
+        self.data.labels.update(labels)
 
         self.append_labels = True
 
@@ -439,7 +445,7 @@ def load_labels(root):
 
         path = os.path.join(root, f)
 
-        labels[key] = np.memmap(path, mode="r", shape=shape, dtype=dtype)
+        labels[key] = np.memmap(path, mode="c", shape=shape, dtype=dtype)
 
     return labels
 

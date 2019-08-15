@@ -192,6 +192,7 @@ def retrieve(
                     )
                 list_or_dict = list_or_dict()
                 parent[last_key] = list_or_dict
+
             last_key = key
             parent = list_or_dict
 
@@ -211,7 +212,7 @@ def retrieve(
     except KeyNotFoundError as e:
         if default is None:
             print("Key not found: {}, seen: {}".format(keys, visited))
-            raise e.cause
+            raise e
         else:
             list_or_dict = default
             success = False
@@ -222,7 +223,7 @@ def retrieve(
         return list_or_dict, success
 
 
-def pop_from_nested_structure(
+def pop_keypath(
     current_item: Union[callable, list, dict],
     key: str,
     splitval: str = "/",
@@ -230,7 +231,7 @@ def pop_from_nested_structure(
     expand: bool = True,
     pass_success: bool = False,
 ):
-    """Given a nested list or dict structure, pop the the desired value at key expanding
+    """Given a nested list or dict structure, pop the desired value at key expanding
     callable nodes if necessary and :attr:`expand` is ``True``. The expansion
     is done in-place.
 
@@ -279,11 +280,15 @@ def pop_from_nested_structure(
                 else:
                     current_item = current_item()
                     parent[last_key] = current_item
+
             last_key = key
             parent = current_item
 
             try:
-                current_item = pop_value_from_key(parent, key)
+                if isinstance(current_item, dict):
+                    current_item = current_item[key]
+                else:
+                    current_item = current_item[int(key)]
             except (KeyError, IndexError) as e:
                 raise KeyNotFoundError(e)
 
@@ -292,6 +297,12 @@ def pop_from_nested_structure(
         if expand and callable(current_item):
             current_item = current_item()
             parent[last_key] = current_item
+
+        if isinstance(parent, list):
+            parent[int(last_key)] = None
+        else:
+            del parent[last_key]
+
     except KeyNotFoundError as e:
         current_item, success = key_not_found_handling(
             current_item, default, e, keys, success, visited
@@ -367,19 +378,15 @@ def set_default(list_or_dict, key, default, splitval="/"):
 
     Returns
     -------
-        The desired value or if :attr:`default` is not ``None`` and the
-        :attr:`key` is not found returns ``default``.
-
-    Raises
-    ------
-        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
-        ``None``.
+        The retrieved value or if the :attr:`key` is not found returns
+        ``default``.
     """
 
-    ret_val = retrieve(list_or_dict, key, splitval, default)
-
-    if ret_val == default:
-        set_value(list_or_dict, key, ret_val, splitval)
+    try:
+        ret_val = retrieve(list_or_dict, key, splitval, None)
+    except KeyNotFoundError as e:
+        set_value(list_or_dict, key, default, splitval)
+        ret_val = default
 
     return ret_val
 
