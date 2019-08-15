@@ -66,11 +66,3 @@ jobs:
       script:
         - cd examples
         - python -m pytest -k torch
-
-deploy:
-  provider: pypi
-  user: "jhaux"
-  password:
-    secure: "yCTYOAbzCFK6aeKQSn2Q4XW5DN5/Gy0/4NmbFF4y07HcqBw2A7XOF7eQcsgNMSiMLu3IrY8iNuZL1urVn7k/m3V5xdQXcYtNJN1ZDcmKKOZHCp+uZoHTw6VzsNA8LhTXJbE9K1rLlfvzPEzoG/YedXpe7KGN7seMk+/w5dBUqzs30appqX395fQ7yfvsRd7h0B67HhtaGAlmumtqwqwRsMLgjGFxT0nW8lduziDfc0UhtvA3XX+Jbl5R8zXlEYg+44nqr2SyFEQN8am0Ig+mb1qkdoH7/QkB96tXMJkjxdKOmqm31uaHXP7AJ5ptTtHghZteiFxxzhQtVl7FH4GFJSwRhlybYbdSaNiNN8DDyW8cWxibDBnljg434o8jDk0npou5o4bsUQp/BiBELrRkEZiUk/pbph6N/WAIAW7GR3p2r2uxbINjr0iWnY8/VzajTgdGgsONAnnPMXlCYJYcK/cOphZzQu/Gm8lYVPRts9IbRW2kSfiWXCejct74nK7vmyFnN5LNK5C/QFVjBMJCOxmhf0Mv6zpI42o3/Xn7qdPkU6mEjPLVF8NeuYYi8HIb5Gk44zzoblnfPN8QZgjYRwYlMKMhKofzPZ02G2eOv5fO63fKfzFnEQWkndJKuVJ0+nKkRWMvjfcIHS3Upp9iTsXxirUva+Amz/bHbbcSTAI="
-  on:
-    tags: true
