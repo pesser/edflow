@@ -1,2 +1,3 @@
 bash release2pypi.sh
-bash release2conda.sh $(python setup.py --version)
+# This does not yet work anywhere!
+# bash release2conda.sh $(python setup.py --version)

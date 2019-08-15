@@ -22,8 +22,8 @@ sed -i 's/opencv-python/opencv/g' edflow/meta.yaml
 conda-build -c conda-forge --python 3.6 edflow
 conda-build -c conda-forge --python 3.7 edflow
 
-# conda convert -f --platform all /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-0.2-py36h39e3cac_0.tar.bz2 -o outputdir/
-conda convert -f --platform all /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-0.2-py37h39e3cac_0.tar.bz2 -o outputdir/
+conda convert -f --platform all /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-$VERSION-py36h39e3cac_0.tar.bz2 -o outputdir/
+conda convert -f --platform all /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-$VERSION-py37h39e3cac_0.tar.bz2 -o outputdir/
 
 # To upload you need the anaconda client
 # conda install anaconda-client
@@ -35,7 +35,7 @@ for folder in $(ls outputdir); do
         done
 done
 # Need to also upload the not converted files!
-anaconda upload /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-0.2-py36h39e3cac_0.tar.bz2
-anaconda upload /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-0.2-py37h39e3cac_0.tar.bz2
+anaconda upload /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-$VERSION-py36h39e3cac_0.tar.bz2
+anaconda upload /home/jhaux/miniconda3/envs/edbase/conda-bld/linux-64/edflow-$VERSION-py37h39e3cac_0.tar.bz2
 
 anaconda logout
