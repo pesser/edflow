@@ -1,9 +1,37 @@
 import pytest
-
+import copy
 from edflow.util import set_value, retrieve, walk, set_default, contains_key
+from edflow import util
 
 
 # ================= set_value ====================
+
+
+def test_pop_value_from_key():
+    collection = {"a": [1, 2]}
+    key = "a"
+    popped_value = util.pop_value_from_key(collection, key)
+    expected_value = [1, 2]
+    assert expected_value == popped_value
+
+
+def test_pop_from_nested_structure():
+    collection = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    key = "a"
+    expected_value = [1, 2]
+    expected_collection = copy.deepcopy(collection)
+    expected_collection.pop("a", None)
+    popped_value = util.pop_from_nested_structure(collection, key)
+    assert expected_value == popped_value
+    assert set(collection.keys()).difference(expected_collection.keys()) == set([])
+
+    collection = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    key = "b/c/d"
+    expected_collection = copy.deepcopy(collection)
+    expected_value = expected_collection["b"]["c"].pop("d", None)
+    popped_value = util.pop_from_nested_structure(collection, key)
+    assert expected_value == popped_value
+    assert set(collection.keys()).difference(expected_collection.keys()) == set([])
 
 
 def test_set_value_fail():

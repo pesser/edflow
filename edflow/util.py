@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pickle
 from fastnumbers import fast_int
+from typing import *
 
 
 def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=1.0):
@@ -219,6 +220,125 @@ def retrieve(
         return list_or_dict
     else:
         return list_or_dict, success
+
+
+def pop_from_nested_structure(
+    current_item: Union[callable, list, dict],
+    key: str,
+    splitval: str = "/",
+    default: object = None,
+    expand: bool = True,
+    pass_success: bool = False,
+):
+    """Given a nested list or dict structure, pop the the desired value at key expanding
+    callable nodes if necessary and :attr:`expand` is ``True``. The expansion
+    is done in-place.
+
+    Parameters
+    ----------
+        current_item : list or dict
+            Possibly nested list or dictionary.
+        key : str
+            key/to/value, path like string describing all keys necessary to
+            consider to get to the desired value. List indices can also be
+            passed here.
+        splitval : str
+            String that defines the delimiter between keys of the
+            different depth levels in `key`.
+        default : obj
+            Value returned if :attr:`key` is not found.
+        expand : bool
+            Whether to expand callable nodes on the path or not.
+
+    Returns
+    -------
+        The desired value or if :attr:`default` is not ``None`` and the
+        :attr:`key` is not found returns ``default``.
+
+    Raises
+    ------
+        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
+        ``None``.
+    """
+
+    keys = key.split(splitval)
+
+    success = True
+    visited = []
+    parent = None
+    last_key = None
+    try:
+        for key in keys:
+            if callable(current_item):
+                if not expand:
+                    raise KeyNotFoundError(
+                        ValueError(
+                            "Trying to get past callable node with expand=False."
+                        )
+                    )
+                else:
+                    current_item = current_item()
+                    parent[last_key] = current_item
+            last_key = key
+            parent = current_item
+
+            try:
+                current_item = pop_value_from_key(parent, key)
+            except (KeyError, IndexError) as e:
+                raise KeyNotFoundError(e)
+
+            visited += [key]
+        # final expansion of retrieved value
+        if expand and callable(current_item):
+            current_item = current_item()
+            parent[last_key] = current_item
+    except KeyNotFoundError as e:
+        current_item, success = key_not_found_handling(
+            current_item, default, e, keys, success, visited
+        )
+    if pass_success:
+        return current_item, success
+    else:
+        return current_item
+
+
+def key_not_found_handling(current_item, default, e, keys, success, visited):
+    if default is None:
+        print("Key not found: {}, seen: {}".format(keys, visited))
+        raise e.cause
+    else:
+        current_item = default
+        success = False
+    return current_item, success
+
+
+def get_value_from_key(collection: Union[list, dict], key: str):
+    """Get value from collection given key
+    """
+    if isinstance(collection, dict):
+        value = collection[key]
+    else:
+        value = collection[int(key)]
+    return value
+
+
+def pop_value_from_key(collection: Union[list, dict], key: str):
+    """Pop item from collection given key
+
+    Parameters
+    ----------
+    collection : Union[list, dict]
+    key
+
+    Returns
+    -------
+
+    """
+    if isinstance(collection, dict):
+        value = collection.pop(key)
+    else:
+        value = collection.pop(int(key))
+    return value
 
 
 def set_default(list_or_dict, key, default, splitval="/"):
