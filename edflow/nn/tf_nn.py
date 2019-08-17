@@ -283,7 +283,7 @@ def conv2d(
         if True, the input has to be [N, H, W, Parts, C]. The convolution will get an additional scale and bias per part
     coords: bool
         if True, will use coordConv (2018ACS_liuIntriguingFailingConvolutionalNeuralNetworks)
-    \**kwargs
+    **kwargs
 
     Returns
     -------

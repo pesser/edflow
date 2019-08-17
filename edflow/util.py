@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pickle
 from fastnumbers import fast_int
+from typing import *
 
 
 def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=1.0):
@@ -136,8 +137,18 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
 
 class KeyNotFoundError(Exception):
-    def __init__(self, cause):
+    def __init__(self, cause, keys=None, visited=None):
         self.cause = cause
+        self.keys = keys
+        self.visited = visited
+        messages = list()
+        if keys is not None:
+            messages.append("Key not found: {}".format(keys))
+        if visited is not None:
+            messages.append("Visited: {}".format(visited))
+        messages.append("Cause:\n{}".format(cause))
+        message = "\n".join(messages)
+        super().__init__(message)
 
 
 def retrieve(
@@ -187,10 +198,13 @@ def retrieve(
                     raise KeyNotFoundError(
                         ValueError(
                             "Trying to get past callable node with expand=False."
-                        )
+                        ),
+                        keys=keys,
+                        visited=visited,
                     )
                 list_or_dict = list_or_dict()
                 parent[last_key] = list_or_dict
+
             last_key = key
             parent = list_or_dict
 
@@ -200,7 +214,7 @@ def retrieve(
                 else:
                     list_or_dict = list_or_dict[int(key)]
             except (KeyError, IndexError) as e:
-                raise KeyNotFoundError(e)
+                raise KeyNotFoundError(e, keys=keys, visited=visited)
 
             visited += [key]
         # final expansion of retrieved value
@@ -209,8 +223,7 @@ def retrieve(
             parent[last_key] = list_or_dict
     except KeyNotFoundError as e:
         if default is None:
-            print("Key not found: {}, seen: {}".format(keys, visited))
-            raise e.cause
+            raise e
         else:
             list_or_dict = default
             success = False
@@ -219,6 +232,129 @@ def retrieve(
         return list_or_dict
     else:
         return list_or_dict, success
+
+
+def pop_keypath(
+    current_item: Union[callable, list, dict],
+    key: str,
+    splitval: str = "/",
+    default: object = None,
+    expand: bool = True,
+    pass_success: bool = False,
+):
+    """Given a nested list or dict structure, pop the desired value at key expanding
+    callable nodes if necessary and :attr:`expand` is ``True``. The expansion
+    is done in-place.
+
+    Parameters
+    ----------
+        current_item : list or dict
+            Possibly nested list or dictionary.
+        key : str
+            key/to/value, path like string describing all keys necessary to
+            consider to get to the desired value. List indices can also be
+            passed here.
+        splitval : str
+            String that defines the delimiter between keys of the
+            different depth levels in `key`.
+        default : obj
+            Value returned if :attr:`key` is not found.
+        expand : bool
+            Whether to expand callable nodes on the path or not.
+
+    Returns
+    -------
+        The desired value or if :attr:`default` is not ``None`` and the
+        :attr:`key` is not found returns ``default``.
+
+    Raises
+    ------
+        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
+        ``None``.
+    """
+
+    keys = key.split(splitval)
+
+    success = True
+    visited = []
+    parent = None
+    last_key = None
+    try:
+        for key in keys:
+            if callable(current_item):
+                if not expand:
+                    raise KeyNotFoundError(
+                        ValueError(
+                            "Trying to get past callable node with expand=False."
+                        ),
+                        keys=keys,
+                        visited=visited,
+                    )
+                else:
+                    current_item = current_item()
+                    parent[last_key] = current_item
+
+            last_key = key
+            parent = current_item
+
+            try:
+                if isinstance(current_item, dict):
+                    current_item = current_item[key]
+                else:
+                    current_item = current_item[int(key)]
+            except (KeyError, IndexError) as e:
+                raise KeyNotFoundError(e, keys=keys, visited=visited)
+
+            visited += [key]
+        # final expansion of retrieved value
+        if expand and callable(current_item):
+            current_item = current_item()
+            parent[last_key] = current_item
+
+        if isinstance(parent, list):
+            parent[int(last_key)] = None
+        else:
+            del parent[last_key]
+
+    except KeyNotFoundError as e:
+        if default is None:
+            raise e
+        else:
+            current_item = default
+            success = False
+    if pass_success:
+        return current_item, success
+    else:
+        return current_item
+
+
+def get_value_from_key(collection: Union[list, dict], key: str):
+    """Get value from collection given key
+    """
+    if isinstance(collection, dict):
+        value = collection[key]
+    else:
+        value = collection[int(key)]
+    return value
+
+
+def pop_value_from_key(collection: Union[list, dict], key: str):
+    """Pop item from collection given key
+
+    Parameters
+    ----------
+    collection : Union[list, dict]
+    key
+
+    Returns
+    -------
+
+    """
+    if isinstance(collection, dict):
+        value = collection.pop(key)
+    else:
+        value = collection.pop(int(key))
+    return value
 
 
 def set_default(list_or_dict, key, default, splitval="/"):
@@ -246,19 +382,15 @@ def set_default(list_or_dict, key, default, splitval="/"):
 
     Returns
     -------
-        The desired value or if :attr:`default` is not ``None`` and the
-        :attr:`key` is not found returns ``default``.
-
-    Raises
-    ------
-        Exception if ``key`` not in ``list_or_dict`` and :attr:`default` is
-        ``None``.
+        The retrieved value or if the :attr:`key` is not found returns
+        ``default``.
     """
 
-    ret_val = retrieve(list_or_dict, key, splitval, default)
-
-    if ret_val == default:
-        set_value(list_or_dict, key, ret_val, splitval)
+    try:
+        ret_val = retrieve(list_or_dict, key, splitval, None)
+    except KeyNotFoundError as e:
+        set_value(list_or_dict, key, default, splitval)
+        ret_val = default
 
     return ret_val
 

@@ -1,9 +1,118 @@
 import pytest
-
-from edflow.util import set_value, retrieve, walk, set_default, contains_key
-
+import copy
+from edflow.util import (
+    set_value,
+    retrieve,
+    walk,
+    set_default,
+    contains_key,
+    KeyNotFoundError,
+)
+from edflow import util
+from itertools import product
 
 # ================= set_value ====================
+
+
+def test_pop_value_from_key():
+    collection = {"a": [1, 2]}
+    key = "a"
+    popped_value = util.pop_value_from_key(collection, key)
+    expected_value = [1, 2]
+    assert expected_value == popped_value
+
+
+def pytest_generate_tests(metafunc):
+    # called once per each test class
+    # http://doc.pytest.org/en/latest/example/parametrize.html
+    if metafunc.cls is not None:
+        funcarglist = metafunc.cls.params[metafunc.function.__name__]
+        argnames = metafunc.cls.argnames
+        metafunc.parametrize(argnames, funcarglist)
+
+
+def make_collection():
+    collection = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    return collection
+
+
+class Test_pop_keypath:
+    argnames = ("collection", "key", "expected_value")
+    params = {
+        "test_pop_keypath": [
+            (make_collection(), "a", [1, 2]),
+            (make_collection(), "b/c/d", 1),
+            (make_collection(), "a/0", 1),
+        ],
+        "test_default": [
+            (make_collection(), "f", "abc"),
+            (make_collection(), "a/4", "abc"),
+            (make_collection(), "b/c/e", "abc"),
+        ],
+        "test_raise_keyNotFoundError": [
+            (make_collection(), "f", None),
+            (make_collection(), "a/4", None),
+            (make_collection(), "b/c/e", None),
+        ],
+        "test_pass_success": [
+            (make_collection(), "f", ("abc", False)),
+            (make_collection(), "a/4", ("abc", False)),
+            (make_collection(), "b/c/e", ("abc", False)),
+            (make_collection(), "a", ([1, 2], True)),
+            (make_collection(), "a/0", (1, True)),
+            (make_collection(), "b/c/d", (1, True)),
+        ],
+        "test_raise_keyNotFoundError_pass_success": [
+            (make_collection(), "f", None),
+            (make_collection(), "a/4", None),
+            (make_collection(), "b/c/e", None),
+        ],
+        "test_pass_sucess_default": [
+            (make_collection(), "a", ([1, 2], True)),
+            (make_collection(), "a/0", (1, True)),
+            (make_collection(), "b/c/d", (1, True)),
+        ],
+    }
+
+    def test_pop_keypath(self, collection, key, expected_value):
+        popped_value = util.pop_keypath(collection, key)
+        assert expected_value == popped_value
+
+    def test_default(self, collection, key, expected_value):
+        popped_value = util.pop_keypath(collection, key, default="abc")
+        assert expected_value == popped_value
+
+    def test_raise_keyNotFoundError(self, collection, key, expected_value):
+        with pytest.raises(KeyNotFoundError) as exc_info:
+            util.pop_keypath(collection, key)
+
+    def test_pass_success(self, collection, key, expected_value):
+        popped_value = util.pop_keypath(
+            collection, key, default="abc", pass_success=True
+        )
+        assert expected_value == popped_value
+
+    def test_raise_keyNotFoundError_pass_success(self, collection, key, expected_value):
+        with pytest.raises(KeyNotFoundError) as exc_info:
+            util.pop_keypath(collection, key, pass_success=True)
+
+    def test_pass_sucess_default(self, collection, key, expected_value):
+        popped_value = util.pop_keypath(
+            collection, key, default="abc", pass_success=True
+        )
+        assert expected_value == popped_value
+
+
+def test_keyNotFoundError():
+    with pytest.raises(KeyNotFoundError) as exc_info:
+        raise KeyNotFoundError("test")
+
+    with pytest.raises(KeyNotFoundError) as exc_info:
+        try:
+            a = {"a": "b"}
+            a.pop("c")
+        except (KeyError, IndexError) as e:
+            raise KeyNotFoundError(e)
 
 
 def test_set_value_fail():
