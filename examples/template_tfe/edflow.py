@@ -64,6 +64,9 @@ class Iterator(TemplateIterator):
             self.optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
         def log_op():
+            # the default logger understands the keys "images" (written as png
+            # in the log directory) and "scalars" (written to stdout and the
+            # log file).
             acc = np.mean(np.argmax(outputs, axis=1) == labels)
             min_loss = np.min(loss)
             max_loss = np.max(loss)
@@ -78,7 +81,11 @@ class Iterator(TemplateIterator):
             }
 
         def eval_op():
-            return {"outputs": np.array(outputs), "loss": np.array(loss)[:, None]}
+            # values under "labels" are written into a single file,
+            # remaining values are written into one file per example.
+            # Here, "outputs" would be small enough to write into labels, but
+            # for illustration we do not write it as labels.
+            return {"outputs": np.array(outputs), "labels": {"loss": np.array(loss)}}
 
         return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
 
@@ -89,14 +96,20 @@ def acc_callback(root, data_in, data_out, config):
     logger = get_logger("acc_callback")
     correct = 0
     seen = 0
-    loss = 0.0
+    # labels are loaded directly into memory
+    loss1 = np.mean(data_out.labels["loss"])
+    loss2 = 0.0
     for i in trange(len(data_in)):
+        # data_in is the dataset that was used for evaluation
         labels = data_in[i]["class"]
+        # data_out contains all the keys that were specified in the eval_op
         outputs = data_out[i]["outputs"]
-        loss = data_out[i]["loss"].squeeze()
+        # labels are also available on each example
+        loss = data_out[i]["loss"]
 
         prediction = np.argmax(outputs, axis=0)
         correct += labels == prediction
-        loss += loss
-    logger.info("Loss: {}".format(loss / len(data_in)))
+        loss2 += loss
+    logger.info("Loss1: {}".format(loss1))
+    logger.info("Loss2: {}".format(loss2 / len(data_in)))
     logger.info("Accuracy: {}".format(correct / len(data_in)))

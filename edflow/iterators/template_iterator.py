@@ -4,7 +4,7 @@ from edflow.hooks.logging_hooks.minimal_logging_hook import LoggingHook
 from edflow.hooks.util_hooks import IntervalHook
 from edflow.eval.pipeline import TemplateEvalHook
 from edflow.project_manager import ProjectManager
-from edflow.util import retrieve
+from edflow.util import retrieve, set_default
 from edflow.main import get_obj_from_str
 
 
@@ -21,12 +21,14 @@ class TemplateIterator(PyHookedModelIterator):
             global_step_setter=self.set_global_step,
             save=self.save,
             restore=self.restore,
-            interval=self.config.get("ckpt_freq", None),
+            interval=set_default(self.config, "ckpt_freq", None),
         )
         if not self.config.get("test_mode", False):
             # in training, excute train ops and add logginghook
-            self._train_ops = self.config.get("train_ops", ["step_ops/train_op"])
-            self._log_ops = self.config.get("log_ops", ["step_ops/log_op"])
+            self._train_ops = set_default(
+                self.config, "train_ops", ["step_ops/train_op"]
+            )
+            self._log_ops = set_default(self.config, "log_ops", ["step_ops/log_op"])
             # logging
             self.loghook = LoggingHook(
                 paths=self._log_ops, root_path=ProjectManager.train, interval=1
@@ -34,9 +36,9 @@ class TemplateIterator(PyHookedModelIterator):
             # wrap it in interval hook
             self.ihook = IntervalHook(
                 [self.loghook],
-                interval=self.config.get("start_log_freq", 1),
+                interval=set_default(self.config, "start_log_freq", 1),
                 modify_each=1,
-                max_interval=self.config.get("log_freq", 1000),
+                max_interval=set_default(self.config, "log_freq", 1000),
                 get_step=self.get_global_step,
             )
             self.hooks.append(self.ihook)
@@ -44,19 +46,27 @@ class TemplateIterator(PyHookedModelIterator):
             self.hooks.append(self.ckpthook)
         else:
             # evaluate
-            self._eval_op = self.config.get("eval_op", "step_ops/eval_op")
-            self._eval_callbacks = self.config.get("eval_callbacks", list())
+            self._eval_op = set_default(
+                self.config, "eval_hook/eval_op", "step_ops/eval_op"
+            )
+            self._eval_callbacks = set_default(
+                self.config, "eval_hook/eval_callbacks", list()
+            )
             if not isinstance(self._eval_callbacks, list):
                 self._eval_callbacks = [self._eval_callbacks]
             self._eval_callbacks = [
                 get_obj_from_str(name) for name in self._eval_callbacks
             ]
+            label_key = set_default(
+                self.config, "eval_hook/label_key", "step_ops/eval_op/labels"
+            )
             self.evalhook = TemplateEvalHook(
                 dataset=self.dataset,
                 step_getter=self.get_global_step,
                 keypath=self._eval_op,
                 meta=self.config,
                 callbacks=self._eval_callbacks,
+                label_key=label_key,
             )
             self.hooks.append(self.evalhook)
             self._train_ops = []
