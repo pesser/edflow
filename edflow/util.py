@@ -137,7 +137,7 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
 
 class KeyNotFoundError(Exception):
-    def __init__(self, cause, keys = None, visited = None):
+    def __init__(self, cause, keys=None, visited=None):
         self.cause = cause
         self.keys = keys
         self.visited = visited
@@ -199,8 +199,8 @@ def retrieve(
                         ValueError(
                             "Trying to get past callable node with expand=False."
                         ),
-                        keys = keys,
-                        visited = visited
+                        keys=keys,
+                        visited=visited,
                     )
                 list_or_dict = list_or_dict()
                 parent[last_key] = list_or_dict
@@ -214,9 +214,7 @@ def retrieve(
                 else:
                     list_or_dict = list_or_dict[int(key)]
             except (KeyError, IndexError) as e:
-                raise KeyNotFoundError(e,
-                        keys = keys,
-                        visited = visited)
+                raise KeyNotFoundError(e, keys=keys, visited=visited)
 
             visited += [key]
         # final expansion of retrieved value
@@ -289,8 +287,8 @@ def pop_keypath(
                         ValueError(
                             "Trying to get past callable node with expand=False."
                         ),
-                        keys = keys,
-                        visited = visited
+                        keys=keys,
+                        visited=visited,
                     )
                 else:
                     current_item = current_item()
@@ -305,7 +303,7 @@ def pop_keypath(
                 else:
                     current_item = current_item[int(key)]
             except (KeyError, IndexError) as e:
-                raise KeyNotFoundError(e, keys = keys, visited = visited)
+                raise KeyNotFoundError(e, keys=keys, visited=visited)
 
             visited += [key]
         # final expansion of retrieved value

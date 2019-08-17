@@ -229,9 +229,7 @@ class EvalHook(Hook):
         """
 
         if self.lk is not None:
-            label_vals = pop_keypath(last_results,
-                                     self.lk,
-                                     default={})
+            label_vals = pop_keypath(last_results, self.lk, default={})
         else:
             label_vals = {}
 

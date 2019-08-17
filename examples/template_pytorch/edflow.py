@@ -96,7 +96,7 @@ def acc_callback(root, data_in, data_out, config):
     correct = 0
     seen = 0
     # labels are loaded directly into memory
-    loss1 = np.mean(data_out.labels['loss'])
+    loss1 = np.mean(data_out.labels["loss"])
     loss2 = 0.0
     for i in trange(len(data_in)):
         # data_in is the dataset that was used for evaluation

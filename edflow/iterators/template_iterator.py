@@ -25,7 +25,9 @@ class TemplateIterator(PyHookedModelIterator):
         )
         if not self.config.get("test_mode", False):
             # in training, excute train ops and add logginghook
-            self._train_ops = set_default(self.config, "train_ops", ["step_ops/train_op"])
+            self._train_ops = set_default(
+                self.config, "train_ops", ["step_ops/train_op"]
+            )
             self._log_ops = set_default(self.config, "log_ops", ["step_ops/log_op"])
             # logging
             self.loghook = LoggingHook(
@@ -44,21 +46,27 @@ class TemplateIterator(PyHookedModelIterator):
             self.hooks.append(self.ckpthook)
         else:
             # evaluate
-            self._eval_op = set_default(self.config, "eval_hook/eval_op", "step_ops/eval_op")
-            self._eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks", list())
+            self._eval_op = set_default(
+                self.config, "eval_hook/eval_op", "step_ops/eval_op"
+            )
+            self._eval_callbacks = set_default(
+                self.config, "eval_hook/eval_callbacks", list()
+            )
             if not isinstance(self._eval_callbacks, list):
                 self._eval_callbacks = [self._eval_callbacks]
             self._eval_callbacks = [
                 get_obj_from_str(name) for name in self._eval_callbacks
             ]
-            label_key = set_default(self.config, "eval_hook/label_key", "step_ops/eval_op/labels")
+            label_key = set_default(
+                self.config, "eval_hook/label_key", "step_ops/eval_op/labels"
+            )
             self.evalhook = TemplateEvalHook(
                 dataset=self.dataset,
                 step_getter=self.get_global_step,
                 keypath=self._eval_op,
                 meta=self.config,
                 callbacks=self._eval_callbacks,
-                label_key=label_key
+                label_key=label_key,
             )
             self.hooks.append(self.evalhook)
             self._train_ops = []
