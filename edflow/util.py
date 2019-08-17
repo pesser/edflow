@@ -137,8 +137,18 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
 
 class KeyNotFoundError(Exception):
-    def __init__(self, cause):
+    def __init__(self, cause, keys = None, visited = None):
         self.cause = cause
+        self.keys = keys
+        self.visited = visited
+        messages = list()
+        if keys is not None:
+            messages.append("Key not found: {}".format(keys))
+        if visited is not None:
+            messages.append("Visited: {}".format(visited))
+        messages.append("Cause:\n{}".format(cause))
+        message = "\n".join(messages)
+        super().__init__(message)
 
 
 def retrieve(
@@ -188,7 +198,9 @@ def retrieve(
                     raise KeyNotFoundError(
                         ValueError(
                             "Trying to get past callable node with expand=False."
-                        )
+                        ),
+                        keys = keys,
+                        visited = visited
                     )
                 list_or_dict = list_or_dict()
                 parent[last_key] = list_or_dict
@@ -202,7 +214,9 @@ def retrieve(
                 else:
                     list_or_dict = list_or_dict[int(key)]
             except (KeyError, IndexError) as e:
-                raise KeyNotFoundError(e)
+                raise KeyNotFoundError(e,
+                        keys = keys,
+                        visited = visited)
 
             visited += [key]
         # final expansion of retrieved value
@@ -211,7 +225,6 @@ def retrieve(
             parent[last_key] = list_or_dict
     except KeyNotFoundError as e:
         if default is None:
-            print("Key not found: {}, seen: {}".format(keys, visited))
             raise e
         else:
             list_or_dict = default
@@ -275,7 +288,9 @@ def pop_keypath(
                     raise KeyNotFoundError(
                         ValueError(
                             "Trying to get past callable node with expand=False."
-                        )
+                        ),
+                        keys = keys,
+                        visited = visited
                     )
                 else:
                     current_item = current_item()
@@ -290,7 +305,7 @@ def pop_keypath(
                 else:
                     current_item = current_item[int(key)]
             except (KeyError, IndexError) as e:
-                raise KeyNotFoundError(e)
+                raise KeyNotFoundError(e, keys = keys, visited = visited)
 
             visited += [key]
         # final expansion of retrieved value
@@ -304,24 +319,15 @@ def pop_keypath(
             del parent[last_key]
 
     except KeyNotFoundError as e:
-        current_item, success = key_not_found_handling(
-            current_item, default, e, keys, success, visited
-        )
+        if default is None:
+            raise e
+        else:
+            current_item = default
+            success = False
     if pass_success:
         return current_item, success
     else:
         return current_item
-
-
-def key_not_found_handling(current_item, default, e, keys, success, visited):
-    if default is None:
-        print("Key not found: {}, seen: {}".format(keys, visited))
-        # raise e.cause
-        raise KeyNotFoundError(e)
-    else:
-        current_item = default
-        success = False
-    return current_item, success
 
 
 def get_value_from_key(collection: Union[list, dict], key: str):
