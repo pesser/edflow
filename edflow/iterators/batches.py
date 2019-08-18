@@ -9,7 +9,6 @@ from edflow.iterators.resize import resize_hfloat32  # noqa
 
 from chainer.iterators import MultiprocessIterator
 
-# from chainer.dataset import DatasetMixin
 from edflow.data.dataset import DatasetMixin  # noqa
 
 
@@ -104,10 +103,7 @@ class Iterator(MultiprocessIterator):
             raise
 
     def __next__(self):
-        try:
-            return self._lod2dol(super(Iterator, self).__next__())
-        except BrokenPipeError:
-            pass
+        return self._lod2dol(super(Iterator, self).__next__())
 
     @property
     def n(self):
