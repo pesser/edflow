@@ -1,6 +1,7 @@
 import numpy as np
 import PIL.Image
 import math
+import warnings
 from edflow.iterators.resize import resize_image  # noqa
 from edflow.iterators.resize import resize_uint8  # noqa
 from edflow.iterators.resize import resize_float32  # noqa
@@ -116,9 +117,13 @@ class Iterator(MultiprocessIterator):
         return math.ceil(self.n / self.batch_size)
 
 
-def make_batches(dataset, batch_size, shuffle, n_processes=8, n_prefetch=1):
+def make_batches(dataset, batch_size, shuffle, n_processes=8, n_prefetch=1, error_on_timeout=False):
     # the first n_processes / batch_size batches will be quite slow for some
     # reason
+    if error_on_timeout:
+        warnings.simplefilter(
+                'error',
+                MultiprocessIterator.TimeoutWarning)
     batches = Iterator(
         dataset,
         repeat=True,
