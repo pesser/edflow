@@ -110,7 +110,7 @@ def _train(config, root, checkpoint=None, retrain=False):
         shuffle=True,
         n_processes=n_processes,
         n_prefetch=n_prefetch,
-        error_on_timeout=config.get("error_on_timeout", False)
+        error_on_timeout=config.get("error_on_timeout", False),
     ) as batches:
         # get them going
         logger.info("Warm up batches.")
@@ -185,7 +185,7 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         shuffle=False,
         n_processes=n_processes,
         n_prefetch=n_prefetch,
-        error_on_timeout=config.get("error_on_timeout", False)
+        error_on_timeout=config.get("error_on_timeout", False),
     )
     # get going
     next(batches)
