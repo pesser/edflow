@@ -15,7 +15,6 @@ from edflow.project_manager import ProjectManager
 
 import time
 import numpy as np
-from sklearn.metrics import accuracy_score
 
 
 def loss(logits, labels):
@@ -50,7 +49,8 @@ def ce_metric(probs, labels):
 
 
 def acc_metric(y_true, y_pred):
-    return np.reshape(accuracy_score(y_true, y_pred), (1, 1))
+    score = np.mean(y_true == y_pred)
+    return np.reshape(score, (1, 1))
 
 
 from edflow.hooks.logging_hooks.tf_logging_hook import ImageOverviewHook

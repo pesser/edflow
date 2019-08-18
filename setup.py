@@ -22,11 +22,7 @@ setup(
         "Pillow",
         "chainer",
         "numpy",
-        "scipy",
-        "h5py",
-        "scikit-learn",
         "scikit-image",
-        "natsort",
         "pandas",
         "psutil",
         "pytest",
@@ -41,5 +37,11 @@ setup(
         "edflow/edlist",
         "edflow/edeval",
         "edflow/edsetup",
+    ],
+    python_requires='>=3.6',
+    classifiers=[
+        "Programming Language :: Python :: 3 :: Only",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: POSIX :: Linux"
     ],
 )
