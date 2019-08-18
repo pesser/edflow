@@ -38,10 +38,10 @@ setup(
         "edflow/edeval",
         "edflow/edsetup",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: POSIX :: Linux"
+        "Operating System :: POSIX :: Linux",
     ],
 )
