@@ -23,3 +23,25 @@ How do I run tests locally?
    can run ``pytest --ignore="examples"`` to run the general tests. To run
    framework dependent tests and see the precise testing protocol executed by
    `travis <https://travis-ci.org/>`_, see `.travis.yml`.
+
+Why can't my implementations be imported?
+   In general, it is your responsibility to make sure `python` can import your
+   implementations (e.g. install your implementations or add their location to
+   your `PYTHONPATH`). To support the common practice of executing `edflow` one
+   directory above your implementations, we add the current working directory
+   to `python`'s import path.
+
+   For example, if `/a/b/myimplementations/c/d.py` contains your `MyModel`
+   class, you can specify `myimplementations.c.d.MyModel` for your `model`
+   config parameter if you run edflow in `a/b/`.
+
+Why is my code not copied to the log folder?
+   You can always specify the path to your code to copy with the `code_root`
+   config option. Similar to how implementations are found (see previous
+   question), we support the common practice of executing `edflow` one
+   directory above your implementations.
+
+   For example, if `/a/b/myimplementations/c/d.py` contains your `MyModel`
+   class and you specify `myimplementations.c.d.MyModel` for your `model`
+   config parameter, `edflow` will use `$(pwd)/myimplementations` as the code
+   root which assumes you are executing `edflow` in `/a/b`.
