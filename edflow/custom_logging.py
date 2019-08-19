@@ -118,7 +118,6 @@ def fix_abseil():
 
 def init_project(base_dir, code_root=".", postfix=None):
     """Must be called at the very beginning of a script."""
-    fix_abseil()
     P = ProjectManager(base_dir, code_root=code_root, postfix=postfix)
     LogSingleton(P.root)
     return P
@@ -143,6 +142,7 @@ def get_logger(name, which=None, level="info"):
         Any subdirectory of the project.
     """
 
+    fix_abseil()
     L = LogSingleton(level=getattr(logging, level.upper()))
 
     if not L.exists:
