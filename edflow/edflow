@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import signal
 
 import sys  # noqa
 
@@ -168,10 +169,14 @@ def main(opt, additional_kwargs):
         )
         processes.append(test_process)
 
+    code = 0
     # Take off
     try:
+        # children should ignore sigint; we'll send SIGTERM upon SIGINT
+        sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
         for p in processes:
             p.start()
+        signal.signal(signal.SIGINT, sigint_handler)
         logger.info("Started {} process(es).".format(len(processes)))
 
         done_count = 0
@@ -195,15 +200,18 @@ def main(opt, additional_kwargs):
         for p in processes:
             p.terminate()
         if not isinstance(e, KeyboardInterrupt):
-            # reraise if we caught a general exception
-            # TODO: only reraise if this is not an exception of a child that
+            code = 1
+            # only reraise if this is not an exception of a child that
             # was already logged above
-            raise e
+            if not e == exc_or_done:
+                raise e
     finally:
         # Landing
         for p in processes:
             p.join()
         logger.info("Finished")
+
+    sys.exit(code)
 
 
 if __name__ == "__main__":
