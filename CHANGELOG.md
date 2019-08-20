@@ -6,4 +6,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `edlist` shows process group id (`pgid`), see FAQ.
 - CHANGELOG.md to document notable changes.

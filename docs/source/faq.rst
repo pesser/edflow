@@ -45,3 +45,8 @@ Why is my code not copied to the log folder?
    class and you specify `myimplementations.c.d.MyModel` for your `model`
    config parameter, `edflow` will use `$(pwd)/myimplementations` as the code
    root which assumes you are executing `edflow` in `/a/b`.
+
+How can I kill edflow zombie processes?
+   You can use `edlist` to show all edflow processes. All sub-processes share
+   the same process group id (`pgid`), so you can easily send all of them a
+   signal with `kill -- -<pgid>`.
