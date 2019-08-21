@@ -6,4 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- TFMultiStageTrainer and TFMultiStageModel
+    - adds interface for model and trainer to derive from to support multiple stages. For example pretraining and training.
+    - example can be found in `examples/multistage_trainer`
 - CHANGELOG.md to document notable changes.
