@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- pdb support. Use `import edflow.fpdb as pdb; pdb.set_trace()` instead of
+  `import pdb; pdb.set_trace()`.
 - `edlist` shows process group id (`pgid`), see FAQ.
 - CHANGELOG.md to document notable changes.
 
