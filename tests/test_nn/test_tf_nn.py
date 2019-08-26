@@ -187,3 +187,45 @@ class Test_MumfordSha(object):
         gradient_x = y[..., 0]
         gradient_y = y[..., 0]
         assert np.allclose(gradient_x, gradient_y[::-1, ::-1])
+
+
+def test_incremental_roll():
+    tf.enable_eager_execution()
+    import numpy as np
+
+    a = tf.ones((1, 1, 1, 10, 1))
+    b = tf.concat([a] + [tf.zeros_like(a)] * 9, axis=0)
+    b = tf.transpose(b, perm=[3, 1, 2, 0, 4])
+    d = nn.incremental_roll(b)
+    e = tf.reshape(d, (10, 1, 1, 10))
+
+    expected_array = np.array(
+        [[[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]], dtype=np.float32
+    )
+    assert np.allclose(e[0], expected_array)
+
+    expected_array = np.array(
+        [[[0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]]], dtype=np.float32
+    )
+    assert np.allclose(e[5], expected_array)
+
+
+def test_space_to_batch2():
+    tf.enable_eager_execution()
+    import numpy as np
+    from skimage import data
+    from skimage import img_as_float
+    import matplotlib.pyplot as plt
+
+    import matplotlib
+
+    # fix from https://youtrack.jetbrains.com/issue/PY-29684?_ga=2.3673904.1244701922.1566840489-1923801516.1548153235
+    matplotlib.use("module://backend_interagg")
+
+    im = data.astronaut()
+    image = img_as_float(np.reshape(im, (1, 512, 512, 3)))
+    image2 = nn.space_to_batch2(tf.convert_to_tensor(image), 2)
+    for i in range(4):
+        plt.figure()
+        plt.imshow(np.squeeze(image2[i]))
+    plt.show()
