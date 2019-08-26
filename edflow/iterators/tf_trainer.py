@@ -342,8 +342,6 @@ class TFMultiStageTrainer(TFBaseTrainer):
     is determined in the order of the stages. A later stage has to have a higher end value then the previous one.
 
     The model has to implement the `edflowiterators.tf_trainer.TFMultiStageModel` interface. Look at the multistage_trainer example.
-
-    # TODO: actually, we do not sanity check that the end value of stages make sense with the ordering. This might be nice
     """
 
     def __init__(self, config, root, model, **kwargs):
@@ -363,6 +361,7 @@ class TFMultiStageTrainer(TFBaseTrainer):
             with tf.control_dependencies([stage_opt_ops] + self.update_ops):
                 stage_train_op = tf.no_op()
             stage_options.update({"train_op": stage_train_op})
+        self.log_ops["stage"] = self.model.stage
 
     def run(self, fetches, feed_dict):
         current_stage = self.determine_current_stage()
@@ -375,9 +374,11 @@ class TFMultiStageTrainer(TFBaseTrainer):
             self.logger.info("Running custom initialization op.")
             fetches["step_ops"] = self.run_once_op
         else:
-            self.logger.info("Running training stage : {}".format(current_stage))
             fetches["step_ops"] = current_train_op
-        return super(TFMultiStageTrainer, self).run(fetches, feed_dict)
+        get_global_step = fetches.pop("global_step")
+        results = self.session.run(fetches, feed_dict=feed_dict)
+        results["global_step"] = get_global_step()
+        return results
 
     def get_current_train_op(self, current_stage):
         current_train_op = self.stages[current_stage]["train_op"]
@@ -397,9 +398,9 @@ class TFMultiStageTrainer(TFBaseTrainer):
 
 
 class TFMultiStageModel(object):
-    def define_graph(self):
+    def __init__(self):
         self._stage_update = tf.placeholder(tf.int32, shape=(), name="stage_update")
-        self._stage = tf.Variable(2, trainable=False, dtype=tf.int32)
+        self._stage = tf.Variable(0, trainable=False, dtype=tf.int32)
         self._stage_update_op = tf.assign(self._stage, self._stage_update)
 
     @property
@@ -411,5 +412,5 @@ class TFMultiStageModel(object):
         return self._stage_update
 
     @property
-    def stage_variable(self):
+    def stage(self):
         return self._stage

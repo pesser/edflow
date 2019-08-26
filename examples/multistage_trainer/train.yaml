@@ -1,13 +1,13 @@
 # must specify
 model: multistage_trainer.model.TrainModel
 iterator: multistage_trainer.model.Trainer
-dataset: multistage_trainer.data.Dataset_MNIST
+dataset: edflow.datasets.mnist.MNIST
 
 batch_size: 28
 num_steps: 501
 lr : 1.0e-4  # yaml needs 1.0 for exponential notation
-lr_decay_begin : 100 # TODO remove these in future versions
-lr_decay_end : 1001  # TODO remove these in future versions
+lr_decay_begin : 100
+lr_decay_end : 1001
 
 
 # options

@@ -44,6 +44,7 @@ def loss(logits, labels):
 
 class TrainModel(TFMultiStageModel):
     def __init__(self, config):
+        super(TrainModel, self).__init__()
         self.config = config
         self.define_graph()
         self.variables = tf.global_variables()
@@ -56,7 +57,7 @@ class TrainModel(TFMultiStageModel):
         -------
 
         """
-        return {"image": self.image, "target": self.targets}
+        return {"image": self.image, "class": self.targets}
 
     @property
     def outputs(self):
@@ -69,8 +70,6 @@ class TrainModel(TFMultiStageModel):
         return {"probs": self.probs, "classes": self.classes}
 
     def define_graph(self):
-        super(TrainModel, self).define_graph()  # setup stages
-
         # inputs
         self.image = tf.placeholder(
             tf.float32,
@@ -90,7 +89,7 @@ class TrainModel(TFMultiStageModel):
                 ],  # 10 classes in mnist # TODO maybe move this to config
             ),
         )
-        self.stage_is_2 = stage_conditional(self.stage_variable)
+        self.stage_is_2 = stage_conditional(self.stage)
 
         # model definition
         model = nn.make_model("model", mnist_model)
@@ -123,7 +122,7 @@ class Trainer(TFMultiStageTrainer):
     def make_loss_ops(self):
         probs = self.model.outputs["probs"]
         logits = self.model.logits
-        targets = self.model.inputs["target"]
+        targets = self.model.inputs["class"]
         correct = tf.nn.in_top_k(probs, tf.cast(targets, tf.int32), k=1)
         acc = tf.reduce_mean(tf.cast(correct, tf.float32))
 
@@ -137,6 +136,5 @@ class Trainer(TFMultiStageTrainer):
         # metrics for logging
         self.log_ops["acc"] = acc
         self.log_ops["ce"] = ce
-        self.log_ops["stage"] = self.model.stage_variable
         self.log_ops["stage_is_2"] = self.model.stage_is_2
         return losses
