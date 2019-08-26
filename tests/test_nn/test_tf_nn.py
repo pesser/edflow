@@ -99,6 +99,11 @@ def test_mask2rgb():
 def test_blobs():
     from matplotlib import pyplot as plt
 
+    import matplotlib
+
+    # fix from https://youtrack.jetbrains.com/issue/PY-29684?_ga=2.3673904.1244701922.1566840489-1923801516.1548153235
+    matplotlib.use("module://backend_interagg")
+
     tf.enable_eager_execution()
     import numpy as np
     import tensorflow.contrib.distributions as tfd
@@ -148,3 +153,37 @@ def test_blobs():
         ax[1, b].imshow(np.squeeze(estimated_blob[b, ...]))
         ax[1, b].set_title("estimated_blobs")
         ax[1, b].set_axis_off()
+
+
+class Test_MumfordSha(object):
+    def test_forward_difference_kernel(self):
+        import matplotlib.pyplot as plt
+
+        import matplotlib
+
+        # fix from https://youtrack.jetbrains.com/issue/PY-29684?_ga=2.3673904.1244701922.1566840489-1923801516.1548153235
+        matplotlib.use("module://backend_interagg")
+
+        tf.enable_eager_execution()
+        import numpy as np
+
+        x = np.zeros((1, 100, 100, 1), dtype=np.float32)
+        x[:, 30:70, 30:70, :] = 1.0
+
+        y = nn.tf_grad(tf.convert_to_tensor(x))
+
+        fig, ax = plt.subplots(1, 3, figsize=(9, 3))
+        ax[0].imshow(np.squeeze(x))
+        ax[0].set_axis_off()
+
+        ax[1].imshow(np.squeeze(y[..., 0]))
+        ax[1].set_axis_off()
+
+        ax[2].imshow(np.squeeze(y[..., 1]))
+        ax[2].set_axis_off()
+        fig.tight_layout()
+        plt.show()
+
+        gradient_x = y[..., 0]
+        gradient_y = y[..., 0]
+        assert np.allclose(gradient_x, gradient_y[::-1, ::-1])

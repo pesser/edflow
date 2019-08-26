@@ -1227,6 +1227,224 @@ def tf_hm(h, w, mu, L, order="exp"):
     return probs
 
 
+def sample_gumbel(shape, eps=1e-20):
+    U = tf.random_uniform(shape, minval=0.0, maxval=1.0)
+    return -tf.log(-tf.log(U + eps) + eps)
+
+
+def spatial_softmax(logits):
+    """Perform softmax over axis [1,2].
+
+    Parameters
+    ----------
+    logits : tensor
+        [N, H, W, C] - shaped tensor of spatial logits
+
+    Returns
+    -------
+    probs: tensor
+        tensor of spatial probabilities
+
+    """
+    N, H, W, C = logits.shape.as_list()
+    logits = tf.reshape(tf.transpose(logits, [0, 3, 1, 2]), [N * C, H * W])
+    probs = tf.nn.softmax(logits)
+    # Reshape and transpose back to original format.
+    probs = tf.transpose(tf.reshape(probs, [N, C, H, W]), [0, 2, 3, 1])
+    return probs
+
+
+def gumbel_softmax(logits, axis, temperature=1.0):
+    """Sample from gumbel noise and perform softmax over given axis.
+
+    Parameters
+    ----------
+    logits : tensor
+        [N, H, W, C] - shaped tensor of logits
+    axis : int
+    temperatur : float
+
+    Returns
+    -------
+    sample: tensor
+        tensor of gumbel samples
+    """
+    gumbel_softmax_sample = logits + sample_gumbel(tf.shape(logits))
+    adjusted_logits = gumbel_softmax_sample / temperature
+    y = tf.nn.softmax(adjusted_logits, axis=axis)
+    return y
+
+
+def hard_max(y, axis):
+    """Performs max filtering along axis. All locations along axis where value == max will be 1, rest will be 0.
+
+    Parameters
+    ----------
+    y: tensor
+    axis: int
+        axis over which to take max.
+
+    Returns
+    -------
+    y_hard : tensor
+        tensor where max value along axis are 1, rest 0.
+
+    """
+    y_hard = tf.cast(tf.equal(y, tf.reduce_max(y, axis, keep_dims=True)), y.dtype)
+    return y_hard
+
+
+def straight_through_estimator(y_hard, y):
+    """constructs straight-through estimator.
+
+    During forward pass, this estimator behaves like `y_hard`. During backward pass, it behaves like `y`
+
+    Parameters
+    ----------
+    y_hard : tensor
+        y_hard graph operation to estimate through
+    y : tensor
+        actual gradient providing expression
+
+    Returns
+    -------
+        tf.stop_gradient(y_hard - y) + y.
+    """
+    return tf.stop_gradient(y_hard - y) + y
+
+
+def incremental_roll(t):
+    """rolls tensor x along first axis by
+    - shift 0 for index 0
+    - shift 1 for index 1,
+    and so on
+
+    x : tensor
+    returns:
+        incrementally shifted tensor
+
+    Example
+    -------
+        a = tf.ones((1, 1, 1, 10, 1))
+        b = tf.concat([a, ] + [tf.zeros_like(a)] * 9, axis=0)
+        b = tf.transpose(b, perm=[3, 1, 2, 0, 4])
+        d = incremental_roll(b)
+        e = tf.reshape(d, (10, 1, 1, 10))
+
+        e[0]
+        >>> array([[[1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]]], dtype=float32)
+
+        e[5]
+        >>> array([[[0., 0., 0., 0., 0., 1., 0., 0., 0., 0.]]], dtype=float32)
+    """
+    idx = tf.range(t.shape[0], dtype=tf.int32)
+    out = tf.map_fn(
+        lambda x: (tf.roll(x[0], shift=x[1], axis=2), x[1]),
+        (t, idx),
+        dtype=(tf.float32, tf.int32),
+    )
+    return out[0]
+
+
+def space_to_batch2(x, cols):
+    """split x in into a grid of `cols` * `cols`
+    along the spatial dimensions and reshape them to the batch axis
+
+    x : tensor
+        [N, H, W, C] - shaped tensor
+    cols : int
+        number of colums and rows to split the batch into
+
+
+    Examples
+    --------
+
+    import numpy as np
+    from skimage import data
+    im = data.astronaut()
+    image = img_as_float(np.reshape(im, (1, 512, 512, 3)))
+    image2 = space_to_batch2(tf.convert_to_tensor(image), 2)
+    for i in range(4):
+        plt.figure()
+        plt.imshow(np.squeeze(image2[i]))
+    """
+    if len(x.shape.as_list()) != 4:
+        raise ValueError("input has to have dimension 4")
+    N, H, W, C = x.shape.as_list()
+    if H % cols != 0:
+        raise ValueError("input dimension 1 has to be divisible by {}".format(cols))
+    if W % cols != 0:
+        raise ValueError("input dimension 2 has to be divisible by {}".format(cols))
+    n1 = N * cols
+    n2 = n1 * cols
+    h = H // cols
+    w = W // cols
+    y = tf.reshape(x, (n1, h, W, C))
+    y = tf.transpose(y, [0, 2, 1, 3])
+    y = tf.reshape(y, (n2, w, h, C))
+    y = tf.transpose(y, [0, 2, 1, 3])
+    return y
+
+
+difference1d = np.float32([0.0, 0.5, -0.5])
+
+
+def forward_difference_kernel(n):
+    ffd = np.zeros([3, 3, n, n * 2])
+    for i in range(n):
+        ffd[1, :, i, 2 * i + 0] = difference1d
+        ffd[:, 1, i, 2 * i + 1] = difference1d
+    return 0.5 * ffd
+
+
+def tf_grad(x):
+    """Channelwise forward-difference gradient for cell size of one."""
+    n = x.shape.as_list()[3]
+    kernel = forward_difference_kernel(n)
+    grad = tf.nn.conv2d(input=x, filter=kernel, strides=4 * [1], padding="SAME")
+    return grad
+
+
+def tf_squared_grad(x):
+    """Pointwise squared L2 norm of gradient assuming cell size of one.
+    Parameters
+    ----------
+    x: tensor
+
+    Returns
+    -------
+
+    """
+    s = tf.shape(x)
+    gx = tf_grad(x)
+    gx = tf.reshape(gx, [s[0], s[1], s[2], s[3], 2])
+    return tf.reduce_sum(tf.square(gx), axis=-1)
+
+
+def mumford_shah(x, alpha, lambda_):
+    """Implements the Mumford Sha approximation introduced by
+    2014CV-E2_strekalovskiyRealTimeMinimizationPiecewiseSmoothMumfordShah
+    https://vision.in.tum.de/_media/spezial/bib/strekalovskiy_cremers_eccv14.pdf
+
+    Parameters
+    ----------
+    x: tensor
+    alpha : alpha parameter as in paper. Scaling factor of gradient norm before min.
+    lambda_ : lambda parameter as in paper. Clips gradient to this value.
+
+    Returns
+    -------
+
+    References
+    ----------
+    https://vision.in.tum.de/_media/spezial/bib/strekalovskiy_cremers_eccv14.pdf
+    Strekalovskiy et al., Real-Time Minimization of the Piecewise Smooth Mumford-Shah Functional, 2014
+    """
+    g = tf_squared_grad(x)
+    r = tf.minimum(alpha * g, lambda_)
+    return r
+
+
 if __name__ == "__main__":
     tf.enable_eager_execution()
     x = tf.ones((1, 128, 128, 3))
