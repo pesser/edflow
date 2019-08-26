@@ -8,9 +8,6 @@ from matplotlib import pyplot as plt
 import tensorflow.contrib.distributions as tfd
 
 
-# TODO: write tests
-
-
 def model_arg_scope(**kwargs):
     """Create new counter and apply arg scope to all arg scoped nn
     operations."""
@@ -964,8 +961,7 @@ def add_coordinates(input_tensor, with_r=False):
 def probs_to_mu_L(
     probs, scaling_factor, inv=True
 ):  # todo maybe exponential map induces to much certainty ! low values basically ignored and only high values count!
-    """
-    Calculate mean and covariance for each channel of probs
+    """Calculate mean and covariance (cholesky decomposition of covariance) for each channel of probs
     tensor of keypoint probabilites [bn, h, w, n_kp]
     mean calculated on a grid of scale [-1, 1]
 
@@ -1113,7 +1109,43 @@ def probs_to_mu_L(
         return mu, L
 
 
-def tf_hm(h, w, mu, L, order="exp"):
+def probs_to_mu_sigma(probs):
+    """Calculate mean and covariance matrix for each channel of spatial probability maps
+    Mean and covariance are caluclated on a grid of scale [-1, 1]
+
+    Parameters
+    ----------
+    probs: tensor
+        tensor of shape [N, H, W, C] where each channel along axis 3 is interpreted as a probability density.
+
+    Returns
+    -------
+    mu : tensor
+        tensor of shape [N, C, 2] representing partwise mean coordinates of x and y for each item in the batch
+    sigma : tensor
+        tensor of shape [N, C, 2, 2] representing covariance matrix matrix for each item in the batch
+
+    Example
+    -------
+
+        mu, sigma = nn.probs_to_mu_sigma(spatial_probability_maps)
+    """
+    bn, h, w, nk = probs.get_shape().as_list()
+    y_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, h), [h, 1]), [1, w])
+    x_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, w), [1, w]), [h, 1])
+    y_t = tf.expand_dims(y_t, axis=-1)
+    x_t = tf.expand_dims(x_t, axis=-1)
+    meshgrid = tf.concat([y_t, x_t], axis=-1)
+
+    mu = tf.einsum("ijl,aijk->akl", meshgrid, probs)
+    mu_out_prod = tf.einsum("akm,akn->akmn", mu, mu)
+
+    mesh_out_prod = tf.einsum("ijm,ijn->ijmn", meshgrid, meshgrid)
+    sigma = tf.einsum("ijmn,aijk->akmn", mesh_out_prod, probs) - mu_out_prod
+    return mu, sigma
+
+
+def tf_hm(h, w, mu, L):
     """
     Returns Gaussian densitiy function based on μ and L for each batch index and part
     L is the cholesky decomposition of the covariance matrix : Σ = L L^T
