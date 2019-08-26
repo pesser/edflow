@@ -1,5 +1,5 @@
-import multistage_trainer.nn as nn
-from multistage_trainer.nn import conv2D, dense
+from edflow.nn import tf_nn as nn
+from edflow.nn.tf_nn import conv2d, dense
 from tensorflow.contrib.framework.python.ops import arg_scope
 import copy
 import tensorflow as tf
@@ -13,13 +13,13 @@ from tensorflow import contrib
 autograph = contrib.autograph
 
 
-def mnist_model(x):
-    with arg_scope([conv2D, dense], activation=tf.nn.relu):
-        features = conv2D(x, 32, 5, padding="valid")
+def mnist_model(x, *args, **kwargs):
+    with arg_scope([conv2d, dense], activation=tf.nn.relu):
+        features = conv2d(x, 32, [5, 5], padding="valid")
         features = tf.layers.max_pooling2d(features, 2, strides=1)
-        features = conv2D(features, 64, 3, padding="valid")
+        features = conv2d(features, 64, [3, 3], padding="valid")
         features = tf.layers.max_pooling2d(features, 2, strides=1)
-        features = conv2D(features, 64, 3, padding="valid")
+        features = conv2d(features, 64, [3, 3], padding="valid")
         features = tf.layers.max_pooling2d(features, 2, strides=1)
 
         y = tf.layers.flatten(features)
