@@ -1534,6 +1534,21 @@ class LatentDistribution(object):
         return out
 
     def kl(self, other=None):
+        """KL between inferred distribution and standard normal distribution
+
+        .. math::
+
+            p \sim N( \mu, diag(\sigma) ) \\
+            KL(p | N(0, I)) = 0.5 * \sum_{j}^{J} { [-1.0 - \log (\sigma_j^2) + \mu_j^2 + \sigma_j^2 ]}
+
+        Parameters
+        ----------
+        other
+
+        Returns
+        -------
+
+        """
         if other is not None:
             raise NotImplemented("Only KL to standard normal is implemented.")
 
