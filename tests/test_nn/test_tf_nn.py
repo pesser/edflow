@@ -229,3 +229,48 @@ def test_space_to_batch2():
         plt.figure()
         plt.imshow(np.squeeze(image2[i]))
     plt.show()
+
+
+class Test_LatentDistribution(object):
+    def test_kl(self):
+        tf.enable_eager_execution()
+        import numpy as np
+
+        dim = 64
+        parameters = np.concatenate([np.zeros((1, dim)), np.ones((1, dim))], axis=1)
+        parameters = tf.convert_to_tensor(parameters)
+        latent_distribution = nn.LatentDistribution(dim, parameters)
+        expected_means = np.zeros((dim, 1))
+        expected_stds = np.ones((dim, 1))
+        assert np.allclose(expected_means, np.squeeze(latent_distribution.mean))
+        assert np.allclose(expected_stds, np.squeeze(latent_distribution.std))
+        assert np.allclose(np.array([0.0]), np.squeeze(latent_distribution.kl()))
+
+    def test_sample(self):
+        tf.enable_eager_execution()
+        import numpy as np
+
+        dim = 64
+        parameters = np.concatenate(
+            [np.zeros((1, dim), dtype=np.float32), np.ones((1, dim), dtype=np.float32)],
+            axis=1,
+        )
+        parameters = tf.convert_to_tensor(parameters)
+        latent_distribution = nn.LatentDistribution(dim, parameters, True)
+        assert latent_distribution.mean.shape == latent_distribution.sample().shape
+
+    def test_expand_dims(self):
+        tf.enable_eager_execution()
+        import numpy as np
+
+        dim = 64
+        parameters = np.concatenate(
+            [
+                np.zeros((1, 1, 1, dim), dtype=np.float32),
+                np.ones((1, 1, 1, dim), dtype=np.float32),
+            ],
+            axis=3,
+        )
+        parameters = tf.convert_to_tensor(parameters)
+        latent_distribution = nn.LatentDistribution(dim, parameters, True)
+        assert (1, 1, 1, dim) == latent_distribution.sample().shape

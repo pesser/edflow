@@ -1463,6 +1463,92 @@ def mumford_shah(x, alpha, lambda_):
     return r
 
 
+class LatentDistribution(object):
+    def __init__(self, dim, parameters, stochastic=True):
+        """Create Gaussian distribution from inferred parameters.
+
+        Each dimension of the Gaussian is assumed to be independent.
+
+        Parameters
+        ----------
+        parameters : tensor
+            tensor of shape [N, 2*dim]
+        dim : int
+            dimension of gaussian distribution
+        stochastic : bool
+            if True, sample returns stochastic samples from the Gaussian. False can be used during inference.
+
+        References
+        ----------
+        Kignma & Welling, Auto-Encoding Variational Bayes, 2014
+        https://arxiv.org/abs/1312.6114
+        """
+        self.parameters = parameters
+        self.dim = dim
+        self.stochastic = stochastic
+
+        parameter_shape = self.parameters.shape.as_list()
+        if len(parameter_shape) != 2:
+            if not len(parameter_shape) == 4:
+                raise ValueError(
+                    "Parameters has to be shape [N, 2*dim] or [N, 1, 1, 2*dim]"
+                )
+            if not parameter_shape[1] == parameter_shape[2] == 1:
+                raise ValueError(
+                    "Parameters has to be shape [N, 2*dim] or [N, 1, 1, 2*dim]"
+                )
+            self.expand_dims = True
+            self.parameters = tf.squeeze(self.parameters, axis=[1, 2])
+            parameter_shape = self.parameters.shape.as_list()
+        else:
+            self.expand_dims = False
+        assert len(parameter_shape) == 2
+        self.batch_size = parameter_shape[0]
+        event_dim = self.dim
+        size_splits = [event_dim, event_dim]
+        self.mean, self.std = tf.split(self.parameters, size_splits, axis=1)
+        # logarithmically
+        ms = self.mean.shape.as_list()
+        self.event_axes = list(range(1, len(ms)))
+        self.event_shape = ms[1:]
+        assert len(self.event_shape) == 1, self.event_shape
+
+    @staticmethod
+    def n_parameters(dim):
+        return dim * 2
+
+    def sample(self, noise_level=1.0):
+        if not self.stochastic:
+            out = self.mean
+        else:
+            eps = (
+                noise_level
+                * tf.random_normal([self.batch_size, self.dim, 1])
+                * tf.expand_dims(self.std, -1)
+            )
+            eps = tf.squeeze(eps, axis=-1)
+            out = self.mean + eps
+        if self.expand_dims:
+            out = tf.expand_dims(out, axis=1)
+            out = tf.expand_dims(out, axis=1)
+        return out
+
+    def kl(self, other=None):
+        if other is not None:
+            raise NotImplemented("Only KL to standard normal is implemented.")
+
+        mu_square = tf.square(self.mean)
+        std_square = tf.square(self.std)
+
+        log_std_square = 2.0 * tf.log(self.std)
+
+        kl = 0.5 * tf.reduce_sum(
+            -1.0 - log_std_square + mu_square + std_square, axis=self.event_axes
+        )
+        kl = tf.reduce_mean(kl)
+        return kl
+
+
 if __name__ == "__main__":
     tf.enable_eager_execution()
     x = tf.ones((1, 128, 128, 3))
