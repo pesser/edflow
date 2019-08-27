@@ -1228,6 +1228,24 @@ def tf_hm(h, w, mu, L, order="exp"):
 
 
 def sample_gumbel(shape, eps=1e-20):
+    r"""Draw sample from gumbel distribution
+
+    .. math::
+
+        U \sim \text{uniform}([0, 1]) \\
+        G = -\log(-\log(U + \epsilon) + \epsilon)
+
+    Parameters
+    ----------
+    shape: tuple
+    eps: float
+        :math:`\epsilon`.
+
+    Returns
+    -------
+    G: tensor
+        samples from gumbel distribution
+    """
     U = tf.random_uniform(shape, minval=0.0, maxval=1.0)
     return -tf.log(-tf.log(U + eps) + eps)
 
