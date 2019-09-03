@@ -10,4 +10,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - adds interface for model and trainer to derive from to support multiple stages. For example pretraining and training.
     - example can be found in `examples/multistage_trainer`
 - `edlist` shows process group id (`pgid`), see FAQ.
+- method `probs_to_mu_sigma` in `tf_nn.py` to estimate spatial mean and covariance across multiple channels.
 - CHANGELOG.md to document notable changes.
