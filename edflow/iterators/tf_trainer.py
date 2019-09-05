@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-
+import copy
 from edflow.iterators.tf_iterator import TFHookedModelIterator
 
 from edflow.hooks.logging_hooks.tf_logging_hook import LoggingHook
@@ -316,3 +316,101 @@ class TFListTrainer(TFBaseTrainer):
 
     def get_learning_rate_multiplier(self, i):
         return 1.0
+
+
+class TFMultiStageTrainer(TFBaseTrainer):
+    """Adds multistage training to Edflow Trainer
+
+    Stages are defined through the config. For example
+
+        stages:
+          1:
+            name: pretrain
+            end: 10
+            losses: []
+          2:
+            name: retrain
+            end: 30
+            losses: ["model"]
+          3:
+            name: train
+            losses: ["model"]
+
+    The stages are sorted by their key. It is recommended to keep the simple numeric ordering.
+    In each stage, a set of losses can be specified through the `losses : [ "loss1", "loss2", ...]` syntax.
+    The duration of each stage is given by the `end : num_steps` value. Note that the end of a stage
+    is determined in the order of the stages. A later stage has to have a higher end value then the previous one.
+
+    The model has to implement the `edflowiterators.tf_trainer.TFMultiStageModel` interface. Look at the multistage_trainer example.
+    """
+
+    def __init__(self, config, root, model, **kwargs):
+        if not isinstance(model, TFMultiStageModel):
+            raise ValueError("Model does not support Multistage interface")
+        else:
+            super(TFMultiStageTrainer, self).__init__(config, root, model, **kwargs)
+
+    def create_train_op(self):
+        super(TFMultiStageTrainer, self).create_train_op()
+        self.stages = copy.deepcopy(self.config.get("stages"))
+        for stage_number, stage_options in self.stages.items():
+            stage_opt_ops = [
+                self.opt_ops[loss_name] for loss_name in stage_options["losses"]
+            ]
+            stage_opt_ops = tf.group(*stage_opt_ops)
+            with tf.control_dependencies([stage_opt_ops] + self.update_ops):
+                stage_train_op = tf.no_op()
+            stage_options.update({"train_op": stage_train_op})
+        self.log_ops["stage"] = self.model.stage
+
+    def run(self, fetches, feed_dict):
+        current_stage = self.determine_current_stage()
+        self.session.run(
+            [self.model.stage_update_op],
+            feed_dict={self.model.stage_placeholder: current_stage},
+        )
+        current_train_op = self.get_current_train_op(current_stage)
+        if self.get_global_step() == 0:
+            self.logger.info("Running custom initialization op.")
+            fetches["step_ops"] = self.run_once_op
+        else:
+            fetches["step_ops"] = current_train_op
+        get_global_step = fetches.pop("global_step")
+        results = self.session.run(fetches, feed_dict=feed_dict)
+        results["global_step"] = get_global_step()
+        return results
+
+    def get_current_train_op(self, current_stage):
+        current_train_op = self.stages[current_stage]["train_op"]
+        return current_train_op
+
+    def determine_current_stage(self):
+        global_step = self.get_global_step()
+        for stage_number in sorted(self.stages.keys()):
+            stage_options = self.stages[stage_number]
+            end = stage_options.get("end", -1)
+            if end < 0:
+                return stage_number
+            elif global_step < end:
+                return stage_number
+            else:
+                pass
+
+
+class TFMultiStageModel(object):
+    def __init__(self):
+        self._stage_update = tf.placeholder(tf.int32, shape=(), name="stage_update")
+        self._stage = tf.Variable(0, trainable=False, dtype=tf.int32)
+        self._stage_update_op = tf.assign(self._stage, self._stage_update)
+
+    @property
+    def stage_update_op(self):
+        return self._stage_update_op
+
+    @property
+    def stage_placeholder(self):
+        return self._stage_update
+
+    @property
+    def stage(self):
+        return self._stage

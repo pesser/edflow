@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal logger now supports list of handlers.
 - pdb support. Use `import edflow.fpdb as pdb; pdb.set_trace()` instead of
   `import pdb; pdb.set_trace()`.
+- TFMultiStageTrainer and TFMultiStageModel
+    - adds interface for model and trainer to derive from to support multiple stages. For example pretraining and training.
+    - example can be found in `examples/multistage_trainer`
 - `edlist` shows process group id (`pgid`), see FAQ.
+- method `probs_to_mu_sigma` in `tf_nn.py` to estimate spatial mean and covariance across multiple channels.
 - CHANGELOG.md to document notable changes.
 
 ### Changed

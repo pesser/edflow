@@ -6,6 +6,7 @@ class ForkedPdb(pdb.Pdb):
     able to interact with the debugger. os.fdopen instead of
     open("/dev/stdin") keeps readline working.
     https://stackoverflow.com/a/31821795"""
+
     def interaction(self, *args, **kwargs):
         _stdin = sys.stdin
         try:
