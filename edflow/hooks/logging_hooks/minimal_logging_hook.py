@@ -25,7 +25,7 @@ class LoggingHook(Hook):
         self.interval = interval
         self.root = root_path
         self.logger = get_logger(self)
-        self.handlers = {"images": self.log_images, "scalars": self.log_scalars}
+        self.handlers = {"images": [self.log_images], "scalars": [self.log_scalars]}
 
     def after_step(self, batch_index, last_results):
         if batch_index % self.interval == 0:
@@ -36,7 +36,8 @@ class LoggingHook(Hook):
                     handler_results = retrieve(
                         last_results, path + "/" + k, default=dict()
                     )
-                    self.handlers[k](handler_results)
+                    for handler in self.handlers[k]:
+                        handler(handler_results)
             self.logger.info("project root: {}".format(self.root))
 
     def log_scalars(self, results):
