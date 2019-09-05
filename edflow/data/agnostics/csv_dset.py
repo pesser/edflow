@@ -1,4 +1,5 @@
-from edflow.data.dataset import DatasetMixin
+from edflow.data.dataset_mixin import DatasetMixin
+import warnings
 import pandas as pd
 import numpy as np
 
@@ -28,7 +29,12 @@ class CsvDataset(DatasetMixin):
         # file like bounding boxes or keypoints.
         # Just make sure to load the data correctly, e.g. by passing the
         # converter ast.literal_val for the corresponding column.
-        self.labels = {k: np.stack(self.data[k].values) for k in self.data}
+        with warnings.catch_warnings():
+            # Pandas will complain, that we are trying to add a column when
+            # doing `self.data.labels = labels`. We can ignore this message.
+            warnings.simplefilter("ignore", category=UserWarning)
+
+            self.labels = {k: np.stack(self.data[k].values) for k in self.data}
 
     def get_example(self, idx):
         """Returns all entries in row :attr:`idx` of the labels."""
