@@ -50,3 +50,8 @@ How can I kill edflow zombie processes?
    You can use `edlist` to show all edflow processes. All sub-processes share
    the same process group id (`pgid`), so you can easily send all of them a
    signal with `kill -- -<pgid>`.
+
+How do I set breakpoints? `import pdb; pdb.set_trace()` is not working.
+   Use `import edflow.fpdb as pdb; pdb.set_trace()` instead. `edflow` runs
+   trainings and evaluations in their own processes. Hence, `sys.stdin` must be
+   set properly to be able to interact with the debugger.

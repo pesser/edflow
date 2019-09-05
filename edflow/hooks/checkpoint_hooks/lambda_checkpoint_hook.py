@@ -32,6 +32,7 @@ class LambdaCheckpointHook(Hook):
 
         os.makedirs(root_path, exist_ok=True)
         self.savename = os.path.join(root_path, "{}-{{}}.ckpt".format(modelname))
+        self._active = False
 
     def after_epoch(self, epoch):
         """
@@ -62,8 +63,11 @@ class LambdaCheckpointHook(Hook):
         -------
 
         """
+        step = self.global_step_getter()
         if self.interval is not None and step % self.interval == 0:
-            self.save()
+            if self._active:
+                self.save()
+        self._active = True
 
     def at_exception(self, *args, **kwargs):
         """
