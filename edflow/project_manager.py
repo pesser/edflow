@@ -44,6 +44,8 @@ class ProjectManager(object):
 
             if given_directory is None and ProjectManager.code_root is not None:
                 self.copy_code()
+            if "EDFLOW_GIT" in os.environ:
+                self.git_commit()
 
             ProjectManager.exists = True
         else:
@@ -121,6 +123,11 @@ class ProjectManager(object):
         except shutil.Error as err:
             print(err)
             pass
+
+    def git_commit(self):
+        # perform the following
+        # CHEAD=$(git rev-parse HEAD); git add -u; git commit -m "edflow ..."; git tag -a edflow_date-and-time-project -m "more"; git reset --mixed $CHEAD
+        pass
 
     def __repr__(self):
         """Nice file structure representation."""
