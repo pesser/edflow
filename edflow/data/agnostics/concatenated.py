@@ -34,6 +34,7 @@ class ExampleConcatenatedDataset(DatasetMixin):
         lists."""
 
         self.example_slice = slice(start, stop, step)
+        self.slice_changed = True
 
     def __len__(self):
         return len(self.datasets[0])
@@ -41,9 +42,9 @@ class ExampleConcatenatedDataset(DatasetMixin):
     @property
     def labels(self):
         """Now each index corresponds to a sequence of labels."""
-        if not hasattr(self, "_labels"):
+        if not hasattr(self, "_labels") or self.slice_changed:
             self._labels = dict()
-            for idx, dataset in enumerate(self.datasets):
+            for idx, dataset in enumerate(self.datasets[self.example_slice]):
                 for k in dataset.labels:
                     if k in self._labels:
                         self._labels[k] += [dataset.labels[k]]
@@ -56,6 +57,7 @@ class ExampleConcatenatedDataset(DatasetMixin):
                 # their axes stay at the same positions.
                 trans = [1, 0] + list(range(2, len(v.shape)))
                 self._labels[k] = v.transpose(*trans)
+            self.slice_changed = False
         return self._labels
 
     def get_example(self, i):

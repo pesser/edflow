@@ -97,7 +97,7 @@ def test_ExampleConcatenatedDataset_step():
     assert len(E) == 10
     d = E[2]
 
-    assert d == {"val": [2, 2], "index_": 2, "other": [2, 2]}
+    assert d == {"val": [2], "index_": 2, "other": [2]}
 
     assert len(E.labels["label1"]) == 10
     assert np.all(E.labels["label1"] == [[i, i] for i in range(10)])
@@ -106,3 +106,51 @@ def test_ExampleConcatenatedDataset_step():
 
     with pytest.raises(AssertionError):
         ExampleConcatenatedDataset(D1, D3)
+
+    D4 = DebugDataset(size=10)
+    D5 = DebugDataset(size=10)
+
+    E = ExampleConcatenatedDataset(D1, D2, D4, D5)
+    E.set_example_pars(step=2)
+    assert len(E) == 10
+    d = E[2]
+
+    assert d == {"val": [2, 2], "index_": 2, "other": [2, 2]}
+
+    assert len(E.labels["label1"]) == 10
+    assert np.all(E.labels["label1"] == [[i, i] for i in range(10)])
+
+
+def test_ExampleConcatenatedDataset_slicing():
+    D1 = DebugDataset(size=10)
+    D2 = DebugDataset(size=10)
+    D3 = DebugDataset(size=10)
+    D4 = DebugDataset(size=10)
+
+    E = ExampleConcatenatedDataset(D1, D2, D3, D4)
+    E.set_example_pars(start=1, step=2)
+    assert len(E) == 10
+    d = E[2]
+
+    assert d == {"val": [2, 2], "index_": 2, "other": [2, 2]}
+
+    assert len(E.labels["label1"]) == 10
+    assert np.all(E.labels["label1"] == [[i, i] for i in range(10)])
+
+    E.set_example_pars(start=0, stop=-1, step=2)
+    assert len(E) == 10
+    d = E[2]
+
+    assert d == {"val": [2, 2], "index_": 2, "other": [2, 2]}
+
+    assert len(E.labels["label1"]) == 10
+    assert np.all(E.labels["label1"] == [[i, i] for i in range(10)])
+
+    E.set_example_pars(start=1, stop=-1, step=2)
+    assert len(E) == 10
+    d = E[2]
+
+    assert d == {"val": [2], "index_": 2, "other": [2]}
+
+    assert len(E.labels["label1"]) == 10
+    assert np.all(E.labels["label1"] == [[i] for i in range(10)])
