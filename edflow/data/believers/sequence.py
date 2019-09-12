@@ -43,16 +43,20 @@ class SequenceDataset(DatasetMixin):
         frame_ids = np.array(dataset.labels[fid_key])
         if frame_ids.ndim != 1 or len(frame_ids) != len(dataset):
             raise ValueError(
-                    'Frame ids must be supplied as a sequence of '
-                    'scalars with the same length as the dataset! Here we '
-                    'have np.shape(dataset.labels[{}]) = {}`.'
-                    .format(fid_key, np.shape(frame_ids)))
+                "Frame ids must be supplied as a sequence of "
+                "scalars with the same length as the dataset! Here we "
+                "have np.shape(dataset.labels[{}]) = {}`.".format(
+                    fid_key, np.shape(frame_ids)
+                )
+            )
         if frame_ids.dtype != np.int:
-            raise TypeError('Frame ids must be supplied as ints, but are {}'
-                             .format(frame_ids.dtype))
+            raise TypeError(
+                "Frame ids must be supplied as ints, but are {}".format(frame_ids.dtype)
+            )
         if frame_ids.dtype != np.int:
-            raise TypeError('Frame ids must be supplied as ints, but are {}'
-                             .format(frame_ids.dtype))
+            raise TypeError(
+                "Frame ids must be supplied as ints, but are {}".format(frame_ids.dtype)
+            )
 
         diffs = frame_ids[1:] - frame_ids[:-1]
         idxs = np.where(diffs <= 0)[0] + 1
@@ -61,13 +65,15 @@ class SequenceDataset(DatasetMixin):
         badboys = start_fids != 0
         if np.any(badboys):
             n = sum(badboys)
-            i_s = '' if n == 1 else 's'
-            id_s = 'ex' if n == 1 else 'ices'
+            i_s = "" if n == 1 else "s"
+            id_s = "ex" if n == 1 else "ices"
             raise ValueError(
-                    'Frame id sequences must always start with 0. '
-                    'There are {} sequences starting with the follwing id{}: '
-                    '{} at ind{} {} in the dataset.'
-                    .format(n, i_s, start_fids[badboys], id_s, idxs[badboys]))
+                "Frame id sequences must always start with 0. "
+                "There are {} sequences starting with the follwing id{}: "
+                "{} at ind{} {} in the dataset.".format(
+                    n, i_s, start_fids[badboys], id_s, idxs[badboys]
+                )
+            )
 
         top_indeces = np.where(np.array(frame_ids) >= (length * step - 1))[0]
 
@@ -191,9 +197,11 @@ def getSeqDataset(config):
     base_dset = get_implementations_from_config(config[ks], ["dataset"])["dataset"]
     base_dset = base_dset(config=config)
 
-    S = SequenceDataset(base_dset,
-                        config[ks]["length"],
-                        config[ks]["step"],
-                        fid_key=config[ks]['fid_key'])
+    S = SequenceDataset(
+        base_dset,
+        config[ks]["length"],
+        config[ks]["step"],
+        fid_key=config[ks]["fid_key"],
+    )
 
     return S

@@ -42,7 +42,8 @@ class DebugDataset(DatasetMixin):
     def labels(self):
         if not hasattr(self, "_labels"):
             self._labels = {
-                k: [i + self.offset for i in range(self.size)] for k in ["label1", "label2"]
+                k: [i + self.offset for i in range(self.size)]
+                for k in ["label1", "label2"]
             }
         return self._labels
 

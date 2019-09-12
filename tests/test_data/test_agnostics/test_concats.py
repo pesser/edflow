@@ -132,25 +132,25 @@ def test_ExampleConcatenatedDataset_slicing():
     assert len(E) == 10
     d = E[2]
 
-    assert d == {"val": [2+1, 2+3], "index_": 2, "other": [2+1, 2+3]}
+    assert d == {"val": [2 + 1, 2 + 3], "index_": 2, "other": [2 + 1, 2 + 3]}
 
     assert len(E.labels["label1"]) == 10
-    assert np.all(E.labels["label1"] == [[i+1, i+3] for i in range(10)])
+    assert np.all(E.labels["label1"] == [[i + 1, i + 3] for i in range(10)])
 
     E.set_example_pars(start=0, stop=-1, step=2)
     assert len(E) == 10
     d = E[2]
 
-    assert d == {"val": [2, 2+2], "index_": 2, "other": [2, 2+2]}
+    assert d == {"val": [2, 2 + 2], "index_": 2, "other": [2, 2 + 2]}
 
     assert len(E.labels["label1"]) == 10
-    assert np.all(E.labels["label1"] == [[i, i+2] for i in range(10)])
+    assert np.all(E.labels["label1"] == [[i, i + 2] for i in range(10)])
 
     E.set_example_pars(start=1, stop=-1, step=2)
     assert len(E) == 10
     d = E[2]
 
-    assert d == {"val": [2+1], "index_": 2, "other": [2+1]}
+    assert d == {"val": [2 + 1], "index_": 2, "other": [2 + 1]}
 
     assert len(E.labels["label1"]) == 10
-    assert np.all(E.labels["label1"] == [[i+1] for i in range(10)])
+    assert np.all(E.labels["label1"] == [[i + 1] for i in range(10)])
