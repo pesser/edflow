@@ -48,3 +48,8 @@ class DebugDataset(DatasetMixin):
 
     def __len__(self):
         return self.size
+
+
+class ConfigDebugDataset(DebugDataset):
+    def __init__(self, config):
+        super().__init__(**config)

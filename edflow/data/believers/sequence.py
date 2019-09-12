@@ -1,6 +1,7 @@
 from edflow.data.dataset_mixin import DatasetMixin
 from edflow.data.agnostics.subdataset import SubDataset
 from edflow.data.agnostics.concatenated import ExampleConcatenatedDataset
+from edflow.main import get_implementations_from_config
 import numpy as np
 
 
@@ -115,26 +116,22 @@ class UnSequenceDataset(DatasetMixin):
         seq_dataset : SequenceDataset
             A :class:`SequenceDataset` with attributes :attr:`length`.
         """
-        self.data = seq_dataset
+        self.base_data = seq_dataset
         try:
-            self.seq_len = self.data.length
+            self.base_seq_len = self.data.length
         except BaseException:
             # Try to get the seq_length from the labels
-            key = list(self.data.labels.keys())[0]
-            self.seq_len = len(self.data.labels[key][0])
+            key = list(self.base_data.labels.keys())[0]
+            self.seq_len = len(self.base_data.labels[key][0])
 
-    @property
-    def labels(self):
-        if not hasattr(self, "_labels"):
-            self._labels = self.data.labels
-            for k, v in self.labels.items():
-                self._labels[k] = np.concatenate(v, axis=-1)
-        return self._labels
+        self.labels = {}
+        for k, v in self.base_data.labels.items():
+            self.labels[k] = np.concatenate(v, axis=-1)
 
     def __len__(self):
         """Length is equal to the fixed sequences length times the number of
         sequences."""
-        return self.seq_len * len(self.data)
+        return self.seq_len * len(self.base_data)
 
     def get_example(self, i):
         """Examples are gathered with the index
@@ -143,7 +140,7 @@ class UnSequenceDataset(DatasetMixin):
         example_idx = i // self.seq_len
         seq_idx = i % self.seq_len
 
-        example = self.data[example_idx]
+        example = self.base_data[example_idx]
         seq_example = {}
         for k, v in example.items():
             # index is added by DatasetMixin
@@ -168,9 +165,10 @@ def getSeqDataset(config):
         iterator: Some Iterator
 
         seqdataset:
-                dataset: import.path.to.your.basedataset,
-                length: 3,
-                step: 1}
+                dataset: import.path.to.your.basedataset
+                length: 3
+                step: 1
+                fid_key: fid
 
     ``getSeqDataSet`` will import the base ``dataset`` and pass it to
     :class:`SequenceDataset` together with ``length`` and ``step`` to
@@ -193,4 +191,9 @@ def getSeqDataset(config):
     base_dset = get_implementations_from_config(config[ks], ["dataset"])["dataset"]
     base_dset = base_dset(config=config)
 
-    return SequenceDataset(base_dset, config[ks]["seq_length"], config[ks]["seq_step"])
+    S = SequenceDataset(base_dset,
+                        config[ks]["length"],
+                        config[ks]["step"],
+                        fid_key=config[ks]['fid_key'])
+
+    return S
