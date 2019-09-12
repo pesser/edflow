@@ -6,8 +6,8 @@ class LabelDataset(DatasetMixin):
 
     def __init__(self, data):
         """
-        Paramters
-        ---------
+        Parameters
+        ----------
         data : DatasetMixin
             Some dataset where we are only interested in the labels.
         """
