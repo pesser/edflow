@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt  # noqa
 import matplotlib.gridspec as gridspec  # noqa
 
 import numpy as np  # noqa
-import cv2  # noqa
 
 from edflow.util import walk  # noqa
 
@@ -31,18 +30,27 @@ def flow2hsv(flow):
     hsv[:, :, 2] = 255
 
     # magnitude and angle
-    mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+    mag, ang = cart2polar(flow[..., 0], flow[..., 1])
 
     # make it colorful
-    hsv[..., 0] = ang * 180 / np.pi / 2
-    hsv[..., 1] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-
+    hsv[..., 0] = ang * 180 / np.pi
+    normalizer = mpl.colors.Normalize(mag.min(), mag.max())
+    hsv[..., 1] = np.int32(normalizer(mag) * 255)
     return hsv
+
+
+def cart2polar(x, y):
+    """
+    Takes two array as x and y coordinates and returns the magnitude and angle.
+    """
+    r = np.sqrt(x ** 2 + y ** 2)
+    phi = np.arctan2(x, y)
+    return r, phi
 
 
 def hsv2rgb(hsv):
     """color space conversion hsv -> rgb. simple wrapper for nice name."""
-    rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+    rgb = mpl.colors.hsv_to_rgb(hsv)
     return rgb
 
 
