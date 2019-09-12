@@ -68,10 +68,13 @@ class LogSingleton(object):
     def get(self, name, which=None):
         """Create logger, set level.
 
-        Args:
-            name (str or object): Name of the logger. If not a string, the name
-                of the given object class is used.
-            which (str): subdirectory in the project folder.
+        Parameters
+        ----------
+        name : str or object
+	    Name of the logger. If not a string, the name
+            of the given object class is used.
+        which : str
+	    subdirectory in the project folder.
         """
         which = which or LogSingleton.default
 
@@ -115,7 +118,6 @@ def fix_abseil():
 
 def init_project(base_dir, code_root=".", postfix=None):
     """Must be called at the very beginning of a script."""
-    fix_abseil()
     P = ProjectManager(base_dir, code_root=code_root, postfix=postfix)
     LogSingleton(P.root)
     return P
@@ -132,11 +134,15 @@ def get_logger(name, which=None, level="info"):
     """Creates a logger, which shares its output directory with all other
     loggers.
 
-    Args:
-        name (str): Name of the logger.
-        which (str): Any subdirectory of the project.
+    Parameters
+    ----------
+    name : str
+        Name of the logger.
+    which : str
+        Any subdirectory of the project.
     """
 
+    fix_abseil()
     L = LogSingleton(level=getattr(logging, level.upper()))
 
     if not L.exists:

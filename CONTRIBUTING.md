@@ -2,6 +2,11 @@
 
 The following is a set of guidelines for contributing to edflow. These are mostly guidelines, not rules. Use your best judgment on when to apply them and always be nice to each other :heart:.
 
+> ### code-block
+> In your docstring write **``.. code-block:: <language>``**, when showing examples.
+>
+> This comment is right here, because everyone seems to be doing it wrong.
+  
 #### Table Of Contents
 
 [Code of Conduct](#code-of-conduct)
@@ -25,17 +30,17 @@ The following is a set of guidelines for contributing to edflow. These are mostl
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [pesser@github.com](mailto:pesser@github.com).
+This project and everyone participating in it is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [patrick.esser@iwr.uni-heidelberg.de](mailto:patrick.esser@iwr.uni-heidelberg.de).
 
 ## I just have a question!
 
-> **Note:** [Please don't file an issue to ask a question.]
-
-If you have any questions on how to use edflow, feel free to contact Mimo Tillbich.
+If the [documentation](https://edflow.readthedocs.io/en/latest/) cannot help
+you, feel free to contact one of the
+[contributors](https://github.com/pesser/edflow#contributors).
 
 ## The Basics
 
-Before you do anything, we advise you to read the [documentation](https://edflow.readthedocs.io/en/latest/), it's really not that long and helps a lot...
+Before you do anything, we advise you to read the [documentation](https://edflow.readthedocs.io/en/latest/), it's really not that long and helps a lot.
 
 ## How Can I Contribute?
 
@@ -72,14 +77,14 @@ As for bugs please be precise in your suggestions:
 ### First Code Contribution
 
 The first step is always the hardest. None of us is Linus Torvalds. This is the first open project for most of us so don't feel intimidated, we are learning, too.
-At least try to follow the guidelines you find [here](#contributing-to-edflow)
+At least try to follow the [guidelines](#contributing-to-edflow).
 
 ### Pull Requests
 
 Please follow these steps when contributing:
 
-1. Follow all instructions in [the template](PULL_REQUEST_TEMPLATE.md)
-2. Follow the [styleguides](#styleguides)
+1. Add notable changes to the [CHANGELOG.md](CHANGELOG.md).
+2. Follow the [styleguides](#styleguides).
 3. After you submit your pull request, verify that all [tests](https://travis-ci.org/pesser/edflow/) are passing.
 
 This makes working together easier for all of us.
@@ -110,7 +115,7 @@ This makes working together easier for all of us.
 
 ### Code Styleguide
 
-Just remember to use black (This is necessary to pass the tests)
+Just remember to use black (This is necessary to pass the tests).
 
 
 

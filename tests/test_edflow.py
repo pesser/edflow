@@ -251,9 +251,11 @@ class Test_eval(object):
         assert any(list(filter(lambda x: "test_inference" in x, eval_dirs)))
 
     def test_4(self, tmpdir):
-        """
-        Tests evaluation with providing a checkpoint and using eval_all=True and eval_forever=True.
-        This should load not load any checkpoint.
+        """Tests evaluation with
+        1. providing a checkpoint
+        2. and using eval_all=True and eval_forever=True.
+
+        This should disable overwrite eval_all and eval_forever to ``False``, and then load the specified checkpoint
 
         effectively runs
             edflow -e config.yaml -b config.yaml -c logs/trained_model/train/checkpoints/model.ckpt-0
@@ -291,6 +293,54 @@ class Test_eval(object):
             "config.yaml",
             "-p",
             os.path.join("logs", "trained_model"),
+            "-n",
+            "test_inference",
+        ]
+        command = " ".join(command)
+        run_edflow_cmdline(command, cwd=tmpdir)
+
+        # check if correct folder was created
+        eval_dirs = os.listdir(os.path.join(tmpdir, "logs", "trained_model", "eval"))
+        assert any(list(filter(lambda x: "test_inference" in x, eval_dirs)))
+
+    def test_5(self, tmpdir):
+        """Tests evaluation with
+        1. providing a project
+        1. using eval_all=True and eval_forever=True.
+
+        This should NOT load any checkpoint.
+
+        effectively runs
+            edflow -e config.yaml -b config.yaml -p logs/trained_model -n test_inference
+
+        and then checks if an evaluation folder "test_inference" was created in logs/trained_model/eval
+        -------
+        """
+        self.setup_tmpdir(tmpdir)
+        # command = "edflow -e eval.yaml -b train.yaml -n test"
+        config = dict()
+        config["model"] = "tests." + fullname(Model)
+        config["iterator"] = "tests." + fullname(Iterator_no_checkpoint)
+        config["dataset"] = "tests." + fullname(Dataset)
+        config["batch_size"] = 16
+        config["num_steps"] = 100
+        config["eval_all"] = True
+        config["eval_forever"] = False
+        import yaml
+
+        with open(os.path.join(tmpdir, "config.yaml"), "w") as outfile:
+            yaml.dump(config, outfile, default_flow_style=False)
+        import shutil
+
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        command = [
+            "edflow",
+            "-e",
+            "config.yaml",
+            "-p",
+            os.path.join("logs", "trained_model"),
+            "-b",
+            "config.yaml",
             "-n",
             "test_inference",
         ]

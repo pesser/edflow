@@ -6,6 +6,8 @@ from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint
 
 
 class LambdaCheckpointHook(Hook):
+    """ """
+
     def __init__(
         self,
         root_path,
@@ -16,7 +18,9 @@ class LambdaCheckpointHook(Hook):
         interval=None,
         modelname="model",
     ):
-        """Args:
+        """
+        Parameters
+        ----------
         """
         self.root = root_path
         self.logger = get_logger(self)
@@ -28,19 +32,61 @@ class LambdaCheckpointHook(Hook):
 
         os.makedirs(root_path, exist_ok=True)
         self.savename = os.path.join(root_path, "{}-{{}}.ckpt".format(modelname))
+        self._active = False
 
     def after_epoch(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch :
+
+
+        Returns
+        -------
+
+        """
         if self.interval is None:
             self.save()
 
     def after_step(self, step, last_results):
+        """
+
+        Parameters
+        ----------
+        step :
+
+        last_results :
+
+
+        Returns
+        -------
+
+        """
+        step = self.global_step_getter()
         if self.interval is not None and step % self.interval == 0:
-            self.save()
+            if self._active:
+                self.save()
+        self._active = True
 
     def at_exception(self, *args, **kwargs):
+        """
+
+        Parameters
+        ----------
+        *args :
+
+        **kwargs :
+
+
+        Returns
+        -------
+
+        """
         self.save()
 
     def save(self):
+        """ """
         savename = self.savename.format(self.global_step_getter())
         self._save(savename)
         self.logger.info("Saved model to {}".format(savename))
@@ -58,6 +104,17 @@ class LambdaCheckpointHook(Hook):
 
     @staticmethod
     def parse_global_step(checkpoint):
+        """
+
+        Parameters
+        ----------
+        checkpoint :
+
+
+        Returns
+        -------
+
+        """
         checkpoint = checkpoint.rsplit(".ckpt", 1)[0]
         global_step = int(checkpoint.rsplit("-", 1)[1])
         return global_step
