@@ -44,12 +44,13 @@ if __name__ == "__main__":
     all_edflow_processes = get_process("edflow")
     all_edflow_processes = sorted(all_edflow_processes, key = lambda x: x["create_time"])
     if all_edflow_processes:
-        print("#"+", ".join(["pid".rjust(5), "start".ljust(19), "command"]))
+        print("#"+", ".join(["pid".rjust(5), "pgid".rjust(6), "start".ljust(19), "command"]))
     for _dict in all_edflow_processes:
         args = _dict["cmdline"]
         args = args[1:]
         args[0] = os.path.basename(args[0])
         cmd = " ".join(args)
         pid = str(_dict["pid"])
+        gid = str(os.getpgid(_dict["pid"]))
         create_time = datetime.datetime.fromtimestamp(_dict["create_time"]).strftime("%Y-%m-%d %H:%M:%S")
-        print(", ".join([pid.rjust(6), create_time, cmd]))
+        print(", ".join([pid.rjust(6), gid.rjust(6), create_time, cmd]))

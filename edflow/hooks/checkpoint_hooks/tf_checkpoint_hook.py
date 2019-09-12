@@ -7,7 +7,15 @@ from edflow.custom_logging import get_logger
 
 class RestoreModelHook(Hook):
     """Restores a TensorFlow model from a checkpoint at each epoch. Can also
-    be used as a functor."""
+    be used as a functor.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    """
 
     def __init__(
         self,
@@ -40,11 +48,23 @@ class RestoreModelHook(Hook):
 
     @property
     def session(self):
+        """ """
         if not hasattr(self, "_session"):
             self._session = tf.get_default_session()
         return self._session
 
     def before_epoch(self, ep):
+        """
+
+        Parameters
+        ----------
+        ep :
+
+
+        Returns
+        -------
+
+        """
         # checkpoint = tf.train.latest_checkpoint(self.root)
         checkpoint = get_latest_checkpoint(self.root, self.fcond)
         self(checkpoint)
@@ -59,6 +79,17 @@ class RestoreModelHook(Hook):
 
     @staticmethod
     def parse_global_step(checkpoint):
+        """
+
+        Parameters
+        ----------
+        checkpoint :
+
+
+        Returns
+        -------
+
+        """
         global_step = int(checkpoint.rsplit("-", 1)[1])
         return global_step
 
@@ -71,7 +102,15 @@ RestoreTFModelHook = RestoreModelHook
 
 class CheckpointHook(Hook):
     """Does that checkpoint thingy where it stores everything in a
-    checkpoint."""
+    checkpoint.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    """
 
     def __init__(
         self,
@@ -119,26 +158,76 @@ class CheckpointHook(Hook):
         self.session = session
 
     def before_epoch(self, ep):
+        """
+
+        Parameters
+        ----------
+        ep :
+
+
+        Returns
+        -------
+
+        """
         if self.session is None:
             self.session = tf.get_default_session()
 
     def after_epoch(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch :
+
+
+        Returns
+        -------
+
+        """
         if self.interval is None:
             self.save()
 
     def after_step(self, step, last_results):
+        """
+
+        Parameters
+        ----------
+        step :
+
+        last_results :
+
+
+        Returns
+        -------
+
+        """
         if self.interval is not None and self.global_step() % self.interval == 0:
             self.save()
 
     def at_exception(self, *args, **kwargs):
+        """
+
+        Parameters
+        ----------
+        *args :
+
+        **kwargs :
+
+
+        Returns
+        -------
+
+        """
         self.save()
 
     def save(self):
+        """ """
         global_step = self.global_step()
         self.saver.save(self.session, self.savename, global_step=global_step)
         self.logger.info("Saved model to {}".format(self.savename))
 
     def global_step(self):
+        """ """
         if isinstance(self.step, tf.Tensor) or isinstance(self.step, tf.Variable):
             global_step = self.step
         else:
@@ -150,21 +239,67 @@ class RetrainHook(Hook):
     """Restes the global step at the beginning of training."""
 
     def __init__(self, global_step=None):
-        """Args:
-            global_step (tf.Variable): Variable tracking the training step.
+        """
+        Parameters
+        ----------
+        global_step : tf.Variable
+	    Variable tracking the training step.
         """
 
         self.global_step = global_step
         self.logger = get_logger(self)
 
     def before_epoch(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch :
+
+
+        Returns
+        -------
+
+        """
         self.epoch = epoch
 
     def before_step(self, batch_index, fetches, feeds, batch):
+        """
+
+        Parameters
+        ----------
+        batch_index :
+
+        fetches :
+
+        feeds :
+
+        batch :
+
+
+        Returns
+        -------
+
+        """
         if self.epoch == 0 and batch_index == 0:
             fetches["reset_step"] = tf.assign(self.global_step, 0)
 
     def after_step(self, step, *args, **kwargs):
+        """
+
+        Parameters
+        ----------
+        step :
+
+        *args :
+
+        **kwargs :
+
+
+        Returns
+        -------
+
+        """
         if step == 0 and self.epoch == 0:
             self.logger.info("Reset global_step")
 
@@ -204,13 +339,43 @@ class WaitForManager(Hook):
             time.sleep(self.sleep_interval)
 
     def before_epoch(self, ep):
+        """
+
+        Parameters
+        ----------
+        ep :
+
+
+        Returns
+        -------
+
+        """
         self.wait()
 
 
 class RestoreCurrentCheckpointHook(RestoreModelHook):
     """Restores a TensorFlow model from a checkpoint at each epoch. Can also
-    be used as a functor."""
+    be used as a functor.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    """
 
     def before_epoch(self, ep):
+        """
+
+        Parameters
+        ----------
+        ep :
+
+
+        Returns
+        -------
+
+        """
         checkpoint = self.root
         self(checkpoint)
