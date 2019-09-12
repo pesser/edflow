@@ -196,6 +196,17 @@ def heatmap_fn(key, im, ax):
     im_fn(key, im, ax)
 
 
+def keypoints_fn(key, keypoints, ax):
+    """
+    Plots a list of keypoints as a dot plot.
+    """
+    add_im_info(keypoints, ax)
+    x = keypoints[:, 0]
+    y = keypoints[:, 1]
+    ax.plot(x, y, "go", markersize=1)
+    ax.set_ylabel(key)
+
+
 def flow_fn(key, im, ax):
     """Plot an flow. Used by :func:`plot_datum`."""
     im = flow2rgb(im)
@@ -213,6 +224,7 @@ def other_fn(key, obj, ax):
 PLOT_FUNCTIONS = {
     "image": im_fn,
     "heat": heatmap_fn,
+    "keypoints": keypoints_fn,
     "flow": flow_fn,
     "other": other_fn,
 }
@@ -228,7 +240,10 @@ def default_heuristic(key, obj):
             if obj.shape[-1] in [3, 4]:
                 return "image"
             elif obj.shape[-1] == 2:
-                return "flow"
+                if len(obj.shape) <= 2:
+                    return "keypoints"
+                else:
+                    return "flow"
             else:
                 return "heat"
     return "other"
