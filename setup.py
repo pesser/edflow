@@ -25,11 +25,13 @@ setup(
         "scikit-image",
         "pandas",
         "psutil",
-        "pytest",
         "deprecated",
         "fastnumbers",
     ],
-    extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "numpy"]},
+    extras_require={
+        "docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "numpy"],
+        "test": ["pytest", "pytest-cov", "coveralls"],
+    },
     zip_safe=False,
     scripts=[
         "edflow/edflow",

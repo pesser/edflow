@@ -19,6 +19,8 @@ before_install:
 
 install: true
 
+after_success:
+  - coveralls
 
 # Run test
 jobs:
@@ -29,32 +31,24 @@ jobs:
         - pip install black
       script:
         - black --check .
+      after_success: skip
     - stage: documentation
       name: "documentation test"
       install:
         - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy
       script:
         - sphinx-build -W -v -b html docs/ docs/_build/
-    - stage: general_tests
-      name: "General Tests"
-      install:
-        - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
-        - source activate test-environment
-        - conda install pytorch-cpu torchvision-cpu -c pytorch
-        - pip install tensorboardX
-        - python setup.py install
-      script:
-        - python -c "import skimage" # fix failing test due to static tls loading
-        - pytest --ignore=examples # use pytest instead of python -m pytest
+      after_success: skip
     - stage: tf_example_tests
       name: "Tensorflow examples test"
       install:
         - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
         - source activate test-environment
-        - python setup.py install
+        - pip install -e .[test]
       script:
         - cd examples
-        - python -m pytest -k tf
+        - pytest --cov edflow -k tf --cov-config .coveragerc --cov-append
+        - cd ..
     - stage: torch_example_tests
       name: "Pytorch examples test"
       install:
@@ -62,7 +56,19 @@ jobs:
         - source activate test-environment
         - conda install pytorch-cpu torchvision-cpu -c pytorch
         - pip install tensorboardX
-        - python setup.py install
+        - pip install -e .[test]
       script:
         - cd examples
-        - python -m pytest -k torch
+        - pytest --cov edflow -k torch --cov-config .coveragerc --cov-append
+        - cd ..
+    - stage: general_tests
+      name: "General Tests"
+      install:
+        - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
+        - source activate test-environment
+        - conda install pytorch-cpu torchvision-cpu -c pytorch
+        - pip install tensorboardX
+        - pip install -e .[test]
+      script:
+        - python -c "import skimage" # fix failing test due to static tls loading
+        - pytest --cov edflow --cov-config .coveragerc --ignore=examples # use pytest instead of python -m pytest
