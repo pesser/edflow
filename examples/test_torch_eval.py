@@ -1,4 +1,5 @@
 import subprocess
+import pytest
 
 
 def get_model_csv(stdout):
@@ -22,18 +23,44 @@ def test_eval():
     csv_name = get_model_csv(str(output))
 
     output = subprocess.run(
-        "edeval -c {} -cb eval_hook.model.empty_callback".format(csv_name),
+            "edeval -c {} -cb empty:eval_hook.model.empty_callback".format(csv_name),
         shell=True,
         check=True,
     )
+
+
+def test_eval_cbs_and_kwargs_from_config():
+    """Just make sure example runs and raises no errors. Here additional
+    callbacks are supplied via the config file."""
+    output = subprocess.check_output(
+        "edflow -t eval_hook/mnist_config_cb.yaml -n eval_testrun --num_steps 11",
+        shell=True,
+    )
+
+
+def test_eval_wrong_cb_format():
+    """Just make sure example runs and raises an expected error."""
+    output = subprocess.check_output(
+        "edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11",
+        shell=True,
+    )
+
+    csv_name = get_model_csv(str(output))
+
+    with pytest.raises(subprocess.CalledProcessError):
+        output = subprocess.run(
+                "edeval -c {} -cb eval_hook.model.empty_callback".format(csv_name),
+            shell=True,
+            check=True,
+        )
 
 
 def test_eval_with_additional_kwargs():
     """Make sure example runs without errors while adding more kwargs.
 
     1. edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11
-    2. edeval -c csv_name -cb eval_hook.model.empty_callback --batch_size 16
-    3. edeval -c csv_name -cb eval_hook.model.empty_callback --not_in_there TEST
+    2. edeval -c csv_name -cb empty:eval_hook.model.empty_callback --batch_size 16
+    3. edeval -c csv_name -cb empty:eval_hook.model.empty_callback --not_in_there TEST
     """
 
     output = subprocess.check_output(
@@ -44,7 +71,7 @@ def test_eval_with_additional_kwargs():
     csv_name = get_model_csv(str(output))
 
     output = subprocess.run(
-        "edeval -c {} -cb eval_hook.model.empty_callback --batch_size 16".format(
+            "edeval -c {} -cb empty:eval_hook.model.empty_callback --batch_size 16".format(
             csv_name
         ),
         shell=True,
@@ -52,7 +79,7 @@ def test_eval_with_additional_kwargs():
     )
 
     output = subprocess.run(
-        "edeval -c {} -cb eval_hook.model.empty_callback --not_in_there TEST".format(
+            "edeval -c {} -cb empty:eval_hook.model.empty_callback --not_in_there TEST".format(
             csv_name
         ),
         shell=True,

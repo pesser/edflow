@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from edflow.eval.pipeline import standalone_eval_csv_file
+from edflow.eval.pipeline import standalone_eval_csv_file, cbargs2cbdict
 from edflow.config import parse_unknown_args
 
 A = argparse.ArgumentParser(
@@ -13,7 +13,7 @@ the relevant information: Which dataset was used to create the data, along with
 all config parameters and where all generated samples live.
 
 Callbacks will be evaluated in the order they have been passed to this
-function.
+function. They must be supplied in `name:callback` pairs.
 
 For more documentation take a look at ``edflow/eval_pipeline/eval_pipeline.py``
 """
@@ -39,4 +39,6 @@ A.add_argument(
 args, unknown = A.parse_known_args()
 additional_kwargs = parse_unknown_args(unknown)
 
-standalone_eval_csv_file(args.csv, args.callback, additional_kwargs)
+standalone_eval_csv_file(args.csv,
+                         cbargs2cbdict(args.callback),
+                         additional_kwargs)
