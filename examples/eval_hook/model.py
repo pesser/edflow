@@ -68,7 +68,7 @@ class Iterator(TorchHookedModelIterator):
             EvalHook(
                 self.dataset,
                 ["target"],
-                callbacks={'empty': empty_callback},
+                callbacks={"empty": empty_callback},
                 config=config,
                 step_getter=self.get_global_step,
             )

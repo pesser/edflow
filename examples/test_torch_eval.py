@@ -23,7 +23,7 @@ def test_eval():
     csv_name = get_model_csv(str(output))
 
     output = subprocess.run(
-            "edeval -c {} -cb empty:eval_hook.model.empty_callback".format(csv_name),
+        "edeval -c {} -cb empty:eval_hook.model.empty_callback".format(csv_name),
         shell=True,
         check=True,
     )
@@ -49,7 +49,7 @@ def test_eval_wrong_cb_format():
 
     with pytest.raises(subprocess.CalledProcessError):
         output = subprocess.run(
-                "edeval -c {} -cb eval_hook.model.empty_callback".format(csv_name),
+            "edeval -c {} -cb eval_hook.model.empty_callback".format(csv_name),
             shell=True,
             check=True,
         )
@@ -71,7 +71,7 @@ def test_eval_with_additional_kwargs():
     csv_name = get_model_csv(str(output))
 
     output = subprocess.run(
-            "edeval -c {} -cb empty:eval_hook.model.empty_callback --batch_size 16".format(
+        "edeval -c {} -cb empty:eval_hook.model.empty_callback --batch_size 16".format(
             csv_name
         ),
         shell=True,
@@ -79,7 +79,7 @@ def test_eval_with_additional_kwargs():
     )
 
     output = subprocess.run(
-            "edeval -c {} -cb empty:eval_hook.model.empty_callback --not_in_there TEST".format(
+        "edeval -c {} -cb empty:eval_hook.model.empty_callback --not_in_there TEST".format(
             csv_name
         ),
         shell=True,
