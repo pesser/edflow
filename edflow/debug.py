@@ -27,11 +27,13 @@ class DebugIterator(PyHookedModelIterator):
 
 
 class DebugDataset(DatasetMixin):
-    def __init__(self, size=100, *args, **kwargs):
+    def __init__(self, size=100, offset=0, *args, **kwargs):
         self.size = size
+        self.offset = offset
 
     def get_example(self, i):
         if i < self.size:
+            i += self.offset
             return {"val": i, "index_": i, "other": i}
         else:
             raise IndexError("Out of bounds")
@@ -40,9 +42,15 @@ class DebugDataset(DatasetMixin):
     def labels(self):
         if not hasattr(self, "_labels"):
             self._labels = {
-                k: [i for i in range(self.size)] for k in ["label1", "label2"]
+                k: [i + self.offset for i in range(self.size)]
+                for k in ["label1", "label2"]
             }
         return self._labels
 
     def __len__(self):
         return self.size
+
+
+class ConfigDebugDataset(DebugDataset):
+    def __init__(self, config):
+        super().__init__(**config)
