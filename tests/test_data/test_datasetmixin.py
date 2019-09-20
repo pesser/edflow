@@ -1,6 +1,6 @@
 import pytest
 
-from edflow.data.dataset import DatasetMixin
+from edflow.data.dataset_mixin import DatasetMixin
 from edflow.debug import DebugDataset
 
 

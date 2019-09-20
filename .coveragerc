@@ -1,0 +1,7 @@
+# .coveragerc to control coverage.py
+[run]
+data_file = .coverage
+
+[report]
+# fail_under = $FAIL_PERCENT
+precision = 2
