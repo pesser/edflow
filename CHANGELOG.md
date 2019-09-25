@@ -18,3 +18,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `LambdaCheckpointHook` uses global step and doesn't save on first step.
+- Switched opencv2 functions with manual ones to get rid of the dependency.
