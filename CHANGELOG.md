@@ -20,3 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Removed colons from log directory names and replaced them by hyphens.
 - `LambdaCheckpointHook` uses global step and doesn't save on first step.
+- Switched opencv2 functions with manual ones to get rid of the dependency.
+- `edeval` now allows for differnet callback interface via the config. Callbacks are now entered as `dicts`, which allows to also pass keyword arguments to the callbacks from the config.
+
+### Removed
+- It is no longer possible to pass callbacks as list via the config
