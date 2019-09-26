@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt  # noqa
 import matplotlib.gridspec as gridspec  # noqa
 
 import numpy as np  # noqa
-import cv2  # noqa
 
 from edflow.util import walk  # noqa
 
@@ -31,18 +30,27 @@ def flow2hsv(flow):
     hsv[:, :, 2] = 255
 
     # magnitude and angle
-    mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+    mag, ang = cart2polar(flow[..., 0], flow[..., 1])
 
     # make it colorful
-    hsv[..., 0] = ang * 180 / np.pi / 2
-    hsv[..., 1] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-
+    hsv[..., 0] = ang * 180 / np.pi
+    normalizer = mpl.colors.Normalize(mag.min(), mag.max())
+    hsv[..., 1] = np.int32(normalizer(mag) * 255)
     return hsv
+
+
+def cart2polar(x, y):
+    """
+    Takes two array as x and y coordinates and returns the magnitude and angle.
+    """
+    r = np.sqrt(x ** 2 + y ** 2)
+    phi = np.arctan2(x, y)
+    return r, phi
 
 
 def hsv2rgb(hsv):
     """color space conversion hsv -> rgb. simple wrapper for nice name."""
-    rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+    rgb = mpl.colors.hsv_to_rgb(hsv)
     return rgb
 
 
@@ -196,6 +204,17 @@ def heatmap_fn(key, im, ax):
     im_fn(key, im, ax)
 
 
+def keypoints_fn(key, keypoints, ax):
+    """
+    Plots a list of keypoints as a dot plot.
+    """
+    add_im_info(keypoints, ax)
+    x = keypoints[:, 0]
+    y = keypoints[:, 1]
+    ax.plot(x, y, "go", markersize=1)
+    ax.set_ylabel(key)
+
+
 def flow_fn(key, im, ax):
     """Plot an flow. Used by :func:`plot_datum`."""
     im = flow2rgb(im)
@@ -213,6 +232,7 @@ def other_fn(key, obj, ax):
 PLOT_FUNCTIONS = {
     "image": im_fn,
     "heat": heatmap_fn,
+    "keypoints": keypoints_fn,
     "flow": flow_fn,
     "other": other_fn,
 }
@@ -228,7 +248,10 @@ def default_heuristic(key, obj):
             if obj.shape[-1] in [3, 4]:
                 return "image"
             elif obj.shape[-1] == 2:
-                return "flow"
+                if len(obj.shape) <= 2:
+                    return "keypoints"
+                else:
+                    return "flow"
             else:
                 return "heat"
     return "other"
