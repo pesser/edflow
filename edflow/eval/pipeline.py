@@ -183,6 +183,10 @@ class EvalHook(Hook):
 
         config_cbs = retrieve(config, "eval_pipeline/callbacks", default={})
         callbacks.update(config_cbs)
+
+        self.cb_names = list(callback.keys())
+        self.cb_paths = list(callback.values())
+
         self.cbacks = load_callbacks(callbacks)
         self.logger.info("{}".format(self.cbacks))
 
@@ -355,11 +359,13 @@ class EvalHook(Hook):
         add_meta_data(csv_path, self.config)
 
         this_script = os.path.dirname(__file__)
-        cb_names = list(self.cbacks.keys())
+        cb_names = self.cb_names
+        cb_paths = self.cb_paths
+
         if cb_names:
-            cbs = " ".join(cb_names)
+            cbs = " ".join("{}:{}".format(k, v) for k, v in zip(cb_names, cb_paths))
         else:
-            cbs = "<your callback>"
+            cbs = "<name>:<your callback>"
 
         self.logger.info("MODEL_OUPUT_CSV {}".format(csv_path))
         self.logger.info(
@@ -1104,7 +1110,6 @@ def config2cbdict(config):
         All name:callback pairs as ``dict`` ``{name: callback}``
     """
 
-    print(config)
     callbacks = retrieve(config, "eval_pipeline/callbacks", default={})
     kwargs = retrieve(config, "eval_pipeline/callback_kwargs", default={})
 
