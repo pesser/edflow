@@ -17,7 +17,6 @@ setup(
     package_data={"": ["*.yaml"]},
     install_requires=[
         "pyyaml",
-        "opencv-python",
         "tqdm",
         "Pillow",
         "chainer",
