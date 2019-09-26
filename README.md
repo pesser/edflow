@@ -227,7 +227,7 @@ evaluation mode will finish with
 
 ```
 [INFO] [EvalHook]: All data has been produced. You can now also run all callbacks using the following command:
-edeval -c logs/2019-08-05T18:55:20_hello_tfe/eval/2019-08-05T19:22:23/1207/model_output.csv -cb <your callback>
+edeval -c logs/2019-08-05T18:55:20_hello_tfe/eval/2019-08-05T19:22:23/1207/model_output.csv -cb <name>:<your callback>
 ```
 
 Your callbacks will get the path to the evaluation folder, the input dataset as
@@ -265,7 +265,7 @@ which can be executed with:
 
 
 ```
-$ edeval -c logs/2019-08-05T18:55:20_hello_tfe/eval/2019-08-05T19:22:23/1207/model_output.csv -cb template_tfe.edflow.acc_callback
+$ edeval -c logs/2019-08-05T18:55:20_hello_tfe/eval/2019-08-05T19:22:23/1207/model_output.csv -cb tfe_cb:template_tfe.edflow.acc_callback
 ...
 INFO:acc_callback:Loss1: 0.4174468219280243
 INFO:acc_callback:Loss2: 0.4174468546746697
