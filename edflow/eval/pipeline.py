@@ -184,8 +184,8 @@ class EvalHook(Hook):
         config_cbs = retrieve(config, "eval_pipeline/callbacks", default={})
         callbacks.update(config_cbs)
 
-        self.cb_names = list(callback.keys())
-        self.cb_paths = list(callback.values())
+        self.cb_names = list(callbacks.keys())
+        self.cb_paths = list(callbacks.values())
 
         self.cbacks = load_callbacks(callbacks)
         self.logger.info("{}".format(self.cbacks))
