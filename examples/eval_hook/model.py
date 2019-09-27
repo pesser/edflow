@@ -8,7 +8,7 @@ from edflow.main import get_obj_from_str
 from edflow.hooks.pytorch_hooks import ToNumpyHook
 
 
-def empty_callback(root, data_in, data_out, config):
+def empty_callback(root, data_in, data_out, config, arg1=None, arg2=None):
 
     for i in range(min(10, len(data_out))):
         ex_in = data_in[i]
@@ -68,8 +68,8 @@ class Iterator(TorchHookedModelIterator):
             EvalHook(
                 self.dataset,
                 ["target"],
-                callbacks=[empty_callback],
-                meta=config,
+                callbacks={"empty": empty_callback},
+                config=config,
                 step_getter=self.get_global_step,
             )
         ]
