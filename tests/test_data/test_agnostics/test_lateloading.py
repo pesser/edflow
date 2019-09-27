@@ -10,7 +10,7 @@ class Base(DatasetMixin):
         def _routine():
             return idx
 
-        return {'image': _routine}
+        return {"image": _routine}
 
     def __len__(self):
         return 10
@@ -23,6 +23,6 @@ def test_late_loading_dset():
     L = LateLoadingDataset(B)
 
     d = L[0]
-    assert d == {'image': 0, 'index_': 0}
+    assert d == {"image": 0, "index_": 0}
     d = L[5]
-    assert d == {'image': 5, 'index_': 5}
+    assert d == {"image": 5, "index_": 5}
