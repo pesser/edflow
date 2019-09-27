@@ -11,6 +11,7 @@ class LateLoadingDataset(DatasetMixin):
     use by calling the routines.
 
     .. code-block:: python
+
         class BaseDset:
             def get_example(self, idx):
                 def _loading_routine():
