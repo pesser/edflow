@@ -7,6 +7,8 @@ from edflow.iterators.resize import resize_uint8  # noqa
 from edflow.iterators.resize import resize_float32  # noqa
 from edflow.iterators.resize import resize_hfloat32  # noqa
 
+from edflow.util import get_leaf_names, retrieve, set_value
+
 from chainer.iterators import MultiprocessIterator
 
 from edflow.data.dataset import DatasetMixin  # noqa
@@ -84,26 +86,188 @@ def batch_to_canvas(X, cols=None):
     return canvas
 
 
+def deep_lod2dol(list_of_nested_things):
+    """Turns a list of nested dictionaries into a nested dictionary of lists.
+    This function takes care that all leafs of the nested dictionaries are 
+    considered as full keys, not only the top level keys.
+
+    Parameters
+    ----------
+    list_of_nested_things : list(dict(anything))
+        A list of deep dictionaries
+
+    Returns
+    -------
+    out : dict(anything(list))
+        A dict containing lists of leaf entries.
+
+    Raises
+    ------
+    ValueError
+        Raised if the passed object is not a `list` or if its values are not
+        `dict`s.
+    """
+
+    # Put custom exceptions in try excepts so that we do not check everytime
+    # the type, only when an error occurs
+    try:
+        leaf_keypaths = get_leaf_names(list_of_nested_things[0])
+    except Exception as e:
+        if not isinstance(list_of_nested_things, list):
+            raise TypeError(
+                "Expected `list` but got " "{}".format(type(list_of_nested_things))
+            )
+        else:
+            raise e
+
+    try:
+        out = {}
+        for key in leaf_keypaths:
+            stacked_entry = np.stack([retrieve(d, key) for d in list_of_nested_things])
+            set_value(out, key, stacked_entry)
+    except Exception as e:
+        for v in list_of_nested_things:
+            if not isinstance(v, dict):
+                raise TypeError("Entries must be `dict` but got " "{}".format(type(v)))
+        raise e
+
+    return out
+
+
+def deep_lod2dol_v2(list_of_nested_things):
+    """Turns a list of nested dictionaries into a nested dictionary of lists.
+    This function takes care that all leafs of the nested dictionaries are 
+    considered as full keys, not only the top level keys.
+
+    .. Note::
+
+        The difference to :function:`deep_lod2dol` is, that the correct type is
+        always checked not only at exceptions.
+
+    Parameters
+    ----------
+    list_of_nested_things : list(dict(anything))
+        A list of deep dictionaries
+
+    Returns
+    -------
+    out : dict(anything(list))
+        A dict containing lists of leaf entries.
+
+    Raises
+    ------
+    ValueError
+        Raised if the passed object is not a `list` or if its values are not
+        `dict`s.
+    """
+
+    if not isinstance(list_of_nested_things, list):
+        raise TypeError(
+            "Expected `list` but got " "{}".format(type(list_of_nested_things))
+        )
+    leaf_keypaths = get_leaf_names(list_of_nested_things[0])
+
+    for v in list_of_nested_things:
+        if not isinstance(v, dict):
+            raise TypeError("Entries must be `dict` but got " "{}".format(type(v)))
+    out = {}
+    for key in leaf_keypaths:
+        stacked_entry = np.stack([retrieve(d, key) for d in list_of_nested_things])
+        set_value(out, key, stacked_entry)
+
+    return out
+
+
+def deep_lod2dol_v3(list_of_nested_things):
+    """Turns a list of nested dictionaries into a nested dictionary of lists.
+    This function takes care that all leafs of the nested dictionaries are 
+    considered as full keys, not only the top level keys.
+
+    .. Note::
+
+        The difference to :function:`deep_lod2dol` is, that the correct type is
+        never checked.
+
+    Parameters
+    ----------
+    list_of_nested_things : list(dict(anything))
+        A list of deep dictionaries
+
+    Returns
+    -------
+    out : dict(anything(list))
+        A dict containing lists of leaf entries.
+    """
+
+    leaf_keypaths = get_leaf_names(list_of_nested_things[0])
+
+    out = {}
+    for key in leaf_keypaths:
+        stacked_entry = np.stack([retrieve(d, key) for d in list_of_nested_things])
+        set_value(out, key, stacked_entry)
+
+    return out
+
+
+def _benchmark_deep_lod2dol():
+    from contextlib import contextmanager
+    from time import time
+
+    @contextmanager
+    def timing(description: str, n: int) -> None:
+        start = time()
+        yield
+        ellapsed_time = (time() - start) / n * 1000
+
+        print(f"{description}: {ellapsed_time:0.3f} ms")
+
+    N = 100
+
+    for bs in [1, 5, 25, 250, 1000]:
+        lod = [{"a": 1, "b": {"c": 1, "d": [1, 2]}, "e": [{"a": 1}] * 2}] * bs
+
+        with timing("v1@{: >4}".format(bs), N):
+            for i in range(N):
+                deep_lod2dol(lod)
+
+        with timing("v2@{: >4}".format(bs), N):
+            for i in range(N):
+                deep_lod2dol_v2(lod)
+
+        with timing("v3@{: >4}".format(bs), N):
+            for i in range(N):
+                deep_lod2dol_v3(lod)
+
+        print("-" * 15)
+
+    # This results in the following on my lenovo t480s with an i7
+    # v1@   1: 0.168 ms
+    # v2@   1: 0.159 ms
+    # v3@   1: 0.137 ms
+    # ---------------
+    # v1@   5: 0.185 ms
+    # v2@   5: 0.189 ms
+    # v3@   5: 0.185 ms
+    # ---------------
+    # v1@  25: 0.502 ms
+    # v2@  25: 0.408 ms
+    # v3@  25: 0.403 ms
+    # ---------------
+    # v1@ 250: 3.364 ms
+    # v2@ 250: 3.740 ms
+    # v3@ 250: 5.661 ms
+    # ---------------
+    # v1@1000: 21.364 ms
+    # v2@1000: 15.858 ms
+    # v3@1000: 15.648 ms
+    # ---------------
+
+
 class Iterator(MultiprocessIterator):
     """Iterator that converts a list of dicts into a dict of lists."""
 
-    def _lod2dol(self, lod):
-        try:
-            return {k: np.stack([d[k] for d in lod], 0) for k in lod[0]}
-        except ValueError:
-            # debug which key is causing trouble
-            for k in lod[0]:
-                try:
-                    np.stack([d[k] for d in lod])
-                except BaseException:
-                    print(k)
-                    for d in lod:
-                        print(d[k])
-                    print(k)
-            raise
-
     def __next__(self):
-        return self._lod2dol(super(Iterator, self).__next__())
+        return deep_lod2dol_v2(super(Iterator, self).__next__())
 
     @property
     def n(self):
@@ -151,3 +315,5 @@ if __name__ == "__main__":
     B.batch_size = 32
 
     pprint(next(B))
+
+    _benchmark_deep_lod2dol()
