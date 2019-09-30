@@ -104,8 +104,7 @@ def deep_lod2dol(list_of_nested_things):
     Raises
     ------
     ValueError
-        Raised if the passed object is not a ``list`` or if its values are not
-        ``dict``s.
+        Raised if the passed object is not a ``list`` or if its values are not ``dict`` s.
     """
 
     # Put custom exceptions in try excepts so that we do not check everytime
@@ -141,7 +140,7 @@ def deep_lod2dol_v2(list_of_nested_things):
 
     .. Note::
 
-        The difference to :function:`deep_lod2dol` is, that the correct type is
+        The difference to :func:`deep_lod2dol` is, that the correct type is
         always checked not only at exceptions.
 
     Parameters
@@ -157,8 +156,8 @@ def deep_lod2dol_v2(list_of_nested_things):
     Raises
     ------
     ValueError
-        Raised if the passed object is not a `list` or if its values are not
-        `dict`s.
+        Raised if the passed object is not a ``list`` or if its values are not
+        ``dict`` s.
     """
 
     if not isinstance(list_of_nested_things, list):
@@ -185,7 +184,7 @@ def deep_lod2dol_v3(list_of_nested_things):
 
     .. Note::
 
-        The difference to :function:`deep_lod2dol` is, that the correct type is
+        The difference to :func:`deep_lod2dol` is, that the correct type is
         never checked.
 
     Parameters
