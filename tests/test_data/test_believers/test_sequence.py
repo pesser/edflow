@@ -72,6 +72,35 @@ def test_seq_wrong_fid_len():
         S = SequenceDataset(D, 3, fid_key="label1")
 
 
+def test_seq_offset_fid_strat_remove():
+    D1 = DebugDataset(size=10)
+    D2 = DebugDataset(size=10, offset=3)
+
+    D = D1 + D2
+
+    S = SequenceDataset(D, 3, fid_key="label1", strategy="remove")
+
+    assert len(S) == (len(D1) - 2)
+
+
+def test_seq_offset_fid_strat_reset():
+    D1 = DebugDataset(size=10)
+    D2 = DebugDataset(size=12, offset=3)
+
+    D = D1 + D2
+
+    S = SequenceDataset(D, 3, fid_key="label1", strategy="reset")
+
+    assert len(S) == (len(D1) - 2 + len(D2) - 2)
+
+
+def test_seq_offset_fid_strat_unknown():
+    D = DebugDataset(size=12, offset=3)
+
+    with pytest.raises(ValueError):
+        S = SequenceDataset(D, 3, fid_key="label1", strategy="recolorize")
+
+
 # =============================================================================
 
 
