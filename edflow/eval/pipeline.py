@@ -974,7 +974,7 @@ def txt_loader(path):
 
 
 def standalone_eval_csv_file(
-    path_to_csv, callbacks, additional_kwargs={}, callback_kwargs={}
+    path_to_csv, callbacks, additional_kwargs={}, other_config={}
 ):
     """Runs all given callbacks on the data in the :class:`EvalDataFolder`
     constructed from the given csv.abs
@@ -989,10 +989,10 @@ def standalone_eval_csv_file(
     additional_kwargs : dict
         Keypath-value pairs added to the config, which is extracted from
         the ``model_outputs.csv``.
-    callback_kwargs : dict
-        Keyword arguments passed to the callbacks when they are run. Must
-        be supplied as ``name: kwargs_dict`` pairs, with ``name`` being the
-        key of the corresponding callback.
+    other_config : dict
+        Additional config used to update the existing one as taken from the
+        ``model_outputs.csv`` . Cannot overwrite the dataset. Only used for 
+        callbacks.
 
     Returns
     -------
@@ -1012,13 +1012,13 @@ def standalone_eval_csv_file(
     config = read_meta_data(path_to_csv)
     update_config(config, additional_kwargs)
 
-    config_callbacks, config_cb_kwargs = config2cbdict(config)
-    callbacks.update(config_callbacks)
-    callback_kwargs.update(config_cb_kwargs)
-
     dataset_str = config["dataset"]
     impl = get_implementations_from_config(config, ["dataset"])
     in_data = impl["dataset"](config)
+
+    config_callbacks, config_cb_kwargs = config2cbdict(config)
+    callbacks.update(config_callbacks)
+    callback_kwargs.update(config_cb_kwargs)
 
     callbacks = load_callbacks(callbacks)
 
@@ -1124,6 +1124,7 @@ def config2cbdict(config):
 
 if __name__ == "__main__":
     import argparse
+    from edflow.config import parse_unknown_args
 
     A = argparse.ArgumentParser()
 
@@ -1148,4 +1149,7 @@ if __name__ == "__main__":
 
     callbacks = cbargs2cbdict(args.callback)
 
-    standalone_eval_csv_file(args.csv, callbacks)
+    args, unknown = parser.parse_known_args()
+    additional_kwargs = parse_unknown_args(unknown)
+
+    standalone_eval_csv_file(args.csv, callbacks, additional_kwargs, args.other_config)
