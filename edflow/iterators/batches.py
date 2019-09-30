@@ -93,19 +93,19 @@ def deep_lod2dol(list_of_nested_things):
 
     Parameters
     ----------
-    list_of_nested_things : list(dict(anything))
-        A list of deep dictionaries
+    list_of_nested_things : list
+        A list of deep nested dictionaries.
 
     Returns
     -------
-    out : dict(anything(list))
+    out : dict
         A dict containing lists of leaf entries.
 
     Raises
     ------
     ValueError
-        Raised if the passed object is not a `list` or if its values are not
-        `dict`s.
+        Raised if the passed object is not a ``list`` or if its values are not
+        ``dict``s.
     """
 
     # Put custom exceptions in try excepts so that we do not check everytime
@@ -146,12 +146,12 @@ def deep_lod2dol_v2(list_of_nested_things):
 
     Parameters
     ----------
-    list_of_nested_things : list(dict(anything))
+    list_of_nested_things : list
         A list of deep dictionaries
 
     Returns
     -------
-    out : dict(anything(list))
+    out : dict
         A dict containing lists of leaf entries.
 
     Raises
