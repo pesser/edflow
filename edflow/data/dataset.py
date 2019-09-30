@@ -20,6 +20,11 @@ be a dict, that can be empty.
     Dataset, which are specified in the edflow config must accept one
     positional argument ``config``!
 
+If you have to worry about dataloading take a look at the
+:class:`LateLoadingDataset`. You can define datasets to return examples
+containing callables for heavy dataloading, which are only executed by the
+:class:`LateLoadingDataset`. Having this class as the last in your dataset
+pipline can potentially speed up your data loading.
 """
 
 # TODO maybe just pull
