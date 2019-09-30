@@ -1012,6 +1012,10 @@ def standalone_eval_csv_file(
     config = read_meta_data(path_to_csv)
     update_config(config, additional_kwargs)
 
+    config_callbacks, config_cb_kwargs = config2cbdict(config)
+    callbacks.update(config_callbacks)
+    callback_kwargs.update(config_cb_kwargs)
+
     dataset_str = config["dataset"]
     impl = get_implementations_from_config(config, ["dataset"])
     in_data = impl["dataset"](config)
@@ -1020,7 +1024,9 @@ def standalone_eval_csv_file(
 
     root = os.path.dirname(path_to_csv)
 
-    outputs = apply_callbacks(callbacks, root, in_data, out_data, config)
+    outputs = apply_callbacks(
+        callbacks, root, in_data, out_data, config, callback_kwargs
+    )
 
     return outputs
 
