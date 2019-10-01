@@ -413,15 +413,16 @@ class EvalDataFolder(DatasetMixin):
             csv_path = root
             root = os.path.dirname(root)
 
+        labels = load_labels(os.path.join(root, "model_outputs"))
+
         # Capture the case that only labels have been written out
         try:
             csv_data = CsvDataset(csv_path, comment="#")
             self.data = ProcessedDataset(csv_data, er)
         except pd.errors.EmptyDataError as e:
-            exemplar_labels = self.labels[sorted(self.labels.keys())[0]]
-            self.data = EmptyDataset(len(exemplar_labels), self.labels)
+            exemplar_labels = labels[sorted(labels.keys())[0]]
+            self.data = EmptyDataset(len(exemplar_labels), labels)
 
-        labels = load_labels(os.path.join(root, "model_outputs"))
         self.data.labels.update(labels)
 
         self.append_labels = True
@@ -464,7 +465,7 @@ def load_labels(root):
     -------
 
     """
-    regex = re.compile(".*-\*-.*-\*-.*\.npy")
+    regex = re.compile(r".*-\*-.*-\*-.*\.npy")
 
     files = os.listdir(root)
     label_files = [f for f in files if regex.match(f) is not None]
@@ -600,7 +601,7 @@ def read_meta_data(path_to_csv):
             else:
                 break
 
-    meta_data = yaml.load(yaml_string)
+    meta_data = yaml.full_load(yaml_string)
 
     return meta_data
 
@@ -974,7 +975,7 @@ def txt_loader(path):
 
 
 def standalone_eval_csv_file(
-    path_to_csv, callbacks, additional_kwargs={}, other_config={}
+    path_to_csv, callbacks, additional_kwargs={}, other_config=None
 ):
     """Runs all given callbacks on the data in the :class:`EvalDataFolder`
     constructed from the given csv.abs
@@ -988,11 +989,14 @@ def standalone_eval_csv_file(
         extracted from :attr:`path_to_csv`.
     additional_kwargs : dict
         Keypath-value pairs added to the config, which is extracted from
-        the ``model_outputs.csv``.
-    other_config : dict
-        Additional config used to update the existing one as taken from the
-        ``model_outputs.csv`` . Cannot overwrite the dataset. Only used for 
-        callbacks.
+        the ``model_outputs.csv``. These will overwrite parameters in the
+        original config extracted from the csv.
+    other_config : str
+        Path to additional config used to update the existing one as taken from
+        the ``model_outputs.csv`` . Cannot overwrite the dataset. Only used for
+        callbacks. Parameters in this other config will overwrite the
+        parameters in the original config and those of the commandline
+        arguments.
 
     Returns
     -------
@@ -1002,23 +1006,27 @@ def standalone_eval_csv_file(
 
     from edflow.main import get_implementations_from_config
     from edflow.config import update_config
+    import yaml
 
-    import sys
-
-    sys.path.append(os.getcwd())  # convenience: load implementations from cwd
+    if other_config is not None:
+        with open(other_config, "r") as f:
+            other_config = yaml.full_load(f)
+    else:
+        other_config = {}
 
     out_data = EvalDataFolder(path_to_csv)
 
     config = read_meta_data(path_to_csv)
-    update_config(config, additional_kwargs)
 
     dataset_str = config["dataset"]
     impl = get_implementations_from_config(config, ["dataset"])
     in_data = impl["dataset"](config)
 
-    config_callbacks, config_cb_kwargs = config2cbdict(config)
+    update_config(config, additional_kwargs)
+    config.update(other_config)
+
+    config_callbacks, callback_kwargs = config2cbdict(config)
     callbacks.update(config_callbacks)
-    callback_kwargs.update(config_cb_kwargs)
 
     callbacks = load_callbacks(callbacks)
 
@@ -1036,6 +1044,9 @@ def load_callbacks(callbacks):
     module behind the import path, otherwise will do nothing.
     """
     import importlib
+    import sys
+
+    sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
     for name, cb in callbacks.items():
         if isinstance(cb, str):
@@ -1067,7 +1078,7 @@ def apply_callbacks(callbacks, root, in_data, out_data, config, callback_kwargs=
         ``in_data[i]``.
     config : dict
         edflow config dictionary.
-    cb_kwargs : dict
+    callback_kwargs : dict
         Keyword Arguments for the callbacks.
 
     Returns
@@ -1124,7 +1135,7 @@ def config2cbdict(config):
 
 if __name__ == "__main__":
     import argparse
-    from edflow.config import parse_unknown_args
+    from edflow.config import parse_unknown_args, update_config
 
     A = argparse.ArgumentParser()
 
@@ -1143,6 +1154,14 @@ if __name__ == "__main__":
         nargs="*",
         help="Import string to the callback functions used for the "
         "standalone evaluation.",
+    )
+    A.add_argument(
+        "-cf",
+        "--other_config",
+        type=str,
+        default=None,
+        help="Other config, which can be used to update eval_pipeline related "
+        "parameters.",
     )
 
     args = A.parse_args()

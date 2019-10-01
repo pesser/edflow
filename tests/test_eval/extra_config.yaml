@@ -1,0 +1,5 @@
+eval_pipeline:
+        callback_kwargs:
+                a:
+                        k1: 2
+                        k2: 1
