@@ -25,7 +25,7 @@ def test_batch_to_canvas():
 def test_deep_lod2dol():
     lod = [{"a": 1, "b": {"c": 1, "d": [1, 2]}, "e": [{"a": 1}] * 2}] * 3
 
-    dol = batches.deep_lod2dol(lod)
+    dol = batches._deep_lod2dol(lod)
 
     ref = {
         "a": np.array([1, 1, 1]),
@@ -46,18 +46,18 @@ def test_deep_lod2dol_wrong_inputs():
     lod = [[1, 2, 3], {"a": 1}]
 
     with pytest.raises(TypeError):
-        dol = batches.deep_lod2dol(lod)
+        dol = batches._deep_lod2dol(lod)
 
     lod = {"a": [1, 2, 3], "b": {"a": 1}}
 
     with pytest.raises(TypeError):
-        dol = batches.deep_lod2dol(lod)
+        dol = batches._deep_lod2dol(lod)
 
 
 def test_deep_lod2dol_v2():
     lod = [{"a": 1, "b": {"c": 1, "d": [1, 2]}, "e": [{"a": 1}] * 2}] * 3
 
-    dol = batches.deep_lod2dol_v2(lod)
+    dol = batches._deep_lod2dol_v2(lod)
 
     ref = {
         "a": np.array([1, 1, 1]),
@@ -78,18 +78,18 @@ def test_deep_lod2dol_v2_wrong_inputs():
     lod = [[1, 2, 3], {"a": 1}]
 
     with pytest.raises(TypeError):
-        dol = batches.deep_lod2dol_v2(lod)
+        dol = batches._deep_lod2dol_v2(lod)
 
     lod = {"a": [1, 2, 3], "b": {"a": 1}}
 
     with pytest.raises(TypeError):
-        dol = batches.deep_lod2dol_v2(lod)
+        dol = batches._deep_lod2dol_v2(lod)
 
 
 def test_deep_lod2dol_v3():
     lod = [{"a": 1, "b": {"c": 1, "d": [1, 2]}, "e": [{"a": 1}] * 2}] * 3
 
-    dol = batches.deep_lod2dol_v3(lod)
+    dol = batches._deep_lod2dol_v3(lod)
 
     ref = {
         "a": np.array([1, 1, 1]),
@@ -110,9 +110,9 @@ def test_deep_lod2dol_v3_wrong_inputs():
     lod = [[1, 2, 3], {"a": 1}]
 
     with pytest.raises(Exception):
-        dol = batches.deep_lod2dol_v3(lod)
+        dol = batches._deep_lod2dol_v3(lod)
 
     lod = {"a": [1, 2, 3], "b": {"a": 1}}
 
     with pytest.raises(Exception):
-        dol = batches.deep_lod2dol_v3(lod)
+        dol = batches._deep_lod2dol_v3(lod)

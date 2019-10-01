@@ -86,7 +86,7 @@ def batch_to_canvas(X, cols=None):
     return canvas
 
 
-def deep_lod2dol(list_of_nested_things):
+def _deep_lod2dol(list_of_nested_things):
     """Turns a list of nested dictionaries into a nested dictionary of lists.
     This function takes care that all leafs of the nested dictionaries are 
     considered as full keys, not only the top level keys.
@@ -133,7 +133,7 @@ def deep_lod2dol(list_of_nested_things):
     return out
 
 
-def deep_lod2dol_v2(list_of_nested_things):
+def _deep_lod2dol_v2(list_of_nested_things):
     """Turns a list of nested dictionaries into a nested dictionary of lists.
     This function takes care that all leafs of the nested dictionaries are 
     considered as full keys, not only the top level keys.
@@ -177,7 +177,7 @@ def deep_lod2dol_v2(list_of_nested_things):
     return out
 
 
-def deep_lod2dol_v3(list_of_nested_things):
+def _deep_lod2dol_v3(list_of_nested_things):
     """Turns a list of nested dictionaries into a nested dictionary of lists.
     This function takes care that all leafs of the nested dictionaries are 
     considered as full keys, not only the top level keys.
@@ -227,15 +227,15 @@ def _benchmark_deep_lod2dol():
 
         with timing("v1@{: >4}".format(bs), N):
             for i in range(N):
-                deep_lod2dol(lod)
+                _deep_lod2dol(lod)
 
         with timing("v2@{: >4}".format(bs), N):
             for i in range(N):
-                deep_lod2dol_v2(lod)
+                _deep_lod2dol_v2(lod)
 
         with timing("v3@{: >4}".format(bs), N):
             for i in range(N):
-                deep_lod2dol_v3(lod)
+                _deep_lod2dol_v3(lod)
 
         print("-" * 15)
 
@@ -262,11 +262,14 @@ def _benchmark_deep_lod2dol():
     # ---------------
 
 
+deep_lod2dol = _deep_lod2dol_v2
+
+
 class Iterator(MultiprocessIterator):
     """Iterator that converts a list of dicts into a dict of lists."""
 
     def __next__(self):
-        return deep_lod2dol_v2(super(Iterator, self).__next__())
+        return deep_lod2dol(super(Iterator, self).__next__())
 
     @property
     def n(self):
