@@ -135,7 +135,7 @@ class EvalHook(Hook):
         dataset,
         sub_dir_keys=[],
         labels_key=None,
-        callbacks=[],
+        callbacks={},
         config=None,
         step_getter=None,
         keypath="step_ops",

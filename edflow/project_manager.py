@@ -1,6 +1,8 @@
 import datetime
 import os
 import shutil
+import sys
+import subprocess
 from shutil import Error
 
 
@@ -26,7 +28,7 @@ class ProjectManager(object):
         has_info = base is not None or given_directory is not None
         if not self.exists and has_info:
             ProjectManager.now = now = datetime.datetime.now().strftime(
-                "%Y-%m-%dT%H:%M:%S"
+                "%Y-%m-%dT%H-%M-%S"
             )
             if given_directory is None:
                 if postfix is not None:
@@ -44,6 +46,8 @@ class ProjectManager(object):
 
             if given_directory is None and ProjectManager.code_root is not None:
                 self.copy_code()
+            if "EDFLOW_GIT" in os.environ:
+                self.git_commit()
 
             ProjectManager.exists = True
         else:
@@ -121,6 +125,39 @@ class ProjectManager(object):
         except shutil.Error as err:
             print(err)
             pass
+
+    def git_commit(self):
+        # perform the following
+        # CHEAD=$(git rev-parse HEAD); git add -u; git commit -m "edflow ..."; git tag -a edflow_date-and-time-project -m "more"; git reset --mixed $CHEAD
+        try:
+            CHEAD = (
+                subprocess.check_output(["git rev-parse HEAD"], shell=True)
+                .decode("utf8")
+                .strip()
+            )
+        except subprocess.CalledProcessError:
+            print(
+                "Tried to commit state of project but the current working directory does not appear to be a git repository."
+            )
+        else:
+            tagname = "{}_{}".format(ProjectManager.now, self.postfix)
+            message = "command: {}\nroot: {}".format(" ".join(sys.argv), self.root)
+            if subprocess.call(["git diff-index --quiet HEAD"], shell=True) != 0:
+                # dirty working directory - add commit
+                command = "git add -u; git commit -m '{commitmessage}'; git tag '{tagname}'".format(
+                    commitmessage=message, tagname=tagname
+                )
+            else:
+                # nothing to add - put message into annotated tag
+                command = "git tag -a '{tagname}' -m '{tagmessage}'".format(
+                    tagname=tagname, tagmessage=message
+                )
+            print(command)
+            try:
+                subprocess.check_call([command], shell=True)
+            finally:
+                print("git reset --mixed {}".format(CHEAD))
+                subprocess.call(["git reset --mixed {}".format(CHEAD)], shell=True)
 
     def __repr__(self):
         """Nice file structure representation."""
