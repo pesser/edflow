@@ -38,6 +38,38 @@ config.
 Batches are automatically created based on the key ``batch_size`` which you
 specify in the config.
 
+A cool feature when working with examples of nested dictionaries is, that they
+behave the same as their batch versions! I.e. you can access the same keys in
+the same order in a single example and in a batch of examples and still end up
+at the value or batch ofl values you would expect.
+
+.. code-block:: python
+
+    example = {'a': 1, 'b': {'c': 1}, 'd': [1, 2]}
+
+    # after applting our batching algorithm on a list of three of the above examples:
+    batch_of_3_examples = {'a': [1, 1, 1], 'b': {'c': [1, 1, 1]}, 'd': [[1, 1, 1], [2, 2, 2]]}
+
+    example['a'] == 1  # True
+    example['d'][0] == 1  # True
+
+    batch_of_3_examples['a'] == [1, 1, 1]  # True
+    batch_of_3_examples['d'][0] == [1, 1, 1]  # True
+
+This comes in especially handy when you use the utility functions found at
+``edflow.util`` for handling nested structures, as you now can use the same
+keys anytime:
+
+.. code-block:: python
+
+    from edflow.util import retrieve
+
+    retrieve(example, 'a') == 1  # True
+    retrieve(example, 'd/0') == 1  # True
+
+    retrieve(batch_of_3_examples, 'a') == [1, 1, 1]  # True
+    retrieve(batch_of_3_examples, 'd/0') == [1, 1, 1]  # True
+
 .. One of the advantages of **EDFLow** is, that if your model runs with a batch
    size of one, it runs with any batch size.
 

@@ -544,6 +544,21 @@ def contains_key(nested_thing, key, splitval="/", expand=True):
         return False
 
 
+def get_leaf_names(nested_thing):
+    class LeafGetter:
+        def __call__(self, key, value):
+            if not hasattr(self, "keys"):
+                self.keys = []
+
+            self.keys += [key]
+
+    LG = LeafGetter()
+
+    walk(nested_thing, LG, pass_key=True)
+
+    return LG.keys
+
+
 def strenumerate(iterable):
     """Works just as enumerate, but the returned index is a string.
 
