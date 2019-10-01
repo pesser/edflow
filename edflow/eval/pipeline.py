@@ -1133,11 +1133,28 @@ def config2cbdict(config):
     return callbacks, kwargs
 
 
-if __name__ == "__main__":
+def main():
     import argparse
-    from edflow.config import parse_unknown_args, update_config
+    from edflow.config import parse_unknown_args
 
-    A = argparse.ArgumentParser()
+    import sys
+
+    sys.path.append(os.getcwd())  # convenience: load implementations from cwd
+
+    A = argparse.ArgumentParser(
+        description="""
+Use edeval for running callbacks on data generated using the
+``edflow.eval_pipeline.eval_pipeline.EvalHook``. Once the data is created all
+you have to do is pass the ``csv``-file created by the hook. It specifies all
+the relevant information: Which dataset was used to create the data, along with
+all config parameters and where all generated samples live.
+
+Callbacks will be evaluated in the order they have been passed to this
+function. They must be supplied in `name:callback` pairs.
+
+For more documentation take a look at ``edflow/eval_pipeline/eval_pipeline.py``
+"""
+    )
 
     A.add_argument(
         "-c",
@@ -1160,15 +1177,17 @@ if __name__ == "__main__":
         "--other_config",
         type=str,
         default=None,
-        help="Other config, which can be used to update eval_pipeline related "
-        "parameters.",
+        help="Other config, which can be used to e.g. update eval_pipeline related "
+        "parameters, but also others.",
     )
 
-    args = A.parse_args()
+    args, unknown = A.parse_known_args()
+    additional_kwargs = parse_unknown_args(unknown)
 
     callbacks = cbargs2cbdict(args.callback)
 
-    args, unknown = parser.parse_known_args()
-    additional_kwargs = parse_unknown_args(unknown)
-
     standalone_eval_csv_file(args.csv, callbacks, additional_kwargs, args.other_config)
+
+
+if __name__ == "__main__":
+    main()
