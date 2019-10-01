@@ -7,6 +7,7 @@ from edflow.util import (
     set_default,
     contains_key,
     KeyNotFoundError,
+    get_leaf_names,
 )
 from edflow import util
 from itertools import product
@@ -744,3 +745,16 @@ def test_contains_key_callable():
     assert not contains_key(dol, "f", expand=True)
     dol = {"a": [1, 2], "b": callable_leave, "e": 2}  # reset
     assert not contains_key(dol, "f", expand=False)
+
+
+# ================== leaf names ==================
+
+
+def test_get_leaf_name():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+
+    names = sorted(get_leaf_names(dol))
+
+    ref = sorted(["a/0", "a/1", "b/c/d", "e"])
+
+    assert names == ref
