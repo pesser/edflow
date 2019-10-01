@@ -25,6 +25,7 @@ Contents
    source/hooks
    source/models
    source/iterator
+   source/git
    source/contributions
    source/faq
    source/source_files/modules
