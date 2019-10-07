@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switched opencv2 functions with manual ones to get rid of the dependency.
 - `edeval` now allows for differnet callback interface via the config. Callbacks are now entered as `dicts`, which allows to also pass keyword arguments to the callbacks from the config.
 - `make_batches` now produces deep batches of examples. See documentation of `deep_lod2dol` or the section "Datasets and Batching" in the documention.
+- `make_var` was broken for period variables because subcommands lacked `**kwargs` in definition. This is fixed now.
 
 ### Removed
 - It is no longer possible to pass callbacks as list via the config

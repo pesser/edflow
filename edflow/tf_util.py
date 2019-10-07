@@ -3,7 +3,7 @@ import numpy as np
 
 
 def make_linear_var(
-    step, start, end, start_value, end_value, clip_min=None, clip_max=None
+    step, start, end, start_value, end_value, clip_min=None, clip_max=None, **kwargs
 ):
     r"""
     Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
@@ -43,7 +43,7 @@ def make_linear_var(
     return tf.clip_by_value(linear, clip_min, clip_max)
 
 
-def make_periodic_step(step, start_step: int, period_duration_in_steps: int):
+def make_periodic_step(step, start_step: int, period_duration_in_steps: int, **kwargs):
     """
     Returns step within the unit period cycle specified
 
@@ -68,7 +68,7 @@ def make_periodic_step(step, start_step: int, period_duration_in_steps: int):
     return unit_step
 
 
-def make_exponential_var(step, start, end, start_value, end_value, decay):
+def make_exponential_var(step, start, end, start_value, end_value, decay, **kwargs):
     r"""
     Exponential from :math:`(a, \alpha)` to :math:`(b, \beta)` with decay
     rate decay.
@@ -101,7 +101,14 @@ def make_exponential_var(step, start, end, start_value, end_value, decay):
 
 
 def make_staircase_var(
-    step, start, start_value, step_size, stair_factor, clip_min=0.0, clip_max=1.0
+    step,
+    start,
+    start_value,
+    step_size,
+    stair_factor,
+    clip_min=0.0,
+    clip_max=1.0,
+    **kwargs
 ):
     r"""
     Parameters
