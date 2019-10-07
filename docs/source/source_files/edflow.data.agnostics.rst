@@ -20,6 +20,14 @@ edflow.data.agnostics.csv\_dset module
    :undoc-members:
    :show-inheritance:
 
+edflow.data.agnostics.late\_loading module
+------------------------------------------
+
+.. automodule:: edflow.data.agnostics.late_loading
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 edflow.data.agnostics.subdataset module
 ---------------------------------------
 
