@@ -21,7 +21,7 @@ class SequenceDataset(DatasetMixin):
     the example from the sequentialized dataset.
     """
 
-    def __init__(self, dataset, length, step=1, fid_key="fid"):
+    def __init__(self, dataset, length, step=1, fid_key="fid", strategy="raise"):
         """
         Parameters
         ----------
@@ -33,6 +33,12 @@ class SequenceDataset(DatasetMixin):
             Step between returned frames. Must be `>= 1`.
         fid_key : str
             Key in labels, at which the frame indices can be found.
+        strategy : str
+            How to handle bad sequences, i.e. sequences starting with a 
+            :attr:`fid_key` > 0.
+            - ``raise``: Raise a ``ValueError``
+            - ``remove``: remove the sequence
+            - ``reset``: remove the sequence
 
         This dataset will have `len(dataset) - length * step` examples.
         """
@@ -58,22 +64,65 @@ class SequenceDataset(DatasetMixin):
                 "Frame ids must be supplied as ints, but are {}".format(frame_ids.dtype)
             )
 
+        # Gradient
         diffs = frame_ids[1:] - frame_ids[:-1]
-        idxs = np.where(diffs <= 0)[0] + 1
+        # All indices where the fid is not monotonically growing
+        idxs = np.array([0] + list(np.where(diffs != 1)[0] + 1))
+        # Values at these indices
         start_fids = frame_ids[idxs]
 
+        # Bad starts
         badboys = start_fids != 0
         if np.any(badboys):
             n = sum(badboys)
             i_s = "" if n == 1 else "s"
+            areis = "is" if n == 1 else "are"
             id_s = "ex" if n == 1 else "ices"
-            raise ValueError(
-                "Frame id sequences must always start with 0. "
-                "There are {} sequences starting with the follwing id{}: "
-                "{} at ind{} {} in the dataset.".format(
-                    n, i_s, start_fids[badboys], id_s, idxs[badboys]
+            if strategy == "raise":
+                raise ValueError(
+                    "Frame id sequences must always start with 0. "
+                    "There {} {} sequence{} starting with the follwing id{}: "
+                    "{} at ind{} {} in the dataset.".format(
+                        areis, n, i_s, i_s, start_fids[badboys], id_s, idxs[badboys]
+                    )
                 )
-            )
+
+            elif strategy == "remove":
+                idxs_stop = np.array(list(idxs[1:]) + [None])
+                starts = idxs[badboys]
+                stops = idxs_stop[badboys]
+
+                bad_seq_mask = np.ones(len(dataset), dtype=bool)
+                for bad_start_idx, bad_stop_idx in zip(starts, stops):
+                    bad_seq_mask[bad_start_idx:bad_stop_idx] = False
+
+                good_seq_idxs = np.arange(len(dataset))[bad_seq_mask]
+                dataset = SubDataset(dataset, good_seq_idxs)
+
+                frame_ids = dataset.labels[fid_key]
+
+            elif strategy == "reset":
+                frame_ids = np.copy(frame_ids)  # Don't try to override
+
+                idxs_stop = np.array(list(idxs[1:]) + [None])
+                starts = idxs[badboys]
+                stops = idxs_stop[badboys]
+                vals = start_fids[badboys]
+
+                for val, bad_sa_idx, bad_so_idx in zip(vals, starts, stops):
+                    frame_ids[bad_sa_idx:bad_so_idx] = (
+                        frame_ids[bad_sa_idx:bad_so_idx] - val
+                    )
+
+                dataset.labels[fid_key] = frame_ids
+
+                frame_ids = dataset.labels[fid_key]
+            else:
+                raise ValueError(
+                    "Strategy of SequenceDataset must be one of "
+                    "`raise`, `remove` or `reset` but is "
+                    "{}".format(strategy)
+                )
 
         top_indeces = np.where(np.array(frame_ids) >= (length * step - 1))[0]
 
