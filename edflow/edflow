@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import os
+# directly terminate on broken pipe without throwing exception
 import signal
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 import sys  # noqa
 

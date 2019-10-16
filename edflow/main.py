@@ -5,11 +5,6 @@ import yaml
 import math
 import datetime
 
-# ignore broken pipe errors: https://www.quora.com/How-can-you-avoid-a-broken-pipe-error-on-Python
-from signal import signal, SIGPIPE, SIG_DFL
-
-signal(SIGPIPE, SIG_DFL)
-
 import multiprocessing as mp
 import traceback
 
