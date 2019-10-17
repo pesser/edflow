@@ -28,7 +28,7 @@ Contents
    source/git
    source/contributions
    source/faq
-   source/source_files/modules
+   source/source_files/edflow
 
 Indices and tables
 ==================
