@@ -13,12 +13,14 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
+import edflow
+
+sys.path.insert(0, os.path.abspath("."))
 
 from unittest import mock
 
 autodoc_mock_imports = [
-    "tensorflow",
+    # "tensorflow",
     "tensorboardX",
     "torch",
     "pyyaml",
@@ -29,15 +31,40 @@ autodoc_mock_imports = [
     "chainer",
     "matplotlib",
     "pandas",
-    "scipy",
+    # "scipy",
     "h5py",
-    "skimage",
+    "scikit-image",
     "natsort",
     "fastnumbers",
     "cv2",
 ]
 
-# sys.modules.update((mod_name, mock.Mock()) for mod_name in autodoc_mock_imports)
+sys.modules.update((mod_name, mock.MagicMock()) for mod_name in autodoc_mock_imports)
+
+
+def run_apidoc(app):
+    """Generage API documentation"""
+    import better_apidoc
+
+    better_apidoc.APP = app
+    better_apidoc.main(
+        [
+            "better-apidoc",
+            "-t",
+            os.path.join(".", "templates"),
+            "--force",
+            "--no-toc",
+            "--separate",
+            "-o",
+            os.path.join(".", "source", "source_files/"),
+            os.path.join("..", "edflow/"),
+        ]
+    )
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)
+
 
 # -- Project information -----------------------------------------------------
 
@@ -105,27 +132,3 @@ napoleon_numpy_docstring = True
 # apidoc_output_dir = "source/source_files"
 ## apidoc_excluded_paths = ['tests']
 ## apidoc_separate_modules = True
-
-
-def run_apidoc(app):
-    """Generage API documentation"""
-    import better_apidoc
-
-    better_apidoc.APP = app
-    better_apidoc.main(
-        [
-            "better-apidoc",
-            "-t",
-            os.path.join(".", "templates"),
-            "--force",
-            "--no-toc",
-            "--separate",
-            "-o",
-            os.path.join(".", "source", "source_files/"),
-            os.path.join("..", "edflow/"),
-        ]
-    )
-
-
-def setup(app):
-    app.connect("builder-inited", run_apidoc)
