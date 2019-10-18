@@ -10,6 +10,20 @@ from edflow.custom_logging import get_logger
 import numpy as np
 from tqdm import tqdm
 import urllib
+import tarfile
+
+
+def unpack(path):
+    if path.endswith("tar.gz"):
+        with tarfile.open(path, "r:gz") as tar:
+            tar.extractall(path=os.path.split(path)[0])
+    elif path.endswith("tar"):
+        with tarfile.open(path, "r:") as tar:
+            tar.extractall(path=os.path.split(path)[0])
+    else:
+        raise NotImplemented(
+            "Unknown file extension: {}".format(os.path.splitext(path)[1])
+        )
 
 
 def reporthook(bar):
