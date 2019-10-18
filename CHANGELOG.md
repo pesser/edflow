@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added CIFAR10 dataset.
 - Environment variable EDFLOW\_GIT enables git integration.
 - Minimal logger now supports list of handlers.
 - pdb support. Use `import edflow.fpdb as pdb; pdb.set_trace()` instead of
