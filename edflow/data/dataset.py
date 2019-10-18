@@ -44,6 +44,7 @@ from edflow.data.dataset_mixin import DatasetMixin
 from edflow.data.agnostics.subdataset import SubDataset
 from edflow.data.agnostics.concatenated import ConcatenatedDataset
 from edflow.data.agnostics.concatenated import ExampleConcatenatedDataset
+from edflow.data.agnostics.concatenated import DisjunctExampleConcatenatedDataset
 from edflow.data.agnostics.csv_dset import CsvDataset
 
 from edflow.data.believers.sequence import SequenceDataset, UnSequenceDataset

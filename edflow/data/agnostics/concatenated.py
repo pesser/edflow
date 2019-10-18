@@ -72,3 +72,62 @@ class ExampleConcatenatedDataset(DatasetMixin):
                     new_examples[key] = [value]
 
         return new_examples
+
+
+class DisjunctExampleConcatenatedDataset(DatasetMixin):
+    """Concatenates a list of disjunct datasets.
+
+    .. note::
+        All datasets must be of same length and labels and returned keys must
+        be disjunct. If labels or keys are not disjunct, set the optional
+        parameter `disjunct` to False, to use the value of the last dataset
+        containing the key. Datasets can have different length if `same_length`
+        is set to False.
+
+    If dataset A returns examples of form ``{'a': w, 'b': x}`` and dataset
+    B of form ``{'c': y, 'd': z}`` the ``DisjunctExampleConcatenatedDataset(A, B)``
+    return examples of form ``{'a': w, 'b': x, 'c': y, 'd': z}``.
+
+    """
+
+    def __init__(self, *datasets, disjunct=True, same_length=True):
+        """
+        Parameters
+        ----------
+        *datasets : DatasetMixin
+            All the datasets to concatenate.
+        disjunct : bool
+            labels and returned keys do not have to be disjunct. Last
+            datasetet overwrites values
+        same_length : bool
+            Datasets do not have to be of same length. Concatenated dataset
+            has length of smallest dataset.
+        """
+        self.disjunct = disjunct
+        self.same_length = same_length
+        if self.same_length:
+            assert np.all(np.equal(len(datasets[0]), [len(d) for d in datasets]))
+        else:
+            self.length = min([len(d) for d in datasets])
+        self.datasets = datasets
+        self.labels = {}
+        for d in datasets:
+            if self.disjunct:
+                assert set(self.labels).isdisjoint(d.labels)
+            self.labels.update(d.labels)
+
+    def __len__(self):
+        if self.same_length:
+            return len(self.datasets[0])
+        else:
+            return self.length
+
+    def get_example(self, i):
+        examples = {}
+        for d in self.datasets:
+            example_new = d[i]
+            if self.disjunct:
+                assert set(examples).difference({"index_"}).isdisjoint(example_new)
+            examples.update(example_new)
+
+        return examples
