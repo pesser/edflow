@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added CelebA dataset.
 - Added CIFAR10 dataset.
 - Environment variable EDFLOW\_GIT enables git integration.
 - Minimal logger now supports list of handlers.
