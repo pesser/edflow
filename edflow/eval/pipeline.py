@@ -883,7 +883,10 @@ def image_saver(savepath, image):
     """
     im_adjust = adjust_support(image, "0->255", clip=True)
 
-    mode = "RGB" if im_adjust.shape[-1] in [1, 3] else "RGBA"
+    modes = {1: "L", 3: "RGB", 4: "RGBA"}
+    mode = modes[im_adjust.shape[-1]]
+    if mode == "L":
+        im_adjust = np.squeeze(im_adjust, -1)
 
     im = Image.fromarray(im_adjust, mode)
 

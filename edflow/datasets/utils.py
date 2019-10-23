@@ -10,6 +10,23 @@ from edflow.custom_logging import get_logger
 import numpy as np
 from tqdm import tqdm
 import urllib
+import tarfile, zipfile
+
+
+def unpack(path):
+    if path.endswith("tar.gz"):
+        with tarfile.open(path, "r:gz") as tar:
+            tar.extractall(path=os.path.split(path)[0])
+    elif path.endswith("tar"):
+        with tarfile.open(path, "r:") as tar:
+            tar.extractall(path=os.path.split(path)[0])
+    elif path.endswith("zip"):
+        with zipfile.ZipFile(path, "r") as f:
+            f.extractall(path=os.path.split(path)[0])
+    else:
+        raise NotImplementedError(
+            "Unknown file extension: {}".format(os.path.splitext(path)[1])
+        )
 
 
 def reporthook(bar):
@@ -38,12 +55,22 @@ def mark_prepared(root):
     Path(root).joinpath(".ready").touch()
 
 
-def prompt_download(file_, source, target_dir):
+def prompt_download(file_, source, target_dir, content_dir=None):
     targetpath = os.path.join(target_dir, file_)
     while not os.path.exists(targetpath):
+        if content_dir is not None and os.path.exists(
+            os.path.join(target_dir, content_dir)
+        ):
+            break
         print(
             "Please download '{}' from '{}' to '{}'.".format(file_, source, targetpath)
         )
+        if content_dir is not None:
+            print(
+                "Or place its content into '{}'.".format(
+                    os.path.join(target_dir, content_dir)
+                )
+            )
         input("Press Enter when done...")
     return targetpath
 
