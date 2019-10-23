@@ -1,5 +1,7 @@
-from chainer.dataset import DatasetMixin as DatasetMixin_
+import warnings
+
 import numpy as np
+from chainer.dataset import DatasetMixin as DatasetMixin_
 
 
 class DatasetMixin(DatasetMixin_):
@@ -365,4 +367,12 @@ class SubDataset(DatasetMixin):
             labels = self.data.labels
             for k in labels:
                 self._labels[k] = [labels[k][i] for i in self.subindices]
+                old_type = type(labels[k])
+                if old_type is np.ndarray:
+                    self._labels[k] = np.array(self._labels[k])
+                if not isinstance(self._labels[k], old_type):
+                    warnings.warn(
+                        f"Warning: Type of key {k} was changed from {old_type} to {list}",
+                        UserWarning,
+                    )
         return self._labels
