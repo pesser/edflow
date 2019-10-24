@@ -326,12 +326,14 @@ class ConcatenatedDataset(DatasetMixin):
     def labels(self):
         # relay if data is cached
         if not hasattr(self, "_labels"):
-            labels = dict(self.datasets[0].labels)
-            for i in range(1, len(self.datasets)):
-                new_labels = self.datasets[i].labels
-                for k in labels:
-                    labels[k] = labels[k] + new_labels[k]
-            self._labels = labels
+            new_labels = {}
+            label_keys = self.datasets[0].labels.keys()
+
+            for k in label_keys:
+                labels = [d.labels[k] for d in self.datasets]
+                new_labels[k] = np.concatenate(labels)
+
+            self._labels = new_labels
         return self._labels
 
 
@@ -364,5 +366,5 @@ class SubDataset(DatasetMixin):
             self._labels = dict()
             labels = self.data.labels
             for k in labels:
-                self._labels[k] = [labels[k][i] for i in self.subindices]
+                self._labels[k] = np.array(labels[k])[self.subindices]
         return self._labels
