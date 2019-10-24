@@ -7,6 +7,14 @@ import pickle
 from fastnumbers import fast_int
 from typing import *
 
+try:
+    from IPython import get_ipython
+    from IPython.display import display, Markdown
+
+    __COULD_HAVE_IPYTHON__ = True
+except ImportError:
+    __COULD_HAVE_IPYTHON__ = False
+
 
 def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=1.0):
     r"""
@@ -636,7 +644,7 @@ class Printer(object):
 class TablePrinter(object):
     """For usage with walk: Collects string to put in a table."""
 
-    def __init__(self, string_fn, names=None):
+    def __init__(self, string_fn, names=None, jupyter_style=False):
         if names is None:
             self.vals = []
             self.has_header = False
@@ -644,6 +652,7 @@ class TablePrinter(object):
             self.vals = [names]
             self.has_header = True
         self.string_fn = string_fn
+        self.jupyter_style = jupyter_style
 
     def __call__(self, key, obj):
         self.vals += [list(self.string_fn(key, obj))]
@@ -666,12 +675,19 @@ class TablePrinter(object):
 
         chars = np.array(list(ref_line))
         crossings = np.where(chars == "|")[0]
-        print(crossings)
-        for c in crossings:
-            sep = sep[:c] + "+" + sep[c + 1 :]
-            hsep = hsep[:c] + "+" + hsep[c + 1 :]
+        if not self.jupyter_style:
+            for c in crossings:
+                sep = sep[:c] + "+" + sep[c + 1 :]
+                hsep = hsep[:c] + "+" + hsep[c + 1 :]
+        else:
+            for c in crossings:
+                hsep = hsep[:c] + "|" + hsep[c + 1 :]
         sep += "\n"
         hsep += "\n"
+
+        if self.jupyter_style:
+            sep = ""
+            hsep = hsep.replace("=", "-")
 
         table_str = sep
         for i, val in enumerate(self.vals):
@@ -725,7 +741,7 @@ def pprint(nested_thing, heuristics=None):
     print(pprint_str(nested_thing, heuristics))
 
 
-def pp2mkdtable(nested_thing):
+def pp2mkdtable(nested_thing, jupyter_style=False):
     """Turns a formatted string into a markdown table."""
 
     def heuristics(key, obj):
@@ -737,11 +753,29 @@ def pp2mkdtable(nested_thing):
         else:
             return key, str(obj.__class__.__name__), str(obj)
 
-    P = TablePrinter(heuristics, names=["Name", "Type", "Content"])
+    P = TablePrinter(
+        heuristics, names=["Name", "Type", "Content"], jupyter_style=jupyter_style
+    )
 
     walk(nested_thing, P, pass_key=True)
 
     return str(P)
+
+
+def edprint(nested_thing):
+    """Prints every leaf variable in :attr:`nested_thing` in the form of a 
+    table.
+
+    Parameters
+    ----------
+    nested_thing : dict or list
+        Some nested object.
+    """
+
+    if __COULD_HAVE_IPYTHON__ and "IPKernelApp" in get_ipython().config:
+        display(Markdown(pp2mkdtable(nested_thing, True)))
+    else:
+        print(pp2mkdtable(nested_thing, False))
 
 
 if __name__ == "__main__":
