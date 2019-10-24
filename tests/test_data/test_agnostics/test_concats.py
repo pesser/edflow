@@ -3,6 +3,7 @@ import numpy as np
 
 from edflow.data.agnostics.concatenated import ConcatenatedDataset
 from edflow.data.agnostics.concatenated import ExampleConcatenatedDataset
+from edflow.data.agnostics.concatenated import DisjunctExampleConcatenatedDataset
 
 from edflow.debug import DebugDataset
 
@@ -154,3 +155,54 @@ def test_ExampleConcatenatedDataset_slicing():
 
     assert len(E.labels["label1"]) == 10
     assert np.all(E.labels["label1"] == [[i + 1] for i in range(10)])
+
+
+def test_DisjunctExampleConcatenatedDataset():
+    D1 = DebugDataset(size=10, other_labels=False, other_ex_keys=False)
+    D2 = DebugDataset(size=10, other_labels=True, other_ex_keys=True)
+    D3 = DebugDataset(size=10, other_labels=True, other_ex_keys=False)
+
+    D = DisjunctExampleConcatenatedDataset(D1, D2)
+    assert len(D) == 10
+    d = D[2]
+
+    assert d == {"val": 2, "index_": 2, "other": 2, "val_other": 2, "other_other": 2}
+
+    assert list(D.labels.keys()) == ["label1", "label2", "label1_other", "label2_other"]
+    assert len(D.labels["label1"]) == 10
+    assert len(D.labels["label1_other"]) == 10
+
+    with pytest.raises(AssertionError):
+        DisjunctExampleConcatenatedDataset(D1, D1)
+
+    D = DisjunctExampleConcatenatedDataset(D1, D3)
+
+    with pytest.raises(AssertionError):
+        D[2]
+
+
+def test_DisjunctExampleConcatenatedDataset_not_disjunct():
+    D1 = DebugDataset(size=10, offset=0)
+    D2 = DebugDataset(size=10, offset=10)
+
+    D = DisjunctExampleConcatenatedDataset(D1, D2, disjunct=False)
+
+    assert len(D) == 10
+
+    assert list(D.labels.keys()) == ["label1", "label2"]
+    assert D.labels == D2.labels
+
+    assert D[2] == {"val": 12, "index_": 2, "other": 12}
+    assert D[2] == D2[2]
+
+
+def test_DisjunctExampleConcatenatedDataset_not_same_length():
+    D1 = DebugDataset(size=10)
+    D2 = DebugDataset(size=20)
+
+    with pytest.raises(AssertionError):
+        D = DisjunctExampleConcatenatedDataset(D1, D2, disjunct=False, same_length=True)
+
+    D = DisjunctExampleConcatenatedDataset(D1, D2, disjunct=False, same_length=False)
+
+    assert len(D) == 10
