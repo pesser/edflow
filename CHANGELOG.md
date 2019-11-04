@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `TFBaseEvaluator` now parses config file for `fcond` flag and gives it to `WaitForCheckpointHook` to allow passing filters on the checkpoints to be evaluated
+    - for example, pass `edflow -e xxx --fcond "lambda c: any([str(n) in c for n in [240000, 320000]])"` will only evaluate checkpoint 240k and 320k
 - Added CelebA dataset.
 - Added CIFAR10 dataset.
 - Environment variable EDFLOW\_GIT enables git integration.
