@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Changed tiling background color to white
 - Removed colons from log directory names and replaced them by hyphens.
 - `LambdaCheckpointHook` uses global step and doesn't save on first step.
 - Switched opencv2 functions with manual ones to get rid of the dependency.
