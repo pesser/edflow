@@ -90,7 +90,9 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
         self.n_joins = retrieve(config, "RandomlyJoinedDataset/n_joins", default=2)
 
         self.test_mode = retrieve(config, "test_mode", default=False)
-        self.avoid_identity = retrieve(config, "RandomlyJoinedDataset/avoid_identity", default=True)
+        self.avoid_identity = retrieve(
+            config, "RandomlyJoinedDataset/avoid_identity", default=True
+        )
         self.balance = retrieve(config, "RandomlyJoinedDataset/balance", default=False)
 
         # self.index_map is used to select a partner for each example.
@@ -104,8 +106,10 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
             self.index_map[value] = np.nonzero(self.join_labels == value)[0]
         if self.test_mode:
             prng = np.random.RandomState(0)
-            self.index_map = [prng.choice(self.index_map[self.join_labels[i]], self.n_joins-1)
-                    for i in range(len(self.dataset))]
+            self.index_map = [
+                prng.choice(self.index_map[self.join_labels[i]], self.n_joins - 1)
+                for i in range(len(self.dataset))
+            ]
 
     def __len__(self):
         return len(self.dataset)
@@ -125,13 +129,13 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
                 i = self.prng.choice(self.index_map[label_id])
             join_value = self.join_labels[i]
             choices = self.index_map[join_value]
-            replace=True
+            replace = True
             if self.avoid_identity:
                 if len(choices) > 1:
                     choices = [idx for idx in choices if not idx == i]
-                if len(choices) >= self.n_joins-1:
-                    replace=False
-            join_indices = self.prng.choice(choices, self.n_joins-1, replace=replace)
+                if len(choices) >= self.n_joins - 1:
+                    replace = False
+            join_indices = self.prng.choice(choices, self.n_joins - 1, replace=replace)
         join_indices = np.concatenate([[i], join_indices])
 
         examples = dict()
