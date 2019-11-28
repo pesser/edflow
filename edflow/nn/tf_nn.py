@@ -1041,7 +1041,12 @@ def probs_to_mu_L(
             ax[1, b].set_axis_off()
 
     """
-    bn, h, w, nk = (
+    (
+        bn,
+        h,
+        w,
+        nk,
+    ) = (
         probs.get_shape().as_list()
     )  # todo instead of calulating sequrity measure from amplitude one could alternativly calculate it by letting the network predict a extra paremeter also one could do
     y_t = tf.tile(tf.reshape(tf.linspace(-1.0, 1.0, h), [h, 1]), [1, w])
