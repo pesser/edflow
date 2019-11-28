@@ -1,5 +1,8 @@
+import numpy as np
 from edflow.data.dataset_mixin import DatasetMixin
 from edflow.util import PRNGMixin
+from edflow.util import retrieve
+from edflow.main import get_obj_from_str
 
 
 def JoinedDataset(dataset, key, n_joins):
@@ -49,29 +52,60 @@ def getDebugDataset(config):
 
 
 class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
-    """Joins similiar JoinedDataset but randomly selects from possible joins.
+    """
+    Load multiple examples which have the same label.
+
+    Required config parameters:
+        - RandomlyJoinedDataset/dataset:    The dataset from which to load
+                                            examples.
+        - RandomlyJoinedDataset/key:        The key of the label to join on.
+
+    Optional config parameters:
+        - test_mode=False:                            If True, behaves deterministic.
+        - RandomlyJoinedDataset/n_joins=2:            How many examples to load.
+        - RandomlyJoinedDataset/balance=False:        If True and not in test_mode,
+                                                      sample join labels uniformly.
+        - RandomlyJoinedDataset/avoid_identity=True:  If True and not in test_mode,
+                                                      never return a pair containing the same
+                                                      image if possible.
+
+    The i-th example returns:
+        'example0': If data_balancing a random example, otherwise the i-th
+                    example of dataset.
+        'example0_index': The index of example0 X in the original dataset.
+        'example1': Another example which has the same label under key as
+                    example0.
+        'example1_index': The index of example1 X in the original dataset.
+        ...
+    The dataset's labels are the same as that of dataset. Be careful, exampleX
+    of the i-th example does not correspond to the i-th entry of the labels but
+    to the exampleX_index-th entry.
     """
 
-    def __init__(self, dataset, key, n_joins):
-        """
-    Parameters
-    ----------
-    dataset : DatasetMixin
-	Dataset to join in.
-    key : str
-	Key to join on. Must be in dataset labels.
-    n_joins : int
-	Number of examples to join.
-    """
-        self.dataset = dataset
-        self.key = key
-        self.n_joins = n_joins
+    def __init__(self, config):
+        self.dataset = retrieve(config, "RandomlyJoinedDataset/dataset")
+        self.dataset = get_obj_from_str(self.dataset)
+        self.dataset = self.dataset(config)
+        self.key = retrieve(config, "RandomlyJoinedDataset/key")
+        self.n_joins = retrieve(config, "RandomlyJoinedDataset/n_joins", default=2)
 
-        labels = np.asarray(dataset.labels[key])
-        unique_labels = np.unique(labels)
+        self.test_mode = retrieve(config, "test_mode", default=False)
+        self.avoid_identity = retrieve(config, "RandomlyJoinedDataset/avoid_identity", default=True)
+        self.balance = retrieve(config, "RandomlyJoinedDataset/balance", default=False)
+
+        # self.index_map is used to select a partner for each example.
+        # In test_mode it is a list containing a single partner index for each
+        # example, otherwise it is a dict containing all indices for a given
+        # join label
+        self.join_labels = np.asarray(self.dataset.labels[self.key])
+        unique_labels = np.unique(self.join_labels)
         self.index_map = dict()
         for value in unique_labels:
-            self.index_map[value] = np.nonzero(labels == value)[0]
+            self.index_map[value] = np.nonzero(self.join_labels == value)[0]
+        if self.test_mode:
+            prng = np.random.RandomState(0)
+            self.index_map = [prng.choice(self.index_map[self.join_labels[i]], self.n_joins-1)
+                    for i in range(len(self.dataset))]
 
     def __len__(self):
         return len(self.dataset)
@@ -79,27 +113,33 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
     @property
     def labels(self):
         """Careful this can only give labels of the original item, not the
-        joined ones."""
+        joined ones. Use 'example{}_index' to get the correct labels."""
         return self.dataset.labels
 
     def get_example(self, i):
-        example = self.dataset[i]
-        join_value = example[self.key]
+        if self.test_mode:
+            join_indices = self.index_map[i]
+        else:
+            if self.balance:
+                label_id = self.prng.choice(list(self.index_map.keys()))
+                i = self.prng.choice(self.index_map[label_id])
+            join_value = self.join_labels[i]
+            choices = self.index_map[join_value]
+            replace=True
+            if self.avoid_identity:
+                if len(choices) > 1:
+                    choices = [idx for idx in choices if not idx == i]
+                if len(choices) >= self.n_joins-1:
+                    replace=False
+            join_indices = self.prng.choice(choices, self.n_joins-1, replace=replace)
+        join_indices = np.concatenate([[i], join_indices])
 
-        choices = [idx for idx in self.index_map[join_value] if not idx == i]
-        join_indices = self.prng.choice(choices, self.n_joins - 1, replace=False)
+        examples = dict()
+        for i_join, idx in enumerate(join_indices):
+            examples["example{}".format(i_join)] = self.dataset[idx]
+            examples["example{}_index".format(i_join)] = idx
 
-        examples = [example] + [self.dataset[idx] for idx in join_indices]
-
-        new_examples = {}
-        for ex in examples:
-            for key, value in ex.items():
-                if key in new_examples:
-                    new_examples[key] += [value]
-                else:
-                    new_examples[key] = [value]
-
-        return new_examples
+        return examples
 
 
 class DataFolder(DatasetMixin):
