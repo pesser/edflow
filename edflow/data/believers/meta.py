@@ -30,37 +30,40 @@ class MetaDataset(DatasetMixin):
     getitem method of the dataset, a special loader function will be called.
 
     Let's take a look at an example data folder of the following structure:
-    ```
-    root/
-    ├ meta.yaml
-    ├ images/
-    │  ├ image_1.png
-    │  ├ image_2.png
-    │  ├ image_3.png
-    ...
-    │  └ image_10000.png
-    ├ image:image-*-10000-*-str.npy
-    ├ attr1-*-10000-*-int.npy
-    ├ attr2-*-10000x2-*-int.npy
-    └ kps-*-10000x17x3-*-int.npy
-    ```
+    .. code-block:: bash
+
+        root/
+        ├ meta.yaml
+        ├ images/
+        │  ├ image_1.png
+        │  ├ image_2.png
+        │  ├ image_3.png
+        ...
+        │  └ image_10000.png
+        ├ image:image-*-10000-*-str.npy
+        ├ attr1-*-10000-*-int.npy
+        ├ attr2-*-10000x2-*-int.npy
+        └ kps-*-10000x17x3-*-int.npy
+
 
     The ``meta.yaml`` file looks like this:
-    ```
-    description: |
-        This is a dataset which loads images.
-        All paths to the images are in the label `image`.
 
-    loader_kwargs:
-        image:
-            support: "-1->1"
-    ```
+    .. code-block:: yaml
+
+        description: |
+            This is a dataset which loads images.
+            All paths to the images are in the label `image`.
+
+        loader_kwargs:
+            image:
+                support: "-1->1"
+
 
     The resulting dataset has the following labels:
-    - ``image_``: the paths to the images. Note the extra `_` at the end.
-    - ``attr1``
-    - ``attr2``
-    - ``kps``
+        - ``image_``: the paths to the images. Note the extra ``_`` at the end.
+        - ``attr1``
+        - ``attr2``
+        - ``kps``
 
     When using the ``__getitem__`` method of the dataset, the image loader will
     be applied to the image label at the given index and the image will be
@@ -137,26 +140,26 @@ class MetaDataset(DatasetMixin):
 
 def setup_loaders(labels, meta_dict):
     """Creates a map of key -> function pairs, which can be used to postprocess
-    label values at each ``getitem`` call.
+    label values at each ``__getitem__`` call.
+
+    Loaders defined in :attr:`meta_dict` supersede those definde in the label
+    keys.
 
     Parameters
     ----------
-    labels : dict(str, numpy.ndarray)
+    labels : dict(str, numpy.memmap)
         Labels contain all load-easy dataset relevant data. If the key follows
         the pattern ``name:loader``, this function will try to finde the
-        corresponding loader in :attr:`DEFAULT_LOADERS``.
+        corresponding loader in :attr:`DEFAULT_LOADERS`.
     meta_dict : dict
         A dictionary containing all dataset relevent information, which is the
         same for all examples. This function will try to find the entry
         ``loaders`` in the dictionary, which must contain another ``dict`` with
         ``name:loader`` pairs. Here ``loader`` must be either an entry in
-        :attr:`DEFAULT_LOADERS`` or a loadable import path.
+        :attr:`DEFAULT_LOADERS` or a loadable import path.
         You can additionally define an entry ``loader_kwargs``, which must
         contain ``name:dict`` pairs. The dictionary is passed as keyword
         arguments to the loader corresponding to ``name``.
-
-    Loaders defined in :attr:`meta_dict` supersede those definde in the label
-    keys.
 
     Returns
     -------
@@ -197,19 +200,17 @@ def setup_loaders(labels, meta_dict):
 
 def load_labels(root):
     """
-
     Parameters
     ----------
     root : str
-        Where to look for the labels
-
+        Where to look for the labels.
 
     Returns
     -------
     labels : dict
-        All labels as ``np.memmap``s.
-
+        All labels as ``np.memmap`` s.
     """
+
     regex = re.compile(r".*-\*-.*-\*-.*\.npy")
 
     files = os.listdir(root)

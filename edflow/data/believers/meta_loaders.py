@@ -12,12 +12,12 @@ def image_loader(path, support="0->255"):
         Where to finde the image.
     support : str
         Defines the support and data type of the loaded image. Must be one of
-        - ``0->255``: The PIL default. Datatype is ``np.uint8`` and all values
-          are integers between 0 and 255.
-        - ``0->1``: Datatype is ``np.float32`` and all values
-          are floats between 0 and 1.
-        - ``-1->1``: Datatype is ``np.float32`` and all values
-          are floats between -1 and 1.
+            - ``0->255``: The PIL default. Datatype is ``np.uint8`` and all values
+              are integers between 0 and 255.
+            - ``0->1``: Datatype is ``np.float32`` and all values
+              are floats between 0 and 1.
+            - ``-1->1``: Datatype is ``np.float32`` and all values
+              are floats between -1 and 1.
 
     Returns
     -------
