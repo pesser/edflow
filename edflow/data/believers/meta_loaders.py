@@ -3,7 +3,7 @@ from PIL import Image
 from edflow.data.util import adjust_support
 
 
-def image_loader(path, support='0->255'):
+def image_loader(path, support="0->255"):
     """
 
     Parameters
@@ -28,10 +28,10 @@ def image_loader(path, support='0->255'):
 
     im = np.array(Image.open(path))
 
-    if support == '0->255':
+    if support == "0->255":
         return im
     else:
-        return adjust_support(im, support, '0->255')
+        return adjust_support(im, support, "0->255")
 
 
 def numpy_loader(path):
