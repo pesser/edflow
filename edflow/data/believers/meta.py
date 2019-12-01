@@ -16,10 +16,7 @@ except ImportError:
     __COULD_HAVE_IPYTHON__ = False
 
 
-DEFAULT_LOADERS = {
-        'image': image_loader,
-        'np': numpy_loader
-        }
+DEFAULT_LOADERS = {"image": image_loader, "np": numpy_loader}
 
 
 class MetaDataset(DatasetMixin):
@@ -74,34 +71,44 @@ class MetaDataset(DatasetMixin):
     """
 
     def __init__(self, root):
-        '''
+        """
         Parameters
         ----------
         root : str
             Where to look for all the data.
-        '''
-        meta_path = os.path.join(root, 'meta.yaml')
-        self.meta = meta = yaml.safe_load(open(meta_path, 'r'))
+        """
+        meta_path = os.path.join(root, "meta.yaml")
+        self.meta = meta = yaml.safe_load(open(meta_path, "r"))
 
         labels = load_labels(root)
         self.loaders, self.loader_kwargs = setup_loaders(labels, meta)
         self.labels = clean_keys(labels)
 
+        lens = []
+        for k in self.labels.keys():
+            lens += [len(self.labels[k])]
+        assert all(x == lens[0] for x in lens)
+
+        self.num_examples = lens[0]
+
         self.append_labels = True
 
+    def __len__(self):
+        return self.num_examples
+
     def get_example(self, idx):
-        '''Loads all loadable data from the labels.
+        """Loads all loadable data from the labels.
         
         Parameters
         ----------
         idx : int
             The index of the example to load
-        '''
+        """
         example = {}
 
         for key, loader in self.loaders.items():
             kwargs = self.loader_kwargs[key]
-            example[key] = loader(self.labels[key + '_'][idx], **kwargs)
+            example[key] = loader(self.labels[key + "_"][idx], **kwargs)
 
         return example
 
@@ -111,9 +118,9 @@ class MetaDataset(DatasetMixin):
         else:
             label_str = pp2mkdtable(self.labels, False)
 
-        descr = self.meta.get('description', 'MetaDataset')
+        descr = self.meta.get("description", "MetaDataset")
 
-        repr_str = f'{descr}\n\n# Labels\n{label_str}'
+        repr_str = f"{descr}\n\n# Labels\n{label_str}"
 
         return repr_str
 
@@ -121,16 +128,15 @@ class MetaDataset(DatasetMixin):
         repr_str = self.__repr__()
 
         if __COULD_HAVE_IPYTHON__ and "IPKernelApp" in get_ipython().config:
-            repr_str += f'\n\n# Example 0\n{pp2mkdtable(self.__getitem__(0), True)}'
+            repr_str += f"\n\n# Example 0\n{pp2mkdtable(self.__getitem__(0), True)}"
             display(Markdown(repr_str))
         else:
-            repr_str += f'\n\n# Example 0\n{pp2mkdtable(self.__getitem__(0), True)}'
+            repr_str += f"\n\n# Example 0\n{pp2mkdtable(self.__getitem__(0), True)}"
             print(repr_str)
-        
 
 
 def setup_loaders(labels, meta_dict):
-    '''Creates a map of key -> function pairs, which can be used to postprocess
+    """Creates a map of key -> function pairs, which can be used to postprocess
     label values at each ``getitem`` call.
 
     Parameters
@@ -160,7 +166,7 @@ def setup_loaders(labels, meta_dict):
     loader_kwargs : dict
         Name, dict pairs. The dicts are passed to the loader functions as
         keyword arguments.
-    '''
+    """
 
     loaders = {}
     loader_kwargs = {}
@@ -170,8 +176,8 @@ def setup_loaders(labels, meta_dict):
         if l is not None:
             loaders[k] = l
 
-    meta_loaders = retrieve(meta_dict, 'loaders', default={})
-    meta_loader_kwargs = retrieve(meta_dict, 'loader_kwargs', default={})
+    meta_loaders = retrieve(meta_dict, "loaders", default={})
+    meta_loader_kwargs = retrieve(meta_dict, "loader_kwargs", default={})
 
     loaders.update(meta_loaders)
 
@@ -223,7 +229,7 @@ def load_labels(root):
 
 
 def clean_keys(labels):
-    '''Removes all loader inforamtion from the keys.
+    """Removes all loader inforamtion from the keys.
 
     Parameters
     ----------
@@ -234,12 +240,12 @@ def clean_keys(labels):
     -------
     labels : dict(str, numpy.memmap)
         The original labels, with keys without the ``:loader`` part.
-    '''
+    """
 
     for k_ in list(labels.keys()):
         k, l = loader_from_key(k_)
         if l is not None:
-            k = k + '_'
+            k = k + "_"
             labels[k] = labels[k_]
             del labels[k_]
         else:
@@ -249,8 +255,8 @@ def clean_keys(labels):
 
 
 def loader_from_key(key):
-    '''Returns the name, loader pair given a key.'''
+    """Returns the name, loader pair given a key."""
 
-    if ':' in key:
-        return key.split(':')
+    if ":" in key:
+        return key.split(":")
     return key, None
