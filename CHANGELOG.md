@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added MetaDataset for easy Dataloading
 - Added CelebA dataset.
 - Added CIFAR10 dataset.
 - Environment variable EDFLOW\_GIT enables git integration.

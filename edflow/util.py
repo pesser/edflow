@@ -16,6 +16,11 @@ except ImportError:
     __COULD_HAVE_IPYTHON__ = False
 
 
+def get_obj_from_str(string):
+    module, cls = string.rsplit(".", 1)
+    return getattr(importlib.import_module(module, package=None), cls)
+
+
 def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=1.0):
     r"""
     Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
