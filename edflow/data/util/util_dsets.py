@@ -70,17 +70,15 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
                                                       image if possible.
 
     The i-th example returns:
-        :'example0': If data_balancing a random example, otherwise the i-th
-                    example of dataset.
-        :'example0_index': The index of example0 X in the original dataset.
-        :'example1': Another example which has the same label under key as
-                    example0.
-        :'example1_index': The index of example1 X in the original dataset.
-        :...: ...
+        :'examples': A list of examples, where each example has the same label
+         as specified by key. If data_balancing is `False`, the first element of
+         the list will be the `i-th` example of the dataset.
+        :'indices': A list of indices, where the `j-th` entry is the index of
+         the `j-th` example in the original dataset.
 
-    The dataset's labels are the same as that of dataset. Be careful, exampleX
-    of the i-th example does not correspond to the i-th entry of the labels but
-    to the exampleX_index-th entry.
+    The dataset's labels are the same as that of dataset. Be careful,
+    `examples[j]` of the i-th example does not correspond to the i-th entry of
+    the labels but to the `indices[j]`-th entry.
     """
 
     def __init__(self, config):
@@ -139,12 +137,13 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
             join_indices = self.prng.choice(choices, self.n_joins - 1, replace=replace)
         join_indices = np.concatenate([[i], join_indices])
 
-        examples = dict()
+        examples = list()
+        indices = list()
         for i_join, idx in enumerate(join_indices):
-            examples["example{}".format(i_join)] = self.dataset[idx]
-            examples["example{}_index".format(i_join)] = idx
+            examples.append(self.dataset[idx])
+            indices.append(idx)
 
-        return examples
+        return {"examples": examples, "indices": indices}
 
 
 class DataFolder(DatasetMixin):
