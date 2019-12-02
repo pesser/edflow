@@ -85,7 +85,7 @@ class MetaDataset(DatasetMixin):
 
         labels = load_labels(root)
         self.loaders, self.loader_kwargs = setup_loaders(labels, meta)
-        self.labels = clean_keys(labels)
+        self.labels = clean_keys(labels, self.loaders)
 
         lens = []
         for k in self.labels.keys():
@@ -218,7 +218,7 @@ def load_labels(root):
 
     labels = {}
     for f in label_files:
-        f_ = f.strip(".npy")
+        f_ = f[:-len(".npy")]
         key, shape, dtype = f_.split("-*-")
         shape = tuple([int(s) for s in shape.split("x")])
 
@@ -229,7 +229,7 @@ def load_labels(root):
     return labels
 
 
-def clean_keys(labels):
+def clean_keys(labels, loaders):
     """Removes all loader inforamtion from the keys.
 
     Parameters
@@ -243,14 +243,10 @@ def clean_keys(labels):
         The original labels, with keys without the ``:loader`` part.
     """
 
-    for k_ in list(labels.keys()):
-        k, l = loader_from_key(k_)
-        if l is not None:
-            k = k + "_"
-            labels[k] = labels[k_]
-            del labels[k_]
-        else:
-            labels[k] = labels[k_]
+    for k_ in list(loaders.keys()):
+        k = k_ + "_"
+        labels[k] = labels[k_]
+        del labels[k_]
 
     return labels
 
