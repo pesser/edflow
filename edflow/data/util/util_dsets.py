@@ -73,12 +73,10 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
         :'examples': A list of examples, where each example has the same label
          as specified by key. If data_balancing is `False`, the first element of
          the list will be the `i-th` example of the dataset.
-        :'indices': A list of indices, where the `j-th` entry is the index of
-         the `j-th` example in the original dataset.
 
     The dataset's labels are the same as that of dataset. Be careful,
     `examples[j]` of the i-th example does not correspond to the i-th entry of
-    the labels but to the `indices[j]`-th entry.
+    the labels but to the `examples[j]["index_"]`-th entry.
     """
 
     def __init__(self, config):
@@ -116,7 +114,8 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
     @property
     def labels(self):
         """Careful this can only give labels of the original item, not the
-        joined ones. Use 'example{}_index' to get the correct labels."""
+        joined ones. Use 'examples[j]["index\_"]' to get the correct label
+        index."""
         return self.dataset.labels
 
     def get_example(self, i):
@@ -137,13 +136,7 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
             join_indices = self.prng.choice(choices, self.n_joins - 1, replace=replace)
         join_indices = np.concatenate([[i], join_indices])
 
-        examples = list()
-        indices = list()
-        for i_join, idx in enumerate(join_indices):
-            examples.append(self.dataset[idx])
-            indices.append(idx)
-
-        return {"examples": examples, "indices": indices}
+        return {"examples": self.dataset[join_indices]}
 
 
 class DataFolder(DatasetMixin):
