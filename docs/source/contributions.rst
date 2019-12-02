@@ -64,7 +64,7 @@ sphinx
 
 To build the documentation locally, install `sphinx` ::
 
-   pip install sphinx sphinx_rtd_theme
+   pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc
 
 and run ::
 

@@ -56,27 +56,28 @@ class RandomlyJoinedDataset(DatasetMixin, PRNGMixin):
     Load multiple examples which have the same label.
 
     Required config parameters:
-        - RandomlyJoinedDataset/dataset:    The dataset from which to load
+        :RandomlyJoinedDataset/dataset:    The dataset from which to load
                                             examples.
-        - RandomlyJoinedDataset/key:        The key of the label to join on.
+        :RandomlyJoinedDataset/key:        The key of the label to join on.
 
     Optional config parameters:
-        - test_mode=False:                            If True, behaves deterministic.
-        - RandomlyJoinedDataset/n_joins=2:            How many examples to load.
-        - RandomlyJoinedDataset/balance=False:        If True and not in test_mode,
+        :test_mode=False:                            If True, behaves deterministic.
+        :RandomlyJoinedDataset/n_joins=2:            How many examples to load.
+        :RandomlyJoinedDataset/balance=False:        If True and not in test_mode,
                                                       sample join labels uniformly.
-        - RandomlyJoinedDataset/avoid_identity=True:  If True and not in test_mode,
+        :RandomlyJoinedDataset/avoid_identity=True:  If True and not in test_mode,
                                                       never return a pair containing the same
                                                       image if possible.
 
     The i-th example returns:
-        'example0': If data_balancing a random example, otherwise the i-th
+        :'example0': If data_balancing a random example, otherwise the i-th
                     example of dataset.
-        'example0_index': The index of example0 X in the original dataset.
-        'example1': Another example which has the same label under key as
+        :'example0_index': The index of example0 X in the original dataset.
+        :'example1': Another example which has the same label under key as
                     example0.
-        'example1_index': The index of example1 X in the original dataset.
-        ...
+        :'example1_index': The index of example1 X in the original dataset.
+        :...: ...
+
     The dataset's labels are the same as that of dataset. Be careful, exampleX
     of the i-th example does not correspond to the i-th entry of the labels but
     to the exampleX_index-th entry.
