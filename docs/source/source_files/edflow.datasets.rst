@@ -4,6 +4,22 @@ edflow.datasets package
 Submodules
 ----------
 
+edflow.datasets.celeba module
+-----------------------------
+
+.. automodule:: edflow.datasets.celeba
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+edflow.datasets.cifar module
+----------------------------
+
+.. automodule:: edflow.datasets.cifar
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 edflow.datasets.fashionmnist module
 -----------------------------------
 
