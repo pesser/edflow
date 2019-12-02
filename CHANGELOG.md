@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added MetaDataset for easy Dataloading
 - Added CelebA dataset.
 - Added CIFAR10 dataset.
 - Environment variable EDFLOW\_GIT enables git integration.
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Changed tiling background color to white
+- Changed interface of `edflow.data.dataset.RandomlyJoinedDataset` to improve it.
 - Removed colons from log directory names and replaced them by hyphens.
 - `LambdaCheckpointHook` uses global step and doesn't save on first step.
 - Switched opencv2 functions with manual ones to get rid of the dependency.
