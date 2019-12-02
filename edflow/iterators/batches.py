@@ -216,13 +216,9 @@ def _benchmark_deep_lod2dol():
     def timing(description: str, n: int) -> None:
         start = time()
         yield
-        elapsed_time = (time() - start) / n * 1000
+        ellapsed_time = (time() - start) / n * 1000
 
-        print(
-            "{description}: {elapsed_time:0.3f} ms".format(
-                description=description, elapsed_time=elapsed_time
-            )
-        )
+        print(f"{description}: {ellapsed_time:0.3f} ms")
 
     N = 100
 
