@@ -246,7 +246,7 @@ def clean_keys(labels, loaders):
     for k_ in labels.keys():
         k, l = loader_from_key(k_)
         if l is not None:
-            labels[k + '_'] = labels[k_]
+            labels[k + "_"] = labels[k_]
             del labels[k_]
 
     for k_ in list(loaders.keys()):
