@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `TFBaseEvaluator` now parses config file for `fcond` flag to filter checkpoints, e.g.`edflow -e xxx --fcond "lambda c: any([str(n) in c for n in [240000, 320000]])"` will only evaluate checkpoint 240k and 320k
 - Added MetaDataset for easy Dataloading
 - Added CelebA dataset.
 - Added CIFAR10 dataset.
