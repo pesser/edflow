@@ -34,7 +34,7 @@ class DatasetMixin(DatasetMixin_):
     lifting like loading and/or manipulating images.
 
     .. warning:: 
-        Labels must be ``dict``s of ``numpy`` arrays and not ``list``s!
+        Labels must be ``dict`` s of ``numpy`` arrays and not ``list`` s!
         Otherwise many operations do not work and result in incoprehensible
         Errors.
 
