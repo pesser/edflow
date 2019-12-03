@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Changed tiling background color to white
 - Changed interface of `edflow.data.dataset.RandomlyJoinedDataset` to improve it.
 - Removed colons from log directory names and replaced them by hyphens.
 - `LambdaCheckpointHook` uses global step and doesn't save on first step.

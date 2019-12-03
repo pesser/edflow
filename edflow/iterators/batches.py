@@ -35,7 +35,7 @@ def save_image(x, path):
 
 def tile(X, rows, cols):
     """Tile images for display."""
-    tiling = np.zeros((rows * X.shape[1], cols * X.shape[2], X.shape[3]), dtype=X.dtype)
+    tiling = np.ones((rows * X.shape[1], cols * X.shape[2], X.shape[3]), dtype=X.dtype)
     for i in range(rows):
         for j in range(cols):
             idx = i * cols + j
