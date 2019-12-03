@@ -218,7 +218,7 @@ def load_labels(root):
 
     labels = {}
     for f in label_files:
-        f_ = f[:-len(".npy")]
+        f_ = f[: -len(".npy")]
         key, shape, dtype = f_.split("-*-")
         shape = tuple([int(s) for s in shape.split("x")])
 
