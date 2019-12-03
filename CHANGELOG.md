@@ -6,8 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- `TFBaseEvaluator` now parses config file for `fcond` flag and gives it to `WaitForCheckpointHook` to allow passing filters on the checkpoints to be evaluated
-    - for example, pass `edflow -e xxx --fcond "lambda c: any([str(n) in c for n in [240000, 320000]])"` will only evaluate checkpoint 240k and 320k
+- `TFBaseEvaluator` now parses config file for `fcond` flag to filter checkpoints, e.g.`edflow -e xxx --fcond "lambda c: any([str(n) in c for n in [240000, 320000]])"` will only evaluate checkpoint 240k and 320k
+- Added MetaDataset for easy Dataloading
 - Added CelebA dataset.
 - Added CIFAR10 dataset.
 - Environment variable EDFLOW\_GIT enables git integration.
@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Changed tiling background color to white
+- Changed interface of `edflow.data.dataset.RandomlyJoinedDataset` to improve it.
 - Removed colons from log directory names and replaced them by hyphens.
 - `LambdaCheckpointHook` uses global step and doesn't save on first step.
 - Switched opencv2 functions with manual ones to get rid of the dependency.

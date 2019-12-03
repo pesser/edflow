@@ -59,10 +59,6 @@ class SequenceDataset(DatasetMixin):
             raise TypeError(
                 "Frame ids must be supplied as ints, but are {}".format(frame_ids.dtype)
             )
-        if frame_ids.dtype != np.int:
-            raise TypeError(
-                "Frame ids must be supplied as ints, but are {}".format(frame_ids.dtype)
-            )
 
         # Gradient
         diffs = frame_ids[1:] - frame_ids[:-1]
