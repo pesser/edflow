@@ -52,6 +52,7 @@ class TFBaseEvaluator(TFHookedModelIterator):
                 checkpoint_root=ProjectManager.checkpoints,
                 callback=restorer,
                 eval_all=self.config.get("eval_all", False),
+                filter_cond=eval(self.config.get("fcond", "lambda c: True")),
             )
             self.hooks += [waiter]
 
