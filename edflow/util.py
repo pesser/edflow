@@ -55,9 +55,15 @@ def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=
     return float(np.clip(linear, clip_min, clip_max))
 
 
-def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key="",
-         splitval='/',
-         walk_np_arrays=False):  # noqa
+def walk(
+    dict_or_list,
+    fn,
+    inplace=False,
+    pass_key=False,
+    prev_key="",
+    splitval="/",
+    walk_np_arrays=False,
+):  # noqa
     """
     Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
@@ -108,11 +114,11 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key="",
     """
 
     instance_test = (list, dict)
-    list_test = (list, )
+    list_test = (list,)
 
     if walk_np_arrays:
-        instance_test += (np.ndarray, )
-        list_test += (np.ndarray, )
+        instance_test += (np.ndarray,)
+        list_test += (np.ndarray,)
 
     if not pass_key:
 
@@ -129,8 +135,15 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key="",
                 key = splitval.join([prev_key, key])
 
             if isinstance(value, instance_test):
-                return walk(value, fn, inplace, pass_key=True, prev_key=key,
-                            splitval=splitval, walk_np_arrays=walk_np_arrays)
+                return walk(
+                    value,
+                    fn,
+                    inplace,
+                    pass_key=True,
+                    prev_key=key,
+                    splitval=splitval,
+                    walk_np_arrays=walk_np_arrays,
+                )
             else:
                 return fn(key, value)
 
@@ -577,6 +590,7 @@ def contains_key(nested_thing, key, splitval="/", expand=True):
 def update(to_update, to_update_with, splitval="/", expand=True):
     def _update(key, value):
         set_value(to_update, key, value, splitval=splitval)
+
     walk(to_update_with, _update, splitval=splitval, pass_key=True)
 
 

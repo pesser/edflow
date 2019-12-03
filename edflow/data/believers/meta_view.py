@@ -9,7 +9,7 @@ from tqdm.autonotebook import tqdm
 
 
 class MetaViewDataset(MetaDataset):
-    '''The :class:`MetaViewDataset` implements a way to render out a view of a
+    """The :class:`MetaViewDataset` implements a way to render out a view of a
     base dataset without the need to rewrite/copy the load heavy data in the
     base dataset.
 
@@ -27,42 +27,46 @@ class MetaViewDataset(MetaDataset):
 
     The dimensionality of the view is reflected in the nestednes of the
     resulting examples.
-    '''
+    """
 
     def __init__(self, root, *base_args, **base_kwargs):
         super().__init__(root)
 
-        base_import = retrieve(self.meta, 'base_dset')
+        base_import = retrieve(self.meta, "base_dset")
         self.base = get_obj_from_str(base_import)(*base_args, **base_kwargs)
         self.base.append_labels = False
 
-        views = retrieve(self.meta, 'views', default='view')
+        views = retrieve(self.meta, "views", default="view")
 
         def get_label(key):
             return retrieve(self.labels, key)
+
         self.views = walk(views, get_label)
 
-        if not os.path.exists(os.path.join(root, '.constructed.txt')):
+        if not os.path.exists(os.path.join(root, ".constructed.txt")):
+
             def constructor(name, view):
                 folder_name = name
-                savefolder = os.path.join(root, 'labels', folder_name)
+                savefolder = os.path.join(root, "labels", folder_name)
 
                 os.makedirs(savefolder, exist_ok=True)
 
-                for key, label in tqdm(self.base.labels.items(),
-                                       desc=f'Exporting View {name}'):
+                for key, label in tqdm(
+                    self.base.labels.items(), desc=f"Exporting View {name}"
+                ):
 
-                    savepath = os.path.join(root, 'labels', name)
+                    savepath = os.path.join(root, "labels", name)
                     label_view = np.take(label, view, axis=0)
-                    store_label_mmap(label_view,
-                                     savepath,
-                                     key)
+                    store_label_mmap(label_view, savepath, key)
+
             walk(self.views, constructor, pass_key=True)
 
-            with open(os.path.join(root, '.constructed.txt'), 'w+') as cf:
-                cf.write('Do not delete, this reduces loading times.\n'
-                         'If you need to re-render the view, you can safely '
-                         'delete this file.')
+            with open(os.path.join(root, ".constructed.txt"), "w+") as cf:
+                cf.write(
+                    "Do not delete, this reduces loading times.\n"
+                    "If you need to re-render the view, you can safely "
+                    "delete this file."
+                )
 
             # Re-initialize as we need to load the labels again.
             super().__init__(root)

@@ -15,22 +15,22 @@ def _setup(root, N=100):
 
     paths = np.array([os.path.join(root, "images", f"{i:0>3d}.png") for i in range(N)])
 
-    mmap_path = os.path.join(root, 'labels', f"image:image-*-{N}-*-{paths.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"image:image-*-{N}-*-{paths.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=paths.dtype, mode="w+", shape=(N,))
     mmap[:] = paths
 
     data = np.arange(N)
-    mmap_path = os.path.join(root, 'labels', f"attr1-*-{N}-*-{data.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"attr1-*-{N}-*-{data.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(N,))
     mmap[:] = data
 
     data = np.zeros(shape=(N, 2))
-    mmap_path = os.path.join(root, 'labels', f"attr2-*-{N}x2-*-{data.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"attr2-*-{N}x2-*-{data.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(N, 2))
     mmap[:] = data
 
     data = np.ones(shape=(N, 17, 2))
-    mmap_path = os.path.join(root, 'labels', f"keypoints-*-{N}x17x2-*-{data.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"keypoints-*-{N}x17x2-*-{data.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(N, 17, 2))
     mmap[:] = data
 

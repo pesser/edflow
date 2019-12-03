@@ -698,6 +698,7 @@ def test_walk_pass_key_inplace():
 
 def test_walk_npoff():
     import numpy as np
+
     dol = {"a": np.array([1, 2]), "b": {"c": {"d": 1}}, "e": 2}
     ref = {"a": np.array([-1, -2]), "b": {"c": {"d": -1}}, "e": -2}
 
@@ -706,14 +707,15 @@ def test_walk_npoff():
 
     val = walk(dol, fn)
 
-    assert np.all(val['a'] == ref['a'])
-    del val['a']
-    del ref['a']
+    assert np.all(val["a"] == ref["a"])
+    del val["a"]
+    del ref["a"]
     assert val == ref
 
 
 def test_walk_npon():
     import numpy as np
+
     dol = {"a": np.array([1, 2]), "b": {"c": {"d": 1}}, "e": 2}
     ref = {"a": np.array([-1, -2]), "b": {"c": {"d": -1}}, "e": -2}
 
@@ -722,9 +724,9 @@ def test_walk_npon():
 
     val = walk(dol, fn, walk_np_arrays=True)
 
-    assert np.all(val['a'] == ref['a'])
-    del val['a']
-    del ref['a']
+    assert np.all(val["a"] == ref["a"])
+    del val["a"]
+    del ref["a"]
     assert val == ref
 
 
