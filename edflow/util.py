@@ -6,6 +6,7 @@ import os
 import pickle
 from fastnumbers import fast_int
 from typing import *
+import importlib
 
 try:
     from IPython import get_ipython
@@ -54,7 +55,8 @@ def linear_var(step, start, end, start_value, end_value, clip_min=0.0, clip_max=
     return float(np.clip(linear, clip_min, clip_max))
 
 
-def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
+def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key="",
+         walk_np_arrays=False):  # noqa
     """
     Walk a nested list and/or dict recursively and call fn on all non
     list or dict objects.
@@ -100,10 +102,17 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
     fn at its leaves. : dict or list
     """
 
+    instance_test = (list, dict)
+    list_test = (list, )
+
+    if walk_np_arrays:
+        instance_test += (np.ndarray, )
+        list_test += (np.ndarray, )
+
     if not pass_key:
 
         def call(value):
-            if isinstance(value, (list, dict)):
+            if isinstance(value, instance_test):
                 return walk(value, fn, inplace)
             else:
                 return fn(value)
@@ -112,12 +121,12 @@ def walk(dict_or_list, fn, inplace=False, pass_key=False, prev_key=""):  # noqa
 
         def call(key, value):
             key = os.path.join(prev_key, key)
-            if isinstance(value, (list, dict)):
+            if isinstance(value, instance_test):
                 return walk(value, fn, inplace, pass_key=True, prev_key=key)
             else:
                 return fn(key, value)
 
-    if isinstance(dict_or_list, list):
+    if isinstance(dict_or_list, list_test):
         results = []
         for i, val in strenumerate(dict_or_list):
             result = call(i, val) if pass_key else call(val)
