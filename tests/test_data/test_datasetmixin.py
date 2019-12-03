@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from edflow.data.dataset_mixin import DatasetMixin
 from edflow.debug import DebugDataset
@@ -26,7 +27,7 @@ def test_dset_mxin():
 def test_dset_mxin_app_labels():
     class MyDset(DatasetMixin):
         def __init__(self):
-            self.labels = {"l": [1, 2, 3]}
+            self.labels = {"l": np.array([1, 2, 3])}
             self.append_labels = True
 
         def get_example(self, idx):
