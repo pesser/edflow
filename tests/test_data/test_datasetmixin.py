@@ -38,7 +38,7 @@ def test_dset_mxin_app_labels():
 
     D = MyDset()
     ex = D[0]
-    assert "l" in ex
+    assert "l" in ex['labels_']
     assert "a" in ex
 
     with pytest.raises(Exception):
@@ -47,6 +47,7 @@ def test_dset_mxin_app_labels():
     D.append_labels = False
     ex = D[0]
     assert "l" not in ex
+    assert "labels_" not in ex
     assert "a" in ex
 
     with pytest.raises(Exception):
@@ -85,8 +86,8 @@ def test_dset_mxin_data_attr_app_labels():
     assert "val" in ex
     assert "other" in ex
     assert "index_" in ex
-    assert "label1" in ex
-    assert "label2" in ex
+    assert "label1" in ex['labels_']
+    assert "label2" in ex['labels_']
 
     with pytest.raises(Exception):
         ex[100]

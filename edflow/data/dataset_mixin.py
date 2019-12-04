@@ -1,6 +1,6 @@
 from chainer.dataset import DatasetMixin as DatasetMixin_
 import numpy as np
-from edflow.util import walk, edprint, update
+from edflow.util import walk, update
 
 
 class DatasetMixin(DatasetMixin_):
@@ -32,11 +32,6 @@ class DatasetMixin(DatasetMixin_):
     loading a ``.npy`` file or a ``.csv``. They can then be used to quickly
     manipulate the dataset. When getting the actual example we can do the heavy
     lifting like loading and/or manipulating images.
-
-    .. warning:: 
-        Labels must be ``dict``s of ``numpy`` arrays and not ``list``s!
-        Otherwise many operations do not work and result in incoprehensible
-        Errors.
 
     **Batching**
 
@@ -94,6 +89,12 @@ class DatasetMixin(DatasetMixin_):
     .. code-block:: python
 
         A = ConcatenatedDataset(C, B)  # Adding two Datasets
+        D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
+
+    **Labels in the example ``dict``**
+
+    Oftentimes it is good to store and load some values as lables as it can
+    increase performance and decrease storage size, e.g. when storing scalar
         D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
 
     **Labels in the example ``dict``**
@@ -176,7 +177,7 @@ class DatasetMixin(DatasetMixin_):
                 return labels[index]
 
             labels = walk(self.labels, label_getter)
-            update(datum, labels)
+            update(datum, {'labels_': labels})
 
     def __len__(self):
         """Add default behaviour for datasets defining an attribute

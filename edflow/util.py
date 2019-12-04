@@ -814,7 +814,11 @@ def edprint(nested_thing):
         Some nested object.
     """
 
-    if __COULD_HAVE_IPYTHON__ and "IPKernelApp" in get_ipython().config:
+    if (
+        __COULD_HAVE_IPYTHON__
+        and hasattr(get_ipython(), "config")
+        and "IPKernelApp" in get_ipython().config
+    ):
         display(Markdown(pp2mkdtable(nested_thing, True)))
     else:
         print(pp2mkdtable(nested_thing, False))

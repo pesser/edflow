@@ -3,6 +3,7 @@ import numpy as np
 import os
 
 from edflow.data.believers.meta import MetaDataset
+from edflow.util import walk, retrieve
 
 
 def _setup(root, N=100):
@@ -67,7 +68,7 @@ def _teardown(test_data_root):
     os.system(f"rm -rf {test_data_root}")
 
 
-def test_sequence_dset_vanilla():
+def test_meta_dset():
     N = 100
     try:
         root = _setup(".", N)
@@ -84,15 +85,19 @@ def test_sequence_dset_vanilla():
         d = M[0]
         ref = {
             "image": np.ones(shape=(64, 64, 3)),
+            "index_": 0,
+            "labels_": {
             "image_": os.path.join(root, "images", "000.png"),
             "attr1": 0,
             "attr2": np.zeros((2)),
             "keypoints": np.ones((17, 2)),
-            "index_": 0,
+            }
         }
 
-        for k in d:
-            assert np.all(d[k] == ref[k])
+        def tester(key, val):
+            assert np.all(val == retrieve(ref, key))
+
+        walk(d, tester, pass_key=True)
 
         assert hasattr(M, "meta")
 
