@@ -27,6 +27,89 @@ class MetaViewDataset(MetaDataset):
 
     The dimensionality of the view is reflected in the nestednes of the
     resulting examples.
+
+    ### Example
+
+    You have a base dataset, which contains video frames. It has length ``N``.
+
+    Say you want to have a combination of two views on your dataset: One
+    contains all ``M`` possible subsequences of length 5 of videos contained in
+    the dataset and one contains an appearance image per each example with the
+    same person as in the sequence.
+    
+    All you need is to define two numpy arrays, one with the indices belonging
+    to the sequenced frames and one with indices of examples of the appearence
+    images. They should look something like this:
+
+    .. code-block:: python
+
+        # Sequence indices
+        seq_idxs = [[0, 1, 2, 3, 4],
+                    [1, 2, 3, 4, 5],
+                    [2, 3, 4, 5, 6],
+                    [3, 4, 5, 6, 7],
+                    ...
+                    [N-4, N-3, N-2, N-1, N],
+        print(seq_idxs.shape)  # [M, 5]
+
+        # Sequence indices
+        app_idxs = [12,
+                    12,
+                    15,
+                    10,
+                    ..
+                    109],
+        print(app_idxs.shape)  # [M]
+
+    Knowing your views, create a folder, where you want to store your view
+    dataset, i.e. at some path ``ROOT``. Create a folder ``ROOT/labels`` and
+    store the views according to the label naming scheme as defined in the
+    :class:`MetaDataset`. You can use the function
+    :function:`edflow.data.believers.meta_util.store_label_mmap` for this.
+    You can also store the views in any subfolder of labels, which might come
+    in handy if you have a lot of labels and want to keep things clean.
+
+    Finally create a file ``ROOT/meta.yaml``.
+
+    Our folder should look something like this:
+
+    .. code-block:: bash
+
+        ROOT/
+         ├ labels/
+         │ ├ app_view-*-{M}-*-int64.npy
+         │ └ seq_view-*-{M}x5-*-int64.npy
+         └ meta.yaml
+
+    Now let us fill the ``meta.yaml``. All we need to do is specify the base
+    dataset and how we want to use our views:
+
+    .. code-block:: yaml
+
+        # meta.yaml
+
+        description: |
+            This is our very own View on the data.
+            Let's have fun with it!
+
+        base_dset: import.path.to.dset_object
+
+        views:
+            appearance: app_view
+            frames: seq_view
+
+    Now we are ready to construct our view on the base dataset!
+    Use ``.show()`` to see how the dataset looks like. This works especially
+    nice in a jupyter notebook.
+
+    .. code-block:: python
+
+        ViewDset = MetaViewDataset('ROOT')
+
+        print(ViewDset.labels.keys())  # ['appearance', 'frames']
+        print(len(ViewDset))  # {M}
+
+        ViewDset.show()  # prints the labels and the first example
     """
 
     def __init__(self, root, *base_args, **base_kwargs):
