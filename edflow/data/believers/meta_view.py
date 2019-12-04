@@ -65,7 +65,7 @@ class MetaViewDataset(MetaDataset):
     dataset, i.e. at some path ``ROOT``. Create a folder ``ROOT/labels`` and
     store the views according to the label naming scheme as defined in the
     :class:`MetaDataset`. You can use the function
-    :function:`edflow.data.believers.meta_util.store_label_mmap` for this.
+    :func:`edflow.data.believers.meta_util.store_label_mmap` for this.
     You can also store the views in any subfolder of labels, which might come
     in handy if you have a lot of labels and want to keep things clean.
 

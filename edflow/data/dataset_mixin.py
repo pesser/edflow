@@ -100,7 +100,7 @@ class DatasetMixin(DatasetMixin_):
 
     Oftentimes it is good to store and load some values as lables as it can
     increase performance and decrease storage size, e.g. when storing scalar
-        D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
+    D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
 
     **Labels in the example ``dict``**
 
