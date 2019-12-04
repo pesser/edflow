@@ -182,7 +182,7 @@ class DatasetMixin(DatasetMixin_):
                 return labels[index]
 
             labels = walk(self.labels, label_getter)
-            update(datum, {'labels_': labels})
+            update(datum, {"labels_": labels})
 
     def __len__(self):
         """Add default behaviour for datasets defining an attribute

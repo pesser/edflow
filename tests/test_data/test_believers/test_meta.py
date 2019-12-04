@@ -87,11 +87,11 @@ def test_meta_dset():
             "image": np.ones(shape=(64, 64, 3)),
             "index_": 0,
             "labels_": {
-            "image_": os.path.join(root, "images", "000.png"),
-            "attr1": 0,
-            "attr2": np.zeros((2)),
-            "keypoints": np.ones((17, 2)),
-            }
+                "image_": os.path.join(root, "images", "000.png"),
+                "attr1": 0,
+                "attr2": np.zeros((2)),
+                "keypoints": np.ones((17, 2)),
+            },
         }
 
         def tester(key, val):

@@ -11,7 +11,7 @@ def _setup(root, N=100, V=25):
 
     super_root = os.path.join(root, "METAVIEW__test_data__METAVIEW")
     super_root = os.path.abspath(super_root)
-    root = os.path.join(super_root, 'base')
+    root = os.path.join(super_root, "base")
     os.makedirs(os.path.join(root, "images"), exist_ok=True)
     os.makedirs(os.path.join(root, "labels"), exist_ok=True)
 
@@ -59,19 +59,23 @@ loader_kwargs:
         """
         )
 
-    view_root = os.path.join(super_root, 'mview')
+    view_root = os.path.join(super_root, "mview")
 
-    os.makedirs(os.path.join(view_root, 'labels', "views"), exist_ok=True)
+    os.makedirs(os.path.join(view_root, "labels", "views"), exist_ok=True)
 
     # view 1
     data = np.arange(V).astype(int)
-    mmap_path = os.path.join(view_root, "labels", "views", f"simple-*-{V}-*-{data.dtype}.npy")
-    mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(V, ))
+    mmap_path = os.path.join(
+        view_root, "labels", "views", f"simple-*-{V}-*-{data.dtype}.npy"
+    )
+    mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(V,))
     mmap[:] = data
 
     # view 2
     data = np.zeros(shape=(V, 5, 3)).astype(int)
-    mmap_path = os.path.join(view_root, "labels", "views", f"complex-*-{V}x5x3-*-{data.dtype}.npy")
+    mmap_path = os.path.join(
+        view_root, "labels", "views", f"complex-*-{V}x5x3-*-{data.dtype}.npy"
+    )
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(V, 5, 3))
     mmap[:] = data
 
@@ -117,9 +121,9 @@ def test_meta_view_dset():
 
         assert len(M) == V
 
-        for kk in ['simple', 'complex']:
+        for kk in ["simple", "complex"]:
             assert kk in M.labels
-            if kk == 'complex':
+            if kk == "complex":
                 for i in range(2):
                     for k in ["attr1", "attr2", "image_", "keypoints"]:
                         assert k in M.labels[kk][i]
@@ -139,7 +143,7 @@ def test_meta_view_dset():
         ref_simple = single_ref
         ref_complex = [[single_ref] * 3] * 20
 
-        ref = {'simple': ref_simple, 'complex': [ref_complex, ref_simple], 'index_': 0}
+        ref = {"simple": ref_simple, "complex": [ref_complex, ref_simple], "index_": 0}
 
         def tester(key, val):
             assert np.all(val == retrieve(ref, key))
