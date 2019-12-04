@@ -30,32 +30,29 @@ from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
 from edflow.config import parse_unknown_args, update_config
 
 
+def load_config(base_configs, main_config, additional_kwargs):
+    config = dict()
+    if base_configs:
+        for base in base_configs:
+            with open(base) as f:
+                config.update(yaml.full_load(f))
+    if main_config:
+        with open(main_config) as f:
+            config.update(yaml.full_load(f))
+    update_config(config, additional_kwargs)
+    return config
+
+
 def main(opt, additional_kwargs):
     # Project manager
     if opt.project is not None:
         P = use_project(opt.project, postfix=opt.name)
     else:
         # Get base or default parameters
-        base_config = {}
-        if opt.base is not None:
-            for base in opt.base:
-                print(base)
-                with open(base) as f:
-                    base_config.update(yaml.full_load(f))
-        print(base_config)
-        # get path to implementation
-        if opt.train:
-            with open(opt.train) as f:
-                config = base_config
-                config.update(yaml.full_load(f))
-                update_config(config, additional_kwargs)
-                impl = config["model"]
-                name = config.get("experiment_name", None)
-        else:
-            config = base_config
-            update_config(config, additional_kwargs)
-            impl = config["model"]
-            name = config.get("experiment_name", None)
+        main_config = opt.train if opt.train else opt.eval[0]
+        config = load_config(opt.base, main_config, additional_kwargs)
+        impl = config.get("iterator", "")
+        name = config.get("experiment_name", None)
         if "code_root" in config:
             code_root = config["code_root"]
         else:
@@ -76,6 +73,7 @@ def main(opt, additional_kwargs):
     # Logger
     set_global_stdout_level(opt.log_level)
     logger = get_logger("main")
+    logger.info(" ".join(sys.argv))
     logger.info(opt)
     logger.info(P)
 
@@ -94,18 +92,9 @@ def main(opt, additional_kwargs):
         else:
             checkpoint = None
 
-        base_config = {}
-        if opt.base is not None:
-            for base in opt.base:
-                print(base)
-                with open(base) as f:
-                    base_config.update(yaml.full_load(f))
-        print(base_config)
-        # get path to implementation
-        with open(opt.train) as f:
-            config = base_config
-            config.update(yaml.full_load(f))
-            update_config(config, additional_kwargs)
+        config = load_config(opt.base, opt.train, additional_kwargs)
+        if not "model" in config:
+            config["model"] = "edflow.util.NoModel"
 
         logger.info("Training config: {}\n{}".format(opt.train, yaml.dump(config)))
 
@@ -118,15 +107,7 @@ def main(opt, additional_kwargs):
     # Evaluation
     opt.eval = opt.eval or list()
     for eval_idx, eval_config in enumerate(opt.eval):
-        base_config = {}
-        if opt.base is not None:
-            for base in opt.base:
-                with open(base) as f:
-                    base_config.update(yaml.full_load(f))
-        with open(eval_config) as f:
-            config = base_config
-            config.update(yaml.full_load(f))
-            update_config(config, additional_kwargs)
+        config = load_config(opt.base, eval_config, additional_kwargs)
 
         disable_eval_all = disable_eval_forever = False
         if opt.checkpoint is not None:
@@ -154,6 +135,8 @@ def main(opt, additional_kwargs):
                     "eval_forever"
                 )
             )
+        if not "model" in config:
+            config["model"] = "edflow.util.NoModel"
 
         logger.info(
             "Evaluation config: {}\n{}".format(eval_config, yaml.dump(eval_config))
