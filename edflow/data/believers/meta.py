@@ -230,7 +230,7 @@ def load_labels(root):
 
 
 def clean_keys(labels, loaders):
-    """Removes all loader inforamtion from the keys.
+    """Removes all loader information from the keys.
 
     Parameters
     ----------
