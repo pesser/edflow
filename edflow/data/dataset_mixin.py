@@ -33,6 +33,11 @@ class DatasetMixin(DatasetMixin_):
     manipulate the dataset. When getting the actual example we can do the heavy
     lifting like loading and/or manipulating images.
 
+    .. warning:: 
+        Labels must be ``dict`` s of ``numpy`` arrays and not ``list`` s!
+        Otherwise many operations do not work and result in incoprehensible
+        Errors.
+
     **Batching**
 
     As one usually works with batched datasets, the compute heavy steps can be

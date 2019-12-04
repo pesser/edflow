@@ -20,6 +20,22 @@ edflow.data.believers.meta\_loaders module
    :undoc-members:
    :show-inheritance:
 
+edflow.data.believers.meta\_util module
+---------------------------------------
+
+.. automodule:: edflow.data.believers.meta_util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+edflow.data.believers.meta\_view module
+---------------------------------------
+
+.. automodule:: edflow.data.believers.meta_view
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 edflow.data.believers.sequence module
 -------------------------------------
 
