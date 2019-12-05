@@ -187,7 +187,6 @@ class DatasetMixin(DatasetMixin_):
     def _expander(self, val):
         if callable(val):
             val = val()
-        print(val)
         return val
 
     def __len__(self):
