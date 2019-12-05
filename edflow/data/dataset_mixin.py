@@ -1,6 +1,6 @@
 from chainer.dataset import DatasetMixin as DatasetMixin_
 import numpy as np
-from edflow.util import walk
+from edflow.util import walk, update
 
 
 class DatasetMixin(DatasetMixin_):
@@ -32,6 +32,11 @@ class DatasetMixin(DatasetMixin_):
     loading a ``.npy`` file or a ``.csv``. They can then be used to quickly
     manipulate the dataset. When getting the actual example we can do the heavy
     lifting like loading and/or manipulating images.
+
+    .. warning:: 
+        Labels must be ``dict`` s of ``numpy`` arrays and not ``list`` s!
+        Otherwise many operations do not work and result in incomprehensible
+        errors.
 
     **Batching**
 
@@ -168,8 +173,12 @@ class DatasetMixin(DatasetMixin_):
 
     def _maybe_append_labels(self, datum, index):
         if self.append_labels:
-            labels = {k: v[index] for k, v in self.labels.items()}
-            datum.update(labels)
+
+            def label_getter(labels):
+                return labels[index]
+
+            labels = walk(self.labels, label_getter)
+            update(datum, {"labels_": labels})
 
     def _maybe_expand(self, nested_object):
         if self.expand:

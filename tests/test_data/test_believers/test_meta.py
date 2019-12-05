@@ -3,32 +3,35 @@ import numpy as np
 import os
 
 from edflow.data.believers.meta import MetaDataset
+from edflow.util import walk, retrieve
 
 
 def _setup(root, N=100):
     from PIL import Image
 
-    root = os.path.join(root, "test_data_")
+    root = os.path.join(root, "META__test_data__META")
+    root = os.path.abspath(root)
     os.makedirs(os.path.join(root, "images"), exist_ok=True)
+    os.makedirs(os.path.join(root, "labels"), exist_ok=True)
 
     paths = np.array([os.path.join(root, "images", f"{i:0>3d}.png") for i in range(N)])
 
-    mmap_path = os.path.join(root, f"image:image-*-{N}-*-{paths.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"image:image-*-{N}-*-{paths.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=paths.dtype, mode="w+", shape=(N,))
     mmap[:] = paths
 
     data = np.arange(N)
-    mmap_path = os.path.join(root, f"attr1-*-{N}-*-{data.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"attr1-*-{N}-*-{data.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(N,))
     mmap[:] = data
 
     data = np.zeros(shape=(N, 2))
-    mmap_path = os.path.join(root, f"attr2-*-{N}x2-*-{data.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"attr2-*-{N}x2-*-{data.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(N, 2))
     mmap[:] = data
 
     data = np.ones(shape=(N, 17, 2))
-    mmap_path = os.path.join(root, f"keypoints-*-{N}x17x2-*-{data.dtype}.npy")
+    mmap_path = os.path.join(root, "labels", f"keypoints-*-{N}x17x2-*-{data.dtype}.npy")
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(N, 17, 2))
     mmap[:] = data
 
@@ -55,7 +58,7 @@ loader_kwargs:
         """
         )
 
-    return root
+    return os.path.abspath(root)
 
 
 def _teardown(test_data_root):
@@ -65,12 +68,13 @@ def _teardown(test_data_root):
     os.system(f"rm -rf {test_data_root}")
 
 
-def test_sequence_dset_vanilla():
+def test_meta_dset():
     N = 100
     try:
         root = _setup(".", N)
 
         M = MetaDataset(root)
+        M.show()
 
         assert len(M) == N
 
@@ -81,15 +85,19 @@ def test_sequence_dset_vanilla():
         d = M[0]
         ref = {
             "image": np.ones(shape=(64, 64, 3)),
-            "image_": os.path.join(root, "images", "000.png"),
-            "attr1": 0,
-            "attr2": np.zeros((2)),
-            "keypoints": np.ones((17, 2)),
             "index_": 0,
+            "labels_": {
+                "image_": os.path.join(root, "images", "000.png"),
+                "attr1": 0,
+                "attr2": np.zeros((2)),
+                "keypoints": np.ones((17, 2)),
+            },
         }
 
-        for k in d:
-            assert np.all(d[k] == ref[k])
+        def tester(key, val):
+            assert np.all(val == retrieve(ref, key))
+
+        walk(d, tester, pass_key=True)
 
         assert hasattr(M, "meta")
 
