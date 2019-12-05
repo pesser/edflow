@@ -154,7 +154,6 @@ class Test_eval(object):
         import shutil
 
         shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
-        shutil.copytree(source, destination)
         command = [
             "edflow",
             "-e",
