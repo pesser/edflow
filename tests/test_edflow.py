@@ -69,6 +69,20 @@ class Dataset(DatasetMixin):
         return {"foo": 0}
 
 
+class LLDataset(DatasetMixin):
+    def __init__(self, config):
+        self.config = config
+
+    def __len__(self):
+        return 1
+
+    def get_example(self, i):
+        def fn():
+            return 0
+
+        return {"foo": fn}
+
+
 def fullname(o):
     """Get string to specify class in edflow config."""
     module = o.__module__
@@ -124,6 +138,7 @@ class Test_eval(object):
         and then checks if an evaluation folder "test_inference" was created in logs/
         -------
         """
+
         self.setup_tmpdir(tmpdir)
         config = dict()
         config["model"] = "tests." + fullname(Model)
@@ -139,6 +154,7 @@ class Test_eval(object):
         import shutil
 
         shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        shutil.copytree(source, destination)
         command = [
             "edflow",
             "-e",
@@ -322,6 +338,49 @@ class Test_eval(object):
         config["model"] = "tests." + fullname(Model)
         config["iterator"] = "tests." + fullname(Iterator_no_checkpoint)
         config["dataset"] = "tests." + fullname(Dataset)
+        config["batch_size"] = 16
+        config["num_steps"] = 100
+        config["eval_all"] = True
+        config["eval_forever"] = False
+        import yaml
+
+        with open(os.path.join(tmpdir, "config.yaml"), "w") as outfile:
+            yaml.dump(config, outfile, default_flow_style=False)
+        import shutil
+
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        command = [
+            "edflow",
+            "-e",
+            "config.yaml",
+            "-p",
+            os.path.join("logs", "trained_model"),
+            "-b",
+            "config.yaml",
+            "-n",
+            "test_inference",
+        ]
+        command = " ".join(command)
+        run_edflow_cmdline(command, cwd=tmpdir)
+
+        # check if correct folder was created
+        eval_dirs = os.listdir(os.path.join(tmpdir, "logs", "trained_model", "eval"))
+        assert any(list(filter(lambda x: "test_inference" in x, eval_dirs)))
+
+    def test_6(self, tmpdir):
+        """Tests evaluation with
+        1. a late loading dataset, which returns a function
+
+        effectively runs test_5 but with a late loading dataset. If test_5
+        passes, the data has been correctly loaded.
+        -------
+        """
+        self.setup_tmpdir(tmpdir)
+        # command = "edflow -e eval.yaml -b train.yaml -n test"
+        config = dict()
+        config["model"] = "tests." + fullname(Model)
+        config["iterator"] = "tests." + fullname(Iterator_no_checkpoint)
+        config["dataset"] = "tests." + fullname(LLDataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["eval_all"] = True

@@ -96,6 +96,7 @@ def _train(config, root, checkpoint=None, retrain=False):
     # fork early to avoid taking all the crap into forked processes
     logger.info("Instantiating dataset.")
     dataset = implementations["dataset"](config=config)
+    dataset.expand = True
     logger.info("Number of training samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
@@ -171,6 +172,7 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     )
 
     dataset = implementations["dataset"](config=config)
+    dataset.expand = True
     logger.info("Number of testing samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
