@@ -108,22 +108,24 @@ class PyHookedModelIterator(object):
         for hook in self.hooks:
             hook.at_exception(e)
 
-    def iterate(self, batch_iterator):
+    def iterate(self, batch_iterator, batch_iterator_validation=None):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
         ----------
         batch_iterator : Iterable
 	    Iterable returning training data.
+        batch_iterator_validation : Iterable
+	    Iterable returning validation data or None
         """
 
         try:
-            self._iterate(batch_iterator)
+            self._iterate(batch_iterator, batch_iterator_validation)
         except Exception as e:
             self._handle_exception(e)
             raise e
 
-    def _iterate(self, batch_iterator):
+    def _iterate(self, batch_iterator, batch_iterator_validation=None):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
@@ -139,6 +141,7 @@ class PyHookedModelIterator(object):
         desc_e = base + "Epoch"
         desc_b = base + "Batch"
 
+        validation_frequency = self.config.get("val_freq", self.config.get("log_freq", -1))
         for ep in trange(
             self.num_epochs, desc=desc_e, position=pos, dynamic_ncols=True
         ):
@@ -151,14 +154,23 @@ class PyHookedModelIterator(object):
             )
             for bi, batch in enumerate(iterator):
                 self._batch_step = bi
+
+                if (batch_iterator_validation is not None and
+                        self.get_global_step() % validation_frequency == 0):
+                    validation_batch = next(batch_iterator_validation)
+                    fetches = {"global_step": self.get_global_step,
+                            "validation_ops": step_ops}
+                    feeds = self.make_feeds(validation_batch)
+                    feeds["validation_batch"] = True
+                    self.run_hooks(bi, fetches, feeds, validation_batch, before=True)
+                    results = self.run(fetches, feed_dict=feeds)
+                    self.run_hooks(bi, results=results, before=False)
+
                 fetches = {"global_step": self.get_global_step, "step_ops": step_ops}
-
                 feeds = self.make_feeds(batch)
-
+                feeds["validation_batch"] = False
                 self.run_hooks(bi, fetches, feeds, batch, before=True)
-
                 results = self.run(fetches, feed_dict=feeds)
-
                 self.run_hooks(bi, results=results, before=False)
 
                 self.increment_global_step()

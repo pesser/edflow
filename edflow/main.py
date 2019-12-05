@@ -92,27 +92,40 @@ def _train(config, root, checkpoint=None, retrain=False):
     implementations = get_implementations_from_config(
         config, ["model", "iterator", "dataset"]
     )
-
-    # fork early to avoid taking all the crap into forked processes
     logger.info("Instantiating dataset.")
     dataset = implementations["dataset"](config=config)
     logger.info("Number of training samples: {}".format(len(dataset)))
+    if "validation_dataset" in config:
+        use_validation_dataset = True
+        implementations["validation_dataset"] = get_obj_from_str(config["validation_dataset"])
+        logger.info("Instantiating validation dataset.")
+        validation_dataset = implementations["validation_dataset"](config=config)
+        logger.info("Number of validation samples: {}".format(len(validation_dataset)))
+    else:
+        use_validation_dataset = False
+
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
-    with make_batches(
+    batches = make_batches(
         dataset,
         batch_size=config["batch_size"],
         shuffle=True,
         n_processes=n_processes,
         n_prefetch=n_prefetch,
         error_on_timeout=config.get("error_on_timeout", False),
-    ) as batches:
-        # get them going
-        logger.info("Warm up batches.")
-        next(batches)
-        batches.reset()
-        logger.info("Reset batches.")
-
+    )
+    if use_validation_dataset:
+        validation_batches = make_batches(
+            validation_dataset,
+            batch_size=config["batch_size"],
+            shuffle=True,
+            n_processes=n_processes,
+            n_prefetch=n_prefetch,
+            error_on_timeout=config.get("error_on_timeout", False),
+        )
+    else:
+        validation_batches = None
+    try:
         if "num_steps" in config:
             # set number of epochs to perform at least num_steps steps
             steps_per_epoch = len(dataset) / config["batch_size"]
@@ -150,7 +163,11 @@ def _train(config, root, checkpoint=None, retrain=False):
         logger.info("Saved config at {}".format(cpath))
 
         logger.info("Iterating.")
-        Trainer.iterate(batches)
+        Trainer.iterate(batches, validation_batches)
+    finally:
+        batches.finalize()
+        if use_validation_dataset:
+            validation_batches.finalize()
 
 
 def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
@@ -182,9 +199,6 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         n_prefetch=n_prefetch,
         error_on_timeout=config.get("error_on_timeout", False),
     )
-    # get going
-    next(batches)
-    batches.reset()
 
     logger.info("Initializing model.")
     Model = implementations["model"](config)
