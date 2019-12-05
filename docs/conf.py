@@ -12,34 +12,44 @@
 #
 import os
 import sys
+import importlib
 
-import edflow
+sys.path.insert(0, os.path.abspath(".."))
 
-sys.path.insert(0, os.path.abspath("."))
+from unittest.mock import Mock
 
-from unittest import mock
-
-autodoc_mock_imports = [
-    # "tensorflow",
-    "tensorboardX",
-    "torch",
-    "pyyaml",
-    "opencv-python",
+MOCK_MODULES = [
     "tqdm",
-    "Pillow",
-    "PIL",
-    "chainer",
-    "matplotlib",
-    "pandas",
-    # "scipy",
-    "h5py",
-    "scikit-image",
-    "natsort",
+    "tqdm.autonotebook",
+    "yaml",
+    "numpy",
     "fastnumbers",
-    "cv2",
+    "PIL",
+    "PIL.Image",
+    "chainer",
+    "chainer.iterators",
+    "chainer.dataset",
+    "pandas",
+    "matplotlib",
+    "matplotlib.pyplot",
+    "matplotlib.gridspec",
+    "tensorflow",
+    "tensorflow.contrib.distributions",
+    "tensorflow.contrib.framework.python.ops",
+    "tensorflow.contrib.keras.api.keras",
+    "tensorflow.contrib.keras.api.keras.models",
+    "tensorflow.contrib.keras.api.keras.applications.vgg19",
+    "tensorflow.python",
+    "tensorflow.python.ops",
+    "tensorflow.python.framework",
+    "torch",
+    "skimage",
+    "skimage.measure",
+    "tensorboardX",
 ]
 
-sys.modules.update((mod_name, mock.MagicMock()) for mod_name in autodoc_mock_imports)
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
 
 
 def run_apidoc(app):
@@ -71,7 +81,6 @@ def setup(app):
 project = "EDFlow"
 copyright = "2019, Mimo Tilbich"
 author = "Mimo Tilbich"
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -107,6 +116,36 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 #
 html_theme = "sphinx_rtd_theme"
 
+autodoc_mock_imports = [
+    #    "edflow",
+    #    "tensorflow",
+    #    "tensorboardX",
+    #    "torch",
+    #    "pyyaml",
+    #    "opencv-python",
+    "tqdm",
+    #    "Pillow",
+    #    "PIL",
+    #    "chainer",
+    #    "matplotlib",
+    #    "pandas",
+    #    "scipy",
+    #    "h5py",
+    #    "scikit-image",
+    #    "natsort",
+    #    "fastnumbers",
+    #    "cv2",
+]
+
+for name in autodoc_mock_imports:
+    try:
+        module = importlib.import_module(name)
+    except:
+        print(f"[autodoc] adding a mock module {name}!")
+        module = mock.Mock(name)
+        sys.modules[name] = module
+
+# sys.modules.update((mod_name, mock.MagicMock()) for mod_name in autodoc_mock_imports)
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
