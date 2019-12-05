@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from edflow.debug import DebugDataset
 from edflow.data.processing.labels import LabelDataset, ExtraLabelsDataset
+from edflow.util import set_value
 
 
 def test_label_dset():
@@ -23,7 +24,7 @@ def test_extra_labels():
 
     de = E[0]
     ref = D[0]
-    ref.update({"new": 0})
+    set_value(ref, "labels_/new", 0)
 
     assert de == ref
 

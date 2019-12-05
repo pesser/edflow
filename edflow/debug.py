@@ -1,5 +1,6 @@
 from edflow.iterators.model_iterator import PyHookedModelIterator
 from edflow.data.dataset import DatasetMixin
+import numpy as np
 
 
 class DebugModel(object):
@@ -60,7 +61,7 @@ class DebugDataset(DatasetMixin):
             else:
                 keys = ["label1", "label2"]
             self._labels = {
-                k: [i + self.offset for i in range(self.size)] for k in keys
+                k: np.array([i + self.offset for i in range(self.size)]) for k in keys
             }
         return self._labels
 

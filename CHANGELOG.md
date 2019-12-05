@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added MetaView Dataset, which allows to store views on a base dataset without the need to recalculate the labels everytime.
 - `TFBaseEvaluator` now parses config file for `fcond` flag to filter checkpoints, e.g.`edflow -e xxx --fcond "lambda c: any([str(n) in c for n in [240000, 320000]])"` will only evaluate checkpoint 240k and 320k
 - Added MetaDataset for easy Dataloading
 - Added CelebA dataset.
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- _Breaking Change:_ When setting the `DatasetMixin` attribute `append_labels = True` the labels are not added to the example directly but behind the key `labels_`.
 - Changed tiling background color to white
 - Changed interface of `edflow.data.dataset.RandomlyJoinedDataset` to improve it.
 - Removed colons from log directory names and replaced them by hyphens.
