@@ -79,6 +79,12 @@ loader_kwargs:
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(V, 5, 3))
     mmap[:] = data
 
+    # view 3
+    data = np.arange(V).astype(int)
+    mmap_path = os.path.join(view_root, "labels", f"simple-*-{V}-*-{data.dtype}.npy")
+    mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(V,))
+    mmap[:] = data
+
     with open(os.path.join(view_root, "meta.yaml"), "w+") as mfile:
         mfile.write(
             """
@@ -92,11 +98,14 @@ base_kwargs:
     root: {}
 
 views:
+    simple1: simple
     simple: views/simple
     complex:
         - views/complex
         - views/simple
-        """.format(root)
+        """.format(
+                root
+            )
         )
 
     return super_root, root, view_root
@@ -115,14 +124,13 @@ def test_meta_view_dset():
     try:
         super_root, base_root, view_root = _setup(".", N, V)
 
-        \begin{M = MetaViewDataset(view_root)}
-        \end{M = MetaViewDataset(view_root)}
+        M = MetaViewDataset(view_root)
         M.append_labels = False
         M.show()
 
         assert len(M) == V
 
-        for kk in ["simple", "complex"]:
+        for kk in ["simple1", "simple", "complex"]:
             assert kk in M.labels
             if kk == "complex":
                 for i in range(2):
@@ -144,7 +152,12 @@ def test_meta_view_dset():
         ref_simple = single_ref
         ref_complex = [[single_ref] * 3] * 20
 
-        ref = {"simple": ref_simple, "complex": [ref_complex, ref_simple], "index_": 0}
+        ref = {
+            "simple1": ref_simple,
+            "simple": ref_simple,
+            "complex": [ref_complex, ref_simple],
+            "index_": 0,
+        }
 
         def tester(key, val):
             assert np.all(val == retrieve(ref, key))

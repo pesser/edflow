@@ -16,8 +16,8 @@ class MetaViewDataset(MetaDataset):
     To use the MetaViewDataset you need to define two things:
         1. A base dataset as import string in the ``meta.yaml`` file. Use the
             key ``base_dset`` for this. This should preferably be a function or
-            object, which is passed the args and kwargs ``base_args`` and
-            ``base_kwargs``.
+            class, which is passed the kwargs ``base_kwargs`` as defined in the
+            ``meta.yaml``..
         2. A view in the form of a numpy ``memmap`` or a nested object of
             ``dict``s and ``list``s with ``memmaps`` at the leaves, each
             storing the indices used for the view in this dataset. The arrays
@@ -93,6 +93,8 @@ class MetaViewDataset(MetaDataset):
             Let's have fun with it!
 
         base_dset: import.path.to.dset_object
+        base_kwargs:
+            stuff: needed_for_construction
 
         views:
             appearance: app_view
