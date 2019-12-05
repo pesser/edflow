@@ -5,6 +5,13 @@ from edflow.util import retrieve
 from edflow.main import get_obj_from_str
 
 
+# handle bug with mocked chainer.dataset.DatasetMixin import
+if hasattr(DatasetMixin, "_mock_name"):
+
+    class DatasetMixin(object):
+        pass
+
+
 def JoinedDataset(dataset, key, n_joins):
     """Concat n_joins random samples based on the condition that
     example_i[key] == example_j[key] for all i,j. Key must be in labels of
