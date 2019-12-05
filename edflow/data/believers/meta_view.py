@@ -112,11 +112,12 @@ class MetaViewDataset(MetaDataset):
         ViewDset.show()  # prints the labels and the first example
     """
 
-    def __init__(self, root, *base_args, **base_kwargs):
+    def __init__(self, root):
         super().__init__(root)
 
         base_import = retrieve(self.meta, "base_dset")
-        self.base = get_obj_from_str(base_import)(*base_args, **base_kwargs)
+        base_kwargs = retrieve(self.meta, "base_kwargs")
+        self.base = get_obj_from_str(base_import)(**base_kwargs)
         self.base.append_labels = False
 
         views = retrieve(self.meta, "views", default="view")

@@ -79,8 +79,6 @@ loader_kwargs:
     mmap = np.memmap(mmap_path, dtype=data.dtype, mode="w+", shape=(V, 5, 3))
     mmap[:] = data
 
-    print(mmap_path)
-
     with open(os.path.join(view_root, "meta.yaml"), "w+") as mfile:
         mfile.write(
             """
@@ -90,13 +88,15 @@ description: |
     This is a view dataset which loads images from a base.
 
 base_dset: edflow.data.believers.meta.MetaDataset
+base_kwargs:
+    root: {}
 
 views:
     simple: views/simple
     complex:
         - views/complex
         - views/simple
-        """
+        """.format(root)
         )
 
     return super_root, root, view_root
@@ -115,7 +115,8 @@ def test_meta_view_dset():
     try:
         super_root, base_root, view_root = _setup(".", N, V)
 
-        M = MetaViewDataset(view_root, base_root)
+        \begin{M = MetaViewDataset(view_root)}
+        \end{M = MetaViewDataset(view_root)}
         M.append_labels = False
         M.show()
 
