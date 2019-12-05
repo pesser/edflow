@@ -30,20 +30,23 @@ def image_loader(path, support="0->255", resize_to=None):
         specified.
     """
 
-    im = Image.open(path)
+    def loader(support=support, resize_to=resize_to):
+        im = Image.open(path)
 
-    if resize_to is not None:
-        if isinstance(resize_to, int):
-            resize_to = [resize_to] * 2
+        if resize_to is not None:
+            if isinstance(resize_to, int):
+                resize_to = [resize_to] * 2
 
-        im = im.resize(resize_to)
+            im = im.resize(resize_to)
 
-    im = np.array(im)
+        im = np.array(im)
 
-    if support == "0->255":
-        return im
-    else:
-        return adjust_support(im, support, "0->255")
+        if support == "0->255":
+            return im
+        else:
+            return adjust_support(im, support, "0->255")
+
+    return loader
 
 
 def numpy_loader(path):
@@ -60,4 +63,7 @@ def numpy_loader(path):
         An array loaded using :class:`np.load`
     """
 
-    return np.load(path)
+    def loader():
+        return np.load(path)
+
+    return loader

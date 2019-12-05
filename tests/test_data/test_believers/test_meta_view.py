@@ -125,6 +125,7 @@ def test_meta_view_dset():
         super_root, base_root, view_root = _setup(".", N, V)
 
         M = MetaViewDataset(view_root)
+        M.expand = True
         M.append_labels = False
         M.show()
 

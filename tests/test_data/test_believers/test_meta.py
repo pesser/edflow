@@ -74,6 +74,7 @@ def test_meta_dset():
         root = _setup(".", N)
 
         M = MetaDataset(root)
+        M.expand = True
         M.show()
 
         assert len(M) == N
