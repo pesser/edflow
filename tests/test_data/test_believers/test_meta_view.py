@@ -125,6 +125,7 @@ def test_meta_view_dset():
         super_root, base_root, view_root = _setup(".", N, V)
 
         M = MetaViewDataset(view_root)
+        M.expand = True
         M.append_labels = False
         M.show()
 
@@ -144,10 +145,7 @@ def test_meta_view_dset():
 
         d = M[0]
         # For ex 0 this is the same for both complex and simple
-        single_ref = {
-            "image": np.ones(shape=(64, 64, 3)),
-            "index_": 0,
-        }
+        single_ref = {"image": np.ones(shape=(64, 64, 3)), "index_": 0}
 
         ref_simple = single_ref
         ref_complex = [[single_ref] * 3] * 20

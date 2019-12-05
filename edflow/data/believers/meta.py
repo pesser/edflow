@@ -150,6 +150,9 @@ class MetaDataset(DatasetMixin):
     def show(self):
         repr_str = self.__repr__()
 
+        expand_ = self.expand
+        self.expand = True
+
         if (
             __COULD_HAVE_IPYTHON__
             and hasattr(get_ipython(), "config")
@@ -160,6 +163,8 @@ class MetaDataset(DatasetMixin):
         else:
             repr_str += f"\n\n# Example 0\n{pp2mkdtable(self.__getitem__(0), True)}"
             print(repr_str)
+
+        self.expand = expand_
 
 
 def setup_loaders(labels, meta_dict):
