@@ -35,8 +35,8 @@ class DatasetMixin(DatasetMixin_):
 
     .. warning:: 
         Labels must be ``dict`` s of ``numpy`` arrays and not ``list`` s!
-        Otherwise many operations do not work and result in incoprehensible
-        Errors.
+        Otherwise many operations do not work and result in incomprehensible
+        errors.
 
     **Batching**
 
@@ -95,12 +95,6 @@ class DatasetMixin(DatasetMixin_):
 
         A = ConcatenatedDataset(C, B)  # Adding two Datasets
         D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
-
-    **Labels in the example ``dict``**
-
-    Oftentimes it is good to store and load some values as lables as it can
-    increase performance and decrease storage size, e.g. when storing scalar
-    D = ConcatenatedDataset(A, A, A)  # Multiplying two datasets
 
     **Labels in the example ``dict``**
 
