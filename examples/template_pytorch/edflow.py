@@ -71,7 +71,7 @@ class Iterator(TemplateIterator):
             min_loss = np.min(loss.detach().numpy())
             max_loss = np.max(loss.detach().numpy())
             return {
-                "images": {"inputs": inputs.detach().numpy()},
+                "images": {"inputs": inputs.detach().transpose(1, 2).transpose(2, 3).numpy()},
                 "scalars": {
                     "min_loss": min_loss,
                     "max_loss": max_loss,
@@ -82,7 +82,7 @@ class Iterator(TemplateIterator):
 
         def eval_op():
             return {
-                "outputs": np.array(outputs.detach().numpy()),
+                "outputs": np.array(outputs.detach().transpose(1, 2).transpose(2, 3).numpy()),
                 "labels": {"loss": np.array(loss.detach().numpy())},
             }
 
