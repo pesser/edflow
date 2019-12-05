@@ -253,7 +253,7 @@ if __name__ == "__main__":
         msg += (
             "\n\033[93m\033[1m\033[4mThe --option Argument is deprecated!"
             + "\033[0m\n"
-            + "You kann now pass additional options via --key value "
+            + "You can now pass additional options via --key value "
             + "pairs. This example equivalent to the old --option `key: "
             + "value`.\n"
             + "Passing --option `sth` is still possible, but will result"
