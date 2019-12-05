@@ -126,6 +126,36 @@ def test_dset_mxin_ops():
     D4[23]
 
 
+def test_dset_lateloading():
+    """Basically test the ConcatenatedDataset"""
+
+    class MyDset(DatasetMixin):
+        def __init__(self, N):
+            self.len = N
+
+        def get_example(self, idx):
+            def fn():
+                return idx
+
+            return {"val": fn}
+
+        def __len__(self):
+            return self.len
+
+    D = MyDset(10)
+
+    d1 = D[0]
+
+    assert callable(d1["val"])
+
+    D.expand = True
+
+    d2 = D[0]
+
+    assert d2["val"] == 0
+    assert d2["val"] == d1["val"]()
+
+
 if __name__ == "__main__":
     test_dset_mxin()
     test_dset_mxin_ops()

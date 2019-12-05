@@ -1,5 +1,6 @@
 from chainer.dataset import DatasetMixin as DatasetMixin_
 import numpy as np
+from edflow.util import walk
 
 
 class DatasetMixin(DatasetMixin_):
@@ -161,12 +162,24 @@ class DatasetMixin(DatasetMixin_):
             ret_dict["index_"] = i
             self._maybe_append_labels(ret_dict, i)
 
+        self._maybe_expand(ret_dict)
+
         return ret_dict
 
     def _maybe_append_labels(self, datum, index):
         if self.append_labels:
             labels = {k: v[index] for k, v in self.labels.items()}
             datum.update(labels)
+
+    def _maybe_expand(self, nested_object):
+        if self.expand:
+            walk(nested_object, self._expander, inplace=True)
+
+    def _expander(self, val):
+        if callable(val):
+            val = val()
+        print(val)
+        return val
 
     def __len__(self):
         """Add default behaviour for datasets defining an attribute
@@ -276,6 +289,16 @@ class DatasetMixin(DatasetMixin_):
     @append_labels.setter
     def append_labels(self, value):
         self._append_labels = value
+
+    @property
+    def expand(self):
+        if not hasattr(self, "_expand"):
+            self._expand = False
+        return self._expand
+
+    @expand.setter
+    def expand(self, value):
+        self._expand = value
 
 
 # We need this here to avoid circular imports
