@@ -38,6 +38,7 @@ setup(
         "edflow/edlist",
         "edflow/edeval",
         "edflow/edsetup",
+        "edflow/edexplore",
     ],
     python_requires=">=3.6",
     classifiers=[
