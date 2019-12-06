@@ -2,6 +2,10 @@ from chainer.dataset import DatasetMixin as DatasetMixin_
 import numpy as np
 from edflow.util import walk, update
 
+# handle bug with mocked chainer.dataset.DatasetMixin import
+if hasattr(DatasetMixin_, "_mock_name"):
+    DatasetMixin_ = object
+
 
 class DatasetMixin(DatasetMixin_):
     """Our fork of the `chainer
