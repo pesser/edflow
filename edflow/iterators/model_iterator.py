@@ -46,6 +46,7 @@ class PyHookedModelIterator(object):
             position when using multiple Iterators in parallel.
         """
         signal.signal(signal.SIGTERM, self._handle_sigterm)
+        signal.signal(signal.SIGINT, self._handle_sigterm)
 
         self.config = config
         self.root = root
@@ -149,38 +150,38 @@ class PyHookedModelIterator(object):
             self.run_hooks(ep, before=True)
 
             pos = self.bar_pos + 1
-            iterator = tqdm(
+            with tqdm(
                 batch_iterator, desc=desc_b, position=pos, dynamic_ncols=True
-            )
-            for bi, batch in enumerate(iterator):
-                self._batch_step = bi
+                ) as iterator:
+                for bi, batch in enumerate(iterator):
+                    self._batch_step = bi
 
-                if (batch_iterator_validation is not None and
-                        self.get_global_step() % validation_frequency == 0):
-                    validation_batch = next(batch_iterator_validation)
-                    fetches = {"global_step": self.get_global_step,
-                            "validation_ops": step_ops}
-                    feeds = self.make_feeds(validation_batch)
-                    feeds["validation_batch"] = True
-                    self.run_hooks(bi, fetches, feeds, validation_batch, before=True)
+                    if (batch_iterator_validation is not None and
+                            self.get_global_step() % validation_frequency == 0):
+                        validation_batch = next(batch_iterator_validation)
+                        fetches = {"global_step": self.get_global_step,
+                                "validation_ops": step_ops}
+                        feeds = self.make_feeds(validation_batch)
+                        feeds["validation_batch"] = True
+                        self.run_hooks(bi, fetches, feeds, validation_batch, before=True)
+                        results = self.run(fetches, feed_dict=feeds)
+                        self.run_hooks(bi, results=results, before=False)
+
+                    fetches = {"global_step": self.get_global_step, "step_ops": step_ops}
+                    feeds = self.make_feeds(batch)
+                    feeds["validation_batch"] = False
+                    self.run_hooks(bi, fetches, feeds, batch, before=True)
                     results = self.run(fetches, feed_dict=feeds)
                     self.run_hooks(bi, results=results, before=False)
 
-                fetches = {"global_step": self.get_global_step, "step_ops": step_ops}
-                feeds = self.make_feeds(batch)
-                feeds["validation_batch"] = False
-                self.run_hooks(bi, fetches, feeds, batch, before=True)
-                results = self.run(fetches, feed_dict=feeds)
-                self.run_hooks(bi, results=results, before=False)
+                    self.increment_global_step()
 
-                self.increment_global_step()
-
-                if batch_iterator.is_new_epoch or self.get_global_step() >= self.config.get(
-                    "num_steps", float("inf")
-                ):
-                    self.logger.info("Done with epoch")
-                    batch_iterator.reset()
-                    break
+                    if batch_iterator.is_new_epoch or self.get_global_step() >= self.config.get(
+                        "num_steps", float("inf")
+                    ):
+                        self.logger.info("Done with epoch")
+                        batch_iterator.reset()
+                        break
             self.run_hooks(ep, before=False)
 
     def run(self, fetches, feed_dict):

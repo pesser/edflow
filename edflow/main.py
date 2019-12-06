@@ -28,42 +28,6 @@ def get_implementations_from_config(config, names):
     return implementations
 
 
-def traceable_process(fn, args, job_queue, idx):
-    try:
-        fn(*args)
-    except Exception as e:
-        trace = traceback.format_exc()
-        exc = Exception(trace)
-        if job_queue is not None:
-            job_queue.put([idx, exc, trace])
-        else:
-            raise exc
-    else:
-        job_queue.put([idx, "Done", None])
-    finally:
-        job_queue.close()
-
-
-def traceable_function(method, ignores=None):
-    def tmethod(*args, **kwargs):
-        try:
-            return method(*args, **kwargs)
-        except Exception as e:
-            if ignores is not None:
-                if not isinstance(e, tuple(ignores)):
-                    traceback.print_exc()
-                    raise e
-
-    return tmethod
-
-
-def traceable_method(ignores=None):
-    def decorator(method):
-        return traceable_function(method, ignores=ignores)
-
-    return decorator
-
-
 def _save_config(config, prefix="config"):
     now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     fname = prefix + "_" + now + ".yaml"
@@ -73,15 +37,7 @@ def _save_config(config, prefix="config"):
     return path
 
 
-def train(args, job_queue, idx):
-    traceable_process(_train, args, job_queue, idx)
-
-
-def test(args, job_queue, idx):
-    traceable_process(_test, args, job_queue, idx)
-
-
-def _train(config, root, checkpoint=None, retrain=False):
+def train(config, root, checkpoint=None, retrain=False):
     """Run training. Loads model, iterator and dataset according to config."""
     from edflow.iterators.batches import make_batches
 
@@ -170,7 +126,7 @@ def _train(config, root, checkpoint=None, retrain=False):
             validation_batches.finalize()
 
 
-def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
+def test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     """Run tests. Loads model, iterator and dataset from config."""
     from edflow.iterators.batches import make_batches
 
@@ -200,38 +156,41 @@ def _test(config, root, checkpoint=None, nogpu=False, bar_position=0):
         error_on_timeout=config.get("error_on_timeout", False),
     )
 
-    logger.info("Initializing model.")
-    Model = implementations["model"](config)
+    try:
+        logger.info("Initializing model.")
+        Model = implementations["model"](config)
 
-    config["hook_freq"] = 1
-    config["num_epochs"] = 1
-    config["nogpu"] = nogpu
-    compat_kwargs = dict(
-        hook_freq=config["hook_freq"],
-        bar_position=bar_position,
-        nogpu=config["nogpu"],
-        num_epochs=config["num_epochs"],
-    )
-    Evaluator = implementations["iterator"](
-        config, root, Model, dataset=dataset, **compat_kwargs
-    )
+        config["hook_freq"] = 1
+        config["num_epochs"] = 1
+        config["nogpu"] = nogpu
+        compat_kwargs = dict(
+            hook_freq=config["hook_freq"],
+            bar_position=bar_position,
+            nogpu=config["nogpu"],
+            num_epochs=config["num_epochs"],
+        )
+        Evaluator = implementations["iterator"](
+            config, root, Model, dataset=dataset, **compat_kwargs
+        )
 
-    logger.info("Initializing model.")
-    if checkpoint is not None:
-        Evaluator.initialize(checkpoint_path=checkpoint)
-    else:
-        Evaluator.initialize()
+        logger.info("Initializing model.")
+        if checkpoint is not None:
+            Evaluator.initialize(checkpoint_path=checkpoint)
+        else:
+            Evaluator.initialize()
 
-    # save current config
-    logger.info("Starting Evaluation with config:\n{}".format(yaml.dump(config)))
-    prefix = "eval"
-    if bar_position > 0:
-        prefix = prefix + str(bar_position)
-    cpath = _save_config(config, prefix=prefix)
-    logger.info("Saved config at {}".format(cpath))
+        # save current config
+        logger.info("Starting Evaluation with config:\n{}".format(yaml.dump(config)))
+        prefix = "eval"
+        if bar_position > 0:
+            prefix = prefix + str(bar_position)
+        cpath = _save_config(config, prefix=prefix)
+        logger.info("Saved config at {}".format(cpath))
 
-    logger.info("Iterating")
-    while True:
-        Evaluator.iterate(batches)
-        if not config.get("eval_forever", False):
-            break
+        logger.info("Iterating")
+        while True:
+            Evaluator.iterate(batches)
+            if not config.get("eval_forever", False):
+                break
+    finally:
+        batches.finalize()

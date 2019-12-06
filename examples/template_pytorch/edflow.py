@@ -82,7 +82,7 @@ class Iterator(TemplateIterator):
 
         def eval_op():
             return {
-                "outputs": np.array(outputs.detach().transpose(1, 2).transpose(2, 3).numpy()),
+                "outputs": np.array(outputs.detach().numpy()),
                 "labels": {"loss": np.array(loss.detach().numpy())},
             }
 

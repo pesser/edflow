@@ -318,6 +318,7 @@ class EvalHook(Hook):
         """
         if hasattr(self, "root"):
             self.save_csv()
+        self.logger.info("Warning: Evaluation data is incomplete!")
 
     def after_epoch(self, epoch):
         """Save csv for reuse and then start the evaluation callbacks

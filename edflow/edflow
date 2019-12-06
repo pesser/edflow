@@ -7,18 +7,7 @@ signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 import sys  # noqa
 
-
 sys.path.append(os.getcwd())  # convenience: load implementations from cwd
-
-pytorch_mp = os.environ.get("USE_PYTORCH_MP", "False") == "True"
-if not pytorch_mp:
-    import multiprocessing as mp
-
-    # mp = _mp.set_start_method('spawn')
-else:
-    print("Using pytorch mp")
-    import torch.multiprocessing as mp
-
 
 import argparse  # noqa
 import yaml  # noqa
@@ -79,7 +68,6 @@ def main(opt, additional_kwargs):
 
     # Processes and error communication
     processes = list()
-    JQ = mp.Queue()
 
     if opt.train:
         if opt.checkpoint is not None:
@@ -90,11 +78,7 @@ def main(opt, additional_kwargs):
             checkpoint = None
 
         logger.info("Training config:\n{}".format(yaml.dump(config)))
-        train_process = mp.Process(
-            target=train,
-            args=((config, P.train, checkpoint, opt.retrain), JQ, len(processes)),
-        )
-        processes.append(train_process)
+        train(config, P.train, checkpoint, opt.retrain)
     else:
         disable_eval_all = disable_eval_forever = False
         if opt.checkpoint is not None:
@@ -129,59 +113,7 @@ def main(opt, additional_kwargs):
         nogpu = len(processes) > 0 or opt.nogpu
         bar_position = len(processes)
 
-        test_process = mp.Process(
-            target=test,
-            args=(
-                (config, P.latest_eval, checkpoint, nogpu, bar_position),
-                JQ,
-                len(processes),
-            ),
-        )
-        processes.append(test_process)
-
-    code = 0
-    # Take off
-    try:
-        # children should ignore sigint; we'll send SIGTERM upon SIGINT
-        sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        for p in processes:
-            p.start()
-        signal.signal(signal.SIGINT, sigint_handler)
-        logger.info("Started {} process(es).".format(len(processes)))
-
-        done_count = 0
-        while True:
-            pidx, exc_or_done, trace = JQ.get()
-            if isinstance(exc_or_done, Exception):
-                logger.warn("Exception in process {}:".format(pidx))
-                logger.warn(trace)
-                raise exc_or_done
-            elif exc_or_done == "Done":
-                logger.info("Process {} is done".format(pidx))
-                done_count += 1
-            else:
-                raise Exception("Unknown element on queue.")
-
-            if done_count >= len(processes):
-                break
-
-    except (Exception, KeyboardInterrupt) as e:
-        logger.info("Terminating all processes")
-        for p in processes:
-            p.terminate()
-        if not isinstance(e, KeyboardInterrupt):
-            code = 1
-            # only reraise if this is not an exception of a child that
-            # was already logged above
-            if not e == exc_or_done:
-                raise e
-    finally:
-        # Landing
-        for p in processes:
-            p.join()
-        logger.info("Finished")
-
-    sys.exit(code)
+        test(config, P.latest_eval, checkpoint, nogpu, bar_position)
 
 
 if __name__ == "__main__":
