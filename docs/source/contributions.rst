@@ -80,6 +80,9 @@ We use `sphinx-apidoc` to track all files automatically:::
     $ cd docs
     $ sphinx-apidoc -o ./source/source_files ../edflow
 
+`docs/conf.py` contains a list of mocked dependencies. Make sure to add newly
+introduced dependencies to that list.
+
 all-contributors
 ================
 
