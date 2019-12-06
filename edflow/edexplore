@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+EDFLOW_SRC=$(python -c "import os,inspect,edflow; print(os.path.dirname(inspect.getfile(edflow)))")
+streamlit run "${EDFLOW_SRC}/explore.py" -- $@
