@@ -5,7 +5,7 @@ from edflow.main import get_implementations_from_config
 import numpy as np
 
 
-def get_sequence_view(frame_ids, length, step=1, strategy='raise'):
+def get_sequence_view(frame_ids, length, step=1, strategy="raise"):
     """Generates a view on some base dataset given its sequence indices
     :attr:`seq_indices`.
 
@@ -106,8 +106,6 @@ def get_sequence_view(frame_ids, length, step=1, strategy='raise'):
     base_indices = base_indices[:, ::step]
 
     return base_indices
-
-
 
 
 class SequenceDataset(DatasetMixin):
