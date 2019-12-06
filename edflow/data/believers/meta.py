@@ -31,6 +31,7 @@ class MetaDataset(DatasetMixin):
     getitem method of the dataset, a special loader function will be called.
 
     Let's take a look at an example data folder of the following structure:
+
     .. code-block:: bash
 
         root/
@@ -59,8 +60,8 @@ class MetaDataset(DatasetMixin):
             image:
                 support: "-1->1"
 
-
     The resulting dataset has the following labels:
+
         - ``image_``: the paths to the images. Note the extra ``_`` at the end.
         - ``attr1``
         - ``attr2``
