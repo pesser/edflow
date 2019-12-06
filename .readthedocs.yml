@@ -1,0 +1,9 @@
+name: edflow
+type: sphinx
+base: docs/source
+conda:
+    file: docs/rtd_conda.yml
+python:
+    version: 3.6
+    setup_py_install: false
+    pip_install: false
