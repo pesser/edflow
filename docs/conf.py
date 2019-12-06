@@ -61,11 +61,15 @@ def run_apidoc(app):
     better_apidoc.main(
         [
             "better-apidoc",
+            "-a",
+            "-M",
             "-t",
             os.path.join(".", "templates"),
             "--force",
             "--no-toc",
             "--separate",
+            "--ext-autodoc",
+            "--ext-coverage",
             "-o",
             os.path.join(".", "source", "source_files/"),
             os.path.join("..", "edflow/"),
