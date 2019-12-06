@@ -285,11 +285,25 @@ def clean_keys(labels, loaders):
         The original labels, with keys without the ``:loader`` part.
     """
 
-    for k_ in labels.keys():
-        k, l = loader_from_key(k_)
-        if l is not None:
-            labels[k + "_"] = labels[k_]
-            del labels[k_]
+    class Cleaner():
+        def __init__(self):
+            self.to_delete = []
+            self.to_set = []
+
+        def __call__(self, key, val):
+            k, l = loader_from_key(key)
+            if l is not None:
+                self.to_set += [[k + "_",  retrieve(labels, key)]]
+                self.to_delete += [key]
+
+    C = Cleaner()
+    walk(labels, C, pass_key=True)
+    
+    for key, val in C.to_set:
+        set_value(labels, key, val)
+
+    for key in C.to_delete:
+        pop_keypath(labels, key)
 
     for k_ in list(loaders.keys()):
         if k_ in labels:
