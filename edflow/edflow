@@ -153,6 +153,7 @@ if __name__ == "__main__":
         default="info",
         help="Set the std-out logging level.",
     )
+    parser.add_argument("-d", "--debug", action="store_true", help="enable post-mortem debugging")
 
     opt, unknown = parser.parse_known_args()
     additional_kwargs = parse_unknown_args(unknown)
@@ -172,4 +173,15 @@ if __name__ == "__main__":
         msg += "=" * 20
         msg += "\n" * 2
         print(msg)
-    main(opt, additional_kwargs)
+    if not opt.debug:
+        main(opt, additional_kwargs)
+    else:
+        try:
+            import pudb as debugger
+        except ImportError:
+            import pdb as debugger
+        try:
+            main(opt, additional_kwargs)
+        except Exception:
+            debugger.post_mortem()
+            raise
