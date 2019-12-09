@@ -5,9 +5,6 @@ import yaml
 import math
 import datetime
 
-import multiprocessing as mp
-import traceback
-
 from edflow.custom_logging import init_project, get_logger, LogSingleton
 from edflow.project_manager import ProjectManager as P
 

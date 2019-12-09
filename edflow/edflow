@@ -66,9 +66,6 @@ def main(opt, additional_kwargs):
     logger.info(opt)
     logger.info(P)
 
-    # Processes and error communication
-    processes = list()
-
     if opt.train:
         if opt.checkpoint is not None:
             checkpoint = opt.checkpoint
@@ -110,10 +107,8 @@ def main(opt, additional_kwargs):
         logger.info(
             "Evaluation config:\n{}".format(yaml.dump(config))
         )
-        nogpu = len(processes) > 0 or opt.nogpu
-        bar_position = len(processes)
-
-        test(config, P.latest_eval, checkpoint, nogpu, bar_position)
+        bar_position = 0
+        test(config, P.latest_eval, checkpoint, opt.nogpu, bar_position)
 
 
 if __name__ == "__main__":
