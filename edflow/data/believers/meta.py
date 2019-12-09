@@ -31,6 +31,7 @@ class MetaDataset(DatasetMixin):
     getitem method of the dataset, a special loader function will be called.
 
     Let's take a look at an example data folder of the following structure:
+
     .. code-block:: bash
 
         root/
@@ -59,8 +60,8 @@ class MetaDataset(DatasetMixin):
             image:
                 support: "-1->1"
 
-
     The resulting dataset has the following labels:
+
         - ``image_``: the paths to the images. Note the extra ``_`` at the end.
         - ``attr1``
         - ``attr2``
@@ -72,6 +73,7 @@ class MetaDataset(DatasetMixin):
 
     As we have specifed loader kweyword arguments, we will get the images with
     a support of ``[-1, 1]``.
+
     """
 
     def __init__(self, root):
@@ -285,11 +287,25 @@ def clean_keys(labels, loaders):
         The original labels, with keys without the ``:loader`` part.
     """
 
-    for k_ in labels.keys():
-        k, l = loader_from_key(k_)
-        if l is not None:
-            labels[k + "_"] = labels[k_]
-            del labels[k_]
+    class Cleaner:
+        def __init__(self):
+            self.to_delete = []
+            self.to_set = []
+
+        def __call__(self, key, val):
+            k, l = loader_from_key(key)
+            if l is not None:
+                self.to_set += [[k + "_", retrieve(labels, key)]]
+                self.to_delete += [key]
+
+    C = Cleaner()
+    walk(labels, C, pass_key=True)
+
+    for key, val in C.to_set:
+        set_value(labels, key, val)
+
+    for key in C.to_delete:
+        pop_keypath(labels, key)
 
     for k_ in list(loaders.keys()):
         if k_ in labels:
