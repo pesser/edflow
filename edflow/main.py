@@ -26,7 +26,7 @@ def get_implementations_from_config(config, names):
 
 
 def _save_config(config, prefix="config"):
-    now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     fname = prefix + "_" + now + ".yaml"
     path = os.path.join(P.configs, fname)
     with open(path, "w") as f:
