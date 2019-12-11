@@ -28,7 +28,8 @@ setup(
         "fastnumbers",
     ],
     extras_require={
-        "docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "numpy"],
+        "explore": ["streamlit > 0.49"],
+        "docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "better-apidoc"],
         "test": ["pytest", "pytest-cov", "coveralls"],
     },
     zip_safe=False,

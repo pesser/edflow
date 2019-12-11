@@ -1,4 +1,5 @@
 from edflow.data.dataset_mixin import DatasetMixin
+import numpy as np
 
 
 class LabelDataset(DatasetMixin):
@@ -49,6 +50,11 @@ class ExtraLabelsDataset(DatasetMixin):
                 self._new_labels[k][i] = new_labels[k]
         self._labels = dict(self.data.labels)
         self._labels.update(self._new_labels)
+
+        labels = {}
+        for k, v in self._labels.items():
+            labels[k] = np.array(v)
+        self._labels = labels
 
         self.append_labels = True
 

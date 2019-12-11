@@ -3,7 +3,7 @@ from PIL import Image
 from edflow.data.util import adjust_support
 
 
-def image_loader(path, support="0->255"):
+def image_loader(path, support="0->255", resize_to=None):
     """
 
     Parameters
@@ -18,6 +18,10 @@ def image_loader(path, support="0->255"):
               are floats between 0 and 1.
             - ``-1->1``: Datatype is ``np.float32`` and all values
               are floats between -1 and 1.
+    resize_to : list
+        If not None, the loaded image will be resized to these dimensions. Must
+        be a list of two integers or a single integer, which is interpreted as
+        list of two integers with same value.
 
     Returns
     -------
@@ -26,12 +30,23 @@ def image_loader(path, support="0->255"):
         specified.
     """
 
-    im = np.array(Image.open(path))
+    def loader(support=support, resize_to=resize_to):
+        im = Image.open(path)
 
-    if support == "0->255":
-        return im
-    else:
-        return adjust_support(im, support, "0->255")
+        if resize_to is not None:
+            if isinstance(resize_to, int):
+                resize_to = [resize_to] * 2
+
+            im = im.resize(resize_to)
+
+        im = np.array(im)
+
+        if support == "0->255":
+            return im
+        else:
+            return adjust_support(im, support, "0->255")
+
+    return loader
 
 
 def numpy_loader(path):
@@ -48,4 +63,7 @@ def numpy_loader(path):
         An array loaded using :class:`np.load`
     """
 
-    return np.load(path)
+    def loader():
+        return np.load(path)
+
+    return loader

@@ -14,31 +14,36 @@ from edflow import get_obj_from_str
 def isimage(obj):
     return isinstance(obj, np.ndarray) and len(obj.shape) == 3
 
+
 def istext(obj):
     return isinstance(obj, (int, float, str, np.integer, np.float))
 
+
 def display_default(obj):
     if isimage(obj):
-        return 'Image'
+        return "Image"
     elif istext(obj):
-        return 'Text'
+        return "Text"
     else:
-        return 'None'
+        return "None"
+
 
 def display(key, obj):
     st.subheader(key)
     sel = selector(key, obj)
-    if sel == 'Text':
+    if sel == "Text":
         st.text(obj)
 
-    elif sel == 'Image':
-        st.image((obj+1.0)/2.0)
+    elif sel == "Image":
+        st.image((obj + 1.0) / 2.0)
+
 
 def selector(key, obj):
-    options = ['Auto', 'Text', 'Image', 'None']
+    options = ["Auto", "Text", "Image", "None"]
     idx = options.index(display_default(obj))
-    select = st.selectbox('Display {} as'.format(key), options, index=idx)
+    select = st.selectbox("Display {} as".format(key), options, index=idx)
     return select
+
 
 def show_example(dset, idx):
     ex = dset[idx]
@@ -47,10 +52,12 @@ def show_example(dset, idx):
     st.header("Summary")
     st.markdown(pp2mkdtable(ex, jupyter_style=True))
 
+
 def _get_state(config):
     Dataset = get_obj_from_str(config["dataset"])
     dataset = Dataset(config)
     return dataset
+
 
 def explore(config, disable_cache=False):
     if not disable_cache:
@@ -58,9 +65,10 @@ def explore(config, disable_cache=False):
     else:
         get_state = _get_state
     dset = get_state(config)
-    st.title('Dataset Explorer: {}'.format(type(dset).__name__))
+    dset.expand = True
+    st.title("Dataset Explorer: {}".format(type(dset).__name__))
 
-    idx = st.sidebar.slider('index', 0, len(dset), 0)
+    idx = st.sidebar.slider("index", 0, len(dset), 0)
     if st.sidebar.button("sample"):
         idx = np.random.choice(len(dset))
 
@@ -70,10 +78,15 @@ def explore(config, disable_cache=False):
     cfg_string = pp2mkdtable(config, jupyter_style=True)
     cfg = st.markdown(cfg_string)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='edflow dataset explorer')
-    parser.add_argument('-d', '--disable_cache', action="store_true",
-                        help="Disable caching dataset instantiation.")
+    parser = argparse.ArgumentParser(description="edflow dataset explorer")
+    parser.add_argument(
+        "-d",
+        "--disable_cache",
+        action="store_true",
+        help="Disable caching dataset instantiation.",
+    )
     parser.add_argument(
         "-b",
         "--base",

@@ -4,3 +4,6 @@ name: edflow-docs
 dependencies:
   - python
   - cmake
+  - pip:
+    - better-apidoc>=0.2.0
+    - sphinx-rtd-theme<0.3

@@ -5,6 +5,109 @@ from edflow.main import get_implementations_from_config
 import numpy as np
 
 
+def get_sequence_view(frame_ids, length, step=1, strategy="raise"):
+    """Generates a view on some base dataset given its sequence indices
+    :attr:`seq_indices`.
+
+    Parameters
+    ----------
+    seq_indices : np.ndarray
+        An array of *sorted* frame indices. Must be of type `int`.
+    length : int
+        Length of the returned sequences in frames.
+    step : int
+        Step between returned frames. Must be `>= 1`.
+    strategy : str
+        How to handle bad sequences, i.e. sequences starting with a 
+        :attr:`fid_key` > 0.
+        - ``raise``: Raise a ``ValueError``
+        - ``remove``: remove the sequence
+        - ``reset``: remove the sequence
+
+    This view will have `len(dataset) - length * step` entries and shape
+    `[len(dataset) - length * step, lenght]`.
+    """
+
+    if frame_ids.ndim != 1:
+        raise ValueError(
+            "Frame ids must be supplied as a sequence of "
+            "scalars with the same length as the dataset! Here we "
+            "have np.shape(dataset.labels[{}]) = {}`.".format(
+                fid_key, np.shape(frame_ids)
+            )
+        )
+    if frame_ids.dtype != np.int:
+        raise TypeError(
+            f"Frame ids must be supplied as ints, but are {frame_ids.dtype}"
+        )
+
+    # Gradient
+    diffs = frame_ids[1:] - frame_ids[:-1]
+    # All indices where the fid is not monotonically growing
+    idxs = np.array([0] + list(np.where(diffs != 1)[0] + 1))
+    # Values at these indices
+    start_fids = frame_ids[idxs]
+
+    # Bad starts
+    badboys = start_fids != 0
+    good_seq_idxs = None
+    if np.any(badboys):
+        n = sum(badboys)
+        i_s = "" if n == 1 else "s"
+        areis = "is" if n == 1 else "are"
+        id_s = "ex" if n == 1 else "ices"
+        if strategy == "raise":
+            raise ValueError(
+                "Frame id sequences must always start with 0. "
+                "There {} {} sequence{} starting with the follwing id{}: "
+                "{} at ind{} {} in the frame_ids.".format(
+                    areis, n, i_s, i_s, start_fids[badboys], id_s, idxs[badboys]
+                )
+            )
+
+        elif strategy == "remove":
+            idxs_stop = np.array(list(idxs[1:]) + [None])
+            starts = idxs[badboys]
+            stops = idxs_stop[badboys]
+
+            bad_seq_mask = np.zeros(len(frame_ids), dtype=bool)
+            for bad_start_idx, bad_stop_idx in zip(starts, stops):
+                bad_seq_mask[bad_start_idx:bad_stop_idx] = True
+
+            frame_ids[bad_seq_mask] = 0
+
+        elif strategy == "reset":
+            frame_ids = np.copy(frame_ids)  # Don't try to override
+
+            idxs_stop = np.array(list(idxs[1:]) + [None])
+            starts = idxs[badboys]
+            stops = idxs_stop[badboys]
+            vals = start_fids[badboys]
+
+            for val, bad_sa_idx, bad_so_idx in zip(vals, starts, stops):
+                frame_ids[bad_sa_idx:bad_so_idx] = (
+                    frame_ids[bad_sa_idx:bad_so_idx] - val
+                )
+        else:
+            raise ValueError(
+                "Strategy of SequenceDataset must be one of "
+                "`raise`, `remove` or `reset` but is "
+                "{}".format(strategy)
+            )
+
+    top_indeces = np.where(frame_ids >= (length * step - 1))[0]
+
+    base_indices = []
+    for i in range(length * step):
+        indeces = top_indeces - i
+        base_indices += [indeces]
+
+    base_indices = np.array(base_indices).transpose(1, 0)[:, ::-1]
+    base_indices = base_indices[:, ::step]
+
+    return base_indices
+
+
 class SequenceDataset(DatasetMixin):
     """Wraps around a dataset and returns sequences of examples.
     Given the length of those sequences the number of available examples
@@ -54,10 +157,6 @@ class SequenceDataset(DatasetMixin):
                 "have np.shape(dataset.labels[{}]) = {}`.".format(
                     fid_key, np.shape(frame_ids)
                 )
-            )
-        if frame_ids.dtype != np.int:
-            raise TypeError(
-                "Frame ids must be supplied as ints, but are {}".format(frame_ids.dtype)
             )
         if frame_ids.dtype != np.int:
             raise TypeError(

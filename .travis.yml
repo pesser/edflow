@@ -35,9 +35,10 @@ jobs:
     - stage: documentation
       name: "documentation test"
       install:
-        - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy
+        - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy better_apidoc
       script:
-        - sphinx-build -W -v -b html docs/ docs/_build/
+        - cd docs
+        - sphinx-build -W -v -b html . _build/
       after_success: skip
     - stage: tf_example_tests
       name: "Tensorflow examples test"
