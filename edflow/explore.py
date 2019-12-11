@@ -65,6 +65,7 @@ def explore(config, disable_cache=False):
     else:
         get_state = _get_state
     dset = get_state(config)
+    dset.expand = True
     st.title("Dataset Explorer: {}".format(type(dset).__name__))
 
     idx = st.sidebar.slider("index", 0, len(dset), 0)
