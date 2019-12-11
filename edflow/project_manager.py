@@ -47,7 +47,7 @@ class ProjectManager(object):
             if given_directory is None and ProjectManager.code_root is not None:
                 self.copy_code()
             if "EDFLOW_GIT" in os.environ:
-                self.git_commit()
+                ProjectManager.git_tag = self.git_commit()
 
             ProjectManager.exists = True
         else:
@@ -128,7 +128,7 @@ class ProjectManager(object):
 
     def git_commit(self):
         # perform the following
-        # CHEAD=$(git rev-parse HEAD); git add -u; git commit -m "edflow ..."; git tag -a edflow_date-and-time-project -m "more"; git reset --mixed $CHEAD
+        # CHEAD=$(git rev-parse HEAD); git add <files...>; git add -u; git commit -m "edflow ..."; git tag -a edflow_date-and-time-project -m "more"; git reset --mixed $CHEAD
         try:
             CHEAD = (
                 subprocess.check_output(["git rev-parse HEAD"], shell=True)
@@ -139,25 +139,37 @@ class ProjectManager(object):
             print(
                 "Tried to commit state of project but the current working directory does not appear to be a git repository."
             )
+            tagname = "error: no git repository found"
         else:
             tagname = "{}_{}".format(ProjectManager.now, self.postfix)
             message = "command: {}\nroot: {}".format(" ".join(sys.argv), self.root)
-            if subprocess.call(["git diff-index --quiet HEAD"], shell=True) != 0:
-                # dirty working directory - add commit
-                command = "git add -u; git commit -m '{commitmessage}'; git tag '{tagname}'".format(
-                    commitmessage=message, tagname=tagname
-                )
-            else:
-                # nothing to add - put message into annotated tag
-                command = "git tag -a '{tagname}' -m '{tagmessage}'".format(
-                    tagname=tagname, tagmessage=message
-                )
-            print(command)
             try:
+                addcommand = "git add {pyfiles}; git add {yamlfiles}; git add -u".format(
+                    pyfiles=os.path.join(ProjectManager.code_root, "\*.py"),
+                    yamlfiles=os.path.join(ProjectManager.code_root, "\*.yaml")
+                )
+                subprocess.call([addcommand], shell=True)
+                if subprocess.call(["git diff-index --quiet HEAD"], shell=True) != 0:
+                    # dirty working directory - add commit
+                    command = "git commit -m '{commitmessage}'; git tag '{tagname}'".format(
+                        commitmessage=message, tagname=tagname
+                    )
+                else:
+                    # nothing to add - put message into annotated tag
+                    command = "git tag -a '{tagname}' -m '{tagmessage}'".format(
+                        tagname=tagname, tagmessage=message
+                    )
+                print(command)
                 subprocess.check_call([command], shell=True)
+            except Exception as e:
+                print(
+                    "Tried to commit state of project but error occured: {}".format(e)
+                )
+                tagname = "error: {}".format(e)
             finally:
                 print("git reset --mixed {}".format(CHEAD))
                 subprocess.call(["git reset --mixed {}".format(CHEAD)], shell=True)
+        return tagname
 
     def __repr__(self):
         """Nice file structure representation."""

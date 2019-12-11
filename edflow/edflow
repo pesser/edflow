@@ -11,6 +11,7 @@ sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
 import argparse  # noqa
 import yaml  # noqa
+from socket import gethostname  #noqa
 
 from edflow.main import train, test  # noqa
 from edflow.custom_logging import init_project, use_project, get_logger  # noqa
@@ -63,6 +64,10 @@ def main(opt, additional_kwargs):
     set_global_stdout_level(opt.log_level)
     logger = get_logger("main")
     logger.info(" ".join(sys.argv))
+    logger.info("root: {}".format(P.root))
+    if hasattr(P, "git_tag"):
+        logger.info("git_tag: {}".format(P.git_tag))
+    logger.info("hostname: {}".format(gethostname()))
     logger.info(opt)
     logger.info(P)
 
