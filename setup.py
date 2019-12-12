@@ -26,12 +26,12 @@ setup(
         "psutil",
         "deprecated",
         "fastnumbers",
+        "flowiz",
     ],
     extras_require={
         "explore": ["streamlit > 0.49"],
         "docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "better-apidoc"],
         "test": ["pytest", "pytest-cov", "coveralls"],
-        "opt_flow": ["flowiz"],
     },
     zip_safe=False,
     scripts=[
