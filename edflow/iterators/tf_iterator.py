@@ -15,7 +15,7 @@ class TFHookedModelIterator(PyHookedModelIterator):
         results["global_step"] = get_global_step()
         return results
 
-    def iterate(self, batch_iterator):
+    def iterate(self, batch_iterator, validation_batch_iterator=None):
         with self.session.as_default():
             super().iterate(batch_iterator)
 
