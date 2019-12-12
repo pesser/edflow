@@ -16,6 +16,16 @@ before_install:
 install: true
 after_success:
 - coveralls
+deploy:
+  provider: pypi
+  user: __token__
+  password:
+    secure: gMPTXF4A8jCoWZZ7LhzFY0ewlWA5TAyf1CY4eV+C7fW7DTI8f5g/vOWEhovX3txzr4lg74IUBXAFkIbk86cF3FJOrJbHbuKAaaBcOg/3+QY6CeYx8SGEs+jvrR/wjiDdXx1W3MwC5M2DHPdKSnA/akzg0B1XdcbLf233zvcrj8/Wd0N6/6pcrZQk1UKQ6joBMOGVhv23v5Mrqe65vy1dPndXJRZOTJFnp1QCyLLjhzBaItVOvfdLZ9AOiReF4aGBmNUKR62oH8Ag4AZmBykoIfFcCAHHitiZ74W2AivNiEZOf1vxXFdTqjZqSraLetA5tJX2oicFkuCX/NsziqFlGMBMcM3etju09BsLJ0DDNc0xEnJDOONVF3WdzIJ5BNVvpaqp2OMEE4niTu/WjQIxXU+O3uIo8wFSWFbk4cRF02uPFV3jSlx9HD1mwChh3sehwUIsb/edTKIWJfjskrLwS8o30ebnNkV+SrjYH6xp6Sv4P/Dhb6DOdTThiIJsE3FzzC+6C8Qbco2A4pvmr9z1xqHNPv0pq6ZW61Y/7PZ6xOm6dcKxsvjEmq7Yn/LYMpsy0ThXz2kZx3Q8oFnw55H9/aBwEK3Yo9ADd2UkbboqlFYEHQqffBTORYf7NpPMN0rWzRQfGU84gbAYrFaV36hPbcVD3Qfjv5h95KTYvqWpusU=
+  on:
+    tags: true
+    branch:
+    - master
+    - "/v?(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$/"
 jobs:
   include:
   - stage: formatting

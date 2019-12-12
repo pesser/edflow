@@ -2,11 +2,11 @@ from setuptools import setup, find_packages
 
 
 # allows to get version via python setup.py --version
-__version__ = "dev"
+__version__ = "0.0.0"
 
 
 setup(
-    name="edflow",
+    name="edflow-test",
     version=__version__,
     description="Logistics for Deep Learning",
     url="https://github.com/pesser/edflow",
