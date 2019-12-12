@@ -13,7 +13,9 @@ from edflow import get_obj_from_str
 
 
 def isimage(obj):
-    return isinstance(obj, np.ndarray) and len(obj.shape) == 3 and obj.shape[2] in [3, 4]
+    return (
+        isinstance(obj, np.ndarray) and len(obj.shape) == 3 and obj.shape[2] in [3, 4]
+    )
 
 
 def isflow(obj):
