@@ -119,6 +119,7 @@ import re
 from edflow.data.util import adjust_support
 from edflow.util import walk, retrieve, pop_keypath
 from edflow.data.dataset import DatasetMixin, CsvDataset, ProcessedDataset
+from edflow.data.believers.meta import MetaDataset
 from edflow.project_manager import ProjectManager as P
 from edflow.hooks.hook import Hook
 from edflow.custom_logging import get_logger
@@ -216,6 +217,7 @@ class EvalHook(Hook):
         self.save_root = os.path.join(self.root, "model_outputs")
         os.makedirs(self.root, exist_ok=True)
         os.makedirs(self.save_root, exist_ok=True)
+        os.makedirs(os.path.join(self.save_root, "labels"), exist_ok=True)
 
         self.label_arrs = None
 
@@ -259,6 +261,25 @@ class EvalHook(Hook):
         else:
             label_vals = {}
 
+        idxs = self.idxs  # indices collected before_step
+
+        path_dicts = save_output(
+            root=self.save_root,
+            example=last_results,
+            index=idxs,
+            sub_dir_keys=self.sdks,
+            keypath=self.keypath,
+        )
+
+        for idx in idxs:
+            for key, path in path_dicts[idx].items():
+                if key not in label_vals:
+                    label_vals[key] = []
+
+                label_vals[key] += [path]
+        for key in list(path_dicts[idxs[0]].keys()):
+            label_vals[key] = np.array(label_vals[key])
+
         if self.label_arrs is None:
             self.label_arrs = {}
             for k in label_vals.keys():
@@ -270,37 +291,15 @@ class EvalHook(Hook):
 
                 k_ = k.replace("/", "--")
                 savepath = os.path.join(
-                    self.save_root, "{}-*-{}-*-{}.npy".format(k_, s, d)
+                    self.save_root, "labels", "{}-*-{}-*-{}.npy".format(k_, s, d)
                 )
                 memmap = np.memmap(savepath, shape=tuple(shape), mode="w+", dtype=dtype)
                 self.label_arrs[k] = memmap
-
-        idxs = self.idxs  # indices collected before_step
 
         for k in label_vals.keys():
             # Can the inner loop be made a fancy indexing assign?
             for i, idx in enumerate(idxs):
                 self.label_arrs[k][idx] = label_vals[k][i]
-
-        path_dicts = save_output(
-            root=self.save_root,
-            example=last_results,
-            index=idxs,
-            sub_dir_keys=self.sdks,
-            keypath=self.keypath,
-        )
-
-        if self.data_frame is None:
-            columns = sorted(path_dicts[list(path_dicts.keys())[0]])
-            if len(columns) == 0:
-                # No load heavy logs written out
-                pass
-            else:
-                self.data_frame = pd.DataFrame(columns=columns)
-
-        if self.data_frame is not None:
-            for idx, path_dict in path_dicts.items():
-                self.data_frame.loc[idx] = path_dict
 
     def at_exception(self, *args, **kwargs):
         """
@@ -316,8 +315,9 @@ class EvalHook(Hook):
         -------
 
         """
+        self.exception_occured = True
         if hasattr(self, "root"):
-            self.save_csv()
+            self.save_meta()
 
     def after_epoch(self, epoch):
         """Save csv for reuse and then start the evaluation callbacks
@@ -331,9 +331,10 @@ class EvalHook(Hook):
         -------
 
         """
-        self.save_csv()
+        self.save_meta()
 
-        data_out = EvalDataFolder(self.root)
+        data_out = MetaDataset(self.save_root)
+        data_out.append_labels = True
 
         cb_kwargs = retrieve(self.config, "eval_pipeline/callback_kwargs", default={})
 
@@ -345,20 +346,17 @@ class EvalHook(Hook):
             kwargs = cb_kwargs.get(n, {})
             cb(self.root, self.data_in, data_out, self.config, **kwargs)
 
-    def save_csv(self):
+    def save_meta(self):
         """ """
-        csv_path = os.path.join(self.root, "model_output.csv")
 
-        if self.data_frame is not None:
-            self.data_frame = self.data_frame.sort_index()
-            self.data_frame.to_csv(csv_path, index=False)
+        if not hasattr(self, "exception_occured"):
+            had_exception = f"    .. note ::\n\n        No exception encountered during creation.\n\n"
         else:
-            with open(csv_path, "w+") as csv_file:
-                csv_file.write("")
+            had_exception = f"    .. warning ::\n\n        An exception occured during creation.\n\n"
 
-        add_meta_data(csv_path, self.config)
+        description = f"    # Model Outputs\n{had_exception}"
+        meta_path = add_meta_data(self.save_root, self.config, description)
 
-        this_script = os.path.dirname(__file__)
         cb_names = self.cb_names
         cb_paths = self.cb_paths
 
@@ -367,11 +365,11 @@ class EvalHook(Hook):
         else:
             cbs = "<name>:<your callback>"
 
-        self.logger.info("MODEL_OUPUT_CSV {}".format(csv_path))
+        self.logger.info("MODEL_OUPUT_META {}".format(meta_path))
         self.logger.info(
             "All data has been produced. You can now also run all"
             + " callbacks using the following command:\n"
-            + "edeval -c {} -cb {}".format(csv_path, cbs)
+            + "edeval -c {} -cb {}".format(self.save_root, cbs)
         )
 
 
@@ -401,10 +399,12 @@ class TemplateEvalHook(EvalHook):
             super().at_exception(*args, **kwargs)
 
 
-class EvalDataFolder(DatasetMixin):
-    """ """
+class EvalDataFolder(MetaDataset):
+    """
+    Loads all data generated by the EvalHook.
+    """
 
-    def __init__(self, root, show_bar=False):
+    def __init__(self, root):
         er = EvalReader(root)
 
         if "model_output.csv" not in root:
@@ -505,15 +505,13 @@ def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
 
     Returns
     -------
-    dict
+    path_dics : dict
         Name: path pairs of the saved ouputs.
-    dict
-        Name: path pairs of the saved ouputs.
-        .. warning:: Make sure the values behind the ``sub_dir_keys`` are compatible with
-    dict
-        Name: path pairs of the saved ouputs.
-        .. warning:: Make sure the values behind the ``sub_dir_keys`` are compatible with
-        the file system you are saving data on.
+
+        .. warning:: 
+        
+            Make sure the values behind the ``sub_dir_keys`` are compatible with
+            the file system you are saving data on.
 
     """
 
@@ -540,43 +538,44 @@ def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
             savename = "{}_{:0>6d}.{{}}".format(n, idx)
             path = os.path.join(root, savename)
 
-            path = save_example(path, e[i])
+            path, inferred_loader = save_example(path, e[i])
 
-            path_dict[n + "_path"] = path
+            # Conforms to the meta dataset key style for automatic loading
+            path_dict[f"{n}:{inferred_loader}"] = path
         path_dicts[idx] = path_dict
 
     return path_dicts
 
 
-def add_meta_data(path_to_csv, metadata):
+def add_meta_data(eval_root, metadata, description=None):
     """Prepends kwargs of interest to a csv file as comments (`#`)
 
     Parameters
     ----------
-    path_to_csv :
-
-    metadata :
-
+    eval_root : str
+        Where the `meta.yaml` will be written.
+    metadata : dict
+        config like object, which will be written in the `meta.yaml`.
+    description : str
+        Optional description string. Will be added unformatted as yaml
+        multiline literal.
 
     Returns
     -------
-
+    meta_path : str
+        Full path of the `meta.yaml`.
     """
 
     meta_string = yaml.dump(metadata)
+    meta_path = os.path.join(eval_root, "meta.yaml")
 
-    commented_string = ""
-    for line in meta_string.split("\n"):
-        line = "# {}\n".format(line)
-        commented_string += line
+    with open(meta_path, "w+") as meta_file:
+        if description is None:
+            description = "Created with the `EvalHook`"
+        meta_file.write(f"escription: |\n{description}")
+        meta_file.write(meta_string)
 
-    with open(path_to_csv, "r+") as csv_file:
-        content = csv_file.read()
-
-    content = commented_string + content
-
-    with open(path_to_csv, "w+") as csv_file:
-        csv_file.write(content)
+    return meta_path
 
 
 def read_meta_data(path_to_csv):
@@ -644,12 +643,13 @@ def save_example(savepath, datum):
     """
 
     saver, ending = determine_saver(datum)
+    loader_name, _ = determine_loader(ending)
 
     savepath = savepath.format(ending)
 
     saver(savepath, datum)
 
-    return savepath
+    return savepath, loader_name
 
 
 def determine_saver(py_obj):
@@ -680,6 +680,19 @@ def determine_saver(py_obj):
         )
 
 
+def determine_loader(ext):
+    """Returns a name, loader pair for a given file extension"""
+
+    if ext == "png":
+        return "image", image_loader
+    elif ext == "npy":
+        return "np", np_loader
+    elif ext == "txt":
+        return "txt", txt_loader
+    else:
+        raise ValueError("Cannot load file with extension `{}`".format(ext))
+
+
 def load_by_heuristic(path):
     """Chooses a loader based on the file ending.
 
@@ -695,14 +708,9 @@ def load_by_heuristic(path):
 
     name, ext = os.path.splitext(path)
 
-    if ext == ".png":
-        return image_loader(path)
-    elif ext == ".npy":
-        return np_loader(path)
-    elif ext == ".txt":
-        return txt_loader(path)
-    else:
-        raise ValueError("Cannot load file with extension `{}` at {}".format(ext, path))
+    _, loader = determine_loader(ext)
+
+    return loader(path)
 
 
 def decompose_name(name):
@@ -978,7 +986,7 @@ def txt_loader(path):
 
 
 def standalone_eval_csv_file(
-    path_to_csv, callbacks, additional_kwargs={}, other_config=None
+    path_to_meta_dir, callbacks, additional_kwargs={}, other_config=None
 ):
     """Runs all given callbacks on the data in the :class:`EvalDataFolder`
     constructed from the given csv.abs
@@ -1017,9 +1025,9 @@ def standalone_eval_csv_file(
     else:
         other_config = {}
 
-    out_data = EvalDataFolder(path_to_csv)
+    out_data = MetaDataset(path_to_meta_dir)
 
-    config = read_meta_data(path_to_csv)
+    config = out_data.meta
 
     dataset_str = config["dataset"]
     impl = get_implementations_from_config(config, ["dataset"])
@@ -1033,7 +1041,7 @@ def standalone_eval_csv_file(
 
     callbacks = load_callbacks(callbacks)
 
-    root = os.path.dirname(path_to_csv)
+    root = os.path.dirname(path_to_meta_dir)
 
     outputs = apply_callbacks(
         callbacks, root, in_data, out_data, config, callback_kwargs

@@ -104,7 +104,7 @@ def acc_callback(root, data_in, data_out, config):
         # data_out contains all the keys that were specified in the eval_op
         outputs = data_out[i]["outputs"]
         # labels are also available on each example
-        loss = data_out[i]["loss"]
+        loss = data_out[i]["labels_"]["loss"]
 
         prediction = np.argmax(outputs, axis=0)
         correct += labels == prediction
