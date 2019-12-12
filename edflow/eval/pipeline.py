@@ -388,7 +388,8 @@ class TemplateEvalHook(EvalHook):
             super().before_step(*args, **kwargs)
 
     def after_step(self, step, last_results):
-        if retrieve(last_results, self.keypath) is None:
+        tmp = object()
+        if retrieve(last_results, self.keypath, default=tmp) in [None, tmp]:
             self._active = False
         if self._active:
             super().after_step(step, last_results)
