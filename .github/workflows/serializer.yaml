@@ -3,7 +3,7 @@ name: serializer
 on:
   push:
     branches:
-      - pypi_release
+      - master
     tag:
       - release
 
