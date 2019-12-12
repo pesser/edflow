@@ -35,44 +35,44 @@ jobs:
     script:
     - black --check .
     after_success: skip
-  - stage: documentation
-    name: documentation test
-    install:
-    - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy better_apidoc
-    script:
-    - cd docs
-    - sphinx-build -W -v -b html . _build/
-    after_success: skip
-  - stage: tf_example_tests
-    name: Tensorflow examples test
-    install:
-    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
-    - source activate test-environment
-    - pip install -e .[test]
-    script:
-    - cd examples
-    - pytest --cov edflow -k tf --cov-config .coveragerc --cov-append
-    - cd ..
-  - stage: torch_example_tests
-    name: Pytorch examples test
-    install:
-    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
-    - source activate test-environment
-    - conda install pytorch-cpu torchvision-cpu -c pytorch
-    - pip install tensorboardX
-    - pip install -e .[test]
-    script:
-    - cd examples
-    - pytest --cov edflow -k torch --cov-config .coveragerc --cov-append
-    - cd ..
-  - stage: general_tests
-    name: General Tests
-    install:
-    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
-    - source activate test-environment
-    - conda install pytorch-cpu torchvision-cpu -c pytorch
-    - pip install tensorboardX
-    - pip install -e .[test]
-    script:
-    - python -c "import skimage"
-    - pytest --cov edflow --cov-config .coveragerc --ignore=examples
+    #  - stage: documentation
+    #    name: documentation test
+    #    install:
+    #    - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy better_apidoc
+    #    script:
+    #    - cd docs
+    #    - sphinx-build -W -v -b html . _build/
+    #    after_success: skip
+    #  - stage: tf_example_tests
+    #    name: Tensorflow examples test
+    #    install:
+    #    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
+    #    - source activate test-environment
+    #    - pip install -e .[test]
+    #    script:
+    #    - cd examples
+    #    - pytest --cov edflow -k tf --cov-config .coveragerc --cov-append
+    #    - cd ..
+    #  - stage: torch_example_tests
+    #    name: Pytorch examples test
+    #    install:
+    #    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+    #    - source activate test-environment
+    #    - conda install pytorch-cpu torchvision-cpu -c pytorch
+    #    - pip install tensorboardX
+    #    - pip install -e .[test]
+    #    script:
+    #    - cd examples
+    #    - pytest --cov edflow -k torch --cov-config .coveragerc --cov-append
+    #    - cd ..
+    #  - stage: general_tests
+    #    name: General Tests
+    #    install:
+    #    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
+    #    - source activate test-environment
+    #    - conda install pytorch-cpu torchvision-cpu -c pytorch
+    #    - pip install tensorboardX
+    #    - pip install -e .[test]
+    #    script:
+    #    - python -c "import skimage"
+    #    - pytest --cov edflow --cov-config .coveragerc --ignore=examples
