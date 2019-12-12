@@ -93,13 +93,16 @@ class MNIST(edu.DatasetMixin):
     def __len__(self):
         return self._length
 
+
 class MNISTTrain(MNIST):
     def _get_split(self):
         return "train"
 
+
 class MNISTTest(MNIST):
     def _get_split(self):
         return "test"
+
 
 if __name__ == "__main__":
     print("train")

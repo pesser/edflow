@@ -51,7 +51,9 @@ def train(config, root, checkpoint=None, retrain=False):
     logger.info("Number of training samples: {}".format(len(dataset)))
     if "validation_dataset" in config:
         use_validation_dataset = True
-        implementations["validation_dataset"] = get_obj_from_str(config["validation_dataset"])
+        implementations["validation_dataset"] = get_obj_from_str(
+            config["validation_dataset"]
+        )
         logger.info("Instantiating validation dataset.")
         validation_dataset = implementations["validation_dataset"](config=config)
         logger.info("Number of validation samples: {}".format(len(validation_dataset)))

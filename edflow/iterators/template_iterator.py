@@ -33,8 +33,10 @@ class TemplateIterator(PyHookedModelIterator):
             self._log_ops = set_default(self.config, "log_ops", ["step_ops/log_op"])
             # logging
             self.loghook = LoggingHook(
-                paths=self._log_ops, root_path=ProjectManager.train,
-                interval=1, name="train"
+                paths=self._log_ops,
+                root_path=ProjectManager.train,
+                interval=1,
+                name="train",
             )
             # wrap it in interval hook
             self.ihook = IntervalHook(
@@ -46,14 +48,17 @@ class TemplateIterator(PyHookedModelIterator):
             )
             self.hooks.append(self.ihook)
             # validation logging
-            self._validation_log_ops = set_default(self.config, "validation_log_ops", ["validation_ops/log_op"])
+            self._validation_log_ops = set_default(
+                self.config, "validation_log_ops", ["validation_ops/log_op"]
+            )
             self._validation_root = os.path.join(ProjectManager.train, "validation")
             os.makedirs(self._validation_root, exist_ok=True)
             # logging
             self.validation_loghook = LoggingHook(
                 paths=self._validation_log_ops,
-                root_path=self._validation_root, interval=1,
-                name="validation"
+                root_path=self._validation_root,
+                interval=1,
+                name="validation",
             )
             self.hooks.append(self.validation_loghook)
             # write checkpoints after epoch or when interrupted

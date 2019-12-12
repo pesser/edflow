@@ -125,17 +125,21 @@ class CelebA(edu.DatasetMixin):
     def __len__(self):
         return self._length
 
+
 class CelebATrain(CelebA):
     def _get_split(self):
         return "train"
+
 
 class CelebAVal(CelebA):
     def _get_split(self):
         return "val"
 
+
 class CelebATest(CelebA):
     def _get_split(self):
         return "test"
+
 
 if __name__ == "__main__":
     from edflow.util import pp2mkdtable

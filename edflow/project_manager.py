@@ -146,7 +146,7 @@ class ProjectManager(object):
             try:
                 addcommand = "git add {pyfiles}; git add {yamlfiles}; git add -u".format(
                     pyfiles=os.path.join(ProjectManager.code_root, "\*.py"),
-                    yamlfiles=os.path.join(ProjectManager.code_root, "\*.yaml")
+                    yamlfiles=os.path.join(ProjectManager.code_root, "\*.yaml"),
                 )
                 subprocess.call([addcommand], shell=True)
                 if subprocess.call(["git diff-index --quiet HEAD"], shell=True) != 0:

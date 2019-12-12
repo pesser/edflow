@@ -122,13 +122,16 @@ class CIFAR10(edu.DatasetMixin):
     def __len__(self):
         return self._length
 
+
 class CIFAR10Train(CIFAR10):
     def _get_split(self):
         return "train"
 
+
 class CIFAR10Test(CIFAR10):
     def _get_split(self):
         return "test"
+
 
 if __name__ == "__main__":
     from edflow.util import pp2mkdtable
