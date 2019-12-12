@@ -67,6 +67,7 @@ class PyHookedModelIterator(object):
         self._global_step = 0
         self._batch_step = 0
         self._epoch_step = 0
+        self._is_validation_batch = False
 
     def get_global_step(self, *args, **kwargs):
         """Get the global step. The global step corresponds to the number of
@@ -94,6 +95,10 @@ class PyHookedModelIterator(object):
         if not self.config.get("test_mode", False):
             self._global_step += 1
         return self._global_step
+
+    def is_validation_batch(self):
+        """Whether or not current batch is from the validation batch."""
+        return self._is_validation_batch
 
     def make_feeds(self, batch):
         # copy of batches
@@ -162,25 +167,25 @@ class PyHookedModelIterator(object):
                         batch_iterator_validation is not None
                         and self.get_global_step() % validation_frequency == 0
                     ):
+                        self._is_validation_batch = True
                         validation_batch = next(batch_iterator_validation)
                         fetches = {
                             "global_step": self.get_global_step,
                             "validation_ops": step_ops,
                         }
                         feeds = self.make_feeds(validation_batch)
-                        feeds["validation_batch"] = True
                         self.run_hooks(
                             bi, fetches, feeds, validation_batch, before=True
                         )
                         results = self.run(fetches, feed_dict=feeds)
                         self.run_hooks(bi, results=results, before=False)
+                        self._is_validation_batch = False
 
                     fetches = {
                         "global_step": self.get_global_step,
                         "step_ops": step_ops,
                     }
                     feeds = self.make_feeds(batch)
-                    feeds["validation_batch"] = False
                     self.run_hooks(bi, fetches, feeds, batch, before=True)
                     results = self.run(fetches, feed_dict=feeds)
                     self.run_hooks(bi, results=results, before=False)
