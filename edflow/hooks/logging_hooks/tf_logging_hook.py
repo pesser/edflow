@@ -147,7 +147,7 @@ class ImageOverviewHook(Hook):
             try:
                 fnt = ImageFont.truetype("LiberationMono-Regular.ttf", 20)
             except OSError:
-                fnt =  ImageFont.load_default()
+                fnt = ImageFont.load_default()
             last_results = last_results["logging"]
             for name, im in sorted(last_results["images"].items()):
                 canvas = batch_to_canvas(im)
@@ -164,7 +164,7 @@ class ImageOverviewHook(Hook):
             try:
                 fnt = ImageFont.truetype("LiberationMono-Regular.ttf", 50)
             except OSError:
-                fnt =  ImageFont.load_default()
+                fnt = ImageFont.load_default()
             d = ImageDraw.Draw(im)
             d.text((10, 10), "epoch\n{:07d}".format(step), fill=(255, 0, 0), font=fnt)
             batches.append(im)
