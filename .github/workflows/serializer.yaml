@@ -1,4 +1,4 @@
-name: minor-serializer
+name: serializer
 
 on:
   push:
