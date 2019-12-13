@@ -6,8 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Git integration adds all .py and .yaml files not just tracked ones.
+- Support for validation batches in train mode. MinimalLoggingHook used in TemplateIterator logs them automatically under `root/train/validation`.
+- `-d/--debug` flag to enable post-mortem debugging. Uses `pudb` if available, otherwise `pdb`.
+- Logging of commandline used to start, logging root, git tag if applicable, hostname.
+- Classes with fixed splits for included datasets.
 - Added `edexplore` for dataset exploration with streamlit: `edexplore -b <config.yaml>`
-- Added Late Loading! You can now return functions in your examples, which will only be evaluated at the end of you data processing pipeline, allowing you to stack many filter operations on top of each other.
+- Added Late Loading. You can now return functions in your examples, which will only be evaluated at the end of you data processing pipeline, allowing you to stack many filter operations on top of each other.
 - Added MetaView Dataset, which allows to store views on a base dataset without the need to recalculate the labels everytime.
 - `TFBaseEvaluator` now parses config file for `fcond` flag to filter checkpoints, e.g.`edflow -e xxx --fcond "lambda c: any([str(n) in c for n in [240000, 320000]])"` will only evaluate checkpoint 240k and 320k
 - Added MetaDataset for easy Dataloading
@@ -25,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Saved config files use `-` instead of `:` in filename to be consistent.
+- No more `-e/--evaluation <config>` and `-t/--train <config>` options. Specify all configs under `-b/--base <config1> <config2>`. Default to evaluation mode, specify `-t/--train` for training mode.
+- Specifying model in config is optional.
+- Code root determined by import path of iterator not model.
 - When setting the `DatasetMixin` attribute `append_labels = True` the labels are not added to the example directly but behind the key `labels_`.
 - Changed tiling background color to white
 - Changed interface of `edflow.data.dataset.RandomlyJoinedDataset` to improve it.
@@ -36,4 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make_var` was broken for period variables because subcommands lacked `**kwargs` in definition. This is fixed now.
 
 ### Removed
+- Cannot start training and (multiple) evaluations at the same time anymore. Simplifies a lot and was almost never used.
+- No single '-' possible for commandline specification of config parameters. Use '--'.
 - It is no longer possible to pass callbacks as list via the config
+
+### Fixed
+- Image outputs in `template_pytorch` example.
+- Negative numbers as values for keyword arguments are now properly parsed.

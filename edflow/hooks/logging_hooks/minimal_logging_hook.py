@@ -9,7 +9,7 @@ class LoggingHook(Hook):
     """Minimal implementation of a logging hook. Can be easily extended by
     adding handlers."""
 
-    def __init__(self, paths, interval, root_path):
+    def __init__(self, paths, interval, root_path, name=None):
         """
         Parameters
         ----------
@@ -20,25 +20,34 @@ class LoggingHook(Hook):
             Intervall of training steps before logging.
         root_path : str
             Path at which the logs are stored.
+        name : str
+            Optional name to recognize logging output.
         """
         self.paths = paths
         self.interval = interval
         self.root = root_path
-        self.logger = get_logger(self)
+        if name is not None:
+            self.logger = get_logger(name)
+        else:
+            self.logger = get_logger(self)
         self.handlers = {"images": [self.log_images], "scalars": [self.log_scalars]}
 
     def after_step(self, batch_index, last_results):
         if batch_index % self.interval == 0:
+            active = False
             self._step = last_results["global_step"]
-            self.logger.info("global_step: {}".format(self._step))
             for path in self.paths:
                 for k in self.handlers:
                     handler_results = retrieve(
                         last_results, path + "/" + k, default=dict()
                     )
+                    if handler_results and not active:
+                        self.logger.info("global_step: {}".format(self._step))
+                        active = True
                     for handler in self.handlers[k]:
                         handler(handler_results)
-            self.logger.info("project root: {}".format(self.root))
+            if active:
+                self.logger.info("logging root: {}".format(self.root))
 
     def log_scalars(self, results):
         for name in sorted(results.keys()):

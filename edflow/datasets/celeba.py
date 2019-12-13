@@ -75,14 +75,18 @@ class CelebA(edu.DatasetMixin):
                 pickle.dump(data, f)
             edu.mark_prepared(self.root)
 
-    def _load(self):
-        with open(self._data_path, "rb") as f:
-            self._data = pickle.load(f)
+    def _get_split(self):
         split = (
             "test" if self.config.get("test_mode", False) else "train"
         )  # default split
         if self.NAME in self.config:
             split = self.config[self.NAME].get("split", split)
+        return split
+
+    def _load(self):
+        with open(self._data_path, "rb") as f:
+            self._data = pickle.load(f)
+        split = self._get_split()
         assert split in ["train", "test", "val"]
         self.logger.info("Using split: {}".format(split))
         if split == "train":
@@ -120,6 +124,21 @@ class CelebA(edu.DatasetMixin):
 
     def __len__(self):
         return self._length
+
+
+class CelebATrain(CelebA):
+    def _get_split(self):
+        return "train"
+
+
+class CelebAVal(CelebA):
+    def _get_split(self):
+        return "val"
+
+
+class CelebATest(CelebA):
+    def _get_split(self):
+        return "test"
 
 
 if __name__ == "__main__":

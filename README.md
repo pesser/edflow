@@ -140,13 +140,14 @@ n_classes: 10
 ```
 
 #### Train
-To start training, use the `-t/--train <config>` command-line option and,
+To start training, specify configuration files with `-b/--base <config>`
+command-line option, use the `-t/--train` flag to enable training mode and,
 optionally, the `-n/--name <name>` option to more easily find your experiments
 later on:
 
 
 ```
-$ edflow -t template_tfe/config.yaml -n hello_tfe
+$ edflow -b template_tfe/config.yaml -t -n hello_tfe
 [INFO] [train]: Starting Training.
 [INFO] [train]: Instantiating dataset.
 [INFO] [FashionMNIST]: Using split: train
@@ -194,7 +195,7 @@ Use `CTRL-C` to interrupt the training:
 To resume training, run
 
 
-    edflow -t template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/
+    edflow -b template_tfe/config.yaml -t -p logs/2019-08-05T18:55:20_hello_tfe/
 
 
 It will load the last checkpoint in the project folder and continue training
@@ -203,7 +204,7 @@ This lets you easily adjust parameters without having to start training from
 scratch, e.g.
 
 
-    edflow -t template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ --batch_size 32
+    edflow -b template_tfe/config.yaml -t -p logs/2019-08-05T18:55:20_hello_tfe/ --batch_size 32
 
 
 will continue with an increased batch size. Instead of loading the latest
@@ -211,15 +212,15 @@ checkpoint, you can load a specific checkpoint by adding `-c <path to
 checkpoint>`:
 
 
-    edflow -t template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ -c logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
+    edflow -b template_tfe/config.yaml -t -p logs/2019-08-05T18:55:20_hello_tfe/ -c logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
 
 
 #### Evaluate
 Evaluation mode will write all outputs of `eval_op` to disk and prepare them
-for consumption by your evaluation functions. Just replace `-t` by `-e`:
+for consumption by your evaluation functions. Just remove the training flag `-t`:
 
 
-    edflow -e template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ -c logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
+    edflow -b template_tfe/config.yaml -p logs/2019-08-05T18:55:20_hello_tfe/ -c logs/2019-08-05T18:55:20_hello_tfe/train/checkpoints/model-1207.ckpt
 
 
 If `-c` is not specified, it will evaluate the latest checkpoint. The
@@ -251,7 +252,7 @@ def acc_callback(root, data_in, data_out, config):
         # data_out contains all the keys that were specified in the eval_op
         outputs = data_out[i]["outputs"]
         # labels are also available on each example
-        loss = data_out[i]["loss"]
+        loss = data_out[i]["labels_"]["loss"]
 
         prediction = np.argmax(outputs, axis=0)
         correct += labels == prediction
@@ -279,7 +280,6 @@ be found for PyTorch in `template_pytorch/edflow.py` and requires only slightly
 different syntax:
 
 ```python
-import functools
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -332,7 +332,7 @@ class Iterator(TemplateIterator):
         # get inputs
         inputs, labels = kwargs["image"], kwargs["class"]
         inputs = torch.tensor(inputs)
-        inputs = inputs.transpose(2, 3).transpose(1, 2)
+        inputs = inputs.permute(0, 3, 1, 2)
         labels = torch.tensor(labels, dtype=torch.long)
 
         # compute loss
@@ -352,7 +352,9 @@ class Iterator(TemplateIterator):
             min_loss = np.min(loss.detach().numpy())
             max_loss = np.max(loss.detach().numpy())
             return {
-                "images": {"inputs": inputs.detach().numpy()},
+                "images": {
+                    "inputs": inputs.detach().permute(0, 2, 3, 1).numpy()
+                },
                 "scalars": {
                     "min_loss": min_loss,
                     "max_loss": max_loss,
@@ -374,7 +376,7 @@ You can experiment with it in the exact same way as [above](#TensorFlow-Eager).
 For example, to [start training](#Train) run:
 
 
-    edflow -t template_pytorch/config.yaml -n hello_pytorch
+    edflow -b template_pytorch/config.yaml -t -n hello_pytorch
 
 
 See also [interrupt and resume](#interrupt-and-resume) and
@@ -386,7 +388,7 @@ See also [interrupt and resume](#interrupt-and-resume) and
 edflow also supports graph-based execution, e.g.
 
     cd examples
-    edflow -t mnist_tf/train.yaml -n hello_tensorflow
+    edflow -b mnist_tf/train.yaml -t -n hello_tensorflow
 
 With TensorFlow 2.x going eager by default and TensorFlow 1.x supporting eager
 execution, support for TensorFlow's 1.x graph
@@ -405,30 +407,26 @@ For more information, look into our [documentation](https://edflow.readthedocs.i
 ```
 $ edflow --help
 usage: edflow [-h] [-n description]
-              [-b [base_config.yaml [base_config.yaml ...]]] [-t config.yaml]
-              [-e [config.yaml [config.yaml ...]]] [-p PROJECT]
-              [-c CHECKPOINT] [-r] [-log LEVEL]
+              [-b [base_config.yaml [base_config.yaml ...]]] [-t] [-p PROJECT]
+              [-c CHECKPOINT] [-r] [-log LEVEL] [-d]
 
 optional arguments:
   -h, --help            show this help message and exit
   -n description, --name description
                         postfix of log directory.
   -b [base_config.yaml [base_config.yaml ...]], --base [base_config.yaml [base_config.yaml ...]]
-                        Path to base config. Any parameter in here is
-                        overwritten by the train of eval config. Useful e.g.
-                        for model parameters, which stay constant between
-                        trainings and evaluations.
-  -t config.yaml, --train config.yaml
-                        path to training config
-  -e [config.yaml [config.yaml ...]], --eval [config.yaml [config.yaml ...]]
-                        path to evaluation configs
+                        paths to base configs. Loaded from left-to-right.
+                        Parameters can be overwritten or added with command-
+                        line options of the form `--key value`.
+  -t, --train           run in training mode
   -p PROJECT, --project PROJECT
                         path to existing project
   -c CHECKPOINT, --checkpoint CHECKPOINT
                         path to existing checkpoint
   -r, --retrain         reset global step
   -log LEVEL, --log-level LEVEL
-                        Set the std-out logging level.
+                        set the std-out logging level.
+  -d, --debug           enable post-mortem debugging
 ```
 
 

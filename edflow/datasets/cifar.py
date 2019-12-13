@@ -83,14 +83,18 @@ class CIFAR10(edu.DatasetMixin):
                 pickle.dump(data, f)
             edu.mark_prepared(self.root)
 
-    def _load(self):
-        with open(self._data_path, "rb") as f:
-            self._data = pickle.load(f)
+    def get_split(self):
         split = (
             "test" if self.config.get("test_mode", False) else "train"
         )  # default split
         if self.NAME in self.config:
             split = self.config[self.NAME].get("split", split)
+        return split
+
+    def _load(self):
+        with open(self._data_path, "rb") as f:
+            self._data = pickle.load(f)
+        split = self._get_split()
         assert split in ["train", "test"]
         self.logger.info("Using split: {}".format(split))
         self.labels = {
@@ -117,6 +121,16 @@ class CIFAR10(edu.DatasetMixin):
 
     def __len__(self):
         return self._length
+
+
+class CIFAR10Train(CIFAR10):
+    def _get_split(self):
+        return "train"
+
+
+class CIFAR10Test(CIFAR10):
+    def _get_split(self):
+        return "test"
 
 
 if __name__ == "__main__":
