@@ -369,7 +369,12 @@ class EvalHook(Hook):
         self.logger.info(
             "All data has been produced. You can now also run all"
             + " callbacks using the following command:\n"
-            + "edeval -c {} -cb {}".format(self.save_root, cbs)
+            + f"edeval -c {self.save_root} -cb {cbs}"
+        )
+        self.logger.info(
+            "To directly reuse the data simply use the following command:\n"
+            + "from edflow.data.believers.meta import MetaDataset\n"
+            + f'M = MetaDataset("{os.path.abspath(self.save_root)}"\n)'
         )
 
 
