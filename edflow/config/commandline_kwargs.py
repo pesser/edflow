@@ -23,7 +23,7 @@ def parse_unknown_args(unknown):
     kwargs = {}
     for i in range(len(unknown)):
         key = unknown[i]
-        if key[0] == "-" or key[:2] == "--":
+        if key[:2] == "--":
             # Make sure that keys are only passed once
             if key in kwargs:
                 raise ValueError("Double Argument: {} is passed twice".format(key))

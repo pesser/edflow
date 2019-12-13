@@ -1,3 +1,4 @@
+import os
 from edflow.iterators.model_iterator import PyHookedModelIterator
 from edflow.hooks.checkpoint_hooks.lambda_checkpoint_hook import LambdaCheckpointHook
 from edflow.hooks.logging_hooks.minimal_logging_hook import LoggingHook
@@ -24,14 +25,18 @@ class TemplateIterator(PyHookedModelIterator):
             interval=set_default(self.config, "ckpt_freq", None),
         )
         if not self.config.get("test_mode", False):
-            # in training, excute train ops and add logginghook
+            # in training, excute train ops and add logginghook for train and
+            # validation batches
             self._train_ops = set_default(
                 self.config, "train_ops", ["step_ops/train_op"]
             )
             self._log_ops = set_default(self.config, "log_ops", ["step_ops/log_op"])
             # logging
             self.loghook = LoggingHook(
-                paths=self._log_ops, root_path=ProjectManager.train, interval=1
+                paths=self._log_ops,
+                root_path=ProjectManager.train,
+                interval=1,
+                name="train",
             )
             # wrap it in interval hook
             self.ihook = IntervalHook(
@@ -42,6 +47,20 @@ class TemplateIterator(PyHookedModelIterator):
                 get_step=self.get_global_step,
             )
             self.hooks.append(self.ihook)
+            # validation logging
+            self._validation_log_ops = set_default(
+                self.config, "validation_log_ops", ["validation_ops/log_op"]
+            )
+            self._validation_root = os.path.join(ProjectManager.train, "validation")
+            os.makedirs(self._validation_root, exist_ok=True)
+            # logging
+            self.validation_loghook = LoggingHook(
+                paths=self._validation_log_ops,
+                root_path=self._validation_root,
+                interval=1,
+                name="validation",
+            )
+            self.hooks.append(self.validation_loghook)
             # write checkpoints after epoch or when interrupted
             self.hooks.append(self.ckpthook)
         else:
@@ -81,7 +100,7 @@ class TemplateIterator(PyHookedModelIterator):
     def run(self, fetches, feed_dict):
         results = super().run(fetches, feed_dict)
         for train_op in self._train_ops:
-            retrieve(results, train_op)
+            retrieve(results, train_op, default=0)
         return results
 
     def save(self, checkpoint_path):

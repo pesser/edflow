@@ -1,75 +1,86 @@
 language: python
 python:
-  - 3.6
+- 3.6
+os:
+- linux
 notifications:
   email: false
-  
 before_install:
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
-
+- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+  -O miniconda.sh; else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  -O miniconda.sh; fi
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
 install: true
-
 after_success:
-  - coveralls
-
-# Run test
+- coveralls
 jobs:
   include:
-    - stage: formatting
-      name: "formatting test"
-      install:
-        - pip install black
-      script:
-        - black --check .
-      after_success: skip
-    - stage: documentation
-      name: "documentation test"
-      install:
-        - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy better_apidoc
-      script:
-        - cd docs
-        - sphinx-build -W -v -b html . _build/
-      after_success: skip
-    - stage: tf_example_tests
-      name: "Tensorflow examples test"
-      install:
-        - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
-        - source activate test-environment
-        - pip install -e .[test]
-      script:
-        - cd examples
-        - pytest --cov edflow -k tf --cov-config .coveragerc --cov-append
-        - cd ..
-    - stage: torch_example_tests
-      name: "Pytorch examples test"
-      install:
-        - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
-        - source activate test-environment
-        - conda install pytorch-cpu torchvision-cpu -c pytorch
-        - pip install tensorboardX
-        - pip install -e .[test]
-      script:
-        - cd examples
-        - pytest --cov edflow -k torch --cov-config .coveragerc --cov-append
-        - cd ..
-    - stage: general_tests
-      name: "General Tests"
-      install:
-        - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
-        - source activate test-environment
-        - conda install pytorch-cpu torchvision-cpu -c pytorch
-        - pip install tensorboardX
-        - pip install -e .[test]
-      script:
-        - python -c "import skimage" # fix failing test due to static tls loading
-        - pytest --cov edflow --cov-config .coveragerc --ignore=examples # use pytest instead of python -m pytest
+  - stage: formatting
+    name: formatting test
+    install:
+    - pip install black
+    script:
+    - black --check .
+    after_success: skip
+  - stage: documentation
+    name: documentation test
+    install:
+    - pip install sphinx sphinx_rtd_theme sphinxcontrib-apidoc pyyaml numpy better_apidoc
+    script:
+    - cd docs
+    - sphinx-build -W -v -b html . _build/
+    after_success: skip
+  - stage: tf_example_tests
+    name: Tensorflow examples test
+    install:
+    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
+    - source activate test-environment
+    - pip install -e .[test]
+    script:
+    - cd examples
+    - pytest --cov edflow -k tf --cov-config .coveragerc --cov-append
+    - cd ..
+  - stage: torch_example_tests
+    name: Pytorch examples test
+    install:
+    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+    - source activate test-environment
+    - conda install pytorch-cpu torchvision-cpu -c pytorch
+    - pip install tensorboardX
+    - pip install -e .[test]
+    script:
+    - cd examples
+    - pytest --cov edflow -k torch --cov-config .coveragerc --cov-append
+    - cd ..
+  - stage: general_tests
+    name: General Tests
+    install:
+    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
+    - source activate test-environment
+    - conda install pytorch-cpu torchvision-cpu -c pytorch
+    - pip install tensorboardX
+    - pip install -e .[test]
+    script:
+    - python -c "import skimage"
+    - pytest --cov edflow --cov-config .coveragerc --ignore=examples
+  - stage: Build and publish
+    name: publish
+    install:
+      - chmod 777 version_from_tag_no.sh
+    script:
+      - ./version_from_tag_no.sh
+    if: tag =~ /v?(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$/
+    deploy:
+      provider: pypi
+      cleanup: false
+      on:
+        all_branches: true
+      username: __token__
+      password:
+        secure: yXC9k2EQ+28vQ1JzdiTUjX/KNSTFEBxFCHWTwDo1yLK5hw4kwXR/GSGQnFjloigJStp5TJ4OJcUBnSRlG+daHmukAgWw7gTzluZwFwG+OkQ4xOF+FuZS2s8SQBth/1hgdbz2EL5M6To9hCQl1GRGCVprbh3Rn6U9vsZxi6e5DaA7Lsyj9Zh2Hi1Q6/CAWaxX6YQEHo4NqaanYKRm2DnkbBay2P2v+eb+ZGycKcRyR7lAynihHrQg1RUL5V9CT9NXCEHMHQTgWj7qFcbXzcUZ0B7SRam+ckcGUuKXd4y8j0KcQ8yE7uK10kCDLBppb+LsY0fTja1K71ReuuN97VhGhGIt7SPSNdc/HDtDAjiSGyoTP9BgFVVFvISqiADcFoOBbH6qbzUCzSId8sz6WihjI779pC1FoW1O4LpiNYav+9N149Iv+TJCWG0XiDOPkPP9to6nmB1mhKhlc4LiwQlrqYe94vI0n/0Pgy/D92UXjwMIPdhXjLTyerADDSzTG+KjSyNnjDaWJIaW/onJ3MfPzCdni+ERXQsRaUoWjoO6yBxZGoBPkGphoDmLmWnth6qGfy1YjiJBExP2lM5g/tQdzVDltkYVJEugyoDVomgPvc3HNm+l+nlz5BpZQzzVoV/8T0kicaDTa5EGAsGvf07J7WO6x8rSdSiIxsOQUTzSO6E=
+    after_success: skip

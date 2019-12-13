@@ -16,7 +16,7 @@ def get_model_csv(stdout):
 def test_eval():
     """Just make sure example runs without errors."""
     output = subprocess.check_output(
-        "edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11",
+        "edflow -b eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11 -t",
         shell=True,
     )
 
@@ -33,7 +33,7 @@ def test_eval_cbs_and_kwargs_from_config():
     """Just make sure example runs and raises no errors. Here additional
     callbacks are supplied via the config file."""
     output = subprocess.check_output(
-        "edflow -t eval_hook/mnist_config_cb.yaml -n eval_testrun --num_steps 11",
+        "edflow -b eval_hook/mnist_config_cb.yaml -n eval_testrun --num_steps 11 -t",
         shell=True,
     )
 
@@ -41,7 +41,7 @@ def test_eval_cbs_and_kwargs_from_config():
 def test_eval_wrong_cb_format():
     """Just make sure example runs and raises an expected error."""
     output = subprocess.check_output(
-        "edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11",
+        "edflow -b eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11 -t",
         shell=True,
     )
 
@@ -58,13 +58,13 @@ def test_eval_wrong_cb_format():
 def test_eval_with_additional_kwargs():
     """Make sure example runs without errors while adding more kwargs.
 
-    1. edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11
+    1. edflow -b eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11 -t
     2. edeval -c csv_name -cb empty:eval_hook.model.empty_callback --batch_size 16
     3. edeval -c csv_name -cb empty:eval_hook.model.empty_callback --not_in_there TEST
     """
 
     output = subprocess.check_output(
-        "edflow -t eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11",
+        "edflow -b eval_hook/mnist_config.yaml -n eval_testrun --num_steps 11 -t",
         shell=True,
     )
 

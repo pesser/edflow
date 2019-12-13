@@ -824,6 +824,11 @@ def edprint(nested_thing):
         print(pp2mkdtable(nested_thing, False))
 
 
+class NoModel(object):
+    def __init__(self, config):
+        self.config = config
+
+
 if __name__ == "__main__":
     from edflow.data.util import plot_datum
 

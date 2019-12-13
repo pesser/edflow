@@ -1,4 +1,3 @@
-import functools
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -51,7 +50,7 @@ class Iterator(TemplateIterator):
         # get inputs
         inputs, labels = kwargs["image"], kwargs["class"]
         inputs = torch.tensor(inputs)
-        inputs = inputs.transpose(2, 3).transpose(1, 2)
+        inputs = inputs.permute(0, 3, 1, 2)
         labels = torch.tensor(labels, dtype=torch.long)
 
         # compute loss
@@ -71,7 +70,7 @@ class Iterator(TemplateIterator):
             min_loss = np.min(loss.detach().numpy())
             max_loss = np.max(loss.detach().numpy())
             return {
-                "images": {"inputs": inputs.detach().numpy()},
+                "images": {"inputs": inputs.detach().permute(0, 2, 3, 1).numpy()},
                 "scalars": {
                     "min_loss": min_loss,
                     "max_loss": max_loss,

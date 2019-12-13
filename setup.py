@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 # allows to get version via python setup.py --version
-__version__ = "0.2.1"
+__version__ = "dev"
 
 
 setup(

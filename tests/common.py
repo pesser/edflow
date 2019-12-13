@@ -1,5 +1,5 @@
 import subprocess, os
-from edflow.main import _train
+from edflow.main import train
 from edflow.custom_logging import init_project
 
 
@@ -20,4 +20,4 @@ def run_edflow_cmdline(command):
 def run_edflow(name, config):
     """Run edflow directly from config."""
     P = init_project("logs", code_root=None, postfix=name)
-    _train(config, P.root)
+    train(config, P.root)
