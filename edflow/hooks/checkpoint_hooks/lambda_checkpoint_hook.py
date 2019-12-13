@@ -67,7 +67,8 @@ class LambdaCheckpointHook(Hook):
         if self.interval is not None and step % self.interval == 0:
             if self._active:
                 self.save()
-        self._active = True
+        if not "validation_ops" in last_results:
+            self._active = True
 
     def at_exception(self, *args, **kwargs):
         """
