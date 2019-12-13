@@ -33,7 +33,6 @@ pipline can potentially speed up your data loading.
 # even do that much and it would provide better documentation as this is
 # actually our base class for datasets
 
-from edflow.main import traceable_method, get_implementations_from_config
 from edflow.util import PRNGMixin
 
 

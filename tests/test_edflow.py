@@ -133,17 +133,21 @@ class Test_eval(object):
         This should load the checkpoint logs/train/checkpoints/model.ckpt-0
 
         effectively runs
-            edflow -e config.yaml -b config.yaml -c logs/train/checkpoints/model.ckpt-0 -n test_inference
+            edflow -b config.yaml -c logs/train/checkpoints/model.ckpt-0 -n test_inference
 
         and then checks if an evaluation folder "test_inference" was created in logs/
+
+        Note: This used to copy everything under {tmpdir}/test but this
+        conflicts with other python packages called test so it was changed to
+        tmptest.
         -------
         """
 
         self.setup_tmpdir(tmpdir)
         config = dict()
-        config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator_checkpoint)
-        config["dataset"] = "tests." + fullname(Dataset)
+        config["model"] = "tmptest." + fullname(Model)
+        config["iterator"] = "tmptest." + fullname(Iterator_checkpoint)
+        config["dataset"] = "tmptest." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["n_processes"] = 1
@@ -153,11 +157,10 @@ class Test_eval(object):
             yaml.dump(config, outfile, default_flow_style=False)
         import shutil
 
-        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tmptest"))
+        print(config)
         command = [
             "edflow",
-            "-e",
-            "config.yaml",
             "-c",
             os.path.join(
                 "logs", "trained_model", "train", "checkpoints", "model.ckpt-0"
@@ -180,7 +183,7 @@ class Test_eval(object):
         This should load the checkpoint logs/trained_model/train/checkpoints/model.ckpt-0
 
         effectively runs
-            edflow -e config.yaml -b config.yaml -c logs/trained_model/train/checkpoints/model.ckpt-0
+            edflow -b config.yaml -c logs/trained_model/train/checkpoints/model.ckpt-0
             -p logs/trained_model -n test_inference
 
         and then checks if an evaluation folder "test_inference" was created in logs/trained_model/eval
@@ -188,9 +191,9 @@ class Test_eval(object):
         """
         self.setup_tmpdir(tmpdir)
         config = dict()
-        config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator_checkpoint)
-        config["dataset"] = "tests." + fullname(Dataset)
+        config["model"] = "tmptest." + fullname(Model)
+        config["iterator"] = "tmptest." + fullname(Iterator_checkpoint)
+        config["dataset"] = "tmptest." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
         import yaml
@@ -199,11 +202,9 @@ class Test_eval(object):
             yaml.dump(config, outfile, default_flow_style=False)
         import shutil
 
-        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tmptest"))
         command = [
             "edflow",
-            "-e",
-            "config.yaml",
             "-c",
             os.path.join(
                 "logs", "trained_model", "train", "checkpoints", "model.ckpt-0"
@@ -227,17 +228,17 @@ class Test_eval(object):
         Tests evaluation without providing a checkpoint. This should load the latest checkpoint.
 
         effectively runs
-            edflow -e config.yaml -b config.yaml -p logs/trained_model -n test_inference
+            edflow -b config.yaml -p logs/trained_model -n test_inference
 
         and then checks if an evaluation folder "test_inference" was created in logs/trained_model/eval
         -------
         """
         self.setup_tmpdir(tmpdir)
-        # command = "edflow -e eval.yaml -b train.yaml -n test"
+        # command = "edflow -b train.yaml -n test"
         config = dict()
-        config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator_checkpoint_latest)
-        config["dataset"] = "tests." + fullname(Dataset)
+        config["model"] = "tmptest." + fullname(Model)
+        config["iterator"] = "tmptest." + fullname(Iterator_checkpoint_latest)
+        config["dataset"] = "tmptest." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
         import yaml
@@ -246,11 +247,9 @@ class Test_eval(object):
             yaml.dump(config, outfile, default_flow_style=False)
         import shutil
 
-        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tmptest"))
         command = [
             "edflow",
-            "-e",
-            "config.yaml",
             "-p",
             os.path.join("logs", "trained_model"),
             "-b",
@@ -273,18 +272,18 @@ class Test_eval(object):
         This should disable overwrite eval_all and eval_forever to ``False``, and then load the specified checkpoint
 
         effectively runs
-            edflow -e config.yaml -b config.yaml -c logs/trained_model/train/checkpoints/model.ckpt-0
+            edflow -b config.yaml -c logs/trained_model/train/checkpoints/model.ckpt-0
             -p logs/trained_model -n test_inference
 
         and then checks if an evaluation folder "test_inference" was created in logs/trained_model/eval
         -------
         """
         self.setup_tmpdir(tmpdir)
-        # command = "edflow -e eval.yaml -b train.yaml -n test"
+        # command = "edflow -b eval.yaml train.yaml -n test"
         config = dict()
-        config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator4)
-        config["dataset"] = "tests." + fullname(Dataset)
+        config["model"] = "tmptest." + fullname(Model)
+        config["iterator"] = "tmptest." + fullname(Iterator4)
+        config["dataset"] = "tmptest." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["eval_all"] = True
@@ -295,11 +294,9 @@ class Test_eval(object):
             yaml.dump(config, outfile, default_flow_style=False)
         import shutil
 
-        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tmptest"))
         command = [
             "edflow",
-            "-e",
-            "config.yaml",
             "-c",
             os.path.join(
                 "logs", "trained_model", "train", "checkpoints", "model.ckpt-0"
@@ -326,17 +323,17 @@ class Test_eval(object):
         This should NOT load any checkpoint.
 
         effectively runs
-            edflow -e config.yaml -b config.yaml -p logs/trained_model -n test_inference
+            edflow -b config.yaml -p logs/trained_model -n test_inference
 
         and then checks if an evaluation folder "test_inference" was created in logs/trained_model/eval
         -------
         """
         self.setup_tmpdir(tmpdir)
-        # command = "edflow -e eval.yaml -b train.yaml -n test"
+        # command = "edflow -b train.yaml -n test"
         config = dict()
-        config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator_no_checkpoint)
-        config["dataset"] = "tests." + fullname(Dataset)
+        config["model"] = "tmptest." + fullname(Model)
+        config["iterator"] = "tmptest." + fullname(Iterator_no_checkpoint)
+        config["dataset"] = "tmptest." + fullname(Dataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["eval_all"] = True
@@ -347,11 +344,9 @@ class Test_eval(object):
             yaml.dump(config, outfile, default_flow_style=False)
         import shutil
 
-        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tmptest"))
         command = [
             "edflow",
-            "-e",
-            "config.yaml",
             "-p",
             os.path.join("logs", "trained_model"),
             "-b",
@@ -375,11 +370,11 @@ class Test_eval(object):
         -------
         """
         self.setup_tmpdir(tmpdir)
-        # command = "edflow -e eval.yaml -b train.yaml -n test"
+        # command = "edflow -b train.yaml -n test"
         config = dict()
-        config["model"] = "tests." + fullname(Model)
-        config["iterator"] = "tests." + fullname(Iterator_no_checkpoint)
-        config["dataset"] = "tests." + fullname(LLDataset)
+        config["model"] = "tmptest." + fullname(Model)
+        config["iterator"] = "tmptest." + fullname(Iterator_no_checkpoint)
+        config["dataset"] = "tmptest." + fullname(LLDataset)
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["eval_all"] = True
@@ -390,11 +385,9 @@ class Test_eval(object):
             yaml.dump(config, outfile, default_flow_style=False)
         import shutil
 
-        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tests"))
+        shutil.copytree(os.path.split(__file__)[0], os.path.join(tmpdir, "tmptest"))
         command = [
             "edflow",
-            "-e",
-            "config.yaml",
             "-p",
             os.path.join("logs", "trained_model"),
             "-b",

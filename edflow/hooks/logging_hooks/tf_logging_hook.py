@@ -144,7 +144,10 @@ class ImageOverviewHook(Hook):
             # TODO: fix hard-coded font type
             # TODO: add option to log overview to tensorboard
             batches = []
-            fnt = ImageFont.truetype("LiberationMono-Regular.ttf", 20)
+            try:
+                fnt = ImageFont.truetype("LiberationMono-Regular.ttf", 20)
+            except OSError:
+                fnt = ImageFont.load_default()
             last_results = last_results["logging"]
             for name, im in sorted(last_results["images"].items()):
                 canvas = batch_to_canvas(im)
@@ -158,7 +161,10 @@ class ImageOverviewHook(Hook):
                 batches.append(im)
 
             im = Image.new("RGB", batches[0].size, color=(0, 0, 0))
-            fnt = ImageFont.truetype("LiberationMono-Regular.ttf", 50)
+            try:
+                fnt = ImageFont.truetype("LiberationMono-Regular.ttf", 50)
+            except OSError:
+                fnt = ImageFont.load_default()
             d = ImageDraw.Draw(im)
             d.text((10, 10), "epoch\n{:07d}".format(step), fill=(255, 0, 0), font=fnt)
             batches.append(im)

@@ -318,6 +318,7 @@ class EvalHook(Hook):
         """
         if hasattr(self, "root"):
             self.save_csv()
+        self.logger.info("Warning: Evaluation data is incomplete!")
 
     def after_epoch(self, epoch):
         """Save csv for reuse and then start the evaluation callbacks
@@ -387,7 +388,8 @@ class TemplateEvalHook(EvalHook):
             super().before_step(*args, **kwargs)
 
     def after_step(self, step, last_results):
-        if retrieve(last_results, self.keypath) is None:
+        tmp = object()
+        if retrieve(last_results, self.keypath, default=tmp) in [None, tmp]:
             self._active = False
         if self._active:
             super().after_step(step, last_results)
