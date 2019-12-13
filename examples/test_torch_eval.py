@@ -3,14 +3,14 @@ import pytest
 
 
 def get_model_csv(stdout):
-    token = "MODEL_OUPUT_CSV "
+    token = "MODEL_OUTPUT_ROOT "
     stdout = stdout.replace("\\n", "\n")
     for line in stdout.split("\n"):
         if token in line:
-            print(len(token) + len("]: MODEL_OUPUT_CSV "))
-            csv_name = line[len(token) + len("]: MODEL_OUPUT_CSV ") :]
-            print(csv_name)
-            return csv_name
+            _, path = line.split(token)
+            path = path.strip()
+            print(path)
+            return path
 
 
 def test_eval():

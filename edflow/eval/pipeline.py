@@ -365,7 +365,7 @@ class EvalHook(Hook):
         else:
             cbs = "<name>:<your callback>"
 
-        self.logger.info("MODEL_OUPUT_META {}".format(meta_path))
+        self.logger.info("MODEL_OUTPUT_ROOT {}".format(self.save_root))
         self.logger.info(
             "All data has been produced. You can now also run all"
             + " callbacks using the following command:\n"
