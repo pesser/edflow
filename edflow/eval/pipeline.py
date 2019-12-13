@@ -572,7 +572,7 @@ def add_meta_data(eval_root, metadata, description=None):
     with open(meta_path, "w+") as meta_file:
         if description is None:
             description = "Created with the `EvalHook`"
-        meta_file.write(f"escription: |\n{description}")
+        meta_file.write(f"description: |\n{description}")
         meta_file.write(meta_string)
 
     return meta_path
