@@ -75,45 +75,36 @@ def test_apply_callbacks():
     assert results == {"a": {"k1": 1}}
 
 
+META_PATH = os.path.abspath(os.path.dirname(__file__))
+
+
 def test_standalone_no_cbs():
-    csv_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "model_output.csv")
-    )
     cbs = {}
 
-    result = standalone_eval_csv_file(csv_path, cbs, {}, None)
+    result = standalone_eval_csv_file(META_PATH, cbs, {}, None)
 
     assert result == {}
 
 
 def test_standalone_w_cbs():
-    csv_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "model_output.csv")
-    )
     cbs = {"a": "test_standalone.empty"}
 
-    result = standalone_eval_csv_file(csv_path, cbs, {}, None)
+    result = standalone_eval_csv_file(META_PATH, cbs, {}, None)
 
     assert result == {"a": {}}
 
 
 def test_standalone_w_cbs_and_kwargs():
-    csv_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "model_output.csv")
-    )
     cbs = {"a": "test_standalone.empty"}
 
     kwargs = {"eval_pipeline": {"callback_kwargs": {"a": {"k1": 1}}}}
 
-    result = standalone_eval_csv_file(csv_path, cbs, kwargs, None)
+    result = standalone_eval_csv_file(META_PATH, cbs, kwargs, None)
 
     assert result == {"a": {"k1": 1}}
 
 
 def test_standalone_w_cbs_and_kwargs_and_config():
-    csv_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "model_output.csv")
-    )
     extra_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "extra_config.yaml")
     )
@@ -121,6 +112,6 @@ def test_standalone_w_cbs_and_kwargs_and_config():
 
     kwargs = {"eval_pipeline": {"callback_kwargs": {"a": {"k1": 1}}}}
 
-    result = standalone_eval_csv_file(csv_path, cbs, kwargs, extra_path)
+    result = standalone_eval_csv_file(META_PATH, cbs, kwargs, extra_path)
 
     assert result == {"a": {"k1": 2, "k2": 1}}
