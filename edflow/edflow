@@ -112,8 +112,7 @@ def main(opt, additional_kwargs):
         logger.info(
             "Evaluation config:\n{}".format(yaml.dump(config))
         )
-        bar_position = 0
-        test(config, P.latest_eval, checkpoint, opt.nogpu, bar_position)
+        test(config, P.latest_eval, checkpoint)
 
 
 if __name__ == "__main__":
@@ -128,9 +127,8 @@ if __name__ == "__main__":
         "--base",
         nargs="*",
         metavar="base_config.yaml",
-        help="Path to base config. Any parameter in here is overwritten by "
-        "the train of eval config. Useful e.g. for model parameters, which"
-        " stay constant between trainings and evaluations.",
+        help="paths to base configs. Loaded from left-to-right. "
+        "Parameters can be overwritten or added with command-line options of the form `--key value`.",
         default=None,
     )
     parser.add_argument(
@@ -142,16 +140,13 @@ if __name__ == "__main__":
         "-r", "--retrain", action="store_true", help="reset global step"
     )
     parser.add_argument(
-        "--nogpu", action="store_true", help="disable gpu for tensorflow"
-    )
-    parser.add_argument(
         "-log",
         "--log-level",
         metavar="LEVEL",
         type=str,
         choices=["warn", "info", "debug", "critical"],
         default="info",
-        help="Set the std-out logging level.",
+        help="set the std-out logging level.",
     )
     parser.add_argument("-d", "--debug", action="store_true", help="enable post-mortem debugging")
 

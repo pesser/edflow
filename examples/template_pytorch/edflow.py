@@ -1,4 +1,3 @@
-import functools
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -51,7 +50,7 @@ class Iterator(TemplateIterator):
         # get inputs
         inputs, labels = kwargs["image"], kwargs["class"]
         inputs = torch.tensor(inputs)
-        inputs = inputs.transpose(2, 3).transpose(1, 2)
+        inputs = inputs.permute(0, 3, 1, 2)
         labels = torch.tensor(labels, dtype=torch.long)
 
         # compute loss
@@ -72,7 +71,7 @@ class Iterator(TemplateIterator):
             max_loss = np.max(loss.detach().numpy())
             return {
                 "images": {
-                    "inputs": inputs.detach().transpose(1, 2).transpose(2, 3).numpy()
+                    "inputs": inputs.detach().permute(0, 2, 3, 1).numpy()
                 },
                 "scalars": {
                     "min_loss": min_loss,
@@ -106,7 +105,7 @@ def acc_callback(root, data_in, data_out, config):
         # data_out contains all the keys that were specified in the eval_op
         outputs = data_out[i]["outputs"]
         # labels are also available on each example
-        loss = data_out[i]["loss"]
+        loss = data_out[i]["labels_"]["loss"]
 
         prediction = np.argmax(outputs, axis=0)
         correct += labels == prediction
