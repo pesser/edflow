@@ -26,7 +26,7 @@ setup(
         "psutil",
         "deprecated",
         "fastnumbers",
-        "streamlit > 0.49",
+        "streamlit >= 0.49",
     ],
     extras_require={
         "docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "better-apidoc"],
