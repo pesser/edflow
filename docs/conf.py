@@ -47,6 +47,7 @@ MOCK_MODULES = [
     "skimage.measure",
     "tensorboardX",
     "streamlit",
+    "flowiz",
 ]
 
 for mod_name in MOCK_MODULES:
