@@ -179,7 +179,7 @@ class PyHookedModelIterator(object):
                         )
                         results = self.run(fetches, feed_dict=feeds)
                         self.run_hooks(bi, results=results, before=False)
-                        del results # make sure resources are freed
+                        del results  # make sure resources are freed
                         self._is_validation_batch = False
 
                     fetches = {
@@ -190,7 +190,7 @@ class PyHookedModelIterator(object):
                     self.run_hooks(bi, fetches, feeds, batch, before=True)
                     results = self.run(fetches, feed_dict=feeds)
                     self.run_hooks(bi, results=results, before=False)
-                    del results # make sure resources are freed
+                    del results  # make sure resources are freed
 
                     self.increment_global_step()
 
