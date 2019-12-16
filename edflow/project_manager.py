@@ -7,7 +7,7 @@ from shutil import Error
 
 
 class ProjectManager(object):
-    """Singelton managing all directories for one Experiment."""
+    """Singleton managing all directories for one Experiment."""
 
     exists = False
 
@@ -30,13 +30,13 @@ class ProjectManager(object):
             ProjectManager.now = now = datetime.datetime.now().strftime(
                 "%Y-%m-%dT%H-%M-%S"
             )
+            ProjectManager.code_root = code_root
             if given_directory is None:
                 if postfix is not None:
                     name = now + "_" + postfix
                 else:
                     name = now
                 ProjectManager.root = os.path.join(base, name)
-                ProjectManager.code_root = code_root
                 ProjectManager.super_root = base
             else:
                 ProjectManager.root = given_directory
