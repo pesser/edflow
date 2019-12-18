@@ -1053,6 +1053,7 @@ def load_callbacks(callbacks):
 
     sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
+    loaded_callbacks = dict()
     for name, cb in callbacks.items():
         if isinstance(cb, str):
             module = ".".join(cb.split(".")[:-1])
@@ -1060,9 +1061,11 @@ def load_callbacks(callbacks):
 
             cb = getattr(module, cb.split(".")[-1])
 
-            callbacks[name] = cb
+            loaded_callbacks[name] = cb
+        else:
+            loaded_callbacks[name] = cb
 
-    return callbacks
+    return loaded_callbacks
 
 
 def apply_callbacks(callbacks, root, in_data, out_data, config, callback_kwargs={}):

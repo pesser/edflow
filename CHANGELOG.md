@@ -50,5 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - It is no longer possible to pass callbacks as list via the config
 
 ### Fixed
+- Callbacks in eval pipeline config are not overwritten by loading them.
 - Image outputs in `template_pytorch` example.
 - Negative numbers as values for keyword arguments are now properly parsed.
