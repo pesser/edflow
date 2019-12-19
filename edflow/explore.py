@@ -50,7 +50,10 @@ def show_example(dset, idx):
     st.header("Keys")
     walk(ex, display, pass_key=True)
     st.header("Summary")
-    st.markdown(pp2mkdtable(ex, jupyter_style=True))
+    summary = pp2mkdtable(ex, jupyter_style=True)
+    # print markdown summary on console for easy copy and pasting in readme etc
+    print(summary)
+    st.markdown(summary)
 
 
 def _get_state(config):
