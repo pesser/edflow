@@ -31,8 +31,6 @@ install_test = install_full + [  # for running the tests
     "pytest",
     "pytest-cov",
     "coveralls",
-    "scipy<1.4",  # TODO pinned dependency of scikit-image; only until 1.4.1 is out and fixes https://github.com/scipy/scipy/issues/11237
-    "scikit-image",  # for some tf tests (also for image_metrics.py but lets avoid heavy dependency for a single functionality)
 ]
 extras_require = {"full": install_full, "docs": install_docs, "test": install_test}
 
