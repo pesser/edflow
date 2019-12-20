@@ -1,4 +1,4 @@
-from edflow.eval.pipeline import standalone_eval_csv_file
+from edflow.eval.pipeline import standalone_eval_meta_dset
 from edflow.eval.pipeline import load_callbacks
 from edflow.eval.pipeline import cbargs2cbdict, config2cbdict, apply_callbacks
 import os
@@ -81,7 +81,7 @@ META_PATH = os.path.abspath(os.path.dirname(__file__))
 def test_standalone_no_cbs():
     cbs = {}
 
-    result = standalone_eval_csv_file(META_PATH, cbs, {}, None)
+    result = standalone_eval_meta_dset(META_PATH, cbs, {}, None)
 
     assert result == {}
 
@@ -89,7 +89,7 @@ def test_standalone_no_cbs():
 def test_standalone_w_cbs():
     cbs = {"a": "test_standalone.empty"}
 
-    result = standalone_eval_csv_file(META_PATH, cbs, {}, None)
+    result = standalone_eval_meta_dset(META_PATH, cbs, {}, None)
 
     assert result == {"a": {}}
 
@@ -99,7 +99,7 @@ def test_standalone_w_cbs_and_kwargs():
 
     kwargs = {"eval_pipeline": {"callback_kwargs": {"a": {"k1": 1}}}}
 
-    result = standalone_eval_csv_file(META_PATH, cbs, kwargs, None)
+    result = standalone_eval_meta_dset(META_PATH, cbs, kwargs, None)
 
     assert result == {"a": {"k1": 1}}
 
@@ -112,6 +112,6 @@ def test_standalone_w_cbs_and_kwargs_and_config():
 
     kwargs = {"eval_pipeline": {"callback_kwargs": {"a": {"k1": 1}}}}
 
-    result = standalone_eval_csv_file(META_PATH, cbs, kwargs, extra_path)
+    result = standalone_eval_meta_dset(META_PATH, cbs, kwargs, extra_path)
 
     assert result == {"a": {"k1": 2, "k2": 1}}
