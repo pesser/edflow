@@ -1,6 +1,6 @@
 from chainer.dataset import DatasetMixin as DatasetMixin_
 import numpy as np
-from edflow.util import walk, update
+from edflow.util import walk, update, LabelsDict
 
 # handle bug with mocked chainer.dataset.DatasetMixin import
 if hasattr(DatasetMixin_, "_mock_name"):
@@ -287,6 +287,7 @@ class DatasetMixin(DatasetMixin_):
 
     @labels.setter
     def labels(self, labels):
+        labels = LabelsDict(labels)
         if hasattr(self, "data"):
             self.data.labels = labels
         else:

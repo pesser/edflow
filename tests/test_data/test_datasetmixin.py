@@ -158,9 +158,34 @@ def test_dset_lateloading():
     assert d2["val"] == d1["val"]()
 
 
+def test_labels_numpy():
+    class MyDset(DatasetMixin):
+        def __init__(self):
+            self.labels = {}
+
+    # set labels with array
+    dataset = MyDset()
+    dataset.labels = {"l": np.arange(10)}
+
+    # set labels with list
+    dataset = MyDset()
+    with pytest.raises(AssertionError):
+        dataset.labels = {"l": list(np.arange(10))}
+
+    # update labels with array
+    dataset = MyDset()
+    dataset.labels.update({"l2": np.arange(10)})
+
+    # update labels with list
+    dataset = MyDset()
+    with pytest.raises(AssertionError):
+        dataset.labels.update({"l2": list(np.arange(10))})
+
+
 if __name__ == "__main__":
     test_dset_mxin()
     test_dset_mxin_ops()
     test_dset_mxin_data_attr()
     test_dset_mxin_app_labels()
     test_dset_mxin_data_attr_app_labels()
+    test_labels_numpy()

@@ -8,9 +8,11 @@ from edflow.util import (
     contains_key,
     KeyNotFoundError,
     get_leaf_names,
+    LabelsDict,
 )
 from edflow import util
 from itertools import product
+import numpy as np
 
 # ================= set_value ====================
 
@@ -792,3 +794,25 @@ def test_get_leaf_name():
     ref = sorted(["a/0", "a/1", "b/c/d", "e"])
 
     assert names == ref
+
+
+# ================= LabelsDict ===================
+
+
+def test_LabelsDict():
+    """Code adapted from https://stackoverflow.com/questions/2060972/subclassing-python-dictionary-to-override-setitem"""
+
+    def test_updates(dictish):
+        dictish["abc"] = np.array(123)
+        dictish.update({"def": np.array(234)})
+        dictish.update(red=np.array(1), blue=np.array(2))
+        dictish.update([("orange", np.array(3)), ("green", np.array(4))])
+        dictish.update({"hello": np.array("kitty")}, black=np.array("white"))
+        dictish.update({"yellow": np.array(5)}, yellow=np.array(6))
+        dictish.setdefault("brown", np.array(7))
+
+    python_dict = dict([("b", 2), ("c", 3)], a=1)
+    test_updates(python_dict)
+
+    my_dict = LabelsDict([("b", np.array(2)), ("c", np.array(3))], a=np.array(1))
+    test_updates(my_dict)

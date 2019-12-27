@@ -829,6 +829,45 @@ class NoModel(object):
         self.config = config
 
 
+class LabelsDict(dict):
+    """
+    Dict which asserts all values are numpy arrays or memmaps.
+    Code from https://stackoverflow.com/questions/2060972/subclassing-python-dictionary-to-override-setitemZ
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.update(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        # optional processing here
+        def assert_valid_label(val):
+            assert isinstance(
+                val, (np.ndarray, np.memmap)
+            ), "Labels must be dict s of numpy arrays or memmaps and not {}!".format(
+                type(val)
+            )
+
+        walk(value, assert_valid_label)
+        super(LabelsDict, self).__setitem__(key, value)
+
+    def update(self, *args, **kwargs):
+        if args:
+            if len(args) > 1:
+                raise TypeError(
+                    "update expected at most 1 arguments, " "got %d" % len(args)
+                )
+            other = dict(args[0])
+            for key in other:
+                self[key] = other[key]
+        for key in kwargs:
+            self[key] = kwargs[key]
+
+    def setdefault(self, key, value=None):
+        if key not in self:
+            self[key] = value
+        return self[key]
+
+
 if __name__ == "__main__":
     from edflow.data.util import plot_datum
 
