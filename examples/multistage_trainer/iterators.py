@@ -107,7 +107,9 @@ class Evaluator(TFBaseEvaluator):
     def __init__(self, *args, **kwargs):
         kwargs[
             "num_epochs"
-        ] = 1000  # this will keep the evaluator running forever # TODO make this much nicer
+        ] = (
+            1000
+        )  # this will keep the evaluator running forever # TODO make this much nicer
         super(Evaluator, self).__init__(*args, **kwargs)
 
         # input_names={"key_from_metric" : "key from data set"}

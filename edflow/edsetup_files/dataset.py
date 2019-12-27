@@ -16,7 +16,7 @@ class Dataset(DatasetMixin, PRNGMixin):
         self.example_names = config.get("example_names")
 
         self.inputs = np.random.rand(self.num_example, self.feature_dimension)
-        self.labels = self.inputs
+        self.labels = {"random": self.inputs}
 
     def get_example(self, idx):
         """
@@ -31,7 +31,7 @@ class Dataset(DatasetMixin, PRNGMixin):
         example (dict): These will be retrieved by their respective keys in the step_op method of the iterator.
         """
         inputs = self.inputs[idx]
-        labels = self.labels[idx]
+        labels = self.labels["random"][idx]
 
         example = {"inputs": inputs, "labels": labels}
         return example
