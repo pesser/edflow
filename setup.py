@@ -17,7 +17,7 @@ install_requires = [
 install_full = [  # for extra functionality
     "streamlit > 0.49",  # for edexplore
     "psutil",  # for edlist
-    "scipy<1.4",  # TODO pinned dependency of scikit-image; only until 1.4.1 is out and fixes https://github.com/scipy/scipy/issues/11237
+    "scipy>=1.4.1",  # pinned dependency of scikit-image; 1.4.1 fixes https://github.com/scipy/scipy/issues/11237
     "scikit-image",  # for ssim in image_metrics.py
     "black",  # for formatting of code
     "matplotlib",  # for plot_datum
@@ -31,6 +31,7 @@ install_test = install_full + [  # for running the tests
     "pytest",
     "pytest-cov",
     "coveralls",
+    "coverage < 5.0",  # TODO pinned dependency of coveralls; see https://github.com/coveralls-clients/coveralls-python/issues/203
 ]
 extras_require = {"full": install_full, "docs": install_docs, "test": install_test}
 
