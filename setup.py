@@ -21,6 +21,7 @@ install_full = [  # for extra functionality
     "scikit-image",  # for ssim in image_metrics.py
     "black",  # for formatting of code
     "matplotlib",  # for plot_datum
+    "flowiz",  # for visualizing flow with streamlit
 ]
 install_docs = [  # for building the documentation
     "sphinx >= 1.4",

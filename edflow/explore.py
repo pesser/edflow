@@ -12,7 +12,15 @@ from edflow import get_obj_from_str
 
 
 def isimage(obj):
-    return isinstance(obj, np.ndarray) and len(obj.shape) == 3
+    return (
+        isinstance(obj, np.ndarray)
+        and len(obj.shape) == 3
+        and obj.shape[2] in [1, 3, 4]
+    )
+
+
+def isflow(obj):
+    return isinstance(obj, np.ndarray) and len(obj.shape) == 3 and obj.shape[2] in [2]
 
 
 def istext(obj):
@@ -24,6 +32,8 @@ def display_default(obj):
         return "Image"
     elif istext(obj):
         return "Text"
+    elif isflow(obj):
+        return "Flow"
     else:
         return "None"
 
@@ -37,9 +47,15 @@ def display(key, obj):
     elif sel == "Image":
         st.image((obj + 1.0) / 2.0)
 
+    elif sel == "Flow":
+        import flowiz as fz
+
+        img = fz.convert_from_flow(obj)
+        st.image(img)
+
 
 def selector(key, obj):
-    options = ["Auto", "Text", "Image", "None"]
+    options = ["Auto", "Text", "Image", "Flow", "None"]
     idx = options.index(display_default(obj))
     select = st.selectbox("Display {} as".format(key), options, index=idx)
     return select
