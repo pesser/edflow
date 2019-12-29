@@ -87,9 +87,19 @@ def explore(config, disable_cache=False):
     dset.expand = True
     st.title("Dataset Explorer: {}".format(type(dset).__name__))
 
-    idx = st.sidebar.slider("index", 0, len(dset), 0)
-    if st.sidebar.button("sample"):
-        idx = np.random.choice(len(dset))
+    input_method = st.sidebar.selectbox(
+        "Index selection method", ["Slider", "Number input", "Sample"]
+    )
+    if input_method == "Slider":
+        idx = st.sidebar.slider("Index", 0, len(dset), 0)
+    elif input_method == "Number input":
+        idx = st.sidebar.number_input("Index", 0, len(dset), 0)
+    elif input_method == "Sample":
+        idx = 0
+        if st.sidebar.button("Sample"):
+            idx = np.random.choice(len(dset))
+        st.sidebar.text("Index: {}".format(idx))
+    show_example(dset, idx)
 
     show_example(dset, idx)
 
