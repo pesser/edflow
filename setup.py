@@ -22,6 +22,7 @@ install_full = [  # for extra functionality
     "black",  # for formatting of code
     "matplotlib",  # for plot_datum
     "flowiz",  # for visualizing flow with streamlit
+    "wandb",  # for `--wandb_logging True`
 ]
 install_docs = [  # for building the documentation
     "sphinx >= 1.4",

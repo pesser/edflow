@@ -1,5 +1,5 @@
 import logging
-import os
+import os, sys
 from tqdm import tqdm
 
 from edflow.project_manager import ProjectManager
@@ -11,8 +11,19 @@ class TqdmHandler(logging.StreamHandler):
         self.tqdm = tqdm(position=pos)
 
     def emit(self, record):
+        # check if stdin and stdout are two different ptys.
+        # this messes up tqdm logging and happens when using wandb.
+        # fix it by writing to stderr instead of stdout.
+        try:
+            file_ = sys.stdout
+            if not os.ttyname(sys.stdout.fileno()) == os.ttyname(sys.stderr.fileno()):
+                file_ = sys.stderr
+        except OSError:
+            # stdout or stderr is not a pty. default to stdout.
+            file_ = sys.stdout
+
         msg = self.format(record)
-        self.tqdm.write(msg)
+        self.tqdm.write(msg, file=file_)
 
 
 def _init_project(out_base_dir):
