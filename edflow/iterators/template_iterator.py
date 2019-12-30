@@ -68,6 +68,9 @@ class TemplateIterator(PyHookedModelIterator):
                 import wandb
                 from edflow.hooks.logging_hooks.wandb_handler import log_wandb
 
+                os.environ["WANDB_RESUME"] = "allow"
+                os.environ["WANDB_RUN_ID"] = ProjectManager.root.replace(
+                    "/", "-")
                 wandb.init(name=ProjectManager.root, config=self.config)
                 self.loghook.handlers["scalars"].append(log_wandb)
                 self.validation_loghook.handlers["scalars"].append(
