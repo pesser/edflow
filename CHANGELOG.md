@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Support for flow visualizations in edexplore and improved index selection.
 - Git integration adds all .py and .yaml files not just tracked ones.
 - Support for validation batches in train mode. MinimalLoggingHook used in TemplateIterator logs them automatically under `root/train/validation`.
 - `-d/--debug` flag to enable post-mortem debugging. Uses `pudb` if available, otherwise `pdb`.
