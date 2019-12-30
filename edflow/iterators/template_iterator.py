@@ -63,6 +63,15 @@ class TemplateIterator(PyHookedModelIterator):
             self.hooks.append(self.validation_loghook)
             # write checkpoints after epoch or when interrupted
             self.hooks.append(self.ckpthook)
+            wandb_logging = set_default(self.config, "log_to_wandb", False)
+            if wandb_logging:
+                import wandb
+                from edflow.hooks.logging_hooks.wandb_handler import log_wandb
+                wandb.init(name=ProjectManager.root, config=self.config)
+                self.loghook.handlers["scalars"].append(log_wandb)
+                self.validation_loghook.handlers["scalars"].append(
+                    lambda *args, **kwargs: log_wandb(*args, **kwargs,
+                                                      prefix="validation"))
         else:
             # evaluate
             self._eval_op = set_default(
