@@ -99,7 +99,6 @@ def explore(config, disable_cache=False):
         if st.sidebar.button("Sample"):
             idx = np.random.choice(len(dset))
         st.sidebar.text("Index: {}".format(idx))
-    show_example(dset, idx)
 
     show_example(dset, idx)
 
