@@ -11,8 +11,8 @@ class TqdmHandler(logging.StreamHandler):
         self.tqdm = tqdm(position=pos)
 
     def emit(self, record):
-        # check if stdin and stdout are two different ptys.
-        # this messes up tqdm logging and happens when using wandb.
+        # check if stderr and stdout are two different ptys.
+        # this detects tampering by wandb which messes up tqdm logging.
         # fix it by writing to stderr instead of stdout.
         try:
             file_ = sys.stdout
