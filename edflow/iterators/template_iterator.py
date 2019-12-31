@@ -77,6 +77,31 @@ class TemplateIterator(PyHookedModelIterator):
                         *args, **kwargs, prefix="validation"
                     )
                 )
+            tensorboardX_logging = set_default(
+                self.config, "tensorboardX_logging", False
+            )
+            if tensorboardX_logging:
+                from tensorboardX import SummaryWriter
+                from edflow.hooks.logging_hooks.tensorboardX_handler import (
+                    log_tensorboard_config,
+                    log_tensorboard_scalars,
+                )
+
+                self.tensorboardX_writer = SummaryWriter(ProjectManager.root)
+                log_tensorboard_config(
+                    self.tensorboardX_writer, self.config, self.get_global_step()
+                )
+                self.loghook.handlers["scalars"].append(
+                    lambda *args, **kwargs: log_tensorboard_scalars(
+                        self.tensorboardX_writer, *args, **kwargs
+                    )
+                )
+                self.validation_loghook.handlers["scalars"].append(
+                    lambda *args, **kwargs: log_tensorboard_scalars(
+                        self.tensorboardX_writer, *args, **kwargs, prefix="validation"
+                    )
+                )
+
         else:
             # evaluate
             self._eval_op = set_default(
