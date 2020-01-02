@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Support for tensorboardX logging. Enable with `--tensorboardX_logging True`.
 - Support for wandb logging. Enable with `--wandb_logging True`.
 - Support for flow visualizations in edexplore and improved index selection.
 - Git integration adds all .py and .yaml files not just tracked ones.
