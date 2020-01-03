@@ -1,8 +1,232 @@
 import logging
 import os, sys
+import datetime
+import shutil
+import subprocess
+from socket import gethostname
 from tqdm import tqdm
 
-from edflow.project_manager import ProjectManager
+
+class run(object):
+    """
+    Singleton managing all directories for a run. Useful attributes:
+    - now: string representing init time
+    - postfix: user specified postfix for run or eval directory
+    - name: name of the run
+    - git_tag: associated tag if git is used
+    - resumed: if this is a resumed run
+    - code_root: where code is copied from
+    - code: path to copied code
+    - root: path under which all outputs of the run should be stored
+    - train: path to store train outputs in
+    - eval: path to eval subfolders
+    - latest_eval: path to store eval outputs in
+    - configs: path to store configs in
+    - checkpoints: path to store checkpoints in
+    """
+
+    exists = False
+
+    @classmethod
+    def init(cls, log_dir=None, run_dir=None, code_root=".", postfix=None,
+             log_level="info", git=True):
+        """
+        Parameters
+        ----------
+        log_dir : str
+	    Create new run directory under this directory.
+        run_dir : str
+	    Resume in existing run directory.
+        code_root : str
+	    Path to where the code lives. py and yaml files will be copied into
+            run directory.
+        postfix : str
+	    Identifier appended to run directory if non-existent else to latest
+            eval directory.
+        log_level : str
+	    Default log level for loggers.
+        git : bool
+	    If True, put code into tagged commit.
+        """
+
+        has_info = log_dir is not None or run_dir is not None
+        if not cls.exists and has_info:
+            cls.now = now = datetime.datetime.now().strftime(
+                "%Y-%m-%dT%H-%M-%S"
+            )
+            cls.postfix = postfix
+            cls.code_root = code_root
+            if run_dir is None:
+                if postfix is not None:
+                    name = now + "_" + postfix
+                else:
+                    name = now
+                cls.resumed = False
+                cls.root = os.path.join(log_dir, name)
+            else:
+                cls.resumed = True
+                cls.root = run_dir
+            cls.name = os.path.split(cls.root)[1]
+            cls.setup()
+            cls.setup_new_eval()
+            cls.exists = True
+
+            set_log_level(log_level)
+            cls.logger = get_logger("run")
+            cls.logger.info(" ".join(sys.argv))
+            cls.logger.info("root: {}".format(cls.root))
+            cls.logger.info("hostname: {}".format(gethostname()))
+            if "CUDA_VISIBLE_DEVICES" in os.environ:
+                cls.logger.info("cuda_devices: {}".format(
+                    os.environ["CUDA_VISIBLE_DEVICES"]))
+
+            if not cls.resumed and cls.code_root is not None:
+                cls.copy_code()
+            if git:
+                cls.git_tag = cls.git_commit()
+                cls.logger.info("git_tag: {}".format(cls.git_tag))
+
+            cls.logger.info(cls())
+
+
+    @classmethod
+    def setup(cls):
+        """Make all the directories."""
+
+        subdirs = ["code", "train", "eval", "configs"]
+        subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [], "configs": []}
+
+        root = cls.root
+
+        cls.repr = "Project structure:\n{}\n".format(root)
+
+        for sub in subdirs:
+            path = os.path.join(root, sub)
+            setattr(cls, sub, path)
+            if sub != "code":
+                # Code directory will be created by copy code
+                os.makedirs(path, exist_ok=True)
+
+            cls.repr += "├╴{}\n".format(sub)
+
+            for subsub in subsubdirs[sub]:
+                path = os.path.join(root, sub, subsub)
+                setattr(cls, subsub, path)
+                os.makedirs(path, exist_ok=True)
+
+                cls.repr += "  ├╴{}\n".format(subsub)
+
+
+    @classmethod
+    def setup_new_eval(cls):
+        """Always create subfolder in eval to avoid clashes between
+        evaluations."""
+        name = cls.now
+        if cls.postfix is not None:
+            name = name + "_" + cls.postfix
+        cls.latest_eval = os.path.join(cls.eval, name)
+        os.makedirs(cls.latest_eval)
+
+
+    @classmethod
+    def copy_code(cls):
+        """Copies all code to the code directory of the run."""
+
+        src = cls.code_root
+        dst = "./" + cls.code
+
+        try:
+            filtered_dirs = ["__pycache__"]
+
+            def ignore(directory, files):
+                filtered = []
+                for f in files:
+                    full_path = os.path.join(directory, f)
+                    is_cool = False
+                    if f[-3:] == ".py":
+                        is_cool = True
+                    elif f[-5:] == ".yaml":
+                        is_cool = True
+                    elif os.path.isdir(full_path):
+                        if not (f.startswith(".") or f in filtered_dirs):
+                            is_cool = True
+
+                    if not is_cool:
+                        filtered += [f]
+
+                return filtered
+
+            shutil.copytree(src, dst, symlinks=False, ignore=ignore)
+
+        except shutil.Error as err:
+            cls.logger.warning(err)
+
+
+    @classmethod
+    def git_commit(cls):
+        # perform the following
+        # CHEAD=$(git rev-parse HEAD); git add <files...>; git add -u; git commit -m "edflow ..."; git tag -a edflow_date-and-time-project -m "more"; git reset --mixed $CHEAD
+        try:
+            CHEAD = (
+                subprocess.run(["git rev-parse HEAD"], shell=True,
+                               check=True, stdout=subprocess.PIPE,
+                               text=True)
+                .stdout
+                .strip()
+            )
+        except subprocess.CalledProcessError:
+            cls.logger.warning(
+                "Tried to commit state of project but the current working directory does not appear to be a git repository."
+            )
+            tagname = "error: no git repository found"
+        else:
+            tagname = "{}_{}".format(cls.now, cls.postfix)
+            message = "command: {}\nroot: {}".format(" ".join(sys.argv), cls.root)
+            try:
+                addcommand = "git add {pyfiles}; git add {yamlfiles}; git add -u".format(
+                    pyfiles=os.path.join(cls.code_root, "\*.py"),
+                    yamlfiles=os.path.join(cls.code_root, "\*.yaml"),
+                )
+                output = subprocess.run([addcommand], shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        text=True).stdout
+                cls.logger.debug(output)
+                if subprocess.run(["git diff-index --quiet HEAD"],
+                                  shell=True).returncode != 0:
+                    # dirty working directory - add commit
+                    command = "git commit -m '{commitmessage}'; git tag '{tagname}'".format(
+                        commitmessage=message, tagname=tagname
+                    )
+                else:
+                    # nothing to add - put message into annotated tag
+                    command = "git tag -a '{tagname}' -m '{tagmessage}'".format(
+                        tagname=tagname, tagmessage=message
+                    )
+                cls.logger.debug(command)
+                output = subprocess.run([command], shell=True, check=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        text=True).stdout
+                cls.logger.debug(output)
+            except Exception as e:
+                cls.logger.warning(
+                    "Tried to commit state of project but error occured: {}".format(e)
+                )
+                tagname = "error: {}".format(e)
+            finally:
+                cls.logger.debug("git reset --mixed {}".format(CHEAD))
+                output = subprocess.run(["git reset --mixed {}".format(CHEAD)],
+                                        shell=True, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        text=True).stdout
+                cls.logger.debug(output)
+        return tagname
+
+
+    def __repr__(self):
+        """Nice file structure representation."""
+        return type(self).repr
 
 
 class TqdmHandler(logging.StreamHandler):
@@ -26,57 +250,18 @@ class TqdmHandler(logging.StreamHandler):
         self.tqdm.write(msg, file=file_)
 
 
-def _init_project(out_base_dir):
-    """Sets up subdirectories given a base directory and copies all scripts."""
-
-    P = ProjectManager(out_base_dir)
-
-    return P.root
-
-
-def _get_logger(name, out_dir, pos=4, level=logging.INFO):
-    """Creates a logger the way it's meant to be."""
-    # init logging
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-
-    if not len(logger.handlers) > 0:
-        ch = TqdmHandler(pos)
-        ch.setLevel(level)
-
-        fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
-        fh.setLevel(logging.DEBUG)
-
-        fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"
-        formatter = logging.Formatter(fmt_string)
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-
-        logger.addHandler(ch)
-        logger.addHandler(fh)
-
-    return logger
-
-
-class LogSingleton(object):
+class log(object):
     exists = False
     default = "root"  # default directory of ProjectManager to log into
+    _level = logging.INFO
+    loggers = []
 
-    def __init__(self, out_base_dir=None, level=logging.INFO, write_pos=4):
-        if self.exists or out_base_dir is None:
-            pass
-        else:
-            LogSingleton.out_base_dir = out_base_dir
-            LogSingleton._log_dir = _init_project(self.out_base_dir)
-            LogSingleton._level = level
-            LogSingleton._write_pos = write_pos
-            LogSingleton.exists = True
-            LogSingleton.loggers = []
+    @classmethod
+    def set_default(cls, which):
+        cls.default = which
 
-    def set_default(self, which):
-        LogSingleton.default = which
-
-    def get(self, name, which=None):
+    @classmethod
+    def get(cls, name, which=None, level=None):
         """Create logger, set level.
 
         Parameters
@@ -87,33 +272,60 @@ class LogSingleton(object):
         which : str
 	    subdirectory in the project folder.
         """
-        which = which or LogSingleton.default
+        which = which or cls.default
+        level = level or cls._level
 
         if not isinstance(name, str):
             name = type(name).__name__
 
-        log_dir = getattr(ProjectManager, which)
-        pos = LogSingleton._write_pos
-        logger = _get_logger(name, log_dir, pos, level=LogSingleton._level)
-        logger.setLevel(LogSingleton._level)
+        if not run.exists:
+            if not isinstance(name, str):
+                name = type(name).__name__
+            logging.basicConfig(level=level)
+            logger = logging.getLogger(name)
+            logger.debug("edflow not initialized.")
+            return logger
 
-        LogSingleton.loggers += [logger]
+
+        log_dir = getattr(run, which)
+        logger = cls._get_logger(name, log_dir, level=level)
+
+        cls.loggers += [logger]
+
+        return logger
+
+    @classmethod
+    def set_level(cls, level):
+        level = getattr(logging, level.upper())
+        LogSingleton._level = level
+        for logger in LogSingleton.loggers:
+            logger.setLevel(level)
+        cls.get("log").debug("Log level set to {}".format(level))
+
+    @staticmethod
+    def _get_logger(name, out_dir, pos=4, level=logging.INFO):
+        """Creates a logger the way it's meant to be."""
+        # init logging
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+
+        if not len(logger.handlers) > 0:
+            ch = TqdmHandler(pos)
+            fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
+
+            fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"
+            formatter = logging.Formatter(fmt_string)
+            fh.setFormatter(formatter)
+            ch.setFormatter(formatter)
+
+            logger.addHandler(ch)
+            logger.addHandler(fh)
 
         return logger
 
 
-def set_global_stdout_level(level="info"):
-    level = getattr(logging, level.upper())
-    print("Setting Log Level to {}".format(level))
-
-    LogSingleton._level = level
-    for logger in LogSingleton.loggers:
-        logger.handlers[0].setLevel(level)
-
-
-def get_default_logger():
-    default_log_dir, default_logger = LogSingleton("logs").get("default")
-    return default_log_dir, default_logger
+def set_log_level(level="info"):
+    log.set_level(level)
 
 
 def fix_abseil():
@@ -127,21 +339,7 @@ def fix_abseil():
         pass
 
 
-def init_project(base_dir, code_root=".", postfix=None):
-    """Must be called at the very beginning of a script."""
-    P = ProjectManager(base_dir, code_root=code_root, postfix=postfix)
-    LogSingleton(P.root)
-    return P
-
-
-def use_project(project_dir, postfix=None):
-    """Must be called at the very beginning of a script."""
-    P = ProjectManager(given_directory=project_dir, postfix=postfix)
-    LogSingleton(P.root)
-    return P
-
-
-def get_logger(name, which=None, level="info"):
+def get_logger(name, which=None, level=None):
     """Creates a logger, which shares its output directory with all other
     loggers.
 
@@ -151,17 +349,13 @@ def get_logger(name, which=None, level="info"):
         Name of the logger.
     which : str
         Any subdirectory of the project.
+    level : str
+        Log level of the logger.
     """
 
     fix_abseil()
-    L = LogSingleton(level=getattr(logging, level.upper()))
+    return log.get(name, which, level=level)
 
-    if not L.exists:
-        print("Warning: LogSingleton not initialized.")
-        if not isinstance(name, str):
-            name = type(name).__name__
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(name)
-        return logger
 
-    return L.get(name, which)
+# backwards compatibility
+LogSingleton = log

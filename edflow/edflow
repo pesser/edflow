@@ -11,13 +11,12 @@ sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
 import argparse  # noqa
 import yaml  # noqa
-from socket import gethostname  #noqa
 
 from edflow.main import train, test  # noqa
-from edflow.custom_logging import init_project, use_project, get_logger  # noqa
-from edflow.custom_logging import set_global_stdout_level  # noqa
+from edflow.custom_logging import run, get_logger  # noqa
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
 from edflow.config import parse_unknown_args, update_config
+from edflow.util import retrieve
 
 
 def load_config(base_configs, additional_kwargs):
@@ -35,9 +34,12 @@ def main(opt, additional_kwargs):
     if not "model" in config:
         config["model"] = "edflow.util.NoModel"
 
+    git = retrieve(config, "integrations/git",
+                   default=False) # TODO pass
+    run_kwargs = {"git": git, "log_level": opt.log_level}
     # Project manager: use existing project or set up new project
     if opt.project is not None:
-        P = use_project(opt.project, postfix=opt.name)
+        run.init(run_dir=opt.project, postfix=opt.name, **run_kwargs)
     else:
         # Determine code root: If not specified, determine based on import path
         # of iterator
@@ -58,29 +60,22 @@ def main(opt, additional_kwargs):
         name = config.get("experiment_name", None)
         if opt.name is not None:
             name = opt.name
-        P = init_project("logs", code_root=code_root, postfix=name)
+        run.init(log_dir="logs", code_root=code_root, postfix=name,
+                 **run_kwargs)
 
     # Logger
-    set_global_stdout_level(opt.log_level)
     logger = get_logger("main")
-    logger.info(" ".join(sys.argv))
-    logger.info("root: {}".format(P.root))
-    if hasattr(P, "git_tag"):
-        logger.info("git_tag: {}".format(P.git_tag))
-    logger.info("hostname: {}".format(gethostname()))
-    logger.info(opt)
-    logger.info(P)
 
     if opt.train:
         if opt.checkpoint is not None:
             checkpoint = opt.checkpoint
         elif opt.project is not None:
-            checkpoint = get_latest_checkpoint(P.checkpoints)
+            checkpoint = get_latest_checkpoint(run.checkpoints)
         else:
             checkpoint = None
 
         logger.info("Training config:\n{}".format(yaml.dump(config)))
-        train(config, P.train, checkpoint, opt.retrain)
+        train(config, run.train, checkpoint, opt.retrain)
     else:
         disable_eval_all = disable_eval_forever = False
         if opt.checkpoint is not None:
@@ -90,7 +85,7 @@ def main(opt, additional_kwargs):
             if any([config.get("eval_all", False), config.get("eval_forever", False)]):
                 checkpoint = None
             else:
-                checkpoint = get_latest_checkpoint(P.checkpoints)
+                checkpoint = get_latest_checkpoint(run.checkpoints)
                 disable_eval_all = disable_eval_forever = True
         else:
             checkpoint = None
@@ -112,12 +107,10 @@ def main(opt, additional_kwargs):
         logger.info(
             "Evaluation config:\n{}".format(yaml.dump(config))
         )
-        test(config, P.latest_eval, checkpoint)
+        test(config, run.latest_eval, checkpoint)
 
 
 if __name__ == "__main__":
-    default_log_dir = os.path.join(os.getcwd(), "log")
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-n", "--name", metavar="description", help="postfix of log directory."
@@ -140,13 +133,13 @@ if __name__ == "__main__":
         "-r", "--retrain", action="store_true", help="reset global step"
     )
     parser.add_argument(
-        "-log",
-        "--log-level",
+        "-l",
+        "--log_level",
         metavar="LEVEL",
         type=str,
         choices=["warn", "info", "debug", "critical"],
         default="info",
-        help="set the std-out logging level.",
+        help="set the logging level.",
     )
     parser.add_argument("-d", "--debug", action="store_true", help="enable post-mortem debugging")
 

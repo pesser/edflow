@@ -5,7 +5,7 @@ import yaml
 import math
 import datetime
 
-from edflow.custom_logging import init_project, get_logger, LogSingleton
+from edflow.custom_logging import get_logger, LogSingleton
 from edflow.project_manager import ProjectManager as P
 
 
