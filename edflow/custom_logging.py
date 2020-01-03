@@ -28,8 +28,15 @@ class run(object):
     exists = False
 
     @classmethod
-    def init(cls, log_dir=None, run_dir=None, code_root=".", postfix=None,
-             log_level="info", git=True):
+    def init(
+        cls,
+        log_dir=None,
+        run_dir=None,
+        code_root=".",
+        postfix=None,
+        log_level="info",
+        git=True,
+    ):
         """
         Parameters
         ----------
@@ -51,9 +58,7 @@ class run(object):
 
         has_info = log_dir is not None or run_dir is not None
         if not cls.exists and has_info:
-            cls.now = now = datetime.datetime.now().strftime(
-                "%Y-%m-%dT%H-%M-%S"
-            )
+            cls.now = now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
             cls.postfix = postfix
             cls.code_root = code_root
             if run_dir is None:
@@ -67,10 +72,13 @@ class run(object):
                 cls.resumed = True
                 cls.root = run_dir
             cls.name = os.path.split(cls.root)[1]
+
+            # create directory structure
             cls.setup()
             cls.setup_new_eval()
             cls.exists = True
 
+            # log run information
             set_log_level(log_level)
             cls.logger = get_logger("run")
             cls.logger.info(" ".join(sys.argv))
@@ -81,12 +89,15 @@ class run(object):
                 # only works if stdin was not messed.
                 tty = os.ttyname(sys.stdin.fileno())
                 tmux_target = subprocess.run(
-                    ["tmux list-panes -a -F"+
-                     "'#{session_id}:#{window_id}.#{pane_id} #{pane_tty}'"+
-                     "| grep {}".format(tty)],
+                    [
+                        "tmux list-panes -a -F"
+                        + "'#{session_id}:#{window_id}.#{pane_id} #{pane_tty}'"
+                        + "| grep {}".format(tty)
+                    ],
                     shell=True,
-                    text = True,
-                    stdout=subprocess.PIPE).stdout
+                    text=True,
+                    stdout=subprocess.PIPE,
+                ).stdout
                 tmux_target = tmux_target.split("\n")[0].split(" ")[0]
                 # output can be used as tmux target, eg 'tmux a {tmux_target}'
                 # to attach to the pane running the logged run
@@ -96,9 +107,11 @@ class run(object):
             cls.logger.info("pid: {}".format(os.getpid()))
             cls.logger.info("pgid: {}".format(os.getpgrp()))
             if "CUDA_VISIBLE_DEVICES" in os.environ:
-                cls.logger.info("cuda_devices: {}".format(
-                    os.environ["CUDA_VISIBLE_DEVICES"]))
+                cls.logger.info(
+                    "cuda_devices: {}".format(os.environ["CUDA_VISIBLE_DEVICES"])
+                )
 
+            # log code
             if not cls.resumed and cls.code_root is not None:
                 cls.copy_code()
             if git:
@@ -106,7 +119,6 @@ class run(object):
                 cls.logger.info("git_tag: {}".format(cls.git_tag))
 
             cls.logger.info(cls())
-
 
     @classmethod
     def setup(cls):
@@ -135,7 +147,6 @@ class run(object):
 
                 cls.repr += "  ├╴{}\n".format(subsub)
 
-
     @classmethod
     def setup_new_eval(cls):
         """Always create subfolder in eval to avoid clashes between
@@ -145,7 +156,6 @@ class run(object):
             name = name + "_" + cls.postfix
         cls.latest_eval = os.path.join(cls.eval, name)
         os.makedirs(cls.latest_eval)
-
 
     @classmethod
     def copy_code(cls):
@@ -180,19 +190,18 @@ class run(object):
         except shutil.Error as err:
             cls.logger.warning(err)
 
-
     @classmethod
     def git_commit(cls):
         # perform the following
         # CHEAD=$(git rev-parse HEAD); git add <files...>; git add -u; git commit -m "edflow ..."; git tag -a edflow_date-and-time-project -m "more"; git reset --mixed $CHEAD
         try:
-            CHEAD = (
-                subprocess.run(["git rev-parse HEAD"], shell=True,
-                               check=True, stdout=subprocess.PIPE,
-                               text=True)
-                .stdout
-                .strip()
-            )
+            CHEAD = subprocess.run(
+                ["git rev-parse HEAD"],
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                text=True,
+            ).stdout.strip()
         except subprocess.CalledProcessError:
             cls.logger.warning(
                 "Tried to commit state of project but the current working directory does not appear to be a git repository."
@@ -206,13 +215,20 @@ class run(object):
                     pyfiles=os.path.join(cls.code_root, "\*.py"),
                     yamlfiles=os.path.join(cls.code_root, "\*.yaml"),
                 )
-                output = subprocess.run([addcommand], shell=True,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        text=True).stdout
+                output = subprocess.run(
+                    [addcommand],
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                ).stdout
                 cls.logger.debug(output)
-                if subprocess.run(["git diff-index --quiet HEAD"],
-                                  shell=True).returncode != 0:
+                if (
+                    subprocess.run(
+                        ["git diff-index --quiet HEAD"], shell=True
+                    ).returncode
+                    != 0
+                ):
                     # dirty working directory - add commit
                     command = "git commit -m '{commitmessage}'; git tag '{tagname}'".format(
                         commitmessage=message, tagname=tagname
@@ -223,10 +239,14 @@ class run(object):
                         tagname=tagname, tagmessage=message
                     )
                 cls.logger.debug(command)
-                output = subprocess.run([command], shell=True, check=True,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        text=True).stdout
+                output = subprocess.run(
+                    [command],
+                    shell=True,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                ).stdout
                 cls.logger.debug(output)
             except Exception as e:
                 cls.logger.warning(
@@ -235,13 +255,15 @@ class run(object):
                 tagname = "error: {}".format(e)
             finally:
                 cls.logger.debug("git reset --mixed {}".format(CHEAD))
-                output = subprocess.run(["git reset --mixed {}".format(CHEAD)],
-                                        shell=True, stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        text=True).stdout
+                output = subprocess.run(
+                    ["git reset --mixed {}".format(CHEAD)],
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                ).stdout
                 cls.logger.debug(output)
         return tagname
-
 
     def __repr__(self):
         """Nice file structure representation."""
@@ -304,7 +326,6 @@ class log(object):
             logger = logging.getLogger(name)
             logger.debug("edflow not initialized.")
             return logger
-
 
         log_dir = getattr(run, which)
         logger = cls._get_logger(name, log_dir, level=level)

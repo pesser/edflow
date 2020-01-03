@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Log tmux target containing current run.
 - Support for tensorboardX logging. Enable with `--tensorboardX_logging True`.
 - Support for wandb logging. Enable with `--wandb_logging True`.
 - Support for flow visualizations in edexplore and improved index selection.
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- ProjectManager is now `edflow.run` and initialized with `edflow.run.init(...)`.
 - Saved config files use `-` instead of `:` in filename to be consistent.
 - No more `-e/--evaluation <config>` and `-t/--train <config>` options. Specify all configs under `-b/--base <config1> <config2>`. Default to evaluation mode, specify `-t/--train` for training mode.
 - Specifying model in config is optional.
