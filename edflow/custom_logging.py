@@ -76,6 +76,25 @@ class run(object):
             cls.logger.info(" ".join(sys.argv))
             cls.logger.info("root: {}".format(cls.root))
             cls.logger.info("hostname: {}".format(gethostname()))
+            try:
+                # try to match tmux target by tty.
+                # only works if stdin was not messed.
+                tty = os.ttyname(sys.stdin.fileno())
+                tmux_target = subprocess.run(
+                    ["tmux list-panes -a -F"+
+                     "'#{session_id}:#{window_id}.#{pane_id} #{pane_tty}'"+
+                     "| grep {}".format(tty)],
+                    shell=True,
+                    text = True,
+                    stdout=subprocess.PIPE).stdout
+                tmux_target = tmux_target.split("\n")[0].split(" ")[0]
+                # output can be used as tmux target, eg 'tmux a {tmux_target}'
+                # to attach to the pane running the logged run
+                cls.logger.info("tmux: {}".format(tmux_target))
+            except Exception:
+                pass
+            cls.logger.info("pid: {}".format(os.getpid()))
+            cls.logger.info("pgid: {}".format(os.getpgrp()))
             if "CUDA_VISIBLE_DEVICES" in os.environ:
                 cls.logger.info("cuda_devices: {}".format(
                     os.environ["CUDA_VISIBLE_DEVICES"]))
