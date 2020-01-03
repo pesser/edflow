@@ -69,7 +69,7 @@ class run(object):
         code_root=".",
         postfix=None,
         log_level="info",
-        git=True,
+        git=False,
     ):
         """Initialize logging for this run.
 

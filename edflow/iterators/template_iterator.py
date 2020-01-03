@@ -63,7 +63,7 @@ class TemplateIterator(PyHookedModelIterator):
             self.hooks.append(self.validation_loghook)
             # write checkpoints after epoch or when interrupted
             self.hooks.append(self.ckpthook)
-            wandb_logging = set_default(self.config, "wandb_logging", False)
+            wandb_logging = set_default(self.config, "integrations/wandb", False)
             if wandb_logging:
                 import wandb
                 from edflow.hooks.logging_hooks.wandb_handler import log_wandb
@@ -78,7 +78,7 @@ class TemplateIterator(PyHookedModelIterator):
                     )
                 )
             tensorboardX_logging = set_default(
-                self.config, "tensorboardX_logging", False
+                self.config, "integrations/tensorboardX", False
             )
             if tensorboardX_logging:
                 from tensorboardX import SummaryWriter

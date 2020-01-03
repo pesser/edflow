@@ -34,9 +34,11 @@ def main(opt, additional_kwargs):
     if not "model" in config:
         config["model"] = "edflow.util.NoModel"
 
-    git = retrieve(config, "integrations/git",
-                   default=False) # TODO pass
-    run_kwargs = {"git": git, "log_level": opt.log_level}
+    run_kwargs = {
+        "git": retrieve(config, "integrations/git",
+                        default=False),
+        "log_level": opt.log_level
+    }
     # Project manager: use existing project or set up new project
     if opt.project is not None:
         run.init(run_dir=opt.project, postfix=opt.name, **run_kwargs)

@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Changed configuration of integrations: `EDFLOWGIT` now `integrations/git`, `wandb_logging` now `integrations/wandb`, `tensorboardX_logging` now `--integrations/tensorboardX`.
 - ProjectManager is now `edflow.run` and initialized with `edflow.run.init(...)`.
 - Saved config files use `-` instead of `:` in filename to be consistent.
 - No more `-e/--evaluation <config>` and `-t/--train <config>` options. Specify all configs under `-b/--base <config1> <config2>`. Default to evaluation mode, specify `-t/--train` for training mode.
@@ -50,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make_var` was broken for period variables because subcommands lacked `**kwargs` in definition. This is fixed now.
 
 ### Removed
+- Environment variable EDFLOWGIT is now ignored.
 - Cannot start training and (multiple) evaluations at the same time anymore. Simplifies a lot and was almost never used.
 - No single '-' possible for commandline specification of config parameters. Use '--'.
 - It is no longer possible to pass callbacks as list via the config
