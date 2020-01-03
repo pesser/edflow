@@ -321,6 +321,7 @@ class run(object):
 class TqdmHandler(logging.StreamHandler):
     """A logging handler compatible with tqdm progress bars.
     """
+
     def __init__(self, pos=4):
         logging.StreamHandler.__init__(self)
         self.tqdm = tqdm(position=pos)
@@ -359,6 +360,7 @@ class log(object):
     loggers
         List of all loggers.
     """
+
     target = "root"  # default directory of ProjectManager to log into
     level = logging.INFO
     loggers = []
