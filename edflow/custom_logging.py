@@ -1,3 +1,8 @@
+"""Module to handle logging in edflow.
+
+Can be imported by application code to get loggers and find out where outputs
+should be stored.
+"""
 import logging
 import os, sys
 import datetime
@@ -8,21 +13,50 @@ from tqdm import tqdm
 
 
 class run(object):
-    """
-    Singleton managing all directories for a run. Useful attributes:
-    - now: string representing init time
-    - postfix: user specified postfix for run or eval directory
-    - name: name of the run
-    - git_tag: associated tag if git is used
-    - resumed: if this is a resumed run
-    - code_root: where code is copied from
-    - code: path to copied code
-    - root: path under which all outputs of the run should be stored
-    - train: path to store train outputs in
-    - eval: path to eval subfolders
-    - latest_eval: path to store eval outputs in
-    - configs: path to store configs in
-    - checkpoints: path to store checkpoints in
+    """Singleton managing all directories for a run.
+
+    Calling the init method below will set up a logging directory structure
+    that should be used for this run. Application code can import this class
+    and use its attributes to figure out where to store their outputs.
+
+    Note
+    ----
+    This class is intended to provide run information without the need to pass
+    it through. Thus it behaves like a singleton by storing all information on
+    the class object itself and not an instance of the class.
+
+    Attributes
+    ----------
+    exists : bool
+        True if log structure was initialized.
+    now : str
+        Representing time of initialization.
+    postfix : str
+        User specified postfix of run directory or eval directory.
+    name : str
+        The name of the current run. Stays consistent on resuming.
+    git_tag : str
+        If activated and a git repo was found, this attribute contains the tag
+        name pointing to a commit recording the state of the repository when
+        this run was started.
+    resumed : bool
+        True if this run was resumed.
+    code_root : str
+        Path where code is copied from.
+    code : str
+        Path where code is copied to.
+    root : str
+        Path under which all outputs of the run should be stored.
+    train : str
+        Path to store train outputs in.
+    eval : str
+        Path to eval subfolders.
+    latest_eval : str
+        Path to store eval outputs in.
+    configs : str
+        Path to store configs in.
+    checkpoints : str
+        Path to store checkpoints in.
     """
 
     exists = False
@@ -37,7 +71,13 @@ class run(object):
         log_level="info",
         git=True,
     ):
-        """
+        """Initialize logging for this run.
+
+        After execution of this method, the log directory structure was
+        created, code was copied and commited if desired, and some basic system
+        information has been logged. Subsequent use of loggers from
+        log.get_logger will result in log files written to the run directory.
+
         Parameters
         ----------
         log_dir : str
@@ -74,13 +114,13 @@ class run(object):
             cls.name = os.path.split(cls.root)[1]
 
             # create directory structure
-            cls.setup()
-            cls.setup_new_eval()
+            cls._setup()
+            cls._setup_new_eval()
             cls.exists = True
 
             # log run information
             log.set_log_level(log_level)
-            cls.logger = get_logger("run")
+            cls.logger = log.get_logger("run")
             cls.logger.info(" ".join(sys.argv))
             cls.logger.info("root: {}".format(cls.root))
             cls.logger.info("hostname: {}".format(gethostname()))
@@ -113,17 +153,16 @@ class run(object):
 
             # log code
             if not cls.resumed and cls.code_root is not None:
-                cls.copy_code()
+                cls._copy_code()
             if git:
-                cls.git_tag = cls.git_commit()
+                cls.git_tag = cls._git_commit()
                 cls.logger.info("git_tag: {}".format(cls.git_tag))
 
             cls.logger.info(cls())
 
     @classmethod
-    def setup(cls):
+    def _setup(cls):
         """Make all the directories."""
-
         subdirs = ["code", "train", "eval", "configs"]
         subsubdirs = {"code": [], "train": ["checkpoints"], "eval": [], "configs": []}
 
@@ -148,7 +187,7 @@ class run(object):
                 cls.repr += "  ├╴{}\n".format(subsub)
 
     @classmethod
-    def setup_new_eval(cls):
+    def _setup_new_eval(cls):
         """Always create subfolder in eval to avoid clashes between
         evaluations."""
         name = cls.now
@@ -158,7 +197,7 @@ class run(object):
         os.makedirs(cls.latest_eval)
 
     @classmethod
-    def copy_code(cls):
+    def _copy_code(cls):
         """Copies all code to the code directory of the run."""
 
         src = cls.code_root
@@ -191,9 +230,18 @@ class run(object):
             cls.logger.warning(err)
 
     @classmethod
-    def git_commit(cls):
-        # perform the following
-        # CHEAD=$(git rev-parse HEAD); git add <files...>; git add -u; git commit -m "edflow ..."; git tag -a edflow_date-and-time-project -m "more"; git reset --mixed $CHEAD
+    def _git_commit(cls):
+        """commit code, tag that commit and reset repositories state
+
+        performs something like the following
+
+            CHEAD=$(git rev-parse HEAD)
+            git add <files...>
+            git add -u
+            git commit -m "edflow ..."
+            git tag -a edflow_date-and-time-project -m "more"
+            git reset --mixed $CHEAD
+        """
         try:
             CHEAD = subprocess.run(
                 ["git rev-parse HEAD"],
@@ -271,6 +319,8 @@ class run(object):
 
 
 class TqdmHandler(logging.StreamHandler):
+    """A logging handler compatible with tqdm progress bars.
+    """
     def __init__(self, pos=4):
         logging.StreamHandler.__init__(self)
         self.tqdm = tqdm(position=pos)
@@ -292,26 +342,47 @@ class TqdmHandler(logging.StreamHandler):
 
 
 class log(object):
-    exists = False
+    """Singleton managing all loggers for a run.
+
+    Note
+    ----
+    This class is intended to provide logging facilities without the need to
+    pass it through. Thus it behaves like a singleton by storing all
+    information on the class object itself and not an instance of the class.
+
+    Attributes
+    ----------
+    target : str
+        Current default target to write log file to.
+    level
+        Current default log level for new loggers.
+    loggers
+        List of all loggers.
+    """
     target = "root"  # default directory of ProjectManager to log into
     level = logging.INFO
     loggers = []
 
     @classmethod
     def set_log_target(cls, which):
+        """Set default target where log file is written to."""
         cls.target = which
 
     @classmethod
     def get_logger(cls, name, which=None, level=None):
-        """Create logger, set level.
+        """Get logger.
+
+        If run was initialized, returns a logger which is compatible with tqdm
+        progress bars and logs into a file in the run directory. Otherwise,
+        returns a basic logger.
 
         Parameters
         ----------
         name : str or object
-	    Name of the logger. If not a string, the name
-            of the given object class is used.
+            Name of the logger. If not a string, the name of the given object
+            class is used.
         which : str
-	    Subdirectory in the project folder.
+	    Subdirectory in the project folder where log file is written to.
         level : str
             Log level of the logger.
         """
@@ -339,11 +410,13 @@ class log(object):
 
     @classmethod
     def set_log_level(cls, level):
+        """Set log level of all existing and default log level of all future
+        loggers."""
         level = getattr(logging, level.upper())
         log.level = level
         for logger in log.loggers:
             logger.setLevel(level)
-        cls.get("log").debug("Log level set to {}".format(level))
+        cls.get_logger("log").debug("Log level set to {}".format(level))
 
     @staticmethod
     def _create_logger(name, out_dir, pos=4, level=logging.INFO):
