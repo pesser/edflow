@@ -79,7 +79,7 @@ class run(object):
             cls.exists = True
 
             # log run information
-            set_log_level(log_level)
+            log.set_log_level(log_level)
             cls.logger = get_logger("run")
             cls.logger.info(" ".join(sys.argv))
             cls.logger.info("root: {}".format(cls.root))
@@ -293,16 +293,16 @@ class TqdmHandler(logging.StreamHandler):
 
 class log(object):
     exists = False
-    default = "root"  # default directory of ProjectManager to log into
-    _level = logging.INFO
+    target = "root"  # default directory of ProjectManager to log into
+    level = logging.INFO
     loggers = []
 
     @classmethod
-    def set_default(cls, which):
-        cls.default = which
+    def set_log_target(cls, which):
+        cls.target = which
 
     @classmethod
-    def get(cls, name, which=None, level=None):
+    def get_logger(cls, name, which=None, level=None):
         """Create logger, set level.
 
         Parameters
@@ -311,10 +311,13 @@ class log(object):
 	    Name of the logger. If not a string, the name
             of the given object class is used.
         which : str
-	    subdirectory in the project folder.
+	    Subdirectory in the project folder.
+        level : str
+            Log level of the logger.
         """
-        which = which or cls.default
-        level = level or cls._level
+        _fix_abseil()
+        which = which or cls.target
+        level = level or cls.level
 
         if not isinstance(name, str):
             name = type(name).__name__
@@ -328,23 +331,23 @@ class log(object):
             return logger
 
         log_dir = getattr(run, which)
-        logger = cls._get_logger(name, log_dir, level=level)
+        logger = cls._create_logger(name, log_dir, level=level)
 
         cls.loggers += [logger]
 
         return logger
 
     @classmethod
-    def set_level(cls, level):
+    def set_log_level(cls, level):
         level = getattr(logging, level.upper())
-        LogSingleton._level = level
-        for logger in LogSingleton.loggers:
+        log.level = level
+        for logger in log.loggers:
             logger.setLevel(level)
         cls.get("log").debug("Log level set to {}".format(level))
 
     @staticmethod
-    def _get_logger(name, out_dir, pos=4, level=logging.INFO):
-        """Creates a logger the way it's meant to be."""
+    def _create_logger(name, out_dir, pos=4, level=logging.INFO):
+        """Creates a logger with tqdm- and file-handler."""
         # init logging
         logger = logging.getLogger(name)
         logger.setLevel(level)
@@ -364,11 +367,7 @@ class log(object):
         return logger
 
 
-def set_log_level(level="info"):
-    log.set_level(level)
-
-
-def fix_abseil():
+def _fix_abseil():
     # https://github.com/tensorflow/tensorflow/issues/26691#issuecomment-500369493
     try:
         import absl.logging
@@ -379,23 +378,6 @@ def fix_abseil():
         pass
 
 
-def get_logger(name, which=None, level=None):
-    """Creates a logger, which shares its output directory with all other
-    loggers.
-
-    Parameters
-    ----------
-    name : str
-        Name of the logger.
-    which : str
-        Any subdirectory of the project.
-    level : str
-        Log level of the logger.
-    """
-
-    fix_abseil()
-    return log.get(name, which, level=level)
-
-
 # backwards compatibility
 LogSingleton = log
+get_logger = log.get_logger

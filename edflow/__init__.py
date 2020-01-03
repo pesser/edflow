@@ -1,6 +1,6 @@
 # project management
 from edflow.project_manager import ProjectManager
-from edflow.custom_logging import get_logger, run
+from edflow.custom_logging import get_logger, run, log
 from edflow.main import get_obj_from_str
 
 # iterators

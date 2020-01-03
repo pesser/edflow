@@ -5,8 +5,7 @@ import yaml
 import math
 import datetime
 
-from edflow.custom_logging import get_logger, LogSingleton
-from edflow.project_manager import ProjectManager as P
+from edflow.custom_logging import log, run
 
 
 def get_obj_from_str(string):
@@ -28,7 +27,7 @@ def get_implementations_from_config(config, names):
 def _save_config(config, prefix="config"):
     now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     fname = prefix + "_" + now + ".yaml"
-    path = os.path.join(P.configs, fname)
+    path = os.path.join(run.configs, fname)
     with open(path, "w") as f:
         f.write(yaml.dump(config))
     return path
@@ -38,8 +37,8 @@ def train(config, root, checkpoint=None, retrain=False):
     """Run training. Loads model, iterator and dataset according to config."""
     from edflow.iterators.batches import make_batches
 
-    LogSingleton().set_default("train")
-    logger = get_logger("train")
+    log.set_log_target("train")
+    logger = log.get_logger("train")
     logger.info("Starting Training.")
 
     implementations = get_implementations_from_config(
@@ -130,8 +129,8 @@ def test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     """Run tests. Loads model, iterator and dataset from config."""
     from edflow.iterators.batches import make_batches
 
-    LogSingleton().set_default("latest_eval")
-    logger = get_logger("test")
+    log.set_log_target("latest_eval")
+    logger = log.get_logger("test")
     logger.info("Starting Evaluation.")
 
     if "test_batch_size" in config:
