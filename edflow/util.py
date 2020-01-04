@@ -256,7 +256,7 @@ def retrieve(
                     list_or_dict = list_or_dict[key]
                 else:
                     list_or_dict = list_or_dict[int(key)]
-            except (KeyError, IndexError) as e:
+            except (KeyError, IndexError, ValueError) as e:
                 raise KeyNotFoundError(e, keys=keys, visited=visited)
 
             visited += [key]
