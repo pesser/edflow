@@ -1,4 +1,33 @@
 from edflow.hooks.hook import Hook
+from edflow.util import retrieve
+
+
+class ExpandHook(Hook):
+    """Retrieve paths."""
+
+    def __init__(
+        self,
+        paths,
+        interval,
+        default=None,
+    ):
+        """
+        Parameters
+        ----------
+        paths : list of keypaths to expand.
+        interval : int
+            The interval in which expansion is performed.
+        """
+        self.paths = paths
+        self.interval = interval
+        self.default = default
+
+    def after_step(self, step, last_results):
+        """Called after each step."""
+
+        if step % self.interval == 0:
+            for path in self.paths:
+                retrieve(last_results, path, default=self.default)
 
 
 class IntervalHook(Hook):

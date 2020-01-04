@@ -2,7 +2,7 @@ import os
 from edflow.iterators.model_iterator import PyHookedModelIterator
 from edflow.hooks.checkpoint_hooks.lambda_checkpoint_hook import LambdaCheckpointHook
 from edflow.hooks.logging_hooks.minimal_logging_hook import LoggingHook
-from edflow.hooks.util_hooks import IntervalHook
+from edflow.hooks.util_hooks import IntervalHook, ExpandHook
 from edflow.eval.pipeline import TemplateEvalHook
 from edflow.project_manager import ProjectManager
 from edflow.util import retrieve, set_default
@@ -30,6 +30,11 @@ class TemplateIterator(PyHookedModelIterator):
             self._train_ops = set_default(
                 self.config, "train_ops", ["step_ops/train_op"]
             )
+            train_hook = ExpandHook(
+                paths=self._train_ops,
+                interval=1)
+            self.hooks.append(train_hook)
+
             self._log_ops = set_default(self.config, "log_ops", ["step_ops/log_op"])
             # logging
             self.loghook = LoggingHook(
@@ -60,7 +65,16 @@ class TemplateIterator(PyHookedModelIterator):
                 interval=1,
                 name="validation",
             )
-            self.hooks.append(self.validation_loghook)
+            # wrap it in interval hook
+            self.validation_ihook = IntervalHook(
+                [self.validation_loghook],
+                interval=set_default(self.config, "start_log_freq", 1),
+                modify_each=1,
+                max_interval=set_default(self.config, "log_freq", 1000),
+                get_step=self.get_global_step,
+            )
+            self.hooks.append(self.validation_ihook)
+
             # write checkpoints after epoch or when interrupted
             self.hooks.append(self.ckpthook)
             wandb_logging = set_default(self.config, "integrations/wandb", False)
@@ -135,12 +149,6 @@ class TemplateIterator(PyHookedModelIterator):
 
     def step_ops(self):
         return self.step_op
-
-    def run(self, fetches, feed_dict):
-        results = super().run(fetches, feed_dict)
-        for train_op in self._train_ops:
-            retrieve(results, train_op, default=0)
-        return results
 
     def save(self, checkpoint_path):
         """Save state to checkpoint path."""
