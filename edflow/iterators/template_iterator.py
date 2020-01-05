@@ -33,16 +33,15 @@ class TemplateIterator(PyHookedModelIterator):
 
         # execute train ops
         self._train_ops = set_default(self.config, "train_ops",
-                                      ["train/step_ops/train_op"])
+                                      ["train/train_op"])
         train_hook = ExpandHook(paths=self._train_ops, interval=1)
         self.hooks.append(train_hook)
 
         # log train/step_ops/log_ops in increasing intervals
         self._log_ops = set_default(self.config, "log_ops",
-                                    ["train/step_ops/log_op"])
+                                    ["train/log_op", "validation/log_op"])
         self.loghook = LoggingHook(paths=self._log_ops,
-                                   root_path=ProjectManager.train, interval=1,
-                                   name="train")
+                                   root_path=ProjectManager.train, interval=1)
         self.ihook = IntervalHook([self.loghook],
                                   interval=set_default(self.config,
                                                        "start_log_freq", 1),
@@ -51,26 +50,6 @@ class TemplateIterator(PyHookedModelIterator):
                                                            "log_freq", 1000),
                                   get_step=self.get_global_step,)
         self.hooks.append(self.ihook)
-
-        # log validation/step_ops/log_op in increasing intervals
-        self._validation_log_ops = set_default(self.config,
-                                               "validation_log_ops",
-                                               ["validation/step_ops/log_op"])
-        _validation_root = os.path.join(ProjectManager.train, "validation")
-        os.makedirs(_validation_root, exist_ok=True)
-        self.validation_loghook = LoggingHook(paths=self._validation_log_ops,
-                                              root_path=_validation_root,
-                                              interval=1, name="validation",)
-        self.validation_ihook = IntervalHook([self.validation_loghook],
-                                             interval=set_default(self.config,
-                                                                  "start_log_freq",
-                                                                  1),
-                                             modify_each=1,
-                                             max_interval=set_default(self.config,
-                                                                      "log_freq",
-                                                                      1000),
-                                             get_step=self.get_global_step,)
-        self.hooks.append(self.validation_ihook)
 
         # setup logging integrations
         wandb_logging = set_default(self.config, "integrations/wandb", False)
@@ -82,11 +61,7 @@ class TemplateIterator(PyHookedModelIterator):
             os.environ["WANDB_RUN_ID"] = ProjectManager.root.replace("/", "-")
             wandb.init(name=ProjectManager.root, config=self.config)
             self.loghook.handlers["scalars"].append(log_wandb)
-            self.validation_loghook.handlers["scalars"].append(
-                lambda *args, **kwargs: log_wandb(
-                    *args, **kwargs, prefix="validation"
-                )
-            )
+
         tensorboardX_logging = set_default(self.config,
                                            "integrations/tensorboardX", False)
         if tensorboardX_logging:
@@ -104,19 +79,14 @@ class TemplateIterator(PyHookedModelIterator):
                     self.tensorboardX_writer, *args, **kwargs
                 )
             )
-            self.validation_loghook.handlers["scalars"].append(
-                lambda *args, **kwargs: log_tensorboard_scalars(
-                    self.tensorboardX_writer, *args, **kwargs, prefix="validation"
-                )
-            )
 
         ## epoch hooks
 
         # evaluate validation/step_ops/eval_op after each epoch
         self._eval_op = set_default(self.config, "eval_hook/eval_op",
-                                    "validation/step_ops/eval_op")
+                                    "validation/eval_op")
         label_key = set_default(self.config, "eval_hook/label_key",
-                                "validation/step_ops/eval_op/labels")
+                                "validation/eval_op/labels")
         self._eval_callbacks = set_default(self.config,
                                            "eval_hook/eval_callbacks", dict())
         if not isinstance(self._eval_callbacks, dict):

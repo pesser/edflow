@@ -30,6 +30,10 @@ class LoggingHook(Hook):
             self.logger = get_logger(name)
         else:
             self.logger = get_logger(self)
+        self.loggers = dict()
+        for path in self.paths:
+            os.makedirs(os.path.join(self.root, path), exist_ok=True)
+            self.loggers[path] = get_logger(path)
         self.handlers = {"images": [self.log_images], "scalars": [self.log_scalars]}
 
     def after_step(self, batch_index, last_results):
@@ -45,16 +49,16 @@ class LoggingHook(Hook):
                         self.logger.info("global_step: {}".format(self._step))
                         active = True
                     for handler in self.handlers[k]:
-                        handler(handler_results, self._step)
+                        handler(handler_results, self._step, path=path)
             if active:
                 self.logger.info("logging root: {}".format(self.root))
 
-    def log_scalars(self, results, step):
+    def log_scalars(self, results, step, path):
         for name in sorted(results.keys()):
-            self.logger.info("{}: {}".format(name, results[name]))
+            self.loggers[path].info("{}: {}".format(name, results[name]))
 
-    def log_images(self, results, step):
+    def log_images(self, results, step, path):
         for name, image_batch in results.items():
             full_name = name + "_{:07}.png".format(self._step)
-            save_path = os.path.join(self.root, full_name)
+            save_path = os.path.join(self.root, path, full_name)
             plot_batch(image_batch, save_path)

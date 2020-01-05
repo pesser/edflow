@@ -142,6 +142,7 @@ class PyHookedModelIterator(object):
         """
 
         step_ops = self.step_ops()
+        epoch_hooks_only = self.config.get("test_mode", False)
 
         pos = self.bar_pos
         base = self.desc + " - " if self.desc != "" else ""
@@ -153,12 +154,12 @@ class PyHookedModelIterator(object):
         )
         batches = {"train": batch_iterator, "validation":
                    batch_iterator_validation}
-        if self.config.get("test_mode", False) and batches["validation"] is None:
+        if epoch_hooks_only and batches["validation"] is None:
             self.logger.warning("No validation batch specified, defaulting to train batch.")
             batches["validation"] = batches["train"]
         batches = dict((s, b) for s, b in batches.items() if b is not None)
 
-        num_epochs = 1 if self.config.get("test_mode", False) else self.num_epochs
+        num_epochs = 1 if epoch_hooks_only else self.num_epochs
         for epoch_step in trange(num_epochs, desc=desc_epoch,
                                  position=pos, dynamic_ncols=True):
             self._epoch_step = epoch_step
@@ -166,7 +167,7 @@ class PyHookedModelIterator(object):
             ############# run one batch on each split until new epoch or max steps
             self.run_hooks(epoch_step, before=True)
 
-            num_steps = 0 if self.config.get("test_mode", False) else len(batches["train"])
+            num_steps = 0 if epoch_hooks_only else len(batches["train"])
             for batch_step in trange(num_steps, desc=desc_batch,
                                      position = pos+1, dynamic_ncols=True):
                 self._batch_step = batch_step
@@ -176,7 +177,7 @@ class PyHookedModelIterator(object):
                         self._split = split
                         batch = next(batches[split])
                         feeds = self.make_feeds(batch)
-                        fetches = {"step_ops": step_ops}
+                        fetches = step_ops
                         self.run_hooks(batch_step, fetches, feeds, batch, before=True)
                         return self.run(fetches, feed_dict=feeds)
                     return split_op
@@ -188,8 +189,10 @@ class PyHookedModelIterator(object):
 
                 self.increment_global_step()
 
-                if batches["train"].is_new_epoch or self.get_global_step() >= self.config.get(
-                    "num_steps", float("inf")
+                if not epoch_hooks_only and (
+                    batches["train"].is_new_epoch or
+                    self.get_global_step() >= self.config.get("num_steps",
+                                                              float("inf"))
                 ):
                     self.logger.info("Done with epoch")
                     batches["train"].reset()
@@ -213,7 +216,7 @@ class PyHookedModelIterator(object):
                             self._split = split
                             batch = next(batches[split])
                             feeds = self.make_feeds(batch)
-                            fetches = {"step_ops": step_ops}
+                            fetches = step_ops
                             self.run_hooks(batch_step, fetches, feeds, batch,
                                            before=True, epoch_hooks=True)
                             return self.run(fetches, feed_dict=feeds)
