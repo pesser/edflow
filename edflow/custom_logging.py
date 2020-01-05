@@ -322,10 +322,6 @@ class TqdmHandler(logging.StreamHandler):
     """A logging handler compatible with tqdm progress bars.
     """
 
-    def __init__(self, pos=4):
-        logging.StreamHandler.__init__(self)
-        self.tqdm = tqdm(position=pos)
-
     def emit(self, record):
         # check if stderr and stdout are two different ptys.
         # this detects tampering by wandb which messes up tqdm logging.
@@ -339,7 +335,7 @@ class TqdmHandler(logging.StreamHandler):
             file_ = sys.stdout
 
         msg = self.format(record)
-        self.tqdm.write(msg, file=file_)
+        tqdm.write(msg, file=file_)
 
 
 class log(object):
@@ -421,14 +417,14 @@ class log(object):
         cls.get_logger("log").debug("Log level set to {}".format(level))
 
     @staticmethod
-    def _create_logger(name, out_dir, pos=4, level=logging.INFO):
+    def _create_logger(name, out_dir, level=logging.INFO):
         """Creates a logger with tqdm- and file-handler."""
         # init logging
         logger = logging.getLogger(name)
         logger.setLevel(level)
 
         if not len(logger.handlers) > 0:
-            ch = TqdmHandler(pos)
+            ch = TqdmHandler()
             fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
 
             fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"
