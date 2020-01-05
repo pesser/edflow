@@ -46,6 +46,7 @@ class LambdaCheckpointHook(Hook):
         -------
 
         """
+        self._active = True
         if self.interval is None:
             self.save()
 
@@ -63,12 +64,11 @@ class LambdaCheckpointHook(Hook):
         -------
 
         """
+        if step > 0:
+            self._active = True
         step = self.global_step_getter()
         if self.interval is not None and step % self.interval == 0:
-            if self._active:
-                self.save()
-        if not "validation_ops" in last_results:
-            self._active = True
+            self.save()
 
     def at_exception(self, *args, **kwargs):
         """
@@ -88,9 +88,10 @@ class LambdaCheckpointHook(Hook):
 
     def save(self):
         """ """
-        savename = self.savename.format(self.global_step_getter())
-        self._save(savename)
-        self.logger.info("Saved model to {}".format(savename))
+        if self._active:
+            savename = self.savename.format(self.global_step_getter())
+            self._save(savename)
+            self.logger.info("Saved model to {}".format(savename))
 
     def __call__(self, checkpoint):
         """Load checkpoint and set global step."""
