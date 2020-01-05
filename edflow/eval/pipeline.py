@@ -490,7 +490,7 @@ def save_example(savepath, datum):
     """
 
     saver, ending = determine_saver(datum)
-    loader_name, _ = determine_loader(ending)
+    loader_name = determine_loader(ending)
 
     savepath = savepath.format(ending)
 
@@ -532,13 +532,19 @@ def determine_saver(py_obj):
 
 
 def determine_loader(ext):
-    """Returns a name, loader pair for a given file extension
+    """Returns a loader name for a given file extension
     
     Parameters
     ----------
     ext : str
         File ending excluding the ``.``. Same as what would be returned by
         :func:`os.path.splitext`
+
+    Returns
+    -------
+    name : str
+        Name of the meta loader (see
+        :py:mod:`~edflow.data.believers.meta_loaders` .
 
     Raises
     ------
@@ -548,11 +554,9 @@ def determine_loader(ext):
     """
 
     if ext == "png":
-        return "image", image_loader
+        return "image"
     elif ext == "npy":
-        return "np", np_loader
-    elif ext == "txt":
-        return "txt", txt_loader
+        return "np"
     else:
         raise ValueError("Cannot load file with extension `{}`".format(ext))
 
