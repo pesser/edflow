@@ -397,6 +397,7 @@ class TemplateEvalHook(EvalHook):
     def after_epoch(self, *args, **kwargs):
         if self._active:
             super().after_epoch(*args, **kwargs)
+            self._active = False
 
     def at_exception(self, *args, **kwargs):
         if self._active:
