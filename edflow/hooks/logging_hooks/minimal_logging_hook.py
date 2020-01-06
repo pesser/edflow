@@ -72,4 +72,8 @@ class LoggingHook(Hook):
         for name, image_batch in results.items():
             full_name = name + "_{:07}.png".format(step)
             save_path = os.path.join(self.root, path, full_name)
-            plot_batch(image_batch, save_path)
+            try:
+                plot_batch(image_batch, save_path)
+            except FileNotFoundError:
+                os.makedirs(os.path.split(save_path)[0])
+                plot_batch(image_batch, save_path)

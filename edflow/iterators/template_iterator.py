@@ -52,33 +52,59 @@ class TemplateIterator(PyHookedModelIterator):
         self.hooks.append(self.ihook)
 
         # setup logging integrations
-        wandb_logging = set_default(self.config, "integrations/wandb", False)
-        if wandb_logging:
-            import wandb
-            from edflow.hooks.logging_hooks.wandb_handler import log_wandb
+        if not self.config.get("test_mode", False):
+            default_wandb_logging = {"active": False,
+                             "handlers": ["scalars", "images"]}
+            wandb_logging = set_default(self.config, "integrations/wandb",
+                                        default_wandb_logging)
+            if wandb_logging["active"]:
+                import wandb
+                from edflow.hooks.logging_hooks.wandb_handler import (
+                    log_wandb, log_wandb_images)
 
-            os.environ["WANDB_RESUME"] = "allow"
-            os.environ["WANDB_RUN_ID"] = ProjectManager.root.replace("/", "-")
-            wandb.init(name=ProjectManager.root, config=self.config)
-            self.loghook.handlers["scalars"].append(log_wandb)
+                os.environ["WANDB_RESUME"] = "allow"
+                os.environ["WANDB_RUN_ID"] = ProjectManager.root.replace("/", "-")
+                wandb.init(name=ProjectManager.root, config=self.config)
 
-        tensorboardX_logging = set_default(self.config,
-                                           "integrations/tensorboardX", False)
-        if tensorboardX_logging:
-            from tensorboardX import SummaryWriter
-            from edflow.hooks.logging_hooks.tensorboardX_handler import (
-                log_tensorboard_config,
-                log_tensorboard_scalars,
-            )
+                handlers = set_default(self.config,
+                                       "integrations/wandb/handlers",
+                                       default_wandb_logging["handlers"])
+                if "scalars" in handlers:
+                    self.loghook.handlers["scalars"].append(log_wandb)
+                if "images" in handlers:
+                    self.loghook.handlers["images"].append(log_wandb_images)
 
-            self.tensorboardX_writer = SummaryWriter(ProjectManager.root)
-            log_tensorboard_config(self.tensorboardX_writer, self.config,
-                                   self.get_global_step())
-            self.loghook.handlers["scalars"].append(
-                lambda *args, **kwargs: log_tensorboard_scalars(
-                    self.tensorboardX_writer, *args, **kwargs
+            default_tensorboardX_logging = {"active": False,
+                                    "handlers": ["scalars", "images"]}
+            tensorboardX_logging = set_default(self.config,
+                                               "integrations/tensorboardX",
+                                               default_tensorboardX_logging)
+            if tensorboardX_logging["active"]:
+                from tensorboardX import SummaryWriter
+                from edflow.hooks.logging_hooks.tensorboardX_handler import (
+                    log_tensorboard_config,
+                    log_tensorboard_scalars,
+                    log_tensorboard_images,
                 )
-            )
+
+                self.tensorboardX_writer = SummaryWriter(ProjectManager.root)
+                log_tensorboard_config(self.tensorboardX_writer, self.config,
+                                       self.get_global_step())
+                handlers = set_default(self.config,
+                                       "integrations/tensorboardX/handlers",
+                                       default_tensorboardX_logging["handlers"])
+                if "scalars" in handlers:
+                    self.loghook.handlers["scalars"].append(
+                        lambda *args, **kwargs: log_tensorboard_scalars(
+                            self.tensorboardX_writer, *args, **kwargs
+                        )
+                    )
+                if "images" in handlers:
+                    self.loghook.handlers["images"].append(
+                        lambda *args, **kwargs: log_tensorboard_images(
+                            self.tensorboardX_writer, *args, **kwargs
+                        )
+                    )
 
         ## epoch hooks
 
