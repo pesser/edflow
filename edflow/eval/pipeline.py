@@ -117,7 +117,7 @@ import inspect
 import re
 
 from edflow.data.util import adjust_support
-from edflow.util import walk, retrieve, pop_keypath
+from edflow.util import walk, retrieve, pop_keypath, set_value
 from edflow.data.dataset import DatasetMixin, CsvDataset, ProcessedDataset
 from edflow.project_manager import ProjectManager as P
 from edflow.hooks.hook import Hook
@@ -338,13 +338,15 @@ class EvalHook(Hook):
 
         cb_kwargs = retrieve(self.config, "eval_pipeline/callback_kwargs", default={})
 
+        results = dict()
         for n, cb in self.cbacks.items():
             cb_name = "CB: {}".format(n)
             cb_name = "{a}\n{c}\n{a}".format(a="=" * len(cb_name), c=cb_name)
             self.logger.info(cb_name)
 
             kwargs = cb_kwargs.get(n, {})
-            cb(self.root, self.data_in, data_out, self.config, **kwargs)
+            results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
+        return results
 
     def save_csv(self):
         """ """
@@ -379,6 +381,11 @@ class EvalHook(Hook):
 class TemplateEvalHook(EvalHook):
     """EvalHook that disables itself when the eval op returns None."""
 
+    def __init__(self, *args, **kwargs):
+        cb_handler = kwargs.pop("callback_handler", None)
+        super().__init__(*args, **kwargs)
+        self.cb_handler = cb_handler
+
     def before_epoch(self, *args, **kwargs):
         self._active = True
         super().before_epoch(*args, **kwargs)
@@ -396,7 +403,12 @@ class TemplateEvalHook(EvalHook):
 
     def after_epoch(self, *args, **kwargs):
         if self._active:
-            super().after_epoch(*args, **kwargs)
+            cb_results = super().after_epoch(*args, **kwargs)
+            if self.cb_handler is not None:
+                results = dict()
+                set_value(results, self.keypath, cb_results)
+                paths = [self.keypath+"/"+cb for cb in self.cb_names]
+                self.cb_handler(results=results, paths=paths)
             self._active = False
 
     def at_exception(self, *args, **kwargs):

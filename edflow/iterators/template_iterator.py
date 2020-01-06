@@ -93,6 +93,13 @@ class TemplateIterator(PyHookedModelIterator):
             self._eval_callbacks = {"cb": self._eval_callbacks}
         for k in self._eval_callbacks:
             self._eval_callbacks[k] = get_obj_from_str(self._eval_callbacks[k])
+        callback_handler = None
+        if not self.config.get("test_mode", False):
+            callback_handler = lambda results, paths: self.loghook(
+                results=results,
+                step=self.get_global_step(),
+                paths=paths,
+            )
         self.evalhook = TemplateEvalHook(
             dataset=self.dataset,
             step_getter=self.get_global_step,
@@ -100,6 +107,7 @@ class TemplateIterator(PyHookedModelIterator):
             config=self.config,
             callbacks=self._eval_callbacks,
             labels_key=label_key,
+            callback_handler=callback_handler,
         )
         self.epoch_hooks.append(self.evalhook)
 
