@@ -33,7 +33,7 @@ def _save_config(config, prefix="config"):
     return path
 
 
-def train(config, root, checkpoint=None, retrain=False):
+def train(config, root, checkpoint=None, retrain=False, debug=False):
     """Run training. Loads model, iterator and dataset according to config."""
     from edflow.iterators.batches import make_batches
 
@@ -48,6 +48,9 @@ def train(config, root, checkpoint=None, retrain=False):
     dataset = implementations["dataset"](config=config)
     dataset.expand = True
     logger.info("Number of training samples: {}".format(len(dataset)))
+    if debug:
+        logger.info("Monkey patching dataset __len__")
+        type(dataset).__len__ = lambda self: 100
     if "validation_dataset" in config:
         use_validation_dataset = True
         implementations["validation_dataset"] = get_obj_from_str(
@@ -56,6 +59,9 @@ def train(config, root, checkpoint=None, retrain=False):
         logger.info("Instantiating validation dataset.")
         validation_dataset = implementations["validation_dataset"](config=config)
         logger.info("Number of validation samples: {}".format(len(validation_dataset)))
+        if debug:
+            logger.info("Monkey patching validation_dataset __len__")
+            type(validation_dataset).__len__ = lambda self: 100
     else:
         use_validation_dataset = False
 
@@ -125,7 +131,7 @@ def train(config, root, checkpoint=None, retrain=False):
             validation_batches.finalize()
 
 
-def test(config, root, checkpoint=None, nogpu=False, bar_position=0):
+def test(config, root, checkpoint=None, nogpu=False, bar_position=0, debug=False):
     """Run tests. Loads model, iterator and dataset from config."""
     from edflow.iterators.batches import make_batches
 
@@ -145,6 +151,10 @@ def test(config, root, checkpoint=None, nogpu=False, bar_position=0):
     dataset = implementations["dataset"](config=config)
     dataset.expand = True
     logger.info("Number of testing samples: {}".format(len(dataset)))
+    if debug:
+        logger.info("Monkey patching dataset __len__")
+        type(dataset).__len__ = lambda self: 100
+        logger.info("Number of testing samples: {}".format(len(dataset)))
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
     batches = make_batches(

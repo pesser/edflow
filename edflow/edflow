@@ -77,7 +77,7 @@ def main(opt, additional_kwargs):
             checkpoint = None
 
         logger.info("Training config:\n{}".format(yaml.dump(config)))
-        train(config, run.train, checkpoint, opt.retrain)
+        train(config, run.train, checkpoint, opt.retrain, debug=opt.debug)
     else:
         disable_eval_all = disable_eval_forever = False
         if opt.checkpoint is not None:
@@ -109,7 +109,7 @@ def main(opt, additional_kwargs):
         logger.info(
             "Evaluation config:\n{}".format(yaml.dump(config))
         )
-        test(config, run.latest_eval, checkpoint)
+        test(config, run.latest_eval, checkpoint, debug=opt.debug)
 
 
 if __name__ == "__main__":
