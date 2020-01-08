@@ -120,6 +120,15 @@ class TemplateIterator(PyHookedModelIterator):
         eval_callbacks = dict()
         for k in _eval_callbacks:
             eval_callbacks[k] = _eval_callbacks[k]
+        if hasattr(self, "callbacks"):
+            iterator_callbacks = retrieve(self.callbacks,
+                                       "eval_op", default=dict())
+            for k in iterator_callbacks:
+                import_path = get_str_from_obj(iterator_callbacks[k])
+                set_value(self.config,
+                          "eval_hook/eval_callbacks/{}".format(k),
+                          import_path)
+                eval_callbacks[k] = import_path
         if hasattr(self.model, "callbacks"):
             model_callbacks = retrieve(self.model.callbacks,
                                        "eval_op", default=dict())
