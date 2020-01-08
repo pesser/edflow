@@ -160,3 +160,12 @@ if __name__ == "__main__":
         except Exception:
             debugger.post_mortem()
             raise
+        finally:
+            # move debug runs to debug subdirectory to easily delete them.
+            # directly removing it is problematic because .nfsXXX files are
+            # created if open files are left on a nfs system, which prevents us
+            # from deleting the directory.
+            dst, name = os.path.split(run.root)
+            dst = os.path.join(dst, "debug_runs")
+            os.makedirs(dst, exist_ok=True)
+            os.rename(run.root, os.path.join(dst, name))
