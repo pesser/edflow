@@ -17,6 +17,10 @@ except ImportError:
     __COULD_HAVE_IPYTHON__ = False
 
 
+def get_str_from_obj(obj):
+    return obj.__module__+"."+obj.__name__
+
+
 def get_obj_from_str(string):
     module, cls = string.rsplit(".", 1)
     return getattr(importlib.import_module(module, package=None), cls)

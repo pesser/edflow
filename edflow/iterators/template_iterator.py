@@ -5,8 +5,8 @@ from edflow.hooks.logging_hooks.minimal_logging_hook import LoggingHook
 from edflow.hooks.util_hooks import IntervalHook, ExpandHook
 from edflow.eval.pipeline import TemplateEvalHook
 from edflow.project_manager import ProjectManager
-from edflow.util import retrieve, set_default
-from edflow.main import get_obj_from_str
+from edflow.util import (retrieve, set_default, set_value, get_obj_from_str,
+                         get_str_from_obj)
 
 
 class TemplateIterator(PyHookedModelIterator):
@@ -113,12 +113,22 @@ class TemplateIterator(PyHookedModelIterator):
                                     "validation/eval_op")
         label_key = set_default(self.config, "eval_hook/label_key",
                                 "validation/eval_op/labels")
-        self._eval_callbacks = set_default(self.config,
-                                           "eval_hook/eval_callbacks", dict())
-        if not isinstance(self._eval_callbacks, dict):
-            self._eval_callbacks = {"cb": self._eval_callbacks}
-        for k in self._eval_callbacks:
-            self._eval_callbacks[k] = get_obj_from_str(self._eval_callbacks[k])
+        _eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks",
+                                      dict())
+        if not isinstance(_eval_callbacks, dict):
+            _eval_callbacks = {"cb": _eval_callbacks}
+        eval_callbacks = dict()
+        for k in _eval_callbacks:
+            eval_callbacks[k] = _eval_callbacks[k]
+        if hasattr(self.model, "callbacks"):
+            model_callbacks = retrieve(self.model.callbacks,
+                                       "eval_op", default=dict())
+            for k in model_callbacks:
+                import_path = get_str_from_obj(model_callbacks[k])
+                set_value(self.config,
+                          "eval_hook/eval_callbacks/{}".format(k),
+                          import_path)
+                eval_callbacks[k] = import_path
         callback_handler = None
         if not self.config.get("test_mode", False):
             callback_handler = lambda results, paths: self.loghook(
@@ -131,7 +141,7 @@ class TemplateIterator(PyHookedModelIterator):
             step_getter=self.get_global_step,
             keypath=self._eval_op,
             config=self.config,
-            callbacks=self._eval_callbacks,
+            callbacks=eval_callbacks,
             labels_key=label_key,
             callback_handler=callback_handler,
         )
