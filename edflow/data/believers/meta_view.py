@@ -158,7 +158,7 @@ class MetaViewDataset(MetaDataset):
             super().__init__(root)
 
     def get_example(self, idx):
-        """Get the examples from the base dataset at defined at ``view[idx]``.
+        """Get the examples from the base dataset at defined at ``view[idx]``. Load loaders if applicable.
         """
 
         def get_view(view):
@@ -167,5 +167,9 @@ class MetaViewDataset(MetaDataset):
         view = walk(self.views, get_view)
 
         view_example = walk(view, self.base.__getitem__, walk_np_arrays=True)
+
+        if len(self.loaders) > 0:
+            loaders_example = super().get_example(idx)
+            view_example.update(loaders_example)
 
         return view_example
