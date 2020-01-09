@@ -110,10 +110,10 @@ class TemplateIterator(PyHookedModelIterator):
             self._eval_callbacks = set_default(
                 self.config, "eval_hook/eval_callbacks", dict()
             )
+
             if not isinstance(self._eval_callbacks, dict):
-                self._eval_callbacks = {"cb": self._eval_callbacks}
-            for k in self._eval_callbacks:
-                self._eval_callbacks[k] = get_obj_from_str(self._eval_callbacks[k])
+                cbs = {"cb": self._eval_callbacks}
+
             label_key = set_default(
                 self.config, "eval_hook/label_key", "step_ops/eval_op/labels"
             )
