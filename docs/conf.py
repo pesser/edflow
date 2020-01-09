@@ -16,6 +16,8 @@ import importlib
 
 sys.path.insert(0, os.path.abspath(".."))
 
+# mock dependencies to avoid installing them all just to build the configuration
+
 from unittest.mock import Mock
 
 MOCK_MODULES = [
@@ -47,6 +49,7 @@ MOCK_MODULES = [
     "skimage.measure",
     "tensorboardX",
     "streamlit",
+    "wandb",
 ]
 
 for mod_name in MOCK_MODULES:
@@ -54,7 +57,7 @@ for mod_name in MOCK_MODULES:
 
 
 def run_apidoc(app):
-    """Generage API documentation"""
+    """Generate API documentation"""
     import better_apidoc
 
     better_apidoc.APP = app
@@ -120,37 +123,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-
-autodoc_mock_imports = [
-    #    "edflow",
-    #    "tensorflow",
-    #    "tensorboardX",
-    #    "torch",
-    #    "pyyaml",
-    #    "opencv-python",
-    "tqdm",
-    #    "Pillow",
-    #    "PIL",
-    #    "chainer",
-    #    "matplotlib",
-    #    "pandas",
-    #    "scipy",
-    #    "h5py",
-    #    "scikit-image",
-    #    "natsort",
-    #    "fastnumbers",
-    #    "cv2",
-]
-
-for name in autodoc_mock_imports:
-    try:
-        module = importlib.import_module(name)
-    except:
-        print(f"[autodoc] adding a mock module {name}!")
-        module = mock.Mock(name)
-        sys.modules[name] = module
-
-# sys.modules.update((mod_name, mock.MagicMock()) for mod_name in autodoc_mock_imports)
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

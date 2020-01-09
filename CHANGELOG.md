@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Log tmux target containing current run.
+- Support for tensorboardX logging. Enable with `--tensorboardX_logging True`.
+- Support for wandb logging. Enable with `--wandb_logging True`.
+- Support for flow visualizations in edexplore and improved index selection.
 - Git integration adds all .py and .yaml files not just tracked ones.
 - Support for validation batches in train mode. MinimalLoggingHook used in TemplateIterator logs them automatically under `root/train/validation`.
 - `-d/--debug` flag to enable post-mortem debugging. Uses `pudb` if available, otherwise `pdb`.
@@ -31,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Eval Pipeline now stores data compatible with MetaDataset specifications. Previously exported data cannot be read again using edeval after this change.
+- Changed configuration of integrations: `EDFLOWGIT` now `integrations/git`, `wandb_logging` now `integrations/wandb`, `tensorboardX_logging` now `--integrations/tensorboardX`.
+- ProjectManager is now `edflow.run` and initialized with `edflow.run.init(...)`.
 - Saved config files use `-` instead of `:` in filename to be consistent.
 - No more `-e/--evaluation <config>` and `-t/--train <config>` options. Specify all configs under `-b/--base <config1> <config2>`. Default to evaluation mode, specify `-t/--train` for training mode.
 - Specifying model in config is optional.
@@ -46,10 +52,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make_var` was broken for period variables because subcommands lacked `**kwargs` in definition. This is fixed now.
 
 ### Removed
+- Environment variable EDFLOWGIT is now ignored.
 - Cannot start training and (multiple) evaluations at the same time anymore. Simplifies a lot and was almost never used.
 - No single '-' possible for commandline specification of config parameters. Use '--'.
 - It is no longer possible to pass callbacks as list via the config
 
 ### Fixed
+- Callbacks in eval pipeline config are not overwritten by loading them.
 - Image outputs in `template_pytorch` example.
 - Negative numbers as values for keyword arguments are now properly parsed.
