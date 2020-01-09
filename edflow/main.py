@@ -106,7 +106,8 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
         )
         logger.info("Instantiating iterator.")
         Trainer = implementations["iterator"](
-            config, root, Model, dataset=dataset, **compat_kwargs
+            config, root, Model, dataset=dataset,
+            validation_dataset=validation_dataset, **compat_kwargs
         )
 
         logger.info("Initializing model.")

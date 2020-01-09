@@ -63,7 +63,7 @@ class TemplateIterator(PyHookedModelIterator):
                     log_wandb, log_wandb_images)
 
                 os.environ["WANDB_RESUME"] = "allow"
-                os.environ["WANDB_RUN_ID"] = ProjectManager.root.replace("/", "-")
+                os.environ["WANDB_RUN_ID"] = ProjectManager.root.strip("/").replace("/", "-")
                 wandb.init(name=ProjectManager.root, config=self.config)
 
                 handlers = set_default(self.config,
@@ -146,7 +146,8 @@ class TemplateIterator(PyHookedModelIterator):
                 paths=paths,
             )
         self.evalhook = TemplateEvalHook(
-            dataset=self.dataset,
+            #dataset=self.dataset, # TODO let EvalHook figure out correct split
+            dataset=self.validation_dataset,
             step_getter=self.get_global_step,
             keypath=self._eval_op,
             config=self.config,

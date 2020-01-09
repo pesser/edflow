@@ -22,6 +22,7 @@ class PyHookedModelIterator(object):
         root,
         model,
         dataset,
+        validation_dataset=None, # TODO switch to datasets dict
         hook_freq=100,
         num_epochs=100,
         hooks=[],
@@ -53,6 +54,7 @@ class PyHookedModelIterator(object):
 
         self.model = model
         self.dataset = dataset
+        self.validation_dataset = validation_dataset
         self.num_epochs = num_epochs
 
         self.hooks = hooks
@@ -165,10 +167,17 @@ class PyHookedModelIterator(object):
             self._epoch_step = epoch_step
 
             ############# run one batch on each split until new epoch or max steps
+            batches["train"].reset()
             self.run_hooks(epoch_step, before=True)
 
-            num_steps = 0 if epoch_hooks_only else len(batches["train"])
-            for batch_step in trange(num_steps, desc=desc_batch,
+            if epoch_hooks_only:
+                batches_per_epoch = 0
+            else:
+                batches_per_epoch = len(batches["train"])
+            if "max_batches_per_epoch" in self.config:
+                batches_per_epoch = min(batches_per_epoch,
+                                        self.config["max_batches_per_epoch"])
+            for batch_step in trange(batches_per_epoch, desc=desc_batch,
                                      position = pos+1, dynamic_ncols=True):
                 self._batch_step = batch_step
 
@@ -189,19 +198,15 @@ class PyHookedModelIterator(object):
 
                 self.increment_global_step()
 
-                if not epoch_hooks_only and (
-                    batches["train"].is_new_epoch or
-                    self.get_global_step() >= self.config.get("num_steps",
-                                                              float("inf"))
-                ):
-                    self.logger.info("Done with epoch")
-                    batches["train"].reset()
+                if self.get_global_step() >= self.config.get("num_steps",
+                                                             float("inf")):
                     break
             self.run_hooks(epoch_step, before=False)
 
             ############# run one epoch on each split
             # only continue a split as long as someone is retrieving results
             for split in batches:
+                batches[split].reset()
                 self.run_hooks(epoch_step, before=True, epoch_hooks=True)
 
                 for batch_step in trange(len(batches[split]), desc=split,
@@ -229,7 +234,6 @@ class PyHookedModelIterator(object):
 
                     if batches[split].is_new_epoch or not active:
                         self.logger.info("Done with {}".format(split))
-                        batches[split].reset()
                         break
                 self.run_hooks(epoch_step, before=False, epoch_hooks=True)
 
