@@ -63,6 +63,45 @@ class TemplateIterator(PyHookedModelIterator):
             self.hooks.append(self.validation_loghook)
             # write checkpoints after epoch or when interrupted
             self.hooks.append(self.ckpthook)
+            wandb_logging = set_default(self.config, "integrations/wandb", False)
+            if wandb_logging:
+                import wandb
+                from edflow.hooks.logging_hooks.wandb_handler import log_wandb
+
+                os.environ["WANDB_RESUME"] = "allow"
+                os.environ["WANDB_RUN_ID"] = ProjectManager.root.replace("/", "-")
+                wandb.init(name=ProjectManager.root, config=self.config)
+                self.loghook.handlers["scalars"].append(log_wandb)
+                self.validation_loghook.handlers["scalars"].append(
+                    lambda *args, **kwargs: log_wandb(
+                        *args, **kwargs, prefix="validation"
+                    )
+                )
+            tensorboardX_logging = set_default(
+                self.config, "integrations/tensorboardX", False
+            )
+            if tensorboardX_logging:
+                from tensorboardX import SummaryWriter
+                from edflow.hooks.logging_hooks.tensorboardX_handler import (
+                    log_tensorboard_config,
+                    log_tensorboard_scalars,
+                )
+
+                self.tensorboardX_writer = SummaryWriter(ProjectManager.root)
+                log_tensorboard_config(
+                    self.tensorboardX_writer, self.config, self.get_global_step()
+                )
+                self.loghook.handlers["scalars"].append(
+                    lambda *args, **kwargs: log_tensorboard_scalars(
+                        self.tensorboardX_writer, *args, **kwargs
+                    )
+                )
+                self.validation_loghook.handlers["scalars"].append(
+                    lambda *args, **kwargs: log_tensorboard_scalars(
+                        self.tensorboardX_writer, *args, **kwargs, prefix="validation"
+                    )
+                )
+
         else:
             # evaluate
             self._eval_op = set_default(
