@@ -45,15 +45,15 @@ class LoggingHook(Hook):
                         self.logger.info("global_step: {}".format(self._step))
                         active = True
                     for handler in self.handlers[k]:
-                        handler(handler_results)
+                        handler(handler_results, self._step)
             if active:
                 self.logger.info("logging root: {}".format(self.root))
 
-    def log_scalars(self, results):
+    def log_scalars(self, results, step):
         for name in sorted(results.keys()):
             self.logger.info("{}: {}".format(name, results[name]))
 
-    def log_images(self, results):
+    def log_images(self, results, step):
         for name, image_batch in results.items():
             full_name = name + "_{:07}.png".format(self._step)
             save_path = os.path.join(self.root, full_name)

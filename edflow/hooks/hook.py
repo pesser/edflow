@@ -1,6 +1,3 @@
-from edflow.custom_logging import get_default_logger
-
-
 class Hook(object):
     """Base Hook to be inherited from. Hooks can be passed to
     :class:`HookedModelIterator` and will be called at fixed intervals.

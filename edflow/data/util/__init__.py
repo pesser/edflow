@@ -1,10 +1,3 @@
-import matplotlib as mpl
-
-mpl.use("Agg")
-
-import matplotlib.pyplot as plt  # noqa
-import matplotlib.gridspec as gridspec  # noqa
-
 import numpy as np  # noqa
 
 from edflow.util import walk  # noqa
@@ -23,6 +16,9 @@ def flow2hsv(flow):
     np.array
         Containing the hsv data.
     """
+    import matplotlib as mpl
+
+    mpl.use("Agg")
 
     # prepare array - value is always at max
     hsv = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
@@ -50,6 +46,9 @@ def cart2polar(x, y):
 
 def hsv2rgb(hsv):
     """color space conversion hsv -> rgb. simple wrapper for nice name."""
+    import matplotlib as mpl
+
+    mpl.use("Agg")
     rgb = mpl.colors.hsv_to_rgb(hsv)
     return rgb
 
@@ -284,6 +283,8 @@ def plot_datum(
         leaf object and the Axes to plot it in.
 
     """
+    import matplotlib.pyplot as plt  # noqa
+    import matplotlib.gridspec as gridspec  # noqa
 
     class Plotter(object):
         def __init__(self, kind_fn, savename):
