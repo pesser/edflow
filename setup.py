@@ -7,7 +7,7 @@ __version__ = "dev"
 install_requires = [
     "pyyaml",
     "tqdm",
-    "Pillow",
+    "Pillow < 7.0.0",
     "chainer",
     "numpy",
     "pandas",  # for csv dataset and eval pipeline

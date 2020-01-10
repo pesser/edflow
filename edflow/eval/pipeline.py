@@ -292,7 +292,7 @@ class EvalHook(Hook):
         """ """
 
         if not hasattr(self, "exception_occured"):
-            had_exception = f"    .. note ::\n\n        No exception encountered during creation.\n\n"
+            had_exception = ""
         else:
             had_exception = f"    .. warning ::\n\n        An exception occured during creation.\n\n"
 
@@ -863,7 +863,7 @@ For more documentation take a look at ``edflow/eval_pipeline/eval_pipeline.py``
     )
     A.add_argument(
         "-c",
-        "--callback",
+        "--callbacks",
         type=str,
         nargs="*",
         help="Import string to the callback functions used for the "
@@ -881,9 +881,11 @@ For more documentation take a look at ``edflow/eval_pipeline/eval_pipeline.py``
     args, unknown = A.parse_known_args()
     additional_kwargs = parse_unknown_args(unknown)
 
-    callbacks = cbargs2cbdict(args.callback)
+    callbacks = cbargs2cbdict(args.callbacks)
 
-    standalone_eval_meta_dset(args.csv, callbacks, additional_kwargs, args.other_config)
+    standalone_eval_meta_dset(
+        args.meta, callbacks, additional_kwargs, args.other_config
+    )
 
 
 if __name__ == "__main__":
