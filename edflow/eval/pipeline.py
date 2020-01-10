@@ -407,7 +407,7 @@ class TemplateEvalHook(EvalHook):
             if self.cb_handler is not None:
                 results = dict()
                 set_value(results, self.keypath, cb_results)
-                paths = [self.keypath+"/"+cb for cb in self.cb_names]
+                paths = [self.keypath + "/" + cb for cb in self.cb_names]
                 self.cb_handler(results=results, paths=paths)
             self._active = False
 

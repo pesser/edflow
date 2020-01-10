@@ -39,9 +39,7 @@ class LoggingHook(Hook):
     def __call__(self, results, step, paths):
         for path in paths:
             for k in self.handlers:
-                handler_results = retrieve(
-                    results, path + "/" + k, default=dict()
-                )
+                handler_results = retrieve(results, path + "/" + k, default=dict())
                 for handler in self.handlers[k]:
                     handler(handler_results, step, path=path)
 

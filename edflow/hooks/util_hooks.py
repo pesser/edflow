@@ -6,10 +6,7 @@ class ExpandHook(Hook):
     """Retrieve paths."""
 
     def __init__(
-        self,
-        paths,
-        interval,
-        default=None,
+        self, paths, interval, default=None,
     ):
         """
         Parameters
