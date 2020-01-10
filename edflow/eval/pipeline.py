@@ -292,7 +292,7 @@ class EvalHook(Hook):
         """ """
 
         if not hasattr(self, "exception_occured"):
-            had_exception = f"    .. note ::\n\n        No exception encountered during creation.\n\n"
+            had_exception = ""
         else:
             had_exception = f"    .. warning ::\n\n        An exception occured during creation.\n\n"
 
