@@ -86,6 +86,7 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
         )
     else:
         validation_batches = None
+        validation_dataset = None
     try:
         if "num_steps" in config:
             # set number of epochs to perform at least num_steps steps
