@@ -276,6 +276,7 @@ class EvalHook(Hook):
         self.save_meta()
 
         data_out = MetaDataset(self.save_root)
+        data_out.expand = True
         data_out.append_labels = True
 
         cb_kwargs = retrieve(self.config, "eval_pipeline/callback_kwargs", default={})
