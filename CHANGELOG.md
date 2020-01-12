@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Eval Pipeline now stores data compatible with MetaDataset specifications. Previously exported data cannot be read again using edeval after this change.
 - Changed configuration of integrations: `EDFLOWGIT` now `integrations/git`, `wandb_logging` now `integrations/wandb`, `tensorboardX_logging` now `--integrations/tensorboardX`.
 - ProjectManager is now `edflow.run` and initialized with `edflow.run.init(...)`.
 - Saved config files use `-` instead of `:` in filename to be consistent.

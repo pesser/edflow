@@ -113,6 +113,7 @@ class TemplateIterator(PyHookedModelIterator):
                                     "validation/eval_op")
         label_key = set_default(self.config, "eval_hook/label_key",
                                 "validation/eval_op/labels")
+        # TODO simplify callback loading - no need to load objects here
         _eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks",
                                       dict())
         if not isinstance(_eval_callbacks, dict):
