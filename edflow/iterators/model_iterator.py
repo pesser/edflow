@@ -21,8 +21,7 @@ class PyHookedModelIterator(object):
         config,
         root,
         model,
-        dataset,
-        validation_dataset=None, # TODO switch to datasets dict
+        datasets,
         hook_freq=100,
         num_epochs=100,
         hooks=[],
@@ -53,8 +52,11 @@ class PyHookedModelIterator(object):
         self.root = root
 
         self.model = model
-        self.dataset = dataset
-        self.validation_dataset = validation_dataset
+        self.datasets = datasets
+        # backwards compatibility
+        self.dataset = datasets["train"]
+        self.validation_dataset = datasets["validation"]
+
         self.num_epochs = num_epochs
 
         self.hooks = hooks
@@ -117,7 +119,7 @@ class PyHookedModelIterator(object):
         for hook in self.hooks:
             hook.at_exception(e)
 
-    def iterate(self, batch_iterator, batch_iterator_validation=None):
+    def iterate(self, batches):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
@@ -129,12 +131,12 @@ class PyHookedModelIterator(object):
         """
 
         try:
-            self._iterate(batch_iterator, batch_iterator_validation)
+            self._iterate(batches)
         except Exception as e:
             self._handle_exception(e)
             raise e
 
-    def _iterate(self, batch_iterator, batch_iterator_validation=None):
+    def _iterate(self, batches):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
@@ -151,16 +153,10 @@ class PyHookedModelIterator(object):
         desc_epoch = base + "Epoch"
         desc_batch = base + "Batch"
 
+        # TODO use val freq
         validation_frequency = self.config.get(
             "val_freq", self.config.get("log_freq", -1)
         )
-        batches = {"train": batch_iterator, "validation":
-                   batch_iterator_validation}
-        if epoch_hooks_only and batches["validation"] is None:
-            self.logger.warning("No validation batch specified, defaulting to train batch.")
-            batches["validation"] = batches["train"]
-        batches = dict((s, b) for s, b in batches.items() if b is not None)
-
         num_epochs = 1 if epoch_hooks_only else self.num_epochs
         for epoch_step in trange(num_epochs, desc=desc_epoch,
                                  position=pos, dynamic_ncols=True):

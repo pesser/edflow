@@ -283,9 +283,9 @@ class EvalHook(Hook):
 
         results = dict()
         for n, cb in self.cbacks.items():
-            cb_name = "CB: {}".format(n)
-            cb_name = "{a}\n{c}\n{a}".format(a="=" * len(cb_name), c=cb_name)
-            self.logger.info(cb_name)
+            self.logger.info("Running callback '{}' on dataset '{}'".format(
+                n, type(self.data_in).__name__
+            ))
 
             kwargs = cb_kwargs.get(n, {})
             results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
@@ -740,6 +740,7 @@ def standalone_eval_meta_dset(
 
     root = os.path.dirname(path_to_meta_dir)
 
+    # TODO handle logging of return values
     outputs = apply_callbacks(
         callbacks, root, in_data, out_data, config, callback_kwargs
     )
