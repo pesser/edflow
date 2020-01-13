@@ -111,8 +111,6 @@ class TemplateIterator(PyHookedModelIterator):
         # evaluate validation/step_ops/eval_op after each epoch
         self._eval_op = set_default(self.config, "eval_hook/eval_op",
                                     "validation/eval_op")
-        label_key = set_default(self.config, "eval_hook/label_key",
-                                "validation/eval_op/labels")
         # TODO simplify callback loading - no need to load objects here
         _eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks",
                                       dict())
@@ -152,7 +150,6 @@ class TemplateIterator(PyHookedModelIterator):
             keypath=self._eval_op,
             config=self.config,
             callbacks=eval_callbacks,
-            labels_key=label_key,
             callback_handler=callback_handler,
         )
         self.epoch_hooks.append(self.evalhook)

@@ -189,7 +189,9 @@ class EvalHook(Hook):
         self.logger.info("{}".format(self.cbacks))
 
         self.sdks = sub_dir_keys
-        self.lk = labels_key
+        self.labels_key = labels_key
+        if self.labels_key is None:
+            self.labels_key = os.path.join(keypath, "labels")
         self.datasets = datasets
         # TODO fix hardcoded data_in
         self.data_in = self.datasets["validation"]
@@ -218,10 +220,7 @@ class EvalHook(Hook):
 
     def after_step(self, step, last_results):
         """Save examples and store label values."""
-        if self.lk is not None:
-            label_vals = pop_keypath(last_results, self.lk, default={})
-        else:
-            label_vals = {}
+        label_vals = pop_keypath(last_results, self.labels_key, default={})
 
         idxs = self.idxs  # indices collected before_step
 
