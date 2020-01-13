@@ -147,8 +147,7 @@ class TemplateIterator(PyHookedModelIterator):
                 paths=paths,
             )
         self.evalhook = TemplateEvalHook(
-            #dataset=self.dataset, # TODO let EvalHook figure out correct split
-            dataset=self.validation_dataset,
+            datasets=self.datasets,
             step_getter=self.get_global_step,
             keypath=self._eval_op,
             config=self.config,

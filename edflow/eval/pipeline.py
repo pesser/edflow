@@ -130,7 +130,7 @@ class EvalHook(Hook):
 
     def __init__(
         self,
-        dataset,
+        datasets,
         sub_dir_keys=[],
         labels_key=None,
         callbacks={},
@@ -145,8 +145,8 @@ class EvalHook(Hook):
 
         Parameters
         ----------
-            dataset : DatasetMixin
-                The Dataset used for creating the new data.
+            datasets : dict(split: DatasetMixin)
+                The Datasets used for creating the new data.
             sub_dir_keys : list(str)
                 Keys found in :attr:`example`, which will
                 be used to make a subdirectory for the stored example.
@@ -190,7 +190,9 @@ class EvalHook(Hook):
 
         self.sdks = sub_dir_keys
         self.lk = labels_key
-        self.data_in = dataset
+        self.datasets = datasets
+        # TODO fix hardcoded data_in
+        self.data_in = self.datasets["validation"]
 
         self.config = config
 
@@ -712,7 +714,7 @@ def standalone_eval_meta_dset(
         The collected outputs of the callbacks.
     """
 
-    from edflow.main import get_implementations_from_config
+    from edflow.util import get_obj_from_str
     from edflow.config import update_config
     import yaml
 
@@ -726,9 +728,15 @@ def standalone_eval_meta_dset(
 
     config = out_data.meta
 
-    dataset_str = config["dataset"]
-    impl = get_implementations_from_config(config, ["dataset"])
-    in_data = impl["dataset"](config)
+    # backwards compatibility
+    if not "datasets" in config:
+        config["datasets"] = {"train": config["dataset"]}
+        if "validation_dataset" in config:
+            config["datasets"]["validation"] = config["validation_dataset"]
+    datasets = dict((split, get_obj_from_str(config["datasets"][split])) for
+                    split in config["datasets"])
+    # TODO fix hardcoded dataset
+    in_data = datasets["validation"](config=config)
 
     update_config(config, additional_kwargs)
     config.update(other_config)
@@ -801,6 +809,9 @@ def apply_callbacks(callbacks, root, in_data, out_data, config, callback_kwargs=
 
     outputs = {}
     for name, cb in callbacks.items():
+        print("Running callback '{}' on dataset '{}'".format(
+            name, type(in_data).__name__
+        ))
         kwargs = callback_kwargs.get(name, {})
         outputs[name] = cb(root, in_data, out_data, config, **kwargs)
 
