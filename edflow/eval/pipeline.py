@@ -725,6 +725,8 @@ def standalone_eval_meta_dset(
         other_config = {}
 
     out_data = MetaDataset(path_to_meta_dir)
+    out_data.expand = True
+    out_data.append_labels = True
 
     config = out_data.meta
 
@@ -737,6 +739,7 @@ def standalone_eval_meta_dset(
                     split in config["datasets"])
     # TODO fix hardcoded dataset
     in_data = datasets["validation"](config=config)
+    in_data.expand = True
 
     update_config(config, additional_kwargs)
     config.update(other_config)
