@@ -15,7 +15,7 @@ def log_tensorboard_images(writer, results, step, path):
     results = dict((path + "/" + k, v) for k, v in results.items())
     for k, v in results.items():
         v = batch_to_canvas(v)
-        v = ((v+1)*127.5).astype(np.uint8)
+        v = ((v + 1) * 127.5).astype(np.uint8)
         writer.add_image(tag=k, img_tensor=v, global_step=step, dataformats="HWC")
     writer.flush()
 

@@ -86,6 +86,7 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
         )
     else:
         validation_batches = None
+        validation_dataset = None
     try:
         if "num_steps" in config:
             # set number of epochs to perform at least num_steps steps
@@ -106,8 +107,12 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
         )
         logger.info("Instantiating iterator.")
         Trainer = implementations["iterator"](
-            config, root, Model, dataset=dataset,
-            validation_dataset=validation_dataset, **compat_kwargs
+            config,
+            root,
+            Model,
+            dataset=dataset,
+            validation_dataset=validation_dataset,
+            **compat_kwargs
         )
 
         logger.info("Initializing model.")
