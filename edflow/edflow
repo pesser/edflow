@@ -165,7 +165,17 @@ if __name__ == "__main__":
             # directly removing it is problematic because .nfsXXX files are
             # created if open files are left on a nfs system, which prevents us
             # from deleting the directory.
-            dst, name = os.path.split(run.root)
-            dst = os.path.join(dst, "debug_runs")
-            os.makedirs(dst, exist_ok=True)
-            os.rename(run.root, os.path.join(dst, name))
+            if not opt.project:
+                # newly created debug project
+                dst, name = os.path.split(run.root)
+                dst = os.path.join(dst, "debug_runs", name)
+                os.makedirs(os.path.split(dst)[0], exist_ok=True)
+                os.rename(run.root, dst)
+            elif opt.project and not opt.train:
+                # debugging eval in existing project -> keep project but delete eval
+                dst, name = os.path.split(run.root)
+                dst = os.path.join(dst, "debug_runs", name)
+                rel_eval = os.path.relpath(run.latest_eval, start=run.root)
+                dst = os.path.join(dst, rel_eval)
+                os.makedirs(os.path.split(dst)[0], exist_ok=True)
+                os.rename(run.latest_eval, dst)

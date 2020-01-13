@@ -109,6 +109,8 @@ class run(object):
                 cls.resumed = False
                 cls.root = os.path.join(log_dir, name)
             else:
+                if run_dir[-1] == "/":
+                    run_dir = run_dir[:-1]
                 cls.resumed = True
                 cls.root = run_dir
             cls.name = os.path.split(cls.root)[1]
