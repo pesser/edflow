@@ -320,7 +320,7 @@ class EvalHook(Hook):
         self.logger.info(
             "To directly reuse the data simply use the following command:\n"
             + "from edflow.data.believers.meta import MetaDataset\n"
-            + f'M = MetaDataset("{os.path.abspath(self.save_root)}"\n)'
+            + f'M = MetaDataset("{os.path.abspath(self.save_root)}")\n'
         )
 
 
