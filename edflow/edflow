@@ -9,6 +9,7 @@ import sys  # noqa
 
 sys.path.append(os.getcwd())  # convenience: load implementations from cwd
 
+import re
 import argparse  # noqa
 import yaml  # noqa
 
@@ -30,6 +31,16 @@ def load_config(base_configs, additional_kwargs):
 
 
 def main(opt, additional_kwargs):
+    # use -p <rundir/configs/config.yaml> as shortcut for
+    # -b <rundir/configs/config.yaml> -p <rundir>
+    if opt.project and opt.project.endswith(".yaml"):
+        extra_base = opt.project
+        project = re.sub("/configs/.+\.yaml", "", opt.project)
+        opt.project = project
+        if opt.base:
+            opt.base = [extra_base]+opt.base
+        else:
+            opt.base = [extra_base]
     config = load_config(opt.base, additional_kwargs)
     if not "model" in config:
         config["model"] = "edflow.util.NoModel"
