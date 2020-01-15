@@ -315,7 +315,7 @@ class EvalHook(Hook):
         self.logger.info(
             "All data has been produced. You can now also run all"
             + " callbacks using the following command:\n"
-            + f"edeval -c {self.save_root} -cb {cbs}"
+            + f"edeval -m {self.save_root} -c {cbs}"
         )
         self.logger.info(
             "To directly reuse the data simply use the following command:\n"
