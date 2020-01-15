@@ -17,7 +17,9 @@ def _save_config(config, prefix="config"):
         f.write(yaml.dump(config))
     return path
 
+
 # TODO: DRY --- train and test are almost the same
+
 
 def train(config, root, checkpoint=None, retrain=False, debug=False):
     """Run training. Loads model, iterator and dataset according to config."""
@@ -35,8 +37,10 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
 
     model = get_obj_from_str(config["model"])
     iterator = get_obj_from_str(config["iterator"])
-    datasets = dict((split, get_obj_from_str(config["datasets"][split])) for
-                    split in config["datasets"])
+    datasets = dict(
+        (split, get_obj_from_str(config["datasets"][split]))
+        for split in config["datasets"]
+    )
 
     logger.info("Instantiating datasets.")
     for split in datasets:
@@ -80,8 +84,7 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
             hook_freq=config["hook_freq"], num_epochs=config["num_epochs"]
         )
         logger.info("Instantiating iterator.")
-        iterator = iterator(config, root, model, datasets=datasets,
-                            **compat_kwargs)
+        iterator = iterator(config, root, model, datasets=datasets, **compat_kwargs)
 
         logger.info("Initializing model.")
         if checkpoint is not None:
@@ -125,8 +128,10 @@ def test(config, root, checkpoint=None, nogpu=False, bar_position=0, debug=False
 
     model = get_obj_from_str(config["model"])
     iterator = get_obj_from_str(config["iterator"])
-    datasets = dict((split, get_obj_from_str(config["datasets"][split])) for
-                    split in config["datasets"])
+    datasets = dict(
+        (split, get_obj_from_str(config["datasets"][split]))
+        for split in config["datasets"]
+    )
 
     logger.info("Instantiating datasets.")
     for split in datasets:
@@ -163,8 +168,7 @@ def test(config, root, checkpoint=None, nogpu=False, bar_position=0, debug=False
             nogpu=config["nogpu"],
             num_epochs=config["num_epochs"],
         )
-        iterator = iterator(config, root, model, datasets=datasets,
-                            **compat_kwargs)
+        iterator = iterator(config, root, model, datasets=datasets, **compat_kwargs)
 
         logger.info("Initializing model.")
         if checkpoint is not None:

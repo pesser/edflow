@@ -115,4 +115,4 @@ def acc_callback(root, data_in, data_out, config):
     logger.info("Loss1: {}".format(loss1))
     logger.info("Loss2: {}".format(loss2 / len(data_in)))
     logger.info("Accuracy: {}".format(correct / len(data_in)))
-    return {"scalars": {"accuracy": correct/len(data_in)}}
+    return {"scalars": {"accuracy": correct / len(data_in)}}

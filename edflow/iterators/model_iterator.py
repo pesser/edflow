@@ -158,8 +158,9 @@ class PyHookedModelIterator(object):
             "val_freq", self.config.get("log_freq", -1)
         )
         num_epochs = 1 if epoch_hooks_only else self.num_epochs
-        for epoch_step in trange(num_epochs, desc=desc_epoch,
-                                 position=pos, dynamic_ncols=True):
+        for epoch_step in trange(
+            num_epochs, desc=desc_epoch, position=pos, dynamic_ncols=True
+        ):
             self._epoch_step = epoch_step
 
             ############# run one batch on each split until new epoch or max steps
@@ -171,10 +172,12 @@ class PyHookedModelIterator(object):
             else:
                 batches_per_epoch = len(batches["train"])
             if "max_batches_per_epoch" in self.config:
-                batches_per_epoch = min(batches_per_epoch,
-                                        self.config["max_batches_per_epoch"])
-            for batch_step in trange(batches_per_epoch, desc=desc_batch,
-                                     position = pos+1, dynamic_ncols=True):
+                batches_per_epoch = min(
+                    batches_per_epoch, self.config["max_batches_per_epoch"]
+                )
+            for batch_step in trange(
+                batches_per_epoch, desc=desc_batch, position=pos + 1, dynamic_ncols=True
+            ):
                 self._batch_step = batch_step
 
                 def lazy_split_op(split):
@@ -185,7 +188,9 @@ class PyHookedModelIterator(object):
                         fetches = step_ops
                         self.run_hooks(batch_step, fetches, feeds, batch, before=True)
                         return self.run(fetches, feed_dict=feeds)
+
                     return split_op
+
                 results = {"global_step": self.get_global_step()}
                 for split in batches:
                     results[split] = lazy_split_op(split)
@@ -194,8 +199,7 @@ class PyHookedModelIterator(object):
 
                 self.increment_global_step()
 
-                if self.get_global_step() >= self.config.get("num_steps",
-                                                             float("inf")):
+                if self.get_global_step() >= self.config.get("num_steps", float("inf")):
                     break
             self.run_hooks(epoch_step, before=False)
 
@@ -205,11 +209,16 @@ class PyHookedModelIterator(object):
                 batches[split].reset()
                 self.run_hooks(epoch_step, before=True, epoch_hooks=True)
 
-                for batch_step in trange(len(batches[split]), desc=split,
-                                         position = pos+2, dynamic_ncols=True):
+                for batch_step in trange(
+                    len(batches[split]),
+                    desc=split,
+                    position=pos + 2,
+                    dynamic_ncols=True,
+                ):
                     self._batch_step = batch_step
 
                     active = False
+
                     def lazy_split_op(split):
                         def split_op():
                             nonlocal active
@@ -218,14 +227,25 @@ class PyHookedModelIterator(object):
                             batch = next(batches[split])
                             feeds = self.make_feeds(batch)
                             fetches = step_ops
-                            self.run_hooks(batch_step, fetches, feeds, batch,
-                                           before=True, epoch_hooks=True)
+                            self.run_hooks(
+                                batch_step,
+                                fetches,
+                                feeds,
+                                batch,
+                                before=True,
+                                epoch_hooks=True,
+                            )
                             return self.run(fetches, feed_dict=feeds)
+
                         return split_op
-                    results = {"global_step": self.get_global_step(),
-                               split: lazy_split_op(split)}
-                    self.run_hooks(batch_step, results=results, before=False,
-                                   epoch_hooks=True)
+
+                    results = {
+                        "global_step": self.get_global_step(),
+                        split: lazy_split_op(split),
+                    }
+                    self.run_hooks(
+                        batch_step, results=results, before=False, epoch_hooks=True
+                    )
                     del results
 
                     if batches[split].is_new_epoch or not active:
@@ -257,8 +277,14 @@ class PyHookedModelIterator(object):
         return results
 
     def run_hooks(
-        self, index, fetches=None, feeds=None, batch=None, results=None,
-        before=True, epoch_hooks=False
+        self,
+        index,
+        fetches=None,
+        feeds=None,
+        batch=None,
+        results=None,
+        before=True,
+        epoch_hooks=False,
     ):
         """Run all hooks and manage their stuff. The passed arguments determine
         which method of the hooks is called.

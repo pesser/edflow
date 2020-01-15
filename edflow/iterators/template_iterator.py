@@ -5,8 +5,13 @@ from edflow.hooks.logging_hooks.minimal_logging_hook import LoggingHook
 from edflow.hooks.util_hooks import IntervalHook, ExpandHook
 from edflow.eval.pipeline import TemplateEvalHook
 from edflow.project_manager import ProjectManager
-from edflow.util import (retrieve, set_default, set_value, get_obj_from_str,
-                         get_str_from_obj)
+from edflow.util import (
+    retrieve,
+    set_default,
+    set_value,
+    get_obj_from_str,
+    get_str_from_obj,
+)
 
 
 class TemplateIterator(PyHookedModelIterator):
@@ -32,53 +37,62 @@ class TemplateIterator(PyHookedModelIterator):
         ## hooks - disabled unless -t is specified
 
         # execute train ops
-        self._train_ops = set_default(self.config, "train_ops",
-                                      ["train/train_op"])
+        self._train_ops = set_default(self.config, "train_ops", ["train/train_op"])
         train_hook = ExpandHook(paths=self._train_ops, interval=1)
         self.hooks.append(train_hook)
 
         # log train/step_ops/log_ops in increasing intervals
-        self._log_ops = set_default(self.config, "log_ops",
-                                    ["train/log_op", "validation/log_op"])
-        self.loghook = LoggingHook(paths=self._log_ops,
-                                   root_path=ProjectManager.train, interval=1)
-        self.ihook = IntervalHook([self.loghook],
-                                  interval=set_default(self.config,
-                                                       "start_log_freq", 1),
-                                  modify_each=1,
-                                  max_interval=set_default(self.config,
-                                                           "log_freq", 1000),
-                                  get_step=self.get_global_step,)
+        self._log_ops = set_default(
+            self.config, "log_ops", ["train/log_op", "validation/log_op"]
+        )
+        self.loghook = LoggingHook(
+            paths=self._log_ops, root_path=ProjectManager.train, interval=1
+        )
+        self.ihook = IntervalHook(
+            [self.loghook],
+            interval=set_default(self.config, "start_log_freq", 1),
+            modify_each=1,
+            max_interval=set_default(self.config, "log_freq", 1000),
+            get_step=self.get_global_step,
+        )
         self.hooks.append(self.ihook)
 
         # setup logging integrations
         if not self.config.get("test_mode", False):
-            default_wandb_logging = {"active": False,
-                             "handlers": ["scalars", "images"]}
-            wandb_logging = set_default(self.config, "integrations/wandb",
-                                        default_wandb_logging)
+            default_wandb_logging = {"active": False, "handlers": ["scalars", "images"]}
+            wandb_logging = set_default(
+                self.config, "integrations/wandb", default_wandb_logging
+            )
             if wandb_logging["active"]:
                 import wandb
                 from edflow.hooks.logging_hooks.wandb_handler import (
-                    log_wandb, log_wandb_images)
+                    log_wandb,
+                    log_wandb_images,
+                )
 
                 os.environ["WANDB_RESUME"] = "allow"
-                os.environ["WANDB_RUN_ID"] = ProjectManager.root.strip("/").replace("/", "-")
+                os.environ["WANDB_RUN_ID"] = ProjectManager.root.strip("/").replace(
+                    "/", "-"
+                )
                 wandb.init(name=ProjectManager.root, config=self.config)
 
-                handlers = set_default(self.config,
-                                       "integrations/wandb/handlers",
-                                       default_wandb_logging["handlers"])
+                handlers = set_default(
+                    self.config,
+                    "integrations/wandb/handlers",
+                    default_wandb_logging["handlers"],
+                )
                 if "scalars" in handlers:
                     self.loghook.handlers["scalars"].append(log_wandb)
                 if "images" in handlers:
                     self.loghook.handlers["images"].append(log_wandb_images)
 
-            default_tensorboardX_logging = {"active": False,
-                                    "handlers": ["scalars", "images"]}
-            tensorboardX_logging = set_default(self.config,
-                                               "integrations/tensorboardX",
-                                               default_tensorboardX_logging)
+            default_tensorboardX_logging = {
+                "active": False,
+                "handlers": ["scalars", "images"],
+            }
+            tensorboardX_logging = set_default(
+                self.config, "integrations/tensorboardX", default_tensorboardX_logging
+            )
             if tensorboardX_logging["active"]:
                 from tensorboardX import SummaryWriter
                 from edflow.hooks.logging_hooks.tensorboardX_handler import (
@@ -88,11 +102,14 @@ class TemplateIterator(PyHookedModelIterator):
                 )
 
                 self.tensorboardX_writer = SummaryWriter(ProjectManager.root)
-                log_tensorboard_config(self.tensorboardX_writer, self.config,
-                                       self.get_global_step())
-                handlers = set_default(self.config,
-                                       "integrations/tensorboardX/handlers",
-                                       default_tensorboardX_logging["handlers"])
+                log_tensorboard_config(
+                    self.tensorboardX_writer, self.config, self.get_global_step()
+                )
+                handlers = set_default(
+                    self.config,
+                    "integrations/tensorboardX/handlers",
+                    default_tensorboardX_logging["handlers"],
+                )
                 if "scalars" in handlers:
                     self.loghook.handlers["scalars"].append(
                         lambda *args, **kwargs: log_tensorboard_scalars(
@@ -109,40 +126,36 @@ class TemplateIterator(PyHookedModelIterator):
         ## epoch hooks
 
         # evaluate validation/step_ops/eval_op after each epoch
-        self._eval_op = set_default(self.config, "eval_hook/eval_op",
-                                    "validation/eval_op")
+        self._eval_op = set_default(
+            self.config, "eval_hook/eval_op", "validation/eval_op"
+        )
         # TODO simplify callback loading - no need to load objects here
-        _eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks",
-                                      dict())
+        _eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks", dict())
         if not isinstance(_eval_callbacks, dict):
             _eval_callbacks = {"cb": _eval_callbacks}
         eval_callbacks = dict()
         for k in _eval_callbacks:
             eval_callbacks[k] = _eval_callbacks[k]
         if hasattr(self, "callbacks"):
-            iterator_callbacks = retrieve(self.callbacks,
-                                       "eval_op", default=dict())
+            iterator_callbacks = retrieve(self.callbacks, "eval_op", default=dict())
             for k in iterator_callbacks:
                 import_path = get_str_from_obj(iterator_callbacks[k])
-                set_value(self.config,
-                          "eval_hook/eval_callbacks/{}".format(k),
-                          import_path)
+                set_value(
+                    self.config, "eval_hook/eval_callbacks/{}".format(k), import_path
+                )
                 eval_callbacks[k] = import_path
         if hasattr(self.model, "callbacks"):
-            model_callbacks = retrieve(self.model.callbacks,
-                                       "eval_op", default=dict())
+            model_callbacks = retrieve(self.model.callbacks, "eval_op", default=dict())
             for k in model_callbacks:
                 import_path = get_str_from_obj(model_callbacks[k])
-                set_value(self.config,
-                          "eval_hook/eval_callbacks/{}".format(k),
-                          import_path)
+                set_value(
+                    self.config, "eval_hook/eval_callbacks/{}".format(k), import_path
+                )
                 eval_callbacks[k] = import_path
         callback_handler = None
         if not self.config.get("test_mode", False):
             callback_handler = lambda results, paths: self.loghook(
-                results=results,
-                step=self.get_global_step(),
-                paths=paths,
+                results=results, step=self.get_global_step(), paths=paths,
             )
 
         # offer option to run eval functor:
@@ -150,15 +163,15 @@ class TemplateIterator(PyHookedModelIterator):
         # overwrite callbacks to only include the callbacks of the functor
         if self.config.get("test_mode", False) and "eval_functor" in self.config:
             # offer option to use eval functor for evaluation
-            eval_functor = get_obj_from_str(self.config["eval_functor"])(config=self.config)
+            eval_functor = get_obj_from_str(self.config["eval_functor"])(
+                config=self.config
+            )
             self.step_ops = lambda: {"eval_op": eval_functor}
             eval_callbacks = dict()
             if hasattr(eval_functor, "callbacks"):
                 for k in eval_functor.callbacks:
                     eval_callbacks[k] = get_str_from_obj(eval_functor.callbacks[k])
-            set_value(self.config,
-                      "eval_hook/eval_callbacks",
-                      eval_callbacks)
+            set_value(self.config, "eval_hook/eval_callbacks", eval_callbacks)
         self.evalhook = TemplateEvalHook(
             datasets=self.datasets,
             step_getter=self.get_global_step,

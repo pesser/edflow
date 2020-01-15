@@ -284,9 +284,11 @@ class EvalHook(Hook):
 
         results = dict()
         for n, cb in self.cbacks.items():
-            self.logger.info("Running callback '{}' on dataset '{}'".format(
-                n, type(self.data_in).__name__
-            ))
+            self.logger.info(
+                "Running callback '{}' on dataset '{}'".format(
+                    n, type(self.data_in).__name__
+                )
+            )
 
             kwargs = cb_kwargs.get(n, {})
             results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
@@ -353,7 +355,7 @@ class TemplateEvalHook(EvalHook):
             if self.cb_handler is not None:
                 results = dict()
                 set_value(results, self.keypath, cb_results)
-                paths = [self.keypath+"/"+cb for cb in self.cb_names]
+                paths = [self.keypath + "/" + cb for cb in self.cb_names]
                 self.cb_handler(results=results, paths=paths)
             self._active = False
 
@@ -734,8 +736,10 @@ def standalone_eval_meta_dset(
         config["datasets"] = {"train": config["dataset"]}
         if "validation_dataset" in config:
             config["datasets"]["validation"] = config["validation_dataset"]
-    datasets = dict((split, get_obj_from_str(config["datasets"][split])) for
-                    split in config["datasets"])
+    datasets = dict(
+        (split, get_obj_from_str(config["datasets"][split]))
+        for split in config["datasets"]
+    )
     # TODO fix hardcoded dataset
     in_data = datasets["validation"](config=config)
     in_data.expand = True
@@ -811,9 +815,9 @@ def apply_callbacks(callbacks, root, in_data, out_data, config, callback_kwargs=
 
     outputs = {}
     for name, cb in callbacks.items():
-        print("Running callback '{}' on dataset '{}'".format(
-            name, type(in_data).__name__
-        ))
+        print(
+            "Running callback '{}' on dataset '{}'".format(name, type(in_data).__name__)
+        )
         kwargs = callback_kwargs.get(name, {})
         outputs[name] = cb(root, in_data, out_data, config, **kwargs)
 
