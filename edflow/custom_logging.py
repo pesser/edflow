@@ -135,7 +135,7 @@ class run(object):
                         + "| grep {}".format(tty)
                     ],
                     shell=True,
-                    text=True,
+                    universal_newlines=True,
                     stdout=subprocess.PIPE,
                 ).stdout
                 tmux_target = tmux_target.split("\n")[0].split(" ")[0]
@@ -248,7 +248,7 @@ class run(object):
                 shell=True,
                 check=True,
                 stdout=subprocess.PIPE,
-                text=True,
+                universal_newlines=True,
             ).stdout.strip()
         except subprocess.CalledProcessError:
             cls.logger.warning(
@@ -268,7 +268,7 @@ class run(object):
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=True,
+                    universal_newlines=True,
                 ).stdout
                 cls.logger.debug(output)
                 if (
@@ -293,7 +293,7 @@ class run(object):
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=True,
+                    universal_newlines=True,
                 ).stdout
                 cls.logger.debug(output)
             except Exception as e:
@@ -308,7 +308,7 @@ class run(object):
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=True,
+                    universal_newlines=True,
                 ).stdout
                 cls.logger.debug(output)
         return tagname
