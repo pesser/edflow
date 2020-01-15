@@ -144,6 +144,21 @@ class TemplateIterator(PyHookedModelIterator):
                 step=self.get_global_step(),
                 paths=paths,
             )
+
+        # offer option to run eval functor:
+        # overwrite step op to only include the evaluation of the functor and
+        # overwrite callbacks to only include the callbacks of the functor
+        if self.config.get("test_mode", False) and "eval_functor" in self.config:
+            # offer option to use eval functor for evaluation
+            eval_functor = get_obj_from_str(self.config["eval_functor"])(config=self.config)
+            self.step_ops = lambda: {"eval_op": eval_functor}
+            eval_callbacks = dict()
+            if hasattr(eval_functor, "callbacks"):
+                for k in eval_functor.callbacks:
+                    eval_callbacks[k] = get_str_from_obj(eval_functor.callbacks[k])
+            set_value(self.config,
+                      "eval_hook/eval_callbacks",
+                      eval_callbacks)
         self.evalhook = TemplateEvalHook(
             datasets=self.datasets,
             step_getter=self.get_global_step,
