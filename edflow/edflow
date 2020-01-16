@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import os
+
 # directly terminate on broken pipe without throwing exception
 import signal
+
 signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 import sys  # noqa
@@ -16,16 +18,23 @@ from edflow.main import train, test  # noqa
 from edflow.custom_logging import run, get_logger  # noqa
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
 from edflow.config import parse_unknown_args, update_config
-from edflow.util import retrieve
+from edflow.util import retrieve, merge
 
 
 def load_config(base_configs, additional_kwargs):
-    config = dict()
+    """
+    Loads configs using `yaml`, merges them and adds additional ``kwargs``.
+    """
+
+    configs = []
     if base_configs:
         for base in base_configs:
             with open(base) as f:
-                config.update(yaml.full_load(f))
+                configs += [yaml.full_load(f)]
+
+    config = merge(*configs)
     update_config(config, additional_kwargs)
+
     return config
 
 
@@ -35,9 +44,8 @@ def main(opt, additional_kwargs):
         config["model"] = "edflow.util.NoModel"
 
     run_kwargs = {
-        "git": retrieve(config, "integrations/git",
-                        default=False),
-        "log_level": opt.log_level
+        "git": retrieve(config, "integrations/git", default=False),
+        "log_level": opt.log_level,
     }
     # Project manager: use existing project or set up new project
     if opt.project is not None:
@@ -62,8 +70,7 @@ def main(opt, additional_kwargs):
         name = config.get("experiment_name", None)
         if opt.name is not None:
             name = opt.name
-        run.init(log_dir="logs", code_root=code_root, postfix=name,
-                 **run_kwargs)
+        run.init(log_dir="logs", code_root=code_root, postfix=name, **run_kwargs)
 
     # Logger
     logger = get_logger("main")
@@ -106,9 +113,7 @@ def main(opt, additional_kwargs):
                 )
             )
 
-        logger.info(
-            "Evaluation config:\n{}".format(yaml.dump(config))
-        )
+        logger.info("Evaluation config:\n{}".format(yaml.dump(config)))
         test(config, run.latest_eval, checkpoint, debug=opt.debug)
 
 
@@ -143,7 +148,9 @@ if __name__ == "__main__":
         default="info",
         help="set the logging level.",
     )
-    parser.add_argument("-d", "--debug", action="store_true", help="enable post-mortem debugging")
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="enable post-mortem debugging"
+    )
 
     opt, unknown = parser.parse_known_args()
     additional_kwargs = parse_unknown_args(unknown)

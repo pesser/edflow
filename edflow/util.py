@@ -7,6 +7,7 @@ import pickle
 from fastnumbers import fast_int
 from typing import *
 import importlib
+from copy import deepcopy
 
 try:
     from IPython import get_ipython
@@ -448,14 +449,14 @@ def set_value(list_or_dict, key, val, splitval="/"):
     Parameters
     ----------
 
+    list_or_dict : list or dict
+        Possibly nested list or dictionary.
     key : str
         ``key/to/value``, path like string describing all keys necessary to
         consider to get to the desired value. List indices can also be passed
         here.
     value : object
         Anything you want to put behind :attr:`key`
-    list_or_dict : list or dict
-        Possibly nested list or dictionary.
     splitval : str
         String that defines the delimiter between keys of the different depth
         levels in :attr:`key`.
@@ -592,10 +593,52 @@ def contains_key(nested_thing, key, splitval="/", expand=True):
 
 
 def update(to_update, to_update_with, splitval="/", expand=True):
+    """
+    Updates the nested object :attr:`to_update` using the entries in :attr:`to_update_with`.
+
+    Arguments
+    ---------
+
+    to_update : list or dict
+        Possibly nested list or dictionary. Values in this object will be
+        overwritten.
+    to_update_with : list or dict
+        Possibly nested list or dictionary.
+    splitval : str
+        String that defines the delimiter between keys of the different depth
+        levels in :attr:`key`.
+    expand : bool
+        Whether to expand callable nodes on the path or not.
+    """
+
     def _update(key, value):
         set_value(to_update, key, value, splitval=splitval)
 
     walk(to_update_with, _update, splitval=splitval, pass_key=True)
+
+
+def merge(*object_list, **update_kwargs):
+    """
+    Merge nested objects using edflow's own :func:`edflow.util.update` function.
+
+    Arguments
+    ---------
+    object_list : positional arguments
+        A list of nested dicts or lists.
+    update_kwargs : keyword arguments
+        Keyword arguments passed to :func:`edflow.util.update`.
+
+    Returns
+    -------
+    merged : nested dict or list
+        A nested config object
+    """
+
+    merged = deepcopy(object_list[0])
+    for c in object_list[1:]:
+        update(merged, c, **update_kwargs)
+
+    return merged
 
 
 def get_leaf_names(nested_thing):
