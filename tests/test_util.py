@@ -6,6 +6,8 @@ from edflow.util import (
     walk,
     set_default,
     contains_key,
+    update,
+    merge,
     KeyNotFoundError,
     get_leaf_names,
 )
@@ -753,7 +755,46 @@ def test_set_default_key_not_contained():
     assert val == "new"
 
 
-# =================== set_default ================
+# =================== update ================
+
+
+def test_update():
+    dol = {"a": [1, 2], "b": {"c": {"d": 1}}, "e": 2}
+    ref = {"a": [1, 2, None, 4], "b": {"c": {"d": 1}}, "e": 2}
+
+    u = {"a/3": 4}
+
+    update(dol, u)
+
+    assert dol == ref
+
+
+def test_update_fancy_inject():
+    dol = [1, 2, 3]
+    ref = [{"a": 1}, 2, 3]
+
+    u = {"0/a": 1}
+
+    update(dol, u)
+
+    assert dol == ref
+
+
+# =================== merge ================
+
+
+def test_merge():
+    dol1 = {"b": {"c": {"d": 1}}}
+    dol2 = {"b": {"c": {"e": 2}}}
+
+    ref = {"b": {"c": {"d": 1, "e": 2}}}
+
+    value = merge(dol1, dol2)
+
+    assert value == ref
+
+
+# =================== contains_key ================
 
 
 def test_contains_key():
