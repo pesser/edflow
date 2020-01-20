@@ -110,21 +110,19 @@ like this:
 
 import os
 import numpy as np
-import pandas as pd  # storing model output paths
 import yaml  # metadata
 from PIL import Image
-import inspect
-import re
 
 from edflow.data.util import adjust_support
 from edflow.util import walk, retrieve, pop_keypath, set_value
-from edflow.data.dataset import DatasetMixin, CsvDataset, ProcessedDataset
+from edflow.data.dataset import DatasetMixin
+from edflow.data.believers.meta import MetaDataset
 from edflow.project_manager import ProjectManager as P
 from edflow.hooks.hook import Hook
 from edflow.custom_logging import get_logger
 
 
-LOADABLE_EXTS = ["png", "npy", "txt"]
+LOADABLE_EXTS = ["png", "npy"]
 
 
 class EvalHook(Hook):
@@ -132,7 +130,7 @@ class EvalHook(Hook):
 
     def __init__(
         self,
-        dataset,
+        datasets,
         sub_dir_keys=[],
         labels_key=None,
         callbacks={},
@@ -147,8 +145,8 @@ class EvalHook(Hook):
 
         Parameters
         ----------
-            dataset : DatasetMixin
-                The Dataset used for creating the new data.
+            datasets : dict(split: DatasetMixin)
+                The Datasets used for creating the new data.
             sub_dir_keys : list(str)
                 Keys found in :attr:`example`, which will
                 be used to make a subdirectory for the stored example.
@@ -191,8 +189,12 @@ class EvalHook(Hook):
         self.logger.info("{}".format(self.cbacks))
 
         self.sdks = sub_dir_keys
-        self.lk = labels_key
-        self.data_in = dataset
+        self.labels_key = labels_key
+        if self.labels_key is None:
+            self.labels_key = os.path.join(keypath, "labels")
+        self.datasets = datasets
+        # TODO fix hardcoded data_in
+        self.data_in = self.datasets["validation"]
 
         self.config = config
 
@@ -201,63 +203,43 @@ class EvalHook(Hook):
 
     def before_epoch(self, epoch):
         """
-
-        Parameters
-        ----------
-        epoch :
-
-
-        Returns
-        -------
-
+        Sets up the dataset for the current epoch.
         """
-        self.data_frame = None
         self.root = os.path.join(P.latest_eval, str(self.gs()))
         self.save_root = os.path.join(self.root, "model_outputs")
+
         os.makedirs(self.root, exist_ok=True)
         os.makedirs(self.save_root, exist_ok=True)
+        os.makedirs(os.path.join(self.save_root, "labels"), exist_ok=True)
 
         self.label_arrs = None
 
     def before_step(self, step, fetches, feeds, batch):
-        """Get dataset indices from batch.
-
-        Parameters
-        ----------
-        step :
-
-        fetches :
-
-        feeds :
-
-        batch :
-
-
-        Returns
-        -------
-
-        """
+        """Get dataset indices from batch."""
         self.idxs = np.array(batch["index_"], dtype=int)
 
     def after_step(self, step, last_results):
-        """
+        """Save examples and store label values."""
+        label_vals = pop_keypath(last_results, self.labels_key, default={})
 
-        Parameters
-        ----------
-        step :
+        idxs = self.idxs  # indices collected before_step
 
-        last_results :
+        path_dicts = save_output(
+            root=self.save_root,
+            example=last_results,
+            index=idxs,
+            sub_dir_keys=self.sdks,
+            keypath=self.keypath,
+        )
 
+        for idx in idxs:
+            for key, path in path_dicts[idx].items():
+                if key not in label_vals:
+                    label_vals[key] = []
 
-        Returns
-        -------
-
-        """
-
-        if self.lk is not None:
-            label_vals = pop_keypath(last_results, self.lk, default={})
-        else:
-            label_vals = {}
+                label_vals[key] += [path]
+        for key in list(path_dicts[idxs[0]].keys()):
+            label_vals[key] = np.array(label_vals[key])
 
         if self.label_arrs is None:
             self.label_arrs = {}
@@ -270,98 +252,59 @@ class EvalHook(Hook):
 
                 k_ = k.replace("/", "--")
                 savepath = os.path.join(
-                    self.save_root, "{}-*-{}-*-{}.npy".format(k_, s, d)
+                    self.save_root, "labels", "{}-*-{}-*-{}.npy".format(k_, s, d)
                 )
                 memmap = np.memmap(savepath, shape=tuple(shape), mode="w+", dtype=dtype)
                 self.label_arrs[k] = memmap
-
-        idxs = self.idxs  # indices collected before_step
 
         for k in label_vals.keys():
             # Can the inner loop be made a fancy indexing assign?
             for i, idx in enumerate(idxs):
                 self.label_arrs[k][idx] = label_vals[k][i]
 
-        path_dicts = save_output(
-            root=self.save_root,
-            example=last_results,
-            index=idxs,
-            sub_dir_keys=self.sdks,
-            keypath=self.keypath,
-        )
-
-        if self.data_frame is None:
-            columns = sorted(path_dicts[list(path_dicts.keys())[0]])
-            if len(columns) == 0:
-                # No load heavy logs written out
-                pass
-            else:
-                self.data_frame = pd.DataFrame(columns=columns)
-
-        if self.data_frame is not None:
-            for idx, path_dict in path_dicts.items():
-                self.data_frame.loc[idx] = path_dict
-
     def at_exception(self, *args, **kwargs):
-        """
-
-        Parameters
-        ----------
-        *args :
-
-        **kwargs :
-
-
-        Returns
-        -------
-
-        """
+        """Save all meta data. The already written data is not lost in any even
+        if this fails."""
+        self.exception_occured = True
         if hasattr(self, "root"):
-            self.save_csv()
+            self.save_meta()
+
         self.logger.info("Warning: Evaluation data is incomplete!")
 
     def after_epoch(self, epoch):
-        """Save csv for reuse and then start the evaluation callbacks
-
-        Parameters
-        ----------
-        epoch :
-
-
-        Returns
-        -------
-
+        """Save meta data for reuse and then start the evaluation callbacks
         """
-        self.save_csv()
+        self.save_meta()
 
-        data_out = EvalDataFolder(self.root)
+        data_out = MetaDataset(self.save_root)
+        data_out.expand = True
+        data_out.append_labels = True
 
         cb_kwargs = retrieve(self.config, "eval_pipeline/callback_kwargs", default={})
 
         results = dict()
         for n, cb in self.cbacks.items():
-            cb_name = "CB: {}".format(n)
-            cb_name = "{a}\n{c}\n{a}".format(a="=" * len(cb_name), c=cb_name)
-            self.logger.info(cb_name)
+            self.logger.info(
+                "Running callback '{}' on dataset '{}'".format(
+                    n, type(self.data_in).__name__
+                )
+            )
 
             kwargs = cb_kwargs.get(n, {})
             results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
         return results
 
-    def save_csv(self):
+    def save_meta(self):
         """ """
-        csv_path = os.path.join(self.root, "model_output.csv")
 
-        if self.data_frame is not None:
-            self.data_frame = self.data_frame.sort_index()
-            self.data_frame.to_csv(csv_path, index=False)
+        if not hasattr(self, "exception_occured"):
+            had_exception = ""
         else:
-            with open(csv_path, "w+") as csv_file:
-                csv_file.write("")
+            had_exception = f"    .. warning ::\n\n        An exception occured during creation.\n\n"
 
-        add_meta_data(csv_path, self.config)
+        description = f"    # Model Outputs\n{had_exception}"
+        meta_path = add_meta_data(self.save_root, self.config, description)
 
-        this_script = os.path.dirname(__file__)
         cb_names = self.cb_names
         cb_paths = self.cb_paths
 
@@ -370,11 +313,16 @@ class EvalHook(Hook):
         else:
             cbs = "<name>:<your callback>"
 
-        self.logger.info("MODEL_OUPUT_CSV {}".format(csv_path))
+        self.logger.info("MODEL_OUTPUT_ROOT {}".format(self.save_root))
         self.logger.info(
             "All data has been produced. You can now also run all"
             + " callbacks using the following command:\n"
-            + "edeval -c {} -cb {}".format(csv_path, cbs)
+            + f"edeval -m {self.save_root} -c {cbs}"
+        )
+        self.logger.info(
+            "To directly reuse the data simply use the following command:\n"
+            + "from edflow.data.believers.meta import MetaDataset\n"
+            + f'M = MetaDataset("{os.path.abspath(self.save_root)}")\n'
         )
 
 
@@ -416,88 +364,6 @@ class TemplateEvalHook(EvalHook):
             super().at_exception(*args, **kwargs)
 
 
-class EvalDataFolder(DatasetMixin):
-    """ """
-
-    def __init__(self, root, show_bar=False):
-        er = EvalReader(root)
-
-        if "model_output.csv" not in root:
-            csv_path = os.path.join(root, "model_output.csv")
-        else:
-            csv_path = root
-            root = os.path.dirname(root)
-
-        labels = load_labels(os.path.join(root, "model_outputs"))
-
-        # Capture the case that only labels have been written out
-        try:
-            csv_data = CsvDataset(csv_path, comment="#")
-            self.data = ProcessedDataset(csv_data, er)
-        except pd.errors.EmptyDataError as e:
-            exemplar_labels = labels[sorted(labels.keys())[0]]
-            self.data = EmptyDataset(len(exemplar_labels), labels)
-
-        self.data.labels.update(labels)
-
-        self.append_labels = True
-
-
-class EmptyDataset(DatasetMixin):
-    """ """
-
-    def __init__(self, n_ex, labels={}):
-        self.len = n_ex
-        self.labels = labels
-
-    def get_example(self, idx):
-        """
-
-        Parameters
-        ----------
-        idx :
-
-
-        Returns
-        -------
-
-        """
-        return {"content": None}
-
-    def __len__(self):
-        return self.len
-
-
-def load_labels(root):
-    """
-
-    Parameters
-    ----------
-    root :
-
-
-    Returns
-    -------
-
-    """
-    regex = re.compile(r".*-\*-.*-\*-.*\.npy")
-
-    files = os.listdir(root)
-    label_files = [f for f in files if regex.match(f) is not None]
-
-    labels = {}
-    for f in label_files:
-        f_ = f.strip(".npy")
-        key, shape, dtype = f_.split("-*-")
-        shape = tuple([int(s) for s in shape.split("x")])
-
-        path = os.path.join(root, f)
-
-        labels[key] = np.memmap(path, mode="c", shape=shape, dtype=dtype)
-
-    return labels
-
-
 def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
     """Saves the ouput of some model contained in ``example`` in a reusable
     manner.
@@ -520,15 +386,13 @@ def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
 
     Returns
     -------
-    dict
+    path_dics : dict
         Name: path pairs of the saved ouputs.
-    dict
-        Name: path pairs of the saved ouputs.
-        .. warning:: Make sure the values behind the ``sub_dir_keys`` are compatible with
-    dict
-        Name: path pairs of the saved ouputs.
-        .. warning:: Make sure the values behind the ``sub_dir_keys`` are compatible with
-        the file system you are saving data on.
+
+        .. warning:: 
+        
+            Make sure the values behind the ``sub_dir_keys`` are compatible with
+            the file system you are saving data on.
 
     """
 
@@ -555,84 +419,63 @@ def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
             savename = "{}_{:0>6d}.{{}}".format(n, idx)
             path = os.path.join(root, savename)
 
-            path = save_example(path, e[i])
+            path, inferred_loader = save_example(path, e[i])
 
-            path_dict[n + "_path"] = path
+            # Conforms to the meta dataset key style for automatic loading
+            path_dict[f"{n}:{inferred_loader}"] = path
         path_dicts[idx] = path_dict
 
     return path_dicts
 
 
-def add_meta_data(path_to_csv, metadata):
+def add_meta_data(eval_root, metadata, description=None):
     """Prepends kwargs of interest to a csv file as comments (`#`)
 
     Parameters
     ----------
-    path_to_csv :
-
-    metadata :
-
+    eval_root : str
+        Where the `meta.yaml` will be written.
+    metadata : dict
+        config like object, which will be written in the `meta.yaml`.
+    description : str
+        Optional description string. Will be added unformatted as yaml
+        multiline literal.
 
     Returns
     -------
-
+    meta_path : str
+        Full path of the `meta.yaml`.
     """
 
     meta_string = yaml.dump(metadata)
+    meta_path = os.path.join(eval_root, "meta.yaml")
 
-    commented_string = ""
-    for line in meta_string.split("\n"):
-        line = "# {}\n".format(line)
-        commented_string += line
+    with open(meta_path, "w+") as meta_file:
+        if description is None:
+            description = "Created with the `EvalHook`"
+        meta_file.write(f"description: |\n{description}")
+        meta_file.write(meta_string)
 
-    with open(path_to_csv, "r+") as csv_file:
-        content = csv_file.read()
-
-    content = commented_string + content
-
-    with open(path_to_csv, "w+") as csv_file:
-        csv_file.write(content)
-
-
-def read_meta_data(path_to_csv):
-    """This functions assumes that the first lines of the csv are the commented
-    output of a ``yaml.dump()`` call and loads its contents for further use.
-
-    Parameters
-    ----------
-    path_to_csv :
-
-
-    Returns
-    -------
-
-    """
-
-    with open(path_to_csv, "r") as csv_file:
-        yaml_string = ""
-        for line in csv_file.readlines():
-            if "# " in line:
-                yaml_string += line[2:] + "\n"
-            else:
-                break
-
-    meta_data = yaml.full_load(yaml_string)
-
-    return meta_data
+    return meta_path
 
 
 def _delget(d, k):
     """
+    Gets a value from ``dict`` :attr:`d` at :attr:`k` and returns it, after
+    deleting :attr:`k` from :attr:`d`.
 
     Parameters
     ----------
-    d :
-
-    k :
+    d : dict
+        Dictionary from which to get the item at :attr:`k`.
+    k : str
+        Key to be deleted after getting the value behind it.
 
 
     Returns
     -------
+    v : object
+        The value ``d[k]``
 
     """
     v = d[k]
@@ -655,16 +498,22 @@ def save_example(savepath, datum):
 
     Returns
     -------
-
+    savepath : str
+        Where the example has been saved. This string has been formatted and
+        can be used to load the file at the described location.
+    loader_name : str
+        The name of a loader, which can be passed to the ``meta.yaml`` 's
+        ``loaders`` entry.
     """
 
     saver, ending = determine_saver(datum)
+    loader_name = determine_loader(ending)
 
     savepath = savepath.format(ending)
 
     saver(savepath, datum)
 
-    return savepath
+    return savepath, loader_name
 
 
 def determine_saver(py_obj):
@@ -672,11 +521,15 @@ def determine_saver(py_obj):
 
     Parameters
     ----------
-    py_obj :
+    py_obj : object
+        Some python object to be saved.
 
 
-    Returns
+    Raises
     -------
+    NotImplementedError
+        If :attr:`py_obj` is of unrecognized type. Feel free to implement your
+        own savers and publish them to edflow.
 
     """
 
@@ -695,29 +548,34 @@ def determine_saver(py_obj):
         )
 
 
-def load_by_heuristic(path):
-    """Chooses a loader based on the file ending.
-
+def determine_loader(ext):
+    """Returns a loader name for a given file extension
+    
     Parameters
     ----------
-    path :
-
+    ext : str
+        File ending excluding the ``.``. Same as what would be returned by
+        :func:`os.path.splitext`
 
     Returns
     -------
+    name : str
+        Name of the meta loader (see
+        :py:mod:`~edflow.data.believers.meta_loaders` .
 
+    Raises
+    ------
+    ValueError
+        If the file extension cannot be handled by the implemented loaders.
+        Feel free to implement you own and publish them to ``edflow``.
     """
 
-    name, ext = os.path.splitext(path)
-
-    if ext == ".png":
-        return image_loader(path)
-    elif ext == ".npy":
-        return np_loader(path)
-    elif ext == ".txt":
-        return txt_loader(path)
+    if ext == "png":
+        return "image"
+    elif ext == "npy":
+        return "np"
     else:
-        raise ValueError("Cannot load file with extension `{}` at {}".format(ext, path))
+        raise ValueError("Cannot load file with extension `{}`".format(ext))
 
 
 def decompose_name(name):
@@ -768,104 +626,6 @@ def is_loadable(filename):
         return False
 
 
-class EvalLabeler(object):
-    """ """
-
-    def __init__(self, root):
-        self.root = root
-
-        self.visited = []
-
-    def __call__(self, path):
-        """Adds the labels ``paths``, ``kind``, ``index_``, ``datum_root``"""
-
-        ret_dict = {}
-
-        rel = os.path.relpath(path, self.root)
-        folder_structure, filename = os.path.split(rel)
-
-        if not is_loadable(filename):
-            return None
-
-        # Do that first, the pass if index already in there.
-        # Now get all the files with the same index
-        index, datum_name, ending = decompose_name(filename)
-
-        if index not in self.visited:
-            self.visited += [index]
-            # Get the sbfolder key val pairs
-            for kv in folder_structure.split("/"):
-                key, val = kv.split(":")
-                val = val.replace("--", "/")
-                ret_dict[key] = val
-
-            # get all files with this index
-            # We know all files must be in the folder, as we must assume, that
-            # index_ is a unique key. Otherwise this whole system does not
-            # work.
-
-            all_files = os.listdir(os.path.join(self.root, folder_structure))
-
-            def idx_filter(fname):
-                """
-
-                Parameters
-                ----------
-                fname :
-
-
-                Returns
-                -------
-
-                """
-                n, e = os.path.splitext(fname)
-                if "." in e:
-                    has_nice_ending = e[1:] in LOADABLE_EXTS
-                else:
-                    return False
-                return "{:0>6d}".format(index) in fname and has_nice_ending
-
-            of_interest = filter(idx_filter, all_files)
-
-            # Remember the filenames -> Not really neccessary, but makes
-            # reading code cleaner (hopefully).
-            for filename in of_interest:
-                path = os.path.join(self.root, folder_structure, filename)
-                _, datum_name, ending = decompose_name(filename)
-                ret_dict["{}_{}".format(datum_name, "path")] = path
-
-            ret_dict["datum_root"] = os.path.join(self.root, folder_structure)
-
-            ret_dict["save_index_"] = index
-
-            return ret_dict
-
-
-class EvalReader(object):
-    """ """
-
-    def __init__(self, root):
-        self.root = root
-
-    def __call__(self, **kwargs):
-        """Works only with non legacy DataFolder!"""
-
-        ret_dict = {}
-
-        if "file_path_" in kwargs:
-            del kwargs["file_path_"]
-
-        path_keys = [f for f in list(kwargs.keys()) if "path" in f]
-
-        for k in path_keys:
-            path = kwargs[k]
-            name = "_".join(os.path.basename(k).split("_")[:-1])
-
-            ret_dict[name] = load_by_heuristic(path)
-
-        return ret_dict
-
-
 def isimage(np_arr):
     """
 
@@ -908,22 +668,6 @@ def image_saver(savepath, image):
     im.save(savepath)
 
 
-def image_loader(path):
-    """
-
-    Parameters
-    ----------
-    path :
-
-
-    Returns
-    -------
-
-    """
-    im = np.array(Image.open(path))
-    return im
-
-
 def np_saver(savepath, np_arr):
     """
 
@@ -941,59 +685,8 @@ def np_saver(savepath, np_arr):
     np.save(savepath, np_arr)
 
 
-def np_loader(path):
-    """
-
-    Parameters
-    ----------
-    path :
-
-
-    Returns
-    -------
-
-    """
-    return np.load(path)
-
-
-def txt_saver(savepath, string):
-    """
-
-    Parameters
-    ----------
-    savepath :
-
-    string :
-
-
-    Returns
-    -------
-
-    """
-    with open(savepath, "a+") as f:
-        f.write(string + "\n")
-
-
-def txt_loader(path):
-    """
-
-    Parameters
-    ----------
-    path :
-
-
-    Returns
-    -------
-
-    """
-    with open(path, "r") as f:
-        data = f.read()
-
-    return data
-
-
-def standalone_eval_csv_file(
-    path_to_csv, callbacks, additional_kwargs={}, other_config=None
+def standalone_eval_meta_dset(
+    path_to_meta_dir, callbacks, additional_kwargs={}, other_config=None
 ):
     """Runs all given callbacks on the data in the :class:`EvalDataFolder`
     constructed from the given csv.abs
@@ -1022,7 +715,7 @@ def standalone_eval_csv_file(
         The collected outputs of the callbacks.
     """
 
-    from edflow.main import get_implementations_from_config
+    from edflow.util import get_obj_from_str
     from edflow.config import update_config
     import yaml
 
@@ -1032,13 +725,24 @@ def standalone_eval_csv_file(
     else:
         other_config = {}
 
-    out_data = EvalDataFolder(path_to_csv)
+    out_data = MetaDataset(path_to_meta_dir)
+    out_data.expand = True
+    out_data.append_labels = True
 
-    config = read_meta_data(path_to_csv)
+    config = out_data.meta
 
-    dataset_str = config["dataset"]
-    impl = get_implementations_from_config(config, ["dataset"])
-    in_data = impl["dataset"](config)
+    # backwards compatibility
+    if not "datasets" in config:
+        config["datasets"] = {"train": config["dataset"]}
+        if "validation_dataset" in config:
+            config["datasets"]["validation"] = config["validation_dataset"]
+    datasets = dict(
+        (split, get_obj_from_str(config["datasets"][split]))
+        for split in config["datasets"]
+    )
+    # TODO fix hardcoded dataset
+    in_data = datasets["validation"](config=config)
+    in_data.expand = True
 
     update_config(config, additional_kwargs)
     config.update(other_config)
@@ -1048,8 +752,9 @@ def standalone_eval_csv_file(
 
     callbacks = load_callbacks(callbacks)
 
-    root = os.path.dirname(path_to_csv)
+    root = os.path.dirname(path_to_meta_dir)
 
+    # TODO handle logging of return values
     outputs = apply_callbacks(
         callbacks, root, in_data, out_data, config, callback_kwargs
     )
@@ -1110,6 +815,9 @@ def apply_callbacks(callbacks, root, in_data, out_data, config, callback_kwargs=
 
     outputs = {}
     for name, cb in callbacks.items():
+        print(
+            "Running callback '{}' on dataset '{}'".format(name, type(in_data).__name__)
+        )
         kwargs = callback_kwargs.get(name, {})
         outputs[name] = cb(root, in_data, out_data, config, **kwargs)
 
@@ -1166,9 +874,10 @@ def main():
         description="""
 Use edeval for running callbacks on data generated using the
 ``edflow.eval_pipeline.eval_pipeline.EvalHook``. Once the data is created all
-you have to do is pass the ``csv``-file created by the hook. It specifies all
-the relevant information: Which dataset was used to create the data, along with
-all config parameters and where all generated samples live.
+you have to do is pass the floder containing the ``meta.yaml``-file created by
+the hook. It specifies all the relevant information: Which dataset was used to
+create the data, along with all config parameters and where all generated
+samples live.
 
 Callbacks will be evaluated in the order they have been passed to this
 function. They must be supplied in `name:callback` pairs.
@@ -1178,16 +887,15 @@ For more documentation take a look at ``edflow/eval_pipeline/eval_pipeline.py``
     )
 
     A.add_argument(
-        "-c",
-        "--csv",
-        default="model_output.csv",
+        "-m",
+        "--meta",
         type=str,
-        help="path to a csv-file created by the EvalHook containing"
-        " samples generated by a model.",
+        help="path to folder containing the meta.yaml created by the EvalHook "
+        " containing samples generated by a model.",
     )
     A.add_argument(
-        "-cb",
-        "--callback",
+        "-c",
+        "--callbacks",
         type=str,
         nargs="*",
         help="Import string to the callback functions used for the "
@@ -1205,9 +913,11 @@ For more documentation take a look at ``edflow/eval_pipeline/eval_pipeline.py``
     args, unknown = A.parse_known_args()
     additional_kwargs = parse_unknown_args(unknown)
 
-    callbacks = cbargs2cbdict(args.callback)
+    callbacks = cbargs2cbdict(args.callbacks)
 
-    standalone_eval_csv_file(args.csv, callbacks, additional_kwargs, args.other_config)
+    standalone_eval_meta_dset(
+        args.meta, callbacks, additional_kwargs, args.other_config
+    )
 
 
 if __name__ == "__main__":

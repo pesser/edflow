@@ -129,9 +129,6 @@ class TemplateIterator(PyHookedModelIterator):
         self._eval_op = set_default(
             self.config, "eval_hook/eval_op", "validation/eval_op"
         )
-        label_key = set_default(
-            self.config, "eval_hook/label_key", "validation/eval_op/labels"
-        )
         _eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks", dict())
         if not isinstance(_eval_callbacks, dict):
             _eval_callbacks = {"cb": _eval_callbacks}
@@ -159,14 +156,27 @@ class TemplateIterator(PyHookedModelIterator):
             callback_handler = lambda results, paths: self.loghook(
                 results=results, step=self.get_global_step(), paths=paths,
             )
+
+        # offer option to run eval functor:
+        # overwrite step op to only include the evaluation of the functor and
+        # overwrite callbacks to only include the callbacks of the functor
+        if self.config.get("test_mode", False) and "eval_functor" in self.config:
+            # offer option to use eval functor for evaluation
+            eval_functor = get_obj_from_str(self.config["eval_functor"])(
+                config=self.config
+            )
+            self.step_ops = lambda: {"eval_op": eval_functor}
+            eval_callbacks = dict()
+            if hasattr(eval_functor, "callbacks"):
+                for k in eval_functor.callbacks:
+                    eval_callbacks[k] = get_str_from_obj(eval_functor.callbacks[k])
+            set_value(self.config, "eval_hook/eval_callbacks", eval_callbacks)
         self.evalhook = TemplateEvalHook(
-            # dataset=self.dataset, # TODO let EvalHook figure out correct split
-            dataset=self.validation_dataset,
+            datasets=self.datasets,
             step_getter=self.get_global_step,
             keypath=self._eval_op,
             config=self.config,
             callbacks=eval_callbacks,
-            labels_key=label_key,
             callback_handler=callback_handler,
         )
         self.epoch_hooks.append(self.evalhook)

@@ -34,6 +34,10 @@ class Iterator(TemplateIterator):
         self.criterion = nn.CrossEntropyLoss(reduction="none")
         self.optimizer = optim.SGD(self.model.parameters(), lr=0.001, momentum=0.9)
 
+    @property
+    def callbacks(self):
+        return {"eval_op": {"acc_callback": acc_callback}}
+
     def save(self, checkpoint_path):
         state = {
             "model": self.model.state_dict(),
@@ -111,3 +115,4 @@ def acc_callback(root, data_in, data_out, config):
     logger.info("Loss1: {}".format(loss1))
     logger.info("Loss2: {}".format(loss2 / len(data_in)))
     logger.info("Accuracy: {}".format(correct / len(data_in)))
+    return {"scalars": {"accuracy": correct / len(data_in)}}

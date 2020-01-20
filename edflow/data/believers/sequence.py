@@ -1,7 +1,7 @@
 from edflow.data.dataset_mixin import DatasetMixin
 from edflow.data.agnostics.subdataset import SubDataset
 from edflow.data.agnostics.concatenated import ExampleConcatenatedDataset
-from edflow.main import get_implementations_from_config
+from edflow.util import get_obj_from_str
 import numpy as np
 
 
@@ -342,7 +342,7 @@ def getSeqDataset(config):
     """
 
     ks = "seqdataset"
-    base_dset = get_implementations_from_config(config[ks], ["dataset"])["dataset"]
+    base_dset = get_obj_from_str(config[ks]["dataset"])
     base_dset = base_dset(config=config)
 
     S = SequenceDataset(
