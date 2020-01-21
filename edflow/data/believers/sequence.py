@@ -95,12 +95,12 @@ def get_sequence_view(frame_ids, length, step=1, strategy="raise"):
                 "{}".format(strategy)
             )
 
-    top_indeces = np.where(frame_ids >= (length * step - 1))[0]
+    top_indices = np.where(frame_ids >= (length * step - 1))[0]
 
     base_indices = []
     for i in range(length * step):
-        indeces = top_indeces - i
-        base_indices += [indeces]
+        indices = top_indices - i
+        base_indices += [indices]
 
     base_indices = np.array(base_indices).transpose(1, 0)[:, ::-1]
     base_indices = base_indices[:, ::step]
@@ -223,14 +223,14 @@ class SequenceDataset(DatasetMixin):
                     "{}".format(strategy)
                 )
 
-        top_indeces = np.where(np.array(frame_ids) >= (length * step - 1))[0]
+        top_indices = np.where(np.array(frame_ids) >= (length * step - 1))[0]
 
         all_subdatasets = []
         base_indices = []
         for i in range(length * step):
-            indeces = top_indeces - i
-            base_indices += [indeces]
-            subdset = SubDataset(dataset, indeces)
+            indices = top_indices - i
+            base_indices += [indices]
+            subdset = SubDataset(dataset, indices)
             all_subdatasets += [subdset]
 
         all_subdatasets = all_subdatasets[::-1]
