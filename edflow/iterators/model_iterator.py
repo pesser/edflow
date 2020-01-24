@@ -253,6 +253,9 @@ class PyHookedModelIterator(object):
                         break
                 self.run_hooks(epoch_step, before=False, epoch_hooks=True)
 
+            if self.get_global_step() >= self.config.get("num_steps", float("inf")):
+                break
+
     def run(self, fetches, feed_dict):
         """Runs all fetch ops and stores the results.
 
