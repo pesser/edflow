@@ -11,7 +11,6 @@ install_requires = [
     "chainer",
     "numpy",
     "pandas",  # for csv dataset and eval pipeline
-    "fastnumbers",  # for dict utils
 ]
 
 install_full = [  # for extra functionality

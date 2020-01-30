@@ -25,7 +25,6 @@ MOCK_MODULES = [
     "tqdm.autonotebook",
     "yaml",
     "numpy",
-    "fastnumbers",
     "PIL",
     "PIL.Image",
     "chainer",
