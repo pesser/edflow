@@ -367,7 +367,7 @@ def getSeqDataset(config):
         config[ks]["length"],
         config[ks]["step"],
         fid_key=config[ks]["fid_key"],
-        base_step=config[ks].get(base_step, 1),
+        base_step=config[ks].get("base_step", 1),
     )
 
     return S
