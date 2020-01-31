@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Epoch and Batch step are restored.
 - Added option to save checkpoint zero with `--ckpt_zero True`.
 - Added support for `project` and `entity` in `integrations/wandb`.
 - Added support for `eval_functor` in test mode.

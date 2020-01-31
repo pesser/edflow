@@ -1,4 +1,4 @@
-import signal, sys
+import signal, sys, math
 from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
@@ -157,27 +157,32 @@ class PyHookedModelIterator(object):
         validation_frequency = self.config.get(
             "val_freq", self.config.get("log_freq", -1)
         )
+        batches_per_epoch = 0 if epoch_hooks_only else len(batches["train"])
+        if "max_batches_per_epoch" in self.config:
+            batches_per_epoch = min(
+                batches_per_epoch, self.config["max_batches_per_epoch"]
+            )
         num_epochs = 1 if epoch_hooks_only else self.num_epochs
+        start_epoch = 0 if epoch_hooks_only else math.floor(
+            self.get_global_step() / batches_per_epoch)
+        start_step = 0 if epoch_hooks_only else math.ceil(
+            self.get_global_step() % batches_per_epoch)
         for epoch_step in trange(
             num_epochs, desc=desc_epoch, position=pos, dynamic_ncols=True
         ):
+            if epoch_step < start_epoch:
+                continue
             self._epoch_step = epoch_step
 
             ############# run one batch on each split until new epoch or max steps
             batches["train"].reset()
             self.run_hooks(epoch_step, before=True)
 
-            if epoch_hooks_only:
-                batches_per_epoch = 0
-            else:
-                batches_per_epoch = len(batches["train"])
-            if "max_batches_per_epoch" in self.config:
-                batches_per_epoch = min(
-                    batches_per_epoch, self.config["max_batches_per_epoch"]
-                )
             for batch_step in trange(
                 batches_per_epoch, desc=desc_batch, position=pos + 1, dynamic_ncols=True
             ):
+                if batch_step < start_step:
+                    continue
                 self._batch_step = batch_step
 
                 def lazy_split_op(split):
@@ -202,6 +207,7 @@ class PyHookedModelIterator(object):
                 if self.get_global_step() >= self.config.get("num_steps", float("inf")):
                     break
             self.run_hooks(epoch_step, before=False)
+            start_step = 0
 
             ############# run one epoch on each split
             # only continue a split as long as someone is retrieving results
