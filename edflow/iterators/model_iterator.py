@@ -209,12 +209,13 @@ class PyHookedModelIterator(object):
                 batches[split].reset()
                 self.run_hooks(epoch_step, before=True, epoch_hooks=True)
 
-                for batch_step in trange(
+                tqdm_iterator = trange(
                     len(batches[split]),
                     desc=split,
                     position=pos + 2,
                     dynamic_ncols=True,
-                ):
+                )
+                for batch_step in tqdm_iterator:
                     self._batch_step = batch_step
 
                     active = False
@@ -249,6 +250,8 @@ class PyHookedModelIterator(object):
                     del results
 
                     if batches[split].is_new_epoch or not active:
+                        tqdm_iterator.update()
+                        tqdm_iterator.close()
                         self.logger.info("Done with {}".format(split))
                         break
                 self.run_hooks(epoch_step, before=False, epoch_hooks=True)
