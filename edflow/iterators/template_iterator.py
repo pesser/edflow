@@ -29,6 +29,7 @@ class TemplateIterator(PyHookedModelIterator):
             save=self.save,
             restore=self.restore,
             interval=set_default(self.config, "ckpt_freq", None),
+            ckpt_zero=set_default(self.config, "ckpt_zero", False),
         )
         # write checkpoints after epoch or when interrupted during training
         if not self.config.get("test_mode", False):
