@@ -163,15 +163,14 @@ class PyHookedModelIterator(object):
                 batches_per_epoch, self.config["max_batches_per_epoch"]
             )
         num_epochs = 1 if epoch_hooks_only else self.num_epochs
-        start_epoch = 0 if epoch_hooks_only else math.floor(
-            self.get_global_step() / batches_per_epoch)
-        start_step = 0 if epoch_hooks_only else math.ceil(
+        start_epoch = 0 if epoch_hooks_only else (
+            self.get_global_step() // batches_per_epoch)
+        start_step = 0 if epoch_hooks_only else (
             self.get_global_step() % batches_per_epoch)
         for epoch_step in trange(
-            num_epochs, desc=desc_epoch, position=pos, dynamic_ncols=True
+            start_epoch, num_epochs, initial=start_epoch, total=num_epochs,
+            desc=desc_epoch, position=pos, dynamic_ncols=True, leave=False,
         ):
-            if epoch_step < start_epoch:
-                continue
             self._epoch_step = epoch_step
 
             ############# run one batch on each split until new epoch or max steps
@@ -179,10 +178,10 @@ class PyHookedModelIterator(object):
             self.run_hooks(epoch_step, before=True)
 
             for batch_step in trange(
-                batches_per_epoch, desc=desc_batch, position=pos + 1, dynamic_ncols=True
+                start_step, batches_per_epoch, initial=start_step,
+                total=batches_per_epoch, desc=desc_batch, position=pos + 1,
+                dynamic_ncols=True, leave=False,
             ):
-                if batch_step < start_step:
-                    continue
                 self._batch_step = batch_step
 
                 def lazy_split_op(split):
@@ -218,8 +217,9 @@ class PyHookedModelIterator(object):
                 tqdm_iterator = trange(
                     len(batches[split]),
                     desc=split,
-                    position=pos + 2,
+                    position=pos + 1,
                     dynamic_ncols=True,
+                    leave=False,
                 )
                 for batch_step in tqdm_iterator:
                     self._batch_step = batch_step
