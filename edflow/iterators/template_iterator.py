@@ -74,7 +74,16 @@ class TemplateIterator(PyHookedModelIterator):
                 os.environ["WANDB_RUN_ID"] = ProjectManager.root.strip("/").replace(
                     "/", "-"
                 )
-                wandb.init(name=ProjectManager.root, config=self.config)
+                wandb_project = set_default(
+                    self.config,
+                    "integrations/wandb/project",
+                    None)
+                wandb_entity = set_default(
+                    self.config,
+                    "integrations/wandb/entity",
+                    None)
+                wandb.init(name=ProjectManager.root, config=self.config,
+                           project=wandb_project, entity=wandb_entity)
 
                 handlers = set_default(
                     self.config,
