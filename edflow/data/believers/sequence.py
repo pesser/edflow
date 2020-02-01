@@ -5,7 +5,7 @@ from edflow.util import get_obj_from_str
 import numpy as np
 
 
-def get_sequence_view(frame_ids, length, step=1, strategy="raise"):
+def get_sequence_view(frame_ids, length, step=1, strategy="raise", base_step=1):
     """Generates a view on some base dataset given its sequence indices
     :attr:`seq_indices`.
 
@@ -23,6 +23,8 @@ def get_sequence_view(frame_ids, length, step=1, strategy="raise"):
         - ``raise``: Raise a ``ValueError``
         - ``remove``: remove the sequence
         - ``reset``: remove the sequence
+    base_step : int
+        Step between base frames of returned sequences. Must be `>=1`.
 
     This view will have `len(dataset) - length * step` entries and shape
     `[len(dataset) - length * step, lenght]`.
@@ -95,12 +97,17 @@ def get_sequence_view(frame_ids, length, step=1, strategy="raise"):
                 "{}".format(strategy)
             )
 
-    top_indeces = np.where(frame_ids >= (length * step - 1))[0]
+    top_indices = np.where(
+        np.logical_and(
+            frame_ids >= (length * step - 1),
+            (frame_ids - (length * step - 1)) % base_step == 0,
+        )
+    )[0]
 
     base_indices = []
     for i in range(length * step):
-        indeces = top_indeces - i
-        base_indices += [indeces]
+        indices = top_indices - i
+        base_indices += [indices]
 
     base_indices = np.array(base_indices).transpose(1, 0)[:, ::-1]
     base_indices = base_indices[:, ::step]
@@ -124,7 +131,9 @@ class SequenceDataset(DatasetMixin):
     the example from the sequentialized dataset.
     """
 
-    def __init__(self, dataset, length, step=1, fid_key="fid", strategy="raise"):
+    def __init__(
+        self, dataset, length, step=1, fid_key="fid", strategy="raise", base_step=1
+    ):
         """
         Parameters
         ----------
@@ -142,6 +151,8 @@ class SequenceDataset(DatasetMixin):
             - ``raise``: Raise a ``ValueError``
             - ``remove``: remove the sequence
             - ``reset``: remove the sequence
+        base_step : int
+            Step between base frames of returned sequences. Must be `>=1`.
 
         This dataset will have `len(dataset) - length * step` examples.
         """
@@ -223,14 +234,19 @@ class SequenceDataset(DatasetMixin):
                     "{}".format(strategy)
                 )
 
-        top_indeces = np.where(np.array(frame_ids) >= (length * step - 1))[0]
+        top_indices = np.where(
+            np.logical_and(
+                frame_ids >= (length * step - 1),
+                (frame_ids - (length * step - 1)) % base_step == 0,
+            )
+        )[0]
 
         all_subdatasets = []
         base_indices = []
         for i in range(length * step):
-            indeces = top_indeces - i
-            base_indices += [indeces]
-            subdset = SubDataset(dataset, indeces)
+            indices = top_indices - i
+            base_indices += [indices]
+            subdset = SubDataset(dataset, indices)
             all_subdatasets += [subdset]
 
         all_subdatasets = all_subdatasets[::-1]
@@ -323,6 +339,7 @@ def getSeqDataset(config):
                 length: 3
                 step: 1
                 fid_key: fid
+                base_step: 1
 
     ``getSeqDataSet`` will import the base ``dataset`` and pass it to
     :class:`SequenceDataset` together with ``length`` and ``step`` to
@@ -350,6 +367,7 @@ def getSeqDataset(config):
         config[ks]["length"],
         config[ks]["step"],
         fid_key=config[ks]["fid_key"],
+        base_step=config[ks].get("base_step", 1),
     )
 
     return S
