@@ -86,43 +86,53 @@ class TemplateIterator(PyHookedModelIterator):
                 if "images" in handlers:
                     self.loghook.handlers["images"].append(log_wandb_images)
 
-            default_tensorboardX_logging = {
+            default_tensorboard_logging = {
                 "active": False,
-                "handlers": ["scalars", "images"],
+                "handlers": ["scalars", "images", "figures"],
             }
-            tensorboardX_logging = set_default(
-                self.config, "integrations/tensorboardX", default_tensorboardX_logging
+            tensorboard_logging = set_default(
+                self.config, "integrations/tensorboard", default_tensorboard_logging
             )
-            if tensorboardX_logging["active"]:
-                from tensorboardX import SummaryWriter
-                from edflow.hooks.logging_hooks.tensorboardX_handler import (
+            if tensorboard_logging["active"]:
+                try:
+                    from torch.utils.tensorboard import SummaryWriter
+                except:
+                    from tensorboardX import SummaryWriter
+
+                from edflow.hooks.logging_hooks.tensorboard_handler import (
                     log_tensorboard_config,
                     log_tensorboard_scalars,
                     log_tensorboard_images,
+                    log_tensorboard_figures,
                 )
 
-                self.tensorboardX_writer = SummaryWriter(ProjectManager.root)
+                self.tensorboard_writer = SummaryWriter(ProjectManager.root)
                 log_tensorboard_config(
-                    self.tensorboardX_writer, self.config, self.get_global_step()
+                    self.tensorboard_writer, self.config, self.get_global_step()
                 )
                 handlers = set_default(
                     self.config,
-                    "integrations/tensorboardX/handlers",
-                    default_tensorboardX_logging["handlers"],
+                    "integrations/tensorboard/handlers",
+                    default_tensorboard_logging["handlers"],
                 )
                 if "scalars" in handlers:
                     self.loghook.handlers["scalars"].append(
                         lambda *args, **kwargs: log_tensorboard_scalars(
-                            self.tensorboardX_writer, *args, **kwargs
+                            self.tensorboard_writer, *args, **kwargs
                         )
                     )
                 if "images" in handlers:
                     self.loghook.handlers["images"].append(
                         lambda *args, **kwargs: log_tensorboard_images(
-                            self.tensorboardX_writer, *args, **kwargs
+                            self.tensorboard_writer, *args, **kwargs
                         )
                     )
-
+                if "figures" in handlers:
+                    self.loghook.handlers["figures"].append(
+                        lambda *args, **kwargs: log_tensorboard_figures(
+                            self.tensorboard_writer, *args, **kwargs
+                        )
+                    )
         ## epoch hooks
 
         # evaluate validation/step_ops/eval_op after each epoch

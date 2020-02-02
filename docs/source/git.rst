@@ -26,10 +26,10 @@ Weights and biases integration can be enabled with the config parameter
 logging values and images to weights and biases. To disable image logging use
 ``--integrations/wandb/handlers '["scalars"]'``.
 
-tensorboardX
+tensorboard
 ------------
 
-TensorboardX integration can be enabled with the config parameter
-``--integrations/tensorboardX/active True``. By default, this will log the config,
-scalar logging values and images to tensorboardX. To disable image logging use
-``--integrations/tensorboardX/handlers '["scalars"]'``.
+Tensorboard integration can be enabled with the config parameter
+``--integrations/tensorboard/active True``. By default, this will log the config,
+scalar logging values and images to tensorboard. To disable image logging use
+``--integrations/tensorboard/handlers '["scalars"]'``.
