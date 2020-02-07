@@ -7,7 +7,7 @@ import streamlit as st
 from edflow.config import parse_unknown_args, update_config
 
 import numpy as np
-from edflow.util import walk, pp2mkdtable
+from edflow.util import walk, pp2mkdtable, retrieve, get_leaf_names
 from edflow import get_obj_from_str
 
 
@@ -67,6 +67,71 @@ def display(key, obj):
         st.pyplot(fig)
 
 
+def first_index(keys, key_part):
+    for i, key in enumerate(keys):
+        if key_part in key:
+            return i
+    return 0
+
+
+def display_flow_on_image(ex, config):
+    import matplotlib.pyplot as plt
+    from skimage.transform import downscale_local_mean
+
+    st.subheader("Optical flow on image")
+
+    # get user input
+    example_keys = get_leaf_names(ex)
+    image_keys = [key for key in example_keys if isimage(retrieve(ex, key, default=0))]
+    flow_keys = [key for key in example_keys if isflow(retrieve(ex, key, default=0))]
+    subconfig = retrieve(
+        config,
+        "edexplore/additional_visualizations/optical_flow_on_image",
+        default=dict(),
+    )
+    image_search_key = retrieve(subconfig, "image_key", default="image")
+    flow_search_key = retrieve(subconfig, "flow_key", default="flow")
+    default_vector_frequency = retrieve(subconfig, "vector_frequency", default=4)
+    image_key = st.selectbox(
+        "Image key", image_keys, index=first_index(image_keys, image_search_key)
+    )
+    flow_key = st.selectbox(
+        "Flow key", flow_keys, index=first_index(flow_keys, flow_search_key)
+    )
+    freq = st.number_input(
+        "Flow vector every ... pixels", value=default_vector_frequency, min_value=1
+    )
+
+    # get image, X, Y, U and V
+    image = retrieve(ex, image_key)
+    flow = retrieve(ex, flow_key)
+    H, W = flow.shape[:2]
+    X, Y = np.meshgrid(np.arange(W), np.arange(H))
+    U, V = flow[:, :, 0], flow[:, :, 1]
+
+    # use only samples, where mean is computed completely from within the original image range
+    sample_height = H // freq
+    sample_width = W // freq
+
+    # average flow values locally
+    X = downscale_local_mean(X, (freq, freq))[:sample_height, :sample_width]
+    Y = downscale_local_mean(Y, (freq, freq))[:sample_height, :sample_width]
+    U = downscale_local_mean(U, (freq, freq))[:sample_height, :sample_width]
+    V = downscale_local_mean(V, (freq, freq))[:sample_height, :sample_width]
+
+    # plot image and flow on figure
+    fig, ax = plt.subplots(1, 1)
+    ax.set_title(image_key + " and " + flow_key)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    ax.imshow((image + 1.0) / 2.0)
+    ax.quiver(X, Y, U, V, color="r", angles="xy", scale_units="xy", scale=1)
+
+    # show data on streamlit
+    st.pyplot(fig)
+    display(flow_key, flow)
+
+
 def selector(key, obj):
     options = ["Auto", "Text", "Image", "Flow", "None"]
     idx = options.index(display_default(obj))
@@ -74,10 +139,34 @@ def selector(key, obj):
     return select
 
 
-def show_example(dset, idx):
+ADDITIONAL_VISUALIZATIONS = {
+    "optical_flow_on_image": display_flow_on_image,
+}
+
+
+def show_example(dset, idx, config):
+
     ex = dset[idx]
+
+    # additional visualizations
+    default_additional_visualizations = retrieve(
+        config, "edexplore/additional_visualizations", default=dict()
+    ).keys()
+    additional_visualizations = st.sidebar.multiselect(
+        "Additional visualizations",
+        list(ADDITIONAL_VISUALIZATIONS.keys()),
+        default=default_additional_visualizations,
+    )
+    if len(additional_visualizations) > 0:
+        st.header("Additional visualizations")
+        for key in additional_visualizations:
+            ADDITIONAL_VISUALIZATIONS[key](ex, config)
+
+    # dataset items
     st.header("Keys")
     walk(ex, display, pass_key=True)
+
+    # summaries
     st.header("Summary")
     summary = pp2mkdtable(ex, jupyter_style=True)
     # print markdown summary on console for easy copy and pasting in readme etc
@@ -113,7 +202,7 @@ def explore(config, disable_cache=False):
             idx = np.random.choice(len(dset))
         st.sidebar.text("Index: {}".format(idx))
 
-    show_example(dset, idx)
+    show_example(dset, idx, config)
 
     st.header("config")
     cfg_string = pp2mkdtable(config, jupyter_style=True)
