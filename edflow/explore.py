@@ -53,6 +53,19 @@ def display(key, obj):
         img = fz.convert_from_flow(obj)
         st.image(img)
 
+        import matplotlib.pyplot as plt
+
+        magnitudes = np.sqrt(obj[:, :, 0] ** 2 + obj[:, :, 1] ** 2).reshape(-1)
+
+        fig, ax = plt.subplots(1, 1)
+        ax.hist(magnitudes, log=True, label="magnitudes", alpha=0.7)
+        ax.hist(obj[:, :, 0].reshape(-1), log=True, label="flow[:,:,0]: dx", alpha=0.7)
+        ax.hist(obj[:, :, 1].reshape(-1), log=True, label="flow[:,:,1]: dy", alpha=0.7)
+        ax.set_title("flow values")
+        ax.legend()
+
+        st.pyplot(fig)
+
 
 def selector(key, obj):
     options = ["Auto", "Text", "Image", "Flow", "None"]
