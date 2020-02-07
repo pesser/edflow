@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Logging figures using tensorboard now possible using log_tensorboard_figures.
 - Added support for `eval_functor` in test mode.
 - use `-p <rundir/configs/config.yaml>` as shortcut for `-b <rundir/configs/config.yaml> -p <rundir>`
 - Log tmux target containing current run.

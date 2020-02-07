@@ -46,7 +46,6 @@ MOCK_MODULES = [
     "torch",
     "skimage",
     "skimage.measure",
-    "tensorboard",
     "streamlit",
     "wandb",
 ]
