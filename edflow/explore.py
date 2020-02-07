@@ -48,23 +48,28 @@ def display(key, obj):
         st.image((obj + 1.0) / 2.0)
 
     elif sel == "Flow":
-        import flowiz as fz
+        display_flow(obj)
 
-        img = fz.convert_from_flow(obj)
-        st.image(img)
 
-        import matplotlib.pyplot as plt
+def display_flow(obj):
+    import flowiz as fz
 
-        magnitudes = np.sqrt(obj[:, :, 0] ** 2 + obj[:, :, 1] ** 2).reshape(-1)
+    img = fz.convert_from_flow(obj)
+    st.image(img)
 
-        fig, ax = plt.subplots(1, 1)
-        ax.hist(magnitudes, log=True, label="magnitudes", alpha=0.7)
-        ax.hist(obj[:, :, 0].reshape(-1), log=True, label="flow[:,:,0]: dx", alpha=0.7)
-        ax.hist(obj[:, :, 1].reshape(-1), log=True, label="flow[:,:,1]: dy", alpha=0.7)
-        ax.set_title("flow values")
-        ax.legend()
+    import matplotlib.pyplot as plt
 
-        st.pyplot(fig)
+    magnitudes = np.sqrt(obj[:, :, 0] ** 2 + obj[:, :, 1] ** 2).reshape(-1)
+
+    fig, ax = plt.subplots(1, 1)
+    ax.hist(magnitudes, log=True, label="magnitudes", alpha=0.7)
+    ax.hist(obj[:, :, 0].reshape(-1), log=True, label="flow[:,:,0]: dx", alpha=0.7)
+    ax.hist(obj[:, :, 1].reshape(-1), log=True, label="flow[:,:,1]: dy", alpha=0.7)
+    ax.set_title("flow values")
+    ax.legend()
+
+    st.pyplot(fig)
+
 
 
 def first_index(keys, key_part):
@@ -129,7 +134,7 @@ def display_flow_on_image(ex, config):
 
     # show data on streamlit
     st.pyplot(fig)
-    display(flow_key, flow)
+    display_flow(flow)
 
 
 def selector(key, obj):
