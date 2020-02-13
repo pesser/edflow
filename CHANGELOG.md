@@ -6,10 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Logging figures using tensorboard now possible using log_tensorboard_figures.
 - Added support for `eval_functor` in test mode.
 - use `-p <rundir/configs/config.yaml>` as shortcut for `-b <rundir/configs/config.yaml> -p <rundir>`
 - Log tmux target containing current run.
-- Support for tensorboardX logging. Enable with `--tensorboardX_logging True`.
+- Support for tensorboard logging. Enable with `--tensorboard_logging True`.
 - Support for wandb logging. Enable with `--wandb_logging True`.
 - Support for flow visualizations in edexplore and improved index selection.
 - Git integration adds all .py and .yaml files not just tracked ones.
@@ -36,10 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Changed usage from tensorboardX to tensorboard, due to native intergration in pytorch.
 - EvalPipeline defaults to keypath/labels for finding labels.
 - A `datasets` dict is now preferred over `dataset` and `validation_dataset` (backwards compatible default: `dataset` -> `datasets/train` and `validation_dataset` -> `datasets/validation`).
 - Eval Pipeline now stores data compatible with MetaDataset specifications. Previously exported data cannot be read again using edeval after this change.
-- Changed configuration of integrations: `EDFLOWGIT` now `integrations/git`, `wandb_logging` now `integrations/wandb`, `tensorboardX_logging` now `--integrations/tensorboardX`.
+- Changed configuration of integrations: `EDFLOWGIT` now `integrations/git`, `wandb_logging` now `integrations/wandb`, `tensorboard_logging` now `--integrations/tensorboard`.
 - ProjectManager is now `edflow.run` and initialized with `edflow.run.init(...)`.
 - Saved config files use `-` instead of `:` in filename to be consistent.
 - No more `-e/--evaluation <config>` and `-t/--train <config>` options. Specify all configs under `-b/--base <config1> <config2>`. Default to evaluation mode, specify `-t/--train` for training mode.

@@ -34,7 +34,11 @@ class LoggingHook(Hook):
         for path in self.paths:
             os.makedirs(os.path.join(self.root, path), exist_ok=True)
             self.loggers[path] = get_logger(path)
-        self.handlers = {"images": [self.log_images], "scalars": [self.log_scalars]}
+        self.handlers = {
+            "images": [self.log_images],
+            "scalars": [self.log_scalars],
+            "figures": [self.log_figures],
+        }
 
     def __call__(self, results, step, paths):
         for path in paths:
@@ -65,6 +69,18 @@ class LoggingHook(Hook):
             if not path in self.loggers:
                 self.loggers[path] = get_logger(path)
             self.loggers[path].info("{}: {}".format(name, results[name]))
+
+    def log_figures(self, results, step, path):
+        import matplotlib.pyplot as plt
+
+        for name, figure in results.items():
+            full_name = name + "_{:07}.png".format(step)
+            save_path = os.path.join(self.root, path, full_name)
+            try:
+                plt.savefig(save_path)
+            except FileNotFoundError:
+                os.makedirs(os.path.split(save_path)[0])
+                plt.savefig(save_path)
 
     def log_images(self, results, step, path):
         for name, image_batch in results.items():

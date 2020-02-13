@@ -22,7 +22,7 @@ install_full = [  # for extra functionality
     "matplotlib",  # for plot_datum
     "flowiz",  # for visualizing flow with streamlit
     "wandb",  # for `--wandb_logging True`
-    "tensorboardX",  # for `--tensorboardX_logging True`
+    "tensorboard",  # for `--tensorboard_logging True`
 ]
 install_docs = [  # for building the documentation
     "sphinx >= 1.4",
