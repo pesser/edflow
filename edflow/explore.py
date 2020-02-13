@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Any
 import random
 import argparse
 import yaml
@@ -8,26 +9,29 @@ from edflow.config import parse_unknown_args, update_config
 
 import numpy as np
 from edflow.util import walk, pp2mkdtable, retrieve, get_leaf_names
+from edflow.util.edexplore import (
+    isimage,
+    isflow,
+    istext,
+    display_flow,
+    display_flow_on_image,
+)
 from edflow import get_obj_from_str
 
 
-def isimage(obj):
-    return (
-        isinstance(obj, np.ndarray)
-        and len(obj.shape) == 3
-        and obj.shape[2] in [1, 3, 4]
-    )
+def display_default(obj: Any) -> str:
+    """Find out how item could be displayed
 
+    Parameters
+    ----------
+    obj : Any
+        Item of example
 
-def isflow(obj):
-    return isinstance(obj, np.ndarray) and len(obj.shape) == 3 and obj.shape[2] in [2]
-
-
-def istext(obj):
-    return isinstance(obj, (int, float, str, np.integer, np.float))
-
-
-def display_default(obj):
+    Returns
+    -------
+    str
+        One of "Image", "Text", "Flow", "None"
+    """
     if isimage(obj):
         return "Image"
     elif istext(obj):
@@ -48,93 +52,7 @@ def display(key, obj):
         st.image((obj + 1.0) / 2.0)
 
     elif sel == "Flow":
-        display_flow(obj)
-
-
-def display_flow(obj):
-    import flowiz as fz
-
-    img = fz.convert_from_flow(obj)
-    st.image(img)
-
-    import matplotlib.pyplot as plt
-
-    magnitudes = np.sqrt(obj[:, :, 0] ** 2 + obj[:, :, 1] ** 2).reshape(-1)
-
-    fig, ax = plt.subplots(1, 1)
-    ax.hist(magnitudes, log=True, label="magnitudes", alpha=0.7)
-    ax.hist(obj[:, :, 0].reshape(-1), log=True, label="flow[:,:,0]: dx", alpha=0.7)
-    ax.hist(obj[:, :, 1].reshape(-1), log=True, label="flow[:,:,1]: dy", alpha=0.7)
-    ax.set_title("flow values")
-    ax.legend()
-
-    st.pyplot(fig)
-
-
-
-def first_index(keys, key_part):
-    for i, key in enumerate(keys):
-        if key_part in key:
-            return i
-    return 0
-
-
-def display_flow_on_image(ex, config):
-    import matplotlib.pyplot as plt
-    from skimage.transform import downscale_local_mean
-
-    st.subheader("Optical flow on image")
-
-    # get user input
-    example_keys = get_leaf_names(ex)
-    image_keys = [key for key in example_keys if isimage(retrieve(ex, key, default=0))]
-    flow_keys = [key for key in example_keys if isflow(retrieve(ex, key, default=0))]
-    subconfig = retrieve(
-        config,
-        "edexplore/additional_visualizations/optical_flow_on_image",
-        default=dict(),
-    )
-    image_search_key = retrieve(subconfig, "image_key", default="image")
-    flow_search_key = retrieve(subconfig, "flow_key", default="flow")
-    default_vector_frequency = retrieve(subconfig, "vector_frequency", default=4)
-    image_key = st.selectbox(
-        "Image key", image_keys, index=first_index(image_keys, image_search_key)
-    )
-    flow_key = st.selectbox(
-        "Flow key", flow_keys, index=first_index(flow_keys, flow_search_key)
-    )
-    freq = st.number_input(
-        "Flow vector every ... pixels", value=default_vector_frequency, min_value=1
-    )
-
-    # get image, X, Y, U and V
-    image = retrieve(ex, image_key)
-    flow = retrieve(ex, flow_key)
-    H, W = flow.shape[:2]
-    X, Y = np.meshgrid(np.arange(W), np.arange(H))
-    U, V = flow[:, :, 0], flow[:, :, 1]
-
-    # use only samples, where mean is computed completely from within the original image range
-    sample_height = H // freq
-    sample_width = W // freq
-
-    # average flow values locally
-    X = downscale_local_mean(X, (freq, freq))[:sample_height, :sample_width]
-    Y = downscale_local_mean(Y, (freq, freq))[:sample_height, :sample_width]
-    U = downscale_local_mean(U, (freq, freq))[:sample_height, :sample_width]
-    V = downscale_local_mean(V, (freq, freq))[:sample_height, :sample_width]
-
-    # plot image and flow on figure
-    fig, ax = plt.subplots(1, 1)
-    ax.set_title(image_key + " and " + flow_key)
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-    ax.imshow((image + 1.0) / 2.0)
-    ax.quiver(X, Y, U, V, color="r", angles="xy", scale_units="xy", scale=1)
-
-    # show data on streamlit
-    st.pyplot(fig)
-    display_flow(flow)
+        display_flow(obj, key)
 
 
 def selector(key, obj):
@@ -144,8 +62,33 @@ def selector(key, obj):
     return select
 
 
+def custom_visualizations(ex, config):
+    st.header("Custom visualizations")
+    default_visualizations = retrieve(
+        config, "edexplore/custom_visualizations", default=dict()
+    )
+    st.text(default_visualizations)
+    import_paths = [
+        vis.get("path", None)
+        for vis in default_visualizations.values()
+        if isinstance(vis.get("path", None), str)
+    ]
+    visualizatins_str = st.text_input(
+        "Visualization import paths: comma separated", value=",".join(import_paths)
+    )
+
+    for vis in visualizatins_str.split(","):
+        try:
+            st.subheader(vis)
+            impl = get_obj_from_str(vis)
+            impl(ex, config)
+        except Exception as error:
+            st.text(error)
+
+
 ADDITIONAL_VISUALIZATIONS = {
     "optical_flow_on_image": display_flow_on_image,
+    "custom_visualizations": custom_visualizations,
 }
 
 
@@ -155,7 +98,7 @@ def show_example(dset, idx, config):
 
     # additional visualizations
     default_additional_visualizations = retrieve(
-        config, "edexplore/additional_visualizations", default=dict()
+        config, "edexplore", default=dict()
     ).keys()
     additional_visualizations = st.sidebar.multiselect(
         "Additional visualizations",
