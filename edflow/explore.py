@@ -17,6 +17,7 @@ from edflow.util.edexplore import (
     display_flow_on_image,
 )
 from edflow import get_obj_from_str
+from edflow.data.dataset_mixin import DatasetMixin
 
 
 def display_default(obj: Any) -> str:
@@ -42,7 +43,16 @@ def display_default(obj: Any) -> str:
         return "None"
 
 
-def display(key, obj):
+def display(key: str, obj: Any) -> None:
+    """Display item in streamlit
+
+    Parameters
+    ----------
+    key : str
+        Subheader to be displayed
+    obj : Any
+        Item of example to be displayed
+    """
     st.subheader(key)
     sel = selector(key, obj)
     if sel == "Text":
@@ -55,19 +65,67 @@ def display(key, obj):
         display_flow(obj, key)
 
 
-def selector(key, obj):
+def selector(key: str, obj: Any) -> str:
+    """Show select box to choose display mode of obj in streamlit
+
+    Parameters
+    ----------
+    key : str
+        Key of item to be displayed
+    obj : Any
+        Item to be displayed
+
+    Returns
+    -------
+    str
+        Selected display method for item
+    """
     options = ["Auto", "Text", "Image", "Flow", "None"]
     idx = options.index(display_default(obj))
     select = st.selectbox("Display {} as".format(key), options, index=idx)
     return select
 
 
-def custom_visualizations(ex, config):
+def custom_visualizations(ex: dict, config: dict) -> None:
+    """Displays custom visualizations in streamlit
+
+    The visualizations can be inserted to the config via their import path.
+    Everyone can implement a custom visualization for an example.
+
+    The visualization functions must accept the example and config as positional
+    arguments.
+
+
+    Examples
+    --------
+
+    Add visualizations to the text box with their import path. For example:
+
+    .. code-block:: python
+
+        edflow.util.edexplore.display_flow_on_image
+
+    Visualizations can be displayed by default, if they are specified in the config.
+    An example for the configuration yaml file would be:
+
+    .. code-block::
+
+        edexplore:
+            custom_visualizations:
+                my_visualization_name:
+                    path: my_package.visualizations.my_visualization
+
+    Parameters
+    ----------
+    ex : dict
+        Example to be visualized
+    config : dict
+        Edexplore config
+    """
     st.header("Custom visualizations")
     default_visualizations = retrieve(
         config, "edexplore/custom_visualizations", default=dict()
     )
-    st.text(default_visualizations)
     import_paths = [
         vis.get("path", None)
         for vis in default_visualizations.values()
@@ -77,7 +135,10 @@ def custom_visualizations(ex, config):
         "Visualization import paths: comma separated", value=",".join(import_paths)
     )
 
-    for vis in visualizatins_str.split(","):
+    if len(visualizatins_str) == 0:
+        st.text(custom_visualizations.__doc__)
+
+    for vis in [vis for vis in visualizatins_str.split(",") if vis != ""]:
         try:
             st.subheader(vis)
             impl = get_obj_from_str(vis)
@@ -92,7 +153,18 @@ ADDITIONAL_VISUALIZATIONS = {
 }
 
 
-def show_example(dset, idx, config):
+def show_example(dset: DatasetMixin, idx: int, config: dict) -> None:
+    """Show example of dataset
+
+    Parameters
+    ----------
+    dset : DatasetMixin
+        Dataset to be shown
+    idx : int
+        Index to be shown
+    config : dict
+        Config used to show example
+    """
 
     ex = dset[idx]
 
@@ -128,7 +200,16 @@ def _get_state(config):
     return dataset
 
 
-def explore(config, disable_cache=False):
+def explore(config: dict, disable_cache: bool = False) -> None:
+    """Explore dataset specified in config
+
+    Parameters
+    ----------
+    config : dict
+        Edflow config dict used to explore dataset
+    disable_cache : bool, optional
+        Disable cache while loading dataset, by default False
+    """
     if not disable_cache:
         get_state = st.cache(persist=False, allow_output_mutation=True)(_get_state)
     else:

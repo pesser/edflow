@@ -151,7 +151,7 @@ def st_get_list_or_dict_item(
     description : str, optional
         Description for streamlit selectbox, by default last part of config_key or item key
     filter_fn : callable, optional
-        Function to check if item is desired, by default lambdaex_item:True
+        Function to check if item is desired, by default `lambda ex_item:True`
     config : dict, optional
         Config for default values, by default None
     config_key : str, optional
@@ -193,6 +193,24 @@ def st_get_list_or_dict_item(
 
 def display_flow_on_image(ex: dict, config: dict) -> None:
     """Display flow vectors on image in streamlit
+
+    Add config for this visualization to your config file to enable this
+    visualization by default.
+
+
+    Examples
+    --------
+
+    Add visualizations to the text box with their import path. For example:
+
+    .. code-block::
+
+        edexplore:
+            optical_flow_on_image:
+                image_key: "images/0/image"
+                flow_key: "forward_flow"
+                vector_frequency: 5
+                flow_downsample_method: max_magnitude
 
     Parameters
     ----------
