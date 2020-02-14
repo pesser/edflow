@@ -89,6 +89,11 @@ class Iterator(TemplateIterator):
 
         return {"train_op": train_op, "log_op": log_op, "eval_op": eval_op}
 
+    @property
+    def callbacks(self):
+        # callbacks to run after validation
+        return {"eval_op": {"accuracy": acc_callback}}
+
 
 def acc_callback(root, data_in, data_out, config):
     from tqdm import trange
@@ -99,7 +104,7 @@ def acc_callback(root, data_in, data_out, config):
     # labels are loaded directly into memory
     loss1 = np.mean(data_out.labels["loss"])
     loss2 = 0.0
-    for i in trange(len(data_in)):
+    for i in trange(len(data_in), leave=False):
         # data_in is the dataset that was used for evaluation
         labels = data_in[i]["class"]
         # data_out contains all the keys that were specified in the eval_op

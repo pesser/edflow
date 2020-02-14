@@ -1,4 +1,6 @@
-dataset: dataset.Dataset
+datasets:
+  train: dataset.Dataset
+  validation: dataset.Dataset
 iterator: iterator.Iterator
 model: model.Model
 
