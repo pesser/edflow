@@ -31,6 +31,10 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
             integrations = retrieve(config, "integrations", default=dict())
             for k in integrations:
                 config["integrations"][k]["active"] = False
+        max_steps = retrieve(config, "debug/max_steps",
+                             default=5*2)
+        if max_steps > 0:
+            config["num_steps"] = max_steps
 
     # backwards compatibility
     if not "datasets" in config:
