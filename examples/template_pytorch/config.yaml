@@ -1,5 +1,6 @@
-dataset: edflow.datasets.fashionmnist.FashionMNISTTrain
-validation_dataset: edflow.datasets.fashionmnist.FashionMNISTTest
+datasets:
+  train: edflow.datasets.fashionmnist.FashionMNISTTrain
+  validation: edflow.datasets.fashionmnist.FashionMNISTTest
 model: template_pytorch.edflow.Model
 iterator: template_pytorch.edflow.Iterator
 batch_size: 4

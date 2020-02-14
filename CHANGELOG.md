@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Debug options: `debug/disable_integrations=True`, `debug/max_examples=5 batches`.
+- Epoch and Batch step are restored.
+- Added option to save checkpoint zero with `--ckpt_zero True`.
+- Added support for `project` and `entity` in `integrations/wandb`.
 - Logging figures using tensorboard now possible using log_tensorboard_figures.
 - Added support for `eval_functor` in test mode.
 - use `-p <rundir/configs/config.yaml>` as shortcut for `-b <rundir/configs/config.yaml> -p <rundir>`

@@ -6,7 +6,7 @@ import math
 import datetime
 
 from edflow.custom_logging import log, run
-from edflow.util import get_obj_from_str
+from edflow.util import get_obj_from_str, retrieve, set_value
 
 
 def _save_config(config, prefix="config"):
@@ -24,6 +24,16 @@ def _save_config(config, prefix="config"):
 def train(config, root, checkpoint=None, retrain=False, debug=False):
     """Run training. Loads model, iterator and dataset according to config."""
     from edflow.iterators.batches import make_batches
+
+    # disable integrations in debug mode
+    if debug:
+        if retrieve(config, "debug/disable_integrations", default=True):
+            integrations = retrieve(config, "integrations", default=dict())
+            for k in integrations:
+                config["integrations"][k]["active"] = False
+        max_steps = retrieve(config, "debug/max_steps", default=5 * 2)
+        if max_steps > 0:
+            config["num_steps"] = max_steps
 
     # backwards compatibility
     if not "datasets" in config:
@@ -48,8 +58,16 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
         datasets[split].expand = True
         logger.info("{} dataset size: {}".format(split, len(datasets[split])))
         if debug:
-            logger.info("Monkey patching {} dataset __len__".format(split))
-            type(datasets[split]).__len__ = lambda self: 100
+            max_examples = retrieve(
+                config, "debug/max_examples", default=5 * config["batch_size"]
+            )
+            if max_examples > 0:
+                logger.info(
+                    "Monkey patching {} dataset __len__ to {} examples".format(
+                        split, max_examples
+                    )
+                )
+                type(datasets[split]).__len__ = lambda self: max_examples
 
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)
@@ -139,8 +157,16 @@ def test(config, root, checkpoint=None, nogpu=False, bar_position=0, debug=False
         datasets[split].expand = True
         logger.info("{} dataset size: {}".format(split, len(datasets[split])))
         if debug:
-            logger.info("Monkey patching {} dataset __len__".format(split))
-            type(datasets[split]).__len__ = lambda self: 100
+            max_examples = retrieve(
+                config, "debug/max_examples", default=5 * config["batch_size"]
+            )
+            if max_examples > 0:
+                logger.info(
+                    "Monkey patching {} dataset __len__ to {} examples".format(
+                        split, max_examples
+                    )
+                )
+                type(datasets[split]).__len__ = lambda self: max_examples
 
     n_processes = config.get("n_data_processes", min(16, config["batch_size"]))
     n_prefetch = config.get("n_prefetch", 1)

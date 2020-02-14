@@ -1,7 +1,0 @@
-dataset: tutorial_pytorch.edflow.Dataset
-model: tutorial_pytorch.edflow.Model
-iterator: tutorial_pytorch.edflow.Iterator
-batch_size: 4
-num_epochs: 2
-
-n_classes: 10

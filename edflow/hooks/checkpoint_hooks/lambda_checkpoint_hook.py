@@ -16,6 +16,7 @@ class LambdaCheckpointHook(Hook):
         save,
         restore,
         interval=None,
+        ckpt_zero=False,
         modelname="model",
     ):
         """
@@ -29,10 +30,26 @@ class LambdaCheckpointHook(Hook):
         self._save = save
         self._restore = restore
         self.interval = interval
+        self.ckpt_zero = ckpt_zero
 
         os.makedirs(root_path, exist_ok=True)
         self.savename = os.path.join(root_path, "{}-{{}}.ckpt".format(modelname))
         self._active = False
+
+    def before_epoch(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch :
+
+
+        Returns
+        -------
+
+        """
+        if self.ckpt_zero and self.global_step_getter() == 0:
+            self.save(force_active=True)
 
     def after_epoch(self, epoch):
         """
@@ -86,9 +103,9 @@ class LambdaCheckpointHook(Hook):
         """
         self.save()
 
-    def save(self):
+    def save(self, force_active=False):
         """ """
-        if self._active:
+        if self._active or force_active:
             savename = self.savename.format(self.global_step_getter())
             self._save(savename)
             self.logger.info("Saved model to {}".format(savename))
