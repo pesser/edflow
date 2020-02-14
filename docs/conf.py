@@ -44,9 +44,9 @@ MOCK_MODULES = [
     "tensorflow.python.ops",
     "tensorflow.python.framework",
     "torch",
+    "torch.utils.tensorboard",
     "skimage",
     "skimage.measure",
-    "tensorboardX",
     "streamlit",
     "wandb",
 ]
