@@ -105,6 +105,28 @@ def custom_visualizations(ex: dict, config: dict) -> None:
 
         edflow.util.edexplore.display_flow_on_image
 
+
+    A valid visualization function could look like for example:
+
+    .. code-block:: python
+
+        import streamlit as st
+        from edflow.util.edexplore import isimage, st_get_list_or_dict_item
+
+        def my_visualization(ex, config):
+            st.write("This is my visualization")
+
+            image1, image1_key = st_get_list_or_dict_item(ex, "image1", filter_fn=isimage)
+
+            st.image((image1 + 1) / 2)
+            
+            image2 = ex["image2"]
+            image3 = ex["image3"]
+
+            st.image((image2 + 1) / 2)
+            st.image((image3 + 1) / 2)
+
+
     Visualizations can be displayed by default, if they are specified in the config.
     An example for the configuration yaml file would be:
 
@@ -114,6 +136,7 @@ def custom_visualizations(ex: dict, config: dict) -> None:
             custom_visualizations:
                 my_visualization_name:
                     path: my_package.visualizations.my_visualization
+
 
     Parameters
     ----------
@@ -141,10 +164,10 @@ def custom_visualizations(ex: dict, config: dict) -> None:
     for vis in [vis for vis in visualizatins_str.split(",") if vis != ""]:
         try:
             st.subheader(vis)
-            impl = get_obj_from_str(vis)
+            impl = get_obj_from_str(vis, reload=True)
             impl(ex, config)
         except Exception as error:
-            st.text(error)
+            st.write(error)
 
 
 ADDITIONAL_VISUALIZATIONS = {

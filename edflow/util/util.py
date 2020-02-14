@@ -20,8 +20,11 @@ def get_str_from_obj(obj):
     return obj.__module__ + "." + obj.__name__
 
 
-def get_obj_from_str(string):
+def get_obj_from_str(string, reload=False):
     module, cls = string.rsplit(".", 1)
+    if reload:
+        module_imp = importlib.import_module(module)
+        importlib.reload(module_imp)
     return getattr(importlib.import_module(module, package=None), cls)
 
 
