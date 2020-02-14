@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added additional and custom visualizations to edexplore
 - Added support for `eval_functor` in test mode.
 - use `-p <rundir/configs/config.yaml>` as shortcut for `-b <rundir/configs/config.yaml> -p <rundir>`
 - Log tmux target containing current run.
