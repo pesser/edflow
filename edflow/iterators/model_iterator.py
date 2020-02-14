@@ -163,13 +163,21 @@ class PyHookedModelIterator(object):
                 batches_per_epoch, self.config["max_batches_per_epoch"]
             )
         num_epochs = 1 if epoch_hooks_only else self.num_epochs
-        start_epoch = 0 if epoch_hooks_only else (
-            self.get_global_step() // batches_per_epoch)
-        start_step = 0 if epoch_hooks_only else (
-            self.get_global_step() % batches_per_epoch)
+        start_epoch = (
+            0 if epoch_hooks_only else (self.get_global_step() // batches_per_epoch)
+        )
+        start_step = (
+            0 if epoch_hooks_only else (self.get_global_step() % batches_per_epoch)
+        )
         for epoch_step in trange(
-            start_epoch, num_epochs, initial=start_epoch, total=num_epochs,
-            desc=desc_epoch, position=pos, dynamic_ncols=True, leave=False,
+            start_epoch,
+            num_epochs,
+            initial=start_epoch,
+            total=num_epochs,
+            desc=desc_epoch,
+            position=pos,
+            dynamic_ncols=True,
+            leave=False,
         ):
             self._epoch_step = epoch_step
 
@@ -178,9 +186,14 @@ class PyHookedModelIterator(object):
             self.run_hooks(epoch_step, before=True)
 
             for batch_step in trange(
-                start_step, batches_per_epoch, initial=start_step,
-                total=batches_per_epoch, desc=desc_batch, position=pos + 1,
-                dynamic_ncols=True, leave=False,
+                start_step,
+                batches_per_epoch,
+                initial=start_step,
+                total=batches_per_epoch,
+                desc=desc_batch,
+                position=pos + 1,
+                dynamic_ncols=True,
+                leave=False,
             ):
                 self._batch_step = batch_step
 
