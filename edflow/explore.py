@@ -171,8 +171,8 @@ def custom_visualizations(ex: dict, config: dict) -> None:
 
 
 ADDITIONAL_VISUALIZATIONS = {
-    "optical_flow_on_image": display_flow_on_image,
     "custom_visualizations": custom_visualizations,
+    "optical_flow_on_image": display_flow_on_image,
 }
 
 
