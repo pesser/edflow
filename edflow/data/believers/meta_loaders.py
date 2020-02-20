@@ -53,14 +53,14 @@ def image_loader(path, root="", support="0->255", resize_to=None):
         else:
             return adjust_support(im, support, "0->255")
 
-    loader.__doc__ = f"""Loads the image found at {path}, relative to :attr:`root` (default:
-        {root}), scales the support to :attr:`support` (default={support}) and
-        resizes the image to :attr:`resize_to` (default: {resize_to}."""
+    loader.__doc__ = f"""Loads the image found at {path} relative to {root},
+    scales the support to :attr:`support` (default={support}) and resizes the
+    image to :attr:`resize_to` (default: {resize_to}."""
 
     return loader
 
 
-def numpy_loader(path):
+def numpy_loader(path, root=""):
     """
 
     Parameters
@@ -75,7 +75,11 @@ def numpy_loader(path):
     """
 
     def loader():
-        return np.load(path)
+        path_ = os.path.join(root, path)
+        return np.load(path_)
+
+    loader.__doc__ = f"""Loads the numpy array found at {path} relative to
+    {root}."""
 
     return loader
 
