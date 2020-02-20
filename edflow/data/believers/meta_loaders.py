@@ -1,15 +1,20 @@
 import numpy as np
+import os
 from PIL import Image
 from edflow.data.util import adjust_support
 
 
-def image_loader(path, support="0->255", resize_to=None):
+def image_loader(path, root="", support="0->255", resize_to=None):
     """
 
     Parameters
     ----------
     path : str
         Where to finde the image.
+    root : str
+        Root path, at which the suuplied :attr:`path` starts. E.g. if all paths
+        supplied to this function are relative to
+        ``/export/scratch/you_are_great/dataset``, this path would be root.
     support : str
         Defines the support and data type of the loaded image. Must be one of
             - ``0->255``: The PIL default. Datatype is ``np.uint8`` and all values
@@ -30,8 +35,10 @@ def image_loader(path, support="0->255", resize_to=None):
         specified.
     """
 
-    def loader(support=support, resize_to=resize_to):
-        im = Image.open(path)
+    def loader(support=support, resize_to=resize_to, root=root):
+        path_ = os.path.join(root, path)
+
+        im = Image.open(path_)
 
         if resize_to is not None:
             if isinstance(resize_to, int):
@@ -45,6 +52,10 @@ def image_loader(path, support="0->255", resize_to=None):
             return im
         else:
             return adjust_support(im, support, "0->255")
+
+    loader.__doc__ = f"""Loads the image found at {path}, relative to :attr:`root` (default:
+        {root}), scales the support to :attr:`support` (default={support}) and
+        resizes the image to :attr:`resize_to` (default: {resize_to}."""
 
     return loader
 
