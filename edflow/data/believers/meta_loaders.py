@@ -67,3 +67,32 @@ def numpy_loader(path):
         return np.load(path)
 
     return loader
+
+
+def category(index, categories):
+    """
+
+    Parameters
+    ----------
+    index : int, Hashable
+        Some value that will be passed to :attr:`categories`'s
+        :meth:`__getitem__` method. I.e. :attr:`categories` can be a ``list`` or
+        ``dict`` or whatever you want!
+    categories : list, dict, object with `__getitem__` method
+        Defines the categories you have in you dataset. Will be accessed like
+        ``categories[index]``
+
+    Returns:
+        category : object
+            ``categories[index]``
+    """
+
+    return categories[index]
+
+
+DEFAULT_LOADERS = {
+    "image": image_loader,
+    "np": numpy_loader,
+    "category": category,
+    "cat": category,
+}
