@@ -76,6 +76,8 @@ def prepare_content(content, opt, additional_kwargs):
     return content
 
 def _add_const_parameter(content, key, value):
+    if isinstance(value, list):
+        value = ' '.join(value)
     par_dict = {'value': value, 'distribution': 'constant'}
     content['parameters'][key] = par_dict
 
