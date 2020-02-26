@@ -72,9 +72,9 @@ class TemplateIterator(PyHookedModelIterator):
                 )
 
                 os.environ["WANDB_RESUME"] = "allow"
-                os.environ.setdefault("WANDB_RUN_ID", ProjectManager.root.strip("/").replace(
-                    "/", "-"
-                ))
+                os.environ.setdefault(
+                    "WANDB_RUN_ID", ProjectManager.root.strip("/").replace("/", "-")
+                )
                 wandb_project = set_default(
                     self.config, "integrations/wandb/project", None
                 )

@@ -24,8 +24,8 @@ def parse_unknown_args(unknown, is_wandb_sweep):
         unknown_ = unknown
         unknown = []
         for u in unknown_:
-            if '=' in u:
-                key, val = u.split('=')
+            if "=" in u:
+                key, val = u.split("=")
                 unknown += [key, val]
             else:
                 unknown += [u]
@@ -53,7 +53,7 @@ def parse_unknown_args(unknown, is_wandb_sweep):
                 key = key[1:]
 
             if is_wandb_sweep:
-                key = key.replace('.', '/')
+                key = key.replace(".", "/")
 
             # Store key key pairs
             kwargs[key] = value

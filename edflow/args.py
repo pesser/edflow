@@ -4,13 +4,13 @@ import argparse
 def get_parser(**parser_kwargs):
     def str2bool(v):
         if isinstance(v, bool):
-           return v
-        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return v
+        if v.lower() in ("yes", "true", "t", "y", "1"):
             return True
-        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        elif v.lower() in ("no", "false", "f", "n", "0"):
             return False
         else:
-            raise argparse.ArgumentTypeError('Boolean value expected.')
+            raise argparse.ArgumentTypeError("Boolean value expected.")
 
     parser = argparse.ArgumentParser(**parser_kwargs)
     parser.add_argument(
@@ -26,16 +26,24 @@ def get_parser(**parser_kwargs):
         default=None,
     )
     parser.add_argument(
-        "-t", "--train",
-        type=str2bool, const=True, default=False, nargs='?',
-        help="run in training mode"
+        "-t",
+        "--train",
+        type=str2bool,
+        const=True,
+        default=False,
+        nargs="?",
+        help="run in training mode",
     )
     parser.add_argument("-p", "--project", help="path to existing project")
     parser.add_argument("-c", "--checkpoint", help="path to existing checkpoint")
     parser.add_argument(
-        "-r", "--retrain",
-        type=str2bool, const=True, default=False, nargs='?',
-        help="reset global step"
+        "-r",
+        "--retrain",
+        type=str2bool,
+        const=True,
+        default=False,
+        nargs="?",
+        help="reset global step",
     )
     parser.add_argument(
         "-l",
@@ -46,12 +54,19 @@ def get_parser(**parser_kwargs):
         default="info",
         help="set the logging level.",
     )
-    parser.add_argument("-d", "--debug", type=str2bool, nargs='?', const=True,
-            default=False, help="enable post-mortem debugging")
+    parser.add_argument(
+        "-d",
+        "--debug",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="enable post-mortem debugging",
+    )
     parser.add_argument(
         "-w",
         "--wandb_sweep",
-        nargs='?',
+        nargs="?",
         const=True,
         type=str2bool,
         default=False,
