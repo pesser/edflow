@@ -132,9 +132,10 @@ def custom_visualizations(ex, config):
     .. code-block::
 
         edexplore:
-            custom_visualizations:
-                my_visualization_name:
-                    path: my_package.visualizations.my_visualization
+            visualizations:
+                custom:
+                    vis1:
+                        path: my_package.visualizations.my_visualization
 
 
     Parameters
@@ -146,7 +147,7 @@ def custom_visualizations(ex, config):
     """
     st.header("Custom visualizations")
     default_visualizations = retrieve(
-        config, "edexplore/custom_visualizations", default=dict()
+        config, "edexplore/visualizations/custom", default=dict()
     )
     import_paths = [
         vis.get("path", None)
@@ -170,7 +171,7 @@ def custom_visualizations(ex, config):
 
 
 ADDITIONAL_VISUALIZATIONS = {
-    "custom_visualizations": custom_visualizations,
+    "custom": custom_visualizations,
     "optical_flow_on_image": display_flow_on_image,
 }
 
@@ -192,7 +193,7 @@ def show_example(dset, idx, config):
 
     # additional visualizations
     default_additional_visualizations = retrieve(
-        config, "edexplore", default=dict()
+        config, "edexplore/visualizations", default=dict()
     ).keys()
     additional_visualizations = st.sidebar.multiselect(
         "Additional visualizations",

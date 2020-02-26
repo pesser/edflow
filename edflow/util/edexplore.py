@@ -205,11 +205,12 @@ def display_flow_on_image(ex, config):
     .. code-block::
 
         edexplore:
-            optical_flow_on_image:
-                image_key: "images/0/image"
-                flow_key: "forward_flow"
-                vector_frequency: 5
-                flow_downsample_method: max_magnitude
+            visualizations:
+                optical_flow_on_image:
+                    image_key: "images/0/image"
+                    flow_key: "forward_flow"
+                    vector_frequency: 5
+                    flow_downsample_method: max_magnitude
 
     Parameters
     ----------
@@ -227,25 +228,25 @@ def display_flow_on_image(ex, config):
         "image",
         filter_fn=isimage,
         config=config,
-        config_key="edexplore/optical_flow_on_image/image_key",
+        config_key="edexplore/visualizations/optical_flow_on_image/image_key",
     )
     flow, flow_key = st_get_list_or_dict_item(
         ex,
         "flow",
         filter_fn=isflow,
         config=config,
-        config_key="edexplore/optical_flow_on_image/flow_key",
+        config_key="edexplore/visualizations/optical_flow_on_image/flow_key",
     )
     downsample_method, downsample_method_key = st_get_list_or_dict_item(
         flow_downsample_methods,
         "flow_downsample_method",
         config=config,
-        config_key="edexplore/optical_flow_on_image/flow_downsample_method",
+        config_key="edexplore/visualizations/optical_flow_on_image/flow_downsample_method",
     )
     freq = st.number_input(
         "vector_frequency",
         value=retrieve(
-            config, "edexplore/optical_flow_on_image/vector_frequency", default=4,
+            config, "edexplore/visualizations/optical_flow_on_image/vector_frequency", default=4,
         ),
         min_value=1,
     )
