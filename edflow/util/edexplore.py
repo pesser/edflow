@@ -1,11 +1,10 @@
-from typing import Any, Iterable, Union, Tuple
 import streamlit as st
 import numpy as np
 
 from edflow.util import walk, pp2mkdtable, retrieve, get_leaf_names
 
 
-def isimage(obj: Any) -> bool:
+def isimage(obj):
     """Heuristic if item could be displayed as an image
 
     Parameters
@@ -25,7 +24,7 @@ def isimage(obj: Any) -> bool:
     )
 
 
-def isflow(obj: Any) -> bool:
+def isflow(obj):
     """Heuristic if item could be displayed as an optical flow field
 
     Parameters
@@ -41,7 +40,7 @@ def isflow(obj: Any) -> bool:
     return isinstance(obj, np.ndarray) and len(obj.shape) == 3 and obj.shape[2] in [2]
 
 
-def istext(obj: Any) -> bool:
+def istext(obj):
     """Heuristic if item could be displayed as text
 
     Parameters
@@ -57,7 +56,7 @@ def istext(obj: Any) -> bool:
     return isinstance(obj, (int, float, str, np.integer, np.float))
 
 
-def display_flow(obj: np.ndarray, key: str = "flow values") -> None:
+def display_flow(obj, key="flow values"):
     """Displays flow colored image and histogram in streamlit
 
     Parameters
@@ -86,7 +85,7 @@ def display_flow(obj: np.ndarray, key: str = "flow values") -> None:
     st.pyplot(fig)
 
 
-def _max_flow_magnitude(blocks: np.ndarray, axis: Tuple[int, int, int]) -> np.ndarray:
+def _max_flow_magnitude(blocks, axis):
     """Method, which downsamples a flow vector field. To be used with skimage.measure.block_reduce.
     """
     assert axis == (3, 4, 5)
@@ -110,7 +109,7 @@ flow_downsample_methods = {
 }
 
 
-def first_index(keys: Iterable[str], key_part: str) -> int:
+def first_index(keys, key_part):
     """Find first item in iterable containing part of the string
 
     Parameters
@@ -132,14 +131,14 @@ def first_index(keys: Iterable[str], key_part: str) -> int:
 
 
 def st_get_list_or_dict_item(
-    list_or_dict: Union[list, dict],
-    item_key: str,
-    description: str = None,
-    filter_fn: callable = lambda ex_item: True,
-    config: dict = None,
-    config_key: str = None,
-    selectbox_key: str = None,
-) -> Tuple[Any, str]:
+    list_or_dict,
+    item_key,
+    description=None,
+    filter_fn=lambda ex_item: True,
+    config=None,
+    config_key=None,
+    selectbox_key=None,
+):
     """Displays streamlit selectbox for selecting a value by key from list or dict
 
     Parameters
@@ -191,7 +190,7 @@ def st_get_list_or_dict_item(
     return item, item_key
 
 
-def display_flow_on_image(ex: dict, config: dict) -> None:
+def display_flow_on_image(ex, config):
     """Display flow vectors on image in streamlit
 
     Add config for this visualization to your config file to enable this

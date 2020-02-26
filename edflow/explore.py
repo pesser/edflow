@@ -1,6 +1,5 @@
 import os
 import sys
-from typing import Any
 import random
 import argparse
 import yaml
@@ -20,7 +19,7 @@ from edflow import get_obj_from_str
 from edflow.data.dataset_mixin import DatasetMixin
 
 
-def display_default(obj: Any) -> str:
+def display_default(obj):
     """Find out how item could be displayed
 
     Parameters
@@ -43,7 +42,7 @@ def display_default(obj: Any) -> str:
         return "None"
 
 
-def display(key: str, obj: Any) -> None:
+def display(key, obj):
     """Display item in streamlit
 
     Parameters
@@ -65,7 +64,7 @@ def display(key: str, obj: Any) -> None:
         display_flow(obj, key)
 
 
-def selector(key: str, obj: Any) -> str:
+def selector(key, obj):
     """Show select box to choose display mode of obj in streamlit
 
     Parameters
@@ -86,7 +85,7 @@ def selector(key: str, obj: Any) -> str:
     return select
 
 
-def custom_visualizations(ex: dict, config: dict) -> None:
+def custom_visualizations(ex, config):
     """Displays custom visualizations in streamlit
 
     The visualizations can be inserted to the config via their import path.
@@ -176,7 +175,7 @@ ADDITIONAL_VISUALIZATIONS = {
 }
 
 
-def show_example(dset: DatasetMixin, idx: int, config: dict) -> None:
+def show_example(dset, idx, config):
     """Show example of dataset
 
     Parameters
@@ -223,7 +222,7 @@ def _get_state(config):
     return dataset
 
 
-def explore(config: dict, disable_cache: bool = False) -> None:
+def explore(config, disable_cache=False):
     """Explore dataset specified in config
 
     Parameters
