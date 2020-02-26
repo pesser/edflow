@@ -246,7 +246,9 @@ def display_flow_on_image(ex, config):
     freq = st.number_input(
         "vector_frequency",
         value=retrieve(
-            config, "edexplore/visualizations/optical_flow_on_image/vector_frequency", default=4,
+            config,
+            "edexplore/visualizations/optical_flow_on_image/vector_frequency",
+            default=4,
         ),
         min_value=1,
     )
