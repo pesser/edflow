@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+'''
+This script is meant to be used together with wandb's great sweep
+functionality. The workflow looks as follows:
+
+
+1. Create a sweep file from your wandb web client. You can put in anything
+    under ``Settings/Training Script`` or leave it as it is. This value will be
+    changed to match you local edflow later on. Choose all parameters you want
+    to sweep over and nothgin else. Don't worry about the dots in the preview,
+    these will be fixed automatically later on.
+
+2. Download the sweep file to your prefered location.
+
+3. Navigate to the script location and run ``edprep <sweep_file.yaml> [all
+    additional parameters]. Add all additional parameters as you would when
+    running ``edflow``. Usually those include ``-t -b
+    <path/to/some/config.yaml> -n <sweep name>``. You can also add any other
+    parameter as if working with edflow. All parameters are added to the sweep
+    as constants, which are not varied.
+
+4. Now follow the wandb manual: run ``wandb sweep <sweep_file.yaml>``
+
+5. copy the command from the output of step 4 and run it. It should look
+    something like this: ``wandb agent <sweep_id>``.
+'''
+
+import os
+import argparse  # noqa
+import yaml  # noqa
+import time
+import subprocess
+
+from edflow.config import parse_unknown_args
+from edflow.args import get_parser
+
+
+def load_sweep(sweep_file_path):
+    '''Loads a yaml file in read only mode'''
+    with open(sweep_file_path, 'r') as sf:
+        content = yaml.safe_load(sf)
+
+    return content
+
+
+def prepare_content(content, opt, additional_kwargs):
+    '''Exchanges the program parameter of the sweep file with the local edflow
+    executable and adds all commandline parameters as constant parameters for
+    the sweep arguments.
+
+    Parameters
+    ----------
+    content : dict
+        content of the sweep file. Needs at least the key ``parameters``.
+    opt : Namespace
+        Parsed arguments from the commandline.
+    additional_kwargs : dict
+        Preprocessed addtitional commandline kwargs.
+
+    Returns
+    -------
+    content : dict
+        Updated version of the content.
+    '''
+    edexec = subprocess.check_output("which edflow", shell=True).decode("utf-8")
+    edexec = edexec.replace('\n', '')
+    content['program'] = edexec
+
+    for key, value in additional_kwargs.items():
+        _add_const_parameter(content, key, value)
+
+    for [key, value] in opt._get_kwargs():
+        if value is not None:
+            _add_const_parameter(content, key, value)
+
+    return content
+
+def _add_const_parameter(content, key, value):
+    par_dict = {'value': value, 'distribution': 'constant'}
+    content['parameters'][key] = par_dict
+
+
+def store_sweep(content, sweep_file_path):
+    '''Stores the updated sweep file and makes a backup of the old one.'''
+    os.rename(sweep_file_path, f'.{sweep_file_path}.{time.time()}.backup')
+    with open(sweep_file_path, 'w') as sf:
+        sf.write(yaml.safe_dump(content, indent=2))
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(
+            parents=[get_parser(add_help=False)],
+            description=__doc__ + '\nNote: the option ``--wand_sweep`` will '
+                'always be set to True!',
+            formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('sweep', metavar='SWEEP.YAML',
+            help='Sweep File as created by wandb. See '
+            'https://docs.wandb.com/sweeps for more.')
+
+    opt, unknown = parser.parse_known_args()
+
+    if not opt.wandb_sweep:
+        opt.wandb_sweep = True
+
+    additional_kwargs = parse_unknown_args(unknown, opt.wandb_sweep)
+
+    content = load_sweep(opt.sweep)
+    content = prepare_content(content, opt, additional_kwargs)
+    store_sweep(content, opt.sweep)

@@ -18,6 +18,7 @@ from edflow.custom_logging import run, get_logger  # noqa
 from edflow.hooks.checkpoint_hooks.common import get_latest_checkpoint  # noqa
 from edflow.config import parse_unknown_args, update_config
 from edflow.util import retrieve
+from edflow.args import get_parser
 
 
 def load_config(base_configs, additional_kwargs):
@@ -124,40 +125,10 @@ def main(opt, additional_kwargs):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-n", "--name", metavar="description", help="postfix of log directory."
-    )
-    parser.add_argument(
-        "-b",
-        "--base",
-        nargs="*",
-        metavar="base_config.yaml",
-        help="paths to base configs. Loaded from left-to-right. "
-        "Parameters can be overwritten or added with command-line options of the form `--key value`.",
-        default=None,
-    )
-    parser.add_argument(
-        "-t", "--train", action="store_true", help="run in training mode"
-    )
-    parser.add_argument("-p", "--project", help="path to existing project")
-    parser.add_argument("-c", "--checkpoint", help="path to existing checkpoint")
-    parser.add_argument(
-        "-r", "--retrain", action="store_true", help="reset global step"
-    )
-    parser.add_argument(
-        "-l",
-        "--log_level",
-        metavar="LEVEL",
-        type=str,
-        choices=["warn", "info", "debug", "critical"],
-        default="info",
-        help="set the logging level.",
-    )
-    parser.add_argument("-d", "--debug", action="store_true", help="enable post-mortem debugging")
+    parser = get_parser()
 
     opt, unknown = parser.parse_known_args()
-    additional_kwargs = parse_unknown_args(unknown)
+    additional_kwargs = parse_unknown_args(unknown, opt.wandb_sweep)
 
     if not opt.debug:
         main(opt, additional_kwargs)
