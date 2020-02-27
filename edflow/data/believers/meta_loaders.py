@@ -86,6 +86,32 @@ def numpy_loader(path, root=""):
 
 def category(index, categories):
     """
+    Turns an abstract category label into a readable label.
+
+    Example:
+
+    Your dataset has the label ``pid`` which has integer entries like ``[0, 0,
+    0, ..., 2, 2]`` between 0 and 3.
+
+    Inside the dataset's ``meta.yaml`` you define
+
+    .. code-block:: yaml
+
+        # meta.yaml
+        # ...
+        loaders:
+            pid: category
+        loader_kwargs:
+            pid:
+                categories: ['besser', 'pesser', 'Mimo Tilbich']
+
+    Now examples will be annotated with ``{pid: 'besser'}`` if the pid is
+    ``0``, ``{pid: 'pesser'}`` if pid is 1 or ``{pid: 'Mimo Tilbich'}`` if the
+    pid is 2.
+
+    Note that categories can be anything that implements a ``__getitem__``
+    method. You simply need to take care, that it understands the ``index``
+    value it is passed by this loader function.
 
     Parameters
     ----------
@@ -97,7 +123,8 @@ def category(index, categories):
         Defines the categories you have in you dataset. Will be accessed like
         ``categories[index]``
 
-    Returns:
+    Returns
+    -------
         category : object
             ``categories[index]``
     """
