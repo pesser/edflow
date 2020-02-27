@@ -25,6 +25,9 @@ def test_color_info():
         logger.info("msg", color="white")
         logger.info("msg", color="black")
 
+        logger.info("nocol")
+        logger.debug("nocol")
+
         logger.info("test", extra={"color": "red"})
         logger.debug("test", extra={"color": "green"})
         logger.critical("test", extra={"color": "yellow"})

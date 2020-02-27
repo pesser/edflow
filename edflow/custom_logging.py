@@ -425,11 +425,7 @@ class log(object):
 
         def _colored_log(level, msg, *args, color=None, **kwargs):
             extra = kwargs.get("extra", {})
-            if color is not None:
-                extra["color"] = color
-            else:
-                if "color" not in extra:
-                    extra["color"] = ""
+            extra["color"] = color
 
             kwargs["extra"] = extra
             logger.log_orig(level, msg, *args, **kwargs)
@@ -497,16 +493,21 @@ class ColorLineFormatter(logging.Formatter):
             color_end = ""
         else:
             color = record.color
-            color_end = COLOR_SEQ_END
+            if color is None:
+                color = ""
+                color_end = ""
+            else:
+                color_end = COLOR_SEQ_END
 
-        if color in VALID_COLORS:
-            color = VALID_COLORS[color]
-        else:
-            raise ValueError(
-                f"color must be one of "
-                f"`{list(VALID_COLORS.keys())}`, but is "
-                f"`{record.color}`."
-            )
+        if color != "":
+            if color in VALID_COLORS:
+                color = VALID_COLORS[color]
+            else:
+                raise ValueError(
+                    f"color must be one of "
+                    f"`{list(VALID_COLORS.keys())}`, but is "
+                    f"`{color}`."
+                )
 
         content = {
             "color": color,
