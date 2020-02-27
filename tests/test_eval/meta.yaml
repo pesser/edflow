@@ -1,0 +1,4 @@
+datasets:
+  train: edflow.debug.ConfigDebugDataset
+  validation: edflow.debug.ConfigDebugDataset
+size: 10

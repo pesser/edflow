@@ -6,8 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Debug options: `debug/disable_integrations=True`, `debug/max_examples=5 batches`.
+- Epoch and Batch step are restored.
+- Added option to save checkpoint zero with `--ckpt_zero True`.
+- Added support for `project` and `entity` in `integrations/wandb`.
+- Logging figures using tensorboard now possible using log_tensorboard_figures.
+- Added support for `eval_functor` in test mode.
+- use `-p <rundir/configs/config.yaml>` as shortcut for `-b <rundir/configs/config.yaml> -p <rundir>`
 - Log tmux target containing current run.
-- Support for tensorboardX logging. Enable with `--tensorboardX_logging True`.
+- Support for tensorboard logging. Enable with `--tensorboard_logging True`.
 - Support for wandb logging. Enable with `--wandb_logging True`.
 - Support for flow visualizations in edexplore and improved index selection.
 - Git integration adds all .py and .yaml files not just tracked ones.
@@ -35,7 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Configs are now merged using `edflow.util.merge`, which allows for slimmer config definitions.
-- Changed configuration of integrations: `EDFLOWGIT` now `integrations/git`, `wandb_logging` now `integrations/wandb`, `tensorboardX_logging` now `--integrations/tensorboardX`.
+- Changed usage from tensorboardX to tensorboard, due to native intergration in pytorch.
+- EvalPipeline defaults to keypath/labels for finding labels.
+- A `datasets` dict is now preferred over `dataset` and `validation_dataset` (backwards compatible default: `dataset` -> `datasets/train` and `validation_dataset` -> `datasets/validation`).
+- Eval Pipeline now stores data compatible with MetaDataset specifications. Previously exported data cannot be read again using edeval after this change.
+- Changed configuration of integrations: `EDFLOWGIT` now `integrations/git`, `wandb_logging` now `integrations/wandb`, `tensorboard_logging` now `--integrations/tensorboard`.
 - ProjectManager is now `edflow.run` and initialized with `edflow.run.init(...)`.
 - Saved config files use `-` instead of `:` in filename to be consistent.
 - No more `-e/--evaluation <config>` and `-t/--train <config>` options. Specify all configs under `-b/--base <config1> <config2>`. Default to evaluation mode, specify `-t/--train` for training mode.
@@ -52,12 +63,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make_var` was broken for period variables because subcommands lacked `**kwargs` in definition. This is fixed now.
 
 ### Removed
+- `get_implementations_from_config` superseded by `get_obj_from_str`.
 - Environment variable EDFLOWGIT is now ignored.
 - Cannot start training and (multiple) evaluations at the same time anymore. Simplifies a lot and was almost never used.
 - No single '-' possible for commandline specification of config parameters. Use '--'.
 - It is no longer possible to pass callbacks as list via the config
 
 ### Fixed
+- Show correct `edeval` command.
+- In debug mode of existing project, only move `latest_eval` folder to `eval_runs`.
 - Callbacks in eval pipeline config are not overwritten by loading them.
 - Image outputs in `template_pytorch` example.
 - Negative numbers as values for keyword arguments are now properly parsed.

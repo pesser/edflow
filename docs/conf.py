@@ -25,7 +25,6 @@ MOCK_MODULES = [
     "tqdm.autonotebook",
     "yaml",
     "numpy",
-    "fastnumbers",
     "PIL",
     "PIL.Image",
     "chainer",
@@ -45,9 +44,9 @@ MOCK_MODULES = [
     "tensorflow.python.ops",
     "tensorflow.python.framework",
     "torch",
+    "torch.utils.tensorboard",
     "skimage",
     "skimage.measure",
-    "tensorboardX",
     "streamlit",
     "wandb",
 ]

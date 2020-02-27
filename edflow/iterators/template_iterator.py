@@ -29,6 +29,7 @@ class TemplateIterator(PyHookedModelIterator):
             save=self.save,
             restore=self.restore,
             interval=set_default(self.config, "ckpt_freq", None),
+            ckpt_zero=set_default(self.config, "ckpt_zero", False),
         )
         # write checkpoints after epoch or when interrupted during training
         if not self.config.get("test_mode", False):
@@ -74,7 +75,18 @@ class TemplateIterator(PyHookedModelIterator):
                 os.environ["WANDB_RUN_ID"] = ProjectManager.root.strip("/").replace(
                     "/", "-"
                 )
-                wandb.init(name=ProjectManager.root, config=self.config)
+                wandb_project = set_default(
+                    self.config, "integrations/wandb/project", None
+                )
+                wandb_entity = set_default(
+                    self.config, "integrations/wandb/entity", None
+                )
+                wandb.init(
+                    name=ProjectManager.root,
+                    config=self.config,
+                    project=wandb_project,
+                    entity=wandb_entity,
+                )
 
                 handlers = set_default(
                     self.config,
@@ -86,51 +98,58 @@ class TemplateIterator(PyHookedModelIterator):
                 if "images" in handlers:
                     self.loghook.handlers["images"].append(log_wandb_images)
 
-            default_tensorboardX_logging = {
+            default_tensorboard_logging = {
                 "active": False,
-                "handlers": ["scalars", "images"],
+                "handlers": ["scalars", "images", "figures"],
             }
-            tensorboardX_logging = set_default(
-                self.config, "integrations/tensorboardX", default_tensorboardX_logging
+            tensorboard_logging = set_default(
+                self.config, "integrations/tensorboard", default_tensorboard_logging
             )
-            if tensorboardX_logging["active"]:
-                from tensorboardX import SummaryWriter
-                from edflow.hooks.logging_hooks.tensorboardX_handler import (
+            if tensorboard_logging["active"]:
+                try:
+                    from torch.utils.tensorboard import SummaryWriter
+                except:
+                    from tensorboardX import SummaryWriter
+
+                from edflow.hooks.logging_hooks.tensorboard_handler import (
                     log_tensorboard_config,
                     log_tensorboard_scalars,
                     log_tensorboard_images,
+                    log_tensorboard_figures,
                 )
 
-                self.tensorboardX_writer = SummaryWriter(ProjectManager.root)
+                self.tensorboard_writer = SummaryWriter(ProjectManager.root)
                 log_tensorboard_config(
-                    self.tensorboardX_writer, self.config, self.get_global_step()
+                    self.tensorboard_writer, self.config, self.get_global_step()
                 )
                 handlers = set_default(
                     self.config,
-                    "integrations/tensorboardX/handlers",
-                    default_tensorboardX_logging["handlers"],
+                    "integrations/tensorboard/handlers",
+                    default_tensorboard_logging["handlers"],
                 )
                 if "scalars" in handlers:
                     self.loghook.handlers["scalars"].append(
                         lambda *args, **kwargs: log_tensorboard_scalars(
-                            self.tensorboardX_writer, *args, **kwargs
+                            self.tensorboard_writer, *args, **kwargs
                         )
                     )
                 if "images" in handlers:
                     self.loghook.handlers["images"].append(
                         lambda *args, **kwargs: log_tensorboard_images(
-                            self.tensorboardX_writer, *args, **kwargs
+                            self.tensorboard_writer, *args, **kwargs
                         )
                     )
-
+                if "figures" in handlers:
+                    self.loghook.handlers["figures"].append(
+                        lambda *args, **kwargs: log_tensorboard_figures(
+                            self.tensorboard_writer, *args, **kwargs
+                        )
+                    )
         ## epoch hooks
 
         # evaluate validation/step_ops/eval_op after each epoch
         self._eval_op = set_default(
             self.config, "eval_hook/eval_op", "validation/eval_op"
-        )
-        label_key = set_default(
-            self.config, "eval_hook/label_key", "validation/eval_op/labels"
         )
         _eval_callbacks = set_default(self.config, "eval_hook/eval_callbacks", dict())
         if not isinstance(_eval_callbacks, dict):
@@ -159,14 +178,27 @@ class TemplateIterator(PyHookedModelIterator):
             callback_handler = lambda results, paths: self.loghook(
                 results=results, step=self.get_global_step(), paths=paths,
             )
+
+        # offer option to run eval functor:
+        # overwrite step op to only include the evaluation of the functor and
+        # overwrite callbacks to only include the callbacks of the functor
+        if self.config.get("test_mode", False) and "eval_functor" in self.config:
+            # offer option to use eval functor for evaluation
+            eval_functor = get_obj_from_str(self.config["eval_functor"])(
+                config=self.config
+            )
+            self.step_ops = lambda: {"eval_op": eval_functor}
+            eval_callbacks = dict()
+            if hasattr(eval_functor, "callbacks"):
+                for k in eval_functor.callbacks:
+                    eval_callbacks[k] = get_str_from_obj(eval_functor.callbacks[k])
+            set_value(self.config, "eval_hook/eval_callbacks", eval_callbacks)
         self.evalhook = TemplateEvalHook(
-            # dataset=self.dataset, # TODO let EvalHook figure out correct split
-            dataset=self.validation_dataset,
+            datasets=self.datasets,
             step_getter=self.get_global_step,
             keypath=self._eval_op,
             config=self.config,
             callbacks=eval_callbacks,
-            labels_key=label_key,
             callback_handler=callback_handler,
         )
         self.epoch_hooks.append(self.evalhook)

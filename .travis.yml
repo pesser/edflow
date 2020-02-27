@@ -16,8 +16,6 @@ before_install:
 - conda update -q conda
 - conda info -a
 install: true
-after_success:
-- coveralls
 jobs:
   include:
   - stage: formatting
@@ -43,31 +41,35 @@ jobs:
     - pip install -e .[test]
     script:
     - cd examples
-    - pytest --cov edflow -k tf --cov-config .coveragerc --cov-append
-    - cd ..
+    - coverage run --source=edflow -m pytest -k "tf"
+    after_success:
+    - coveralls
   - stage: torch_example_tests
     name: Pytorch examples test
     install:
     - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
     - source activate test-environment
     - conda install pytorch-cpu torchvision-cpu -c pytorch
-    - pip install tensorboardX
+    - pip install tensorboard
     - pip install -e .[test]
     script:
     - cd examples
-    - pytest --cov edflow -k torch --cov-config .coveragerc --cov-append
-    - cd ..
+    - coverage run --source=edflow -m pytest -k "torch"
+    after_success:
+    - coveralls
   - stage: general_tests
     name: General Tests
     install:
     - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION tensorflow=1.13.1
     - source activate test-environment
     - conda install pytorch-cpu torchvision-cpu -c pytorch
-    - pip install tensorboardX
+    - pip install tensorboard
     - pip install -e .[test]
     script:
     - python -c "import skimage"
-    - pytest --cov edflow --cov-config .coveragerc --ignore=examples
+    - coverage run --source=edflow -m pytest --ignore=examples
+    after_success:
+    - coveralls
   - stage: Build and publish
     name: publish
     install:
@@ -83,4 +85,3 @@ jobs:
       username: __token__
       password:
         secure: yXC9k2EQ+28vQ1JzdiTUjX/KNSTFEBxFCHWTwDo1yLK5hw4kwXR/GSGQnFjloigJStp5TJ4OJcUBnSRlG+daHmukAgWw7gTzluZwFwG+OkQ4xOF+FuZS2s8SQBth/1hgdbz2EL5M6To9hCQl1GRGCVprbh3Rn6U9vsZxi6e5DaA7Lsyj9Zh2Hi1Q6/CAWaxX6YQEHo4NqaanYKRm2DnkbBay2P2v+eb+ZGycKcRyR7lAynihHrQg1RUL5V9CT9NXCEHMHQTgWj7qFcbXzcUZ0B7SRam+ckcGUuKXd4y8j0KcQ8yE7uK10kCDLBppb+LsY0fTja1K71ReuuN97VhGhGIt7SPSNdc/HDtDAjiSGyoTP9BgFVVFvISqiADcFoOBbH6qbzUCzSId8sz6WihjI779pC1FoW1O4LpiNYav+9N149Iv+TJCWG0XiDOPkPP9to6nmB1mhKhlc4LiwQlrqYe94vI0n/0Pgy/D92UXjwMIPdhXjLTyerADDSzTG+KjSyNnjDaWJIaW/onJ3MfPzCdni+ERXQsRaUoWjoO6yBxZGoBPkGphoDmLmWnth6qGfy1YjiJBExP2lM5g/tQdzVDltkYVJEugyoDVomgPvc3HNm+l+nlz5BpZQzzVoV/8T0kicaDTa5EGAsGvf07J7WO6x8rSdSiIxsOQUTzSO6E=
-    after_success: skip

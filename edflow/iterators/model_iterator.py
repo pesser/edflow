@@ -1,4 +1,4 @@
-import signal, sys
+import signal, sys, math
 from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
@@ -21,8 +21,7 @@ class PyHookedModelIterator(object):
         config,
         root,
         model,
-        dataset,
-        validation_dataset=None,  # TODO switch to datasets dict
+        datasets,
         hook_freq=100,
         num_epochs=100,
         hooks=[],
@@ -53,8 +52,11 @@ class PyHookedModelIterator(object):
         self.root = root
 
         self.model = model
-        self.dataset = dataset
-        self.validation_dataset = validation_dataset
+        self.datasets = datasets
+        # backwards compatibility
+        self.dataset = datasets["train"]
+        self.validation_dataset = datasets["validation"]
+
         self.num_epochs = num_epochs
 
         self.hooks = hooks
@@ -117,7 +119,7 @@ class PyHookedModelIterator(object):
         for hook in self.hooks:
             hook.at_exception(e)
 
-    def iterate(self, batch_iterator, batch_iterator_validation=None):
+    def iterate(self, batches):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
@@ -129,12 +131,12 @@ class PyHookedModelIterator(object):
         """
 
         try:
-            self._iterate(batch_iterator, batch_iterator_validation)
+            self._iterate(batches)
         except Exception as e:
             self._handle_exception(e)
             raise e
 
-    def _iterate(self, batch_iterator, batch_iterator_validation=None):
+    def _iterate(self, batches):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
@@ -151,20 +153,31 @@ class PyHookedModelIterator(object):
         desc_epoch = base + "Epoch"
         desc_batch = base + "Batch"
 
+        # TODO use val freq
         validation_frequency = self.config.get(
             "val_freq", self.config.get("log_freq", -1)
         )
-        batches = {"train": batch_iterator, "validation": batch_iterator_validation}
-        if epoch_hooks_only and batches["validation"] is None:
-            self.logger.warning(
-                "No validation batch specified, defaulting to train batch."
+        batches_per_epoch = 0 if epoch_hooks_only else len(batches["train"])
+        if "max_batches_per_epoch" in self.config:
+            batches_per_epoch = min(
+                batches_per_epoch, self.config["max_batches_per_epoch"]
             )
-            batches["validation"] = batches["train"]
-        batches = dict((s, b) for s, b in batches.items() if b is not None)
-
         num_epochs = 1 if epoch_hooks_only else self.num_epochs
+        start_epoch = (
+            0 if epoch_hooks_only else (self.get_global_step() // batches_per_epoch)
+        )
+        start_step = (
+            0 if epoch_hooks_only else (self.get_global_step() % batches_per_epoch)
+        )
         for epoch_step in trange(
-            num_epochs, desc=desc_epoch, position=pos, dynamic_ncols=True
+            start_epoch,
+            num_epochs,
+            initial=start_epoch,
+            total=num_epochs,
+            desc=desc_epoch,
+            position=pos,
+            dynamic_ncols=True,
+            leave=False,
         ):
             self._epoch_step = epoch_step
 
@@ -172,16 +185,15 @@ class PyHookedModelIterator(object):
             batches["train"].reset()
             self.run_hooks(epoch_step, before=True)
 
-            if epoch_hooks_only:
-                batches_per_epoch = 0
-            else:
-                batches_per_epoch = len(batches["train"])
-            if "max_batches_per_epoch" in self.config:
-                batches_per_epoch = min(
-                    batches_per_epoch, self.config["max_batches_per_epoch"]
-                )
             for batch_step in trange(
-                batches_per_epoch, desc=desc_batch, position=pos + 1, dynamic_ncols=True
+                start_step,
+                batches_per_epoch,
+                initial=start_step,
+                total=batches_per_epoch,
+                desc=desc_batch,
+                position=pos + 1,
+                dynamic_ncols=True,
+                leave=False,
             ):
                 self._batch_step = batch_step
 
@@ -207,6 +219,7 @@ class PyHookedModelIterator(object):
                 if self.get_global_step() >= self.config.get("num_steps", float("inf")):
                     break
             self.run_hooks(epoch_step, before=False)
+            start_step = 0
 
             ############# run one epoch on each split
             # only continue a split as long as someone is retrieving results
@@ -214,12 +227,14 @@ class PyHookedModelIterator(object):
                 batches[split].reset()
                 self.run_hooks(epoch_step, before=True, epoch_hooks=True)
 
-                for batch_step in trange(
+                tqdm_iterator = trange(
                     len(batches[split]),
                     desc=split,
-                    position=pos + 2,
+                    position=pos + 1,
                     dynamic_ncols=True,
-                ):
+                    leave=False,
+                )
+                for batch_step in tqdm_iterator:
                     self._batch_step = batch_step
 
                     active = False
@@ -254,9 +269,14 @@ class PyHookedModelIterator(object):
                     del results
 
                     if batches[split].is_new_epoch or not active:
+                        tqdm_iterator.update()
+                        tqdm_iterator.close()
                         self.logger.info("Done with {}".format(split))
                         break
                 self.run_hooks(epoch_step, before=False, epoch_hooks=True)
+
+            if self.get_global_step() >= self.config.get("num_steps", float("inf")):
+                break
 
     def run(self, fetches, feed_dict):
         """Runs all fetch ops and stores the results.

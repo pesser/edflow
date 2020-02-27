@@ -1,9 +1,14 @@
 datasets:
   train: edflow.datasets.fashionmnist.FashionMNISTTrain
   validation: edflow.datasets.fashionmnist.FashionMNISTTest
-model: template_tfe.edflow.Model
-iterator: template_tfe.edflow.Iterator
+model: template_tfe_multiple_optimizers.edflow.Model
+iterator: template_tfe_multiple_optimizers.edflow.Iterator
 batch_size: 4
 num_epochs: 2
+
+
+lr: 1.0e-4
+
+z_dim : 10
 
 n_classes: 10

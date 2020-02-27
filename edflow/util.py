@@ -4,7 +4,6 @@ better catorgory than util."""
 import numpy as np
 import os
 import pickle
-from fastnumbers import fast_int
 from typing import *
 import importlib
 from copy import deepcopy
@@ -532,7 +531,13 @@ def set_value(list_or_dict, key, val, splitval="/"):
     """
 
     # Split into single keys and convert to int if possible
-    keys = [fast_int(k) for k in key.split(splitval)]
+    keys = []
+    for k in key.split(splitval):
+        try:
+            newkey = int(k)
+        except:
+            newkey = k
+        keys.append(newkey)
     next_keys = keys[1:] + [None]
 
     is_leaf = [False for k in keys]

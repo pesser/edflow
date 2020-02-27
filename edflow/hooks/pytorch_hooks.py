@@ -3,7 +3,7 @@ import sys
 
 import torch
 import numpy as np
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from edflow.hooks.hook import Hook
 from edflow.custom_logging import get_logger

@@ -147,7 +147,10 @@ class Test_eval(object):
         config = dict()
         config["model"] = "tmptest." + fullname(Model)
         config["iterator"] = "tmptest." + fullname(Iterator_checkpoint)
-        config["dataset"] = "tmptest." + fullname(Dataset)
+        config["datasets"] = {
+            "train": "tmptest." + fullname(Dataset),
+            "validation": "tmptest." + fullname(Dataset),
+        }
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["n_processes"] = 1
@@ -193,7 +196,10 @@ class Test_eval(object):
         config = dict()
         config["model"] = "tmptest." + fullname(Model)
         config["iterator"] = "tmptest." + fullname(Iterator_checkpoint)
-        config["dataset"] = "tmptest." + fullname(Dataset)
+        config["datasets"] = {
+            "train": "tmptest." + fullname(Dataset),
+            "validation": "tmptest." + fullname(Dataset),
+        }
         config["batch_size"] = 16
         config["num_steps"] = 100
         import yaml
@@ -238,7 +244,10 @@ class Test_eval(object):
         config = dict()
         config["model"] = "tmptest." + fullname(Model)
         config["iterator"] = "tmptest." + fullname(Iterator_checkpoint_latest)
-        config["dataset"] = "tmptest." + fullname(Dataset)
+        config["datasets"] = {
+            "train": "tmptest." + fullname(Dataset),
+            "validation": "tmptest." + fullname(Dataset),
+        }
         config["batch_size"] = 16
         config["num_steps"] = 100
         import yaml
@@ -283,7 +292,10 @@ class Test_eval(object):
         config = dict()
         config["model"] = "tmptest." + fullname(Model)
         config["iterator"] = "tmptest." + fullname(Iterator4)
-        config["dataset"] = "tmptest." + fullname(Dataset)
+        config["datasets"] = {
+            "train": "tmptest." + fullname(Dataset),
+            "validation": "tmptest." + fullname(Dataset),
+        }
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["eval_all"] = True
@@ -333,7 +345,10 @@ class Test_eval(object):
         config = dict()
         config["model"] = "tmptest." + fullname(Model)
         config["iterator"] = "tmptest." + fullname(Iterator_no_checkpoint)
-        config["dataset"] = "tmptest." + fullname(Dataset)
+        config["datasets"] = {
+            "train": "tmptest." + fullname(Dataset),
+            "validation": "tmptest." + fullname(Dataset),
+        }
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["eval_all"] = True
@@ -374,7 +389,10 @@ class Test_eval(object):
         config = dict()
         config["model"] = "tmptest." + fullname(Model)
         config["iterator"] = "tmptest." + fullname(Iterator_no_checkpoint)
-        config["dataset"] = "tmptest." + fullname(LLDataset)
+        config["datasets"] = {
+            "train": "tmptest." + fullname(Dataset),
+            "validation": "tmptest." + fullname(Dataset),
+        }
         config["batch_size"] = 16
         config["num_steps"] = 100
         config["eval_all"] = True
