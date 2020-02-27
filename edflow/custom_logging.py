@@ -423,26 +423,19 @@ class log(object):
         logger = logging.getLogger(name)
         logger.setLevel(level)
 
-        def _colored_info(msg, *args, color=None, **kwargs):
+        def _colored_log(level, msg, *args, color=None, **kwargs):
             extra = kwargs.get("extra", {})
             if color is not None:
-                if color in VALID_COLORS:
-                    extra["color"] = VALID_COLORS[color]
-                    extra["color_end"] = COLOR_SEQ_END
-                else:
-                    raise ValueError(
-                        f"color must be one of "
-                        f"`{list(VALID_COLORS.keys())}`, but is "
-                        f"`{color}`."
-                    )
+                extra["color"] = color
             else:
-                extra["color"] = ""
-                extra["color_end"] = ""
+                if "color" not in extra:
+                    extra["color"] = ""
 
             kwargs["extra"] = extra
-            logger.info(msg, *args, **kwargs)
+            logger.log_orig(level, msg, *args, **kwargs)
 
-        logger.colored_info = _colored_info
+        logger.log_orig = logger._log
+        logger._log = _colored_log
 
         if not len(logger.handlers) > 0:
             ch = TqdmHandler()
@@ -499,9 +492,25 @@ class ColorLineFormatter(logging.Formatter):
             self._fmt_str = "[{levelname}] [{name}]: {msg}"
 
     def format(self, record):
+        if not hasattr(record, "color"):
+            color = ""
+            color_end = ""
+        else:
+            color = record.color
+            color_end = COLOR_SEQ_END
+
+        if color in VALID_COLORS:
+            color = VALID_COLORS[color]
+        else:
+            raise ValueError(
+                f"color must be one of "
+                f"`{list(VALID_COLORS.keys())}`, but is "
+                f"`{record.color}`."
+            )
+
         content = {
-            "color": record.color,
-            "color_end": record.color_end,
+            "color": color,
+            "color_end": color_end,
             "levelname": record.levelname,
             "name": record.name,
             "msg": record.msg,
@@ -532,4 +541,3 @@ if __name__ == "__main__":
     l.colored_info("msg", color=1)
     l.colored_info("msg", color="green")
     l.colored_info("msg", color="y")
-    l.colored_info("msg", color="wrong")
