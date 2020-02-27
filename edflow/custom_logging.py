@@ -423,14 +423,13 @@ class log(object):
         logger = logging.getLogger(name)
         logger.setLevel(level)
 
-        logger.copyline = lambda msg: logger.log(22, msg)
+        logger.colored_info = lambda msg: logger.log(22, msg)
 
         if not len(logger.handlers) > 0:
             ch = TqdmHandler()
             fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
 
             fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"
-            formatter = logging.Formatter(fmt_string)
             fh.setFormatter(CopyLineFormatter(False))
             ch.setFormatter(CopyLineFormatter(True))
 
