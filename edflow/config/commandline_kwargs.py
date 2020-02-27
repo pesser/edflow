@@ -19,7 +19,7 @@ def update_config(config, additional_kwargs):
     walk(config, replace, inplace=True)
 
 
-def parse_unknown_args(unknown, is_wandb_sweep):
+def parse_unknown_args(unknown, is_wandb_sweep=False):
     if is_wandb_sweep:
         unknown_ = unknown
         unknown = []
