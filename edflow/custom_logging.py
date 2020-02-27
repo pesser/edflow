@@ -423,15 +423,33 @@ class log(object):
         logger = logging.getLogger(name)
         logger.setLevel(level)
 
-        logger.colored_info = lambda msg: logger.log(22, msg)
+        def _colored_info(msg, *args, color=None, **kwargs):
+            extra = kwargs.get("extra", {})
+            if color is not None:
+                if color in VALID_COLORS:
+                    extra["color"] = VALID_COLORS[color]
+                    extra["color_end"] = COLOR_SEQ_END
+                else:
+                    raise ValueError(
+                        f"color must be one of "
+                        f"`{list(VALID_COLORS.keys())}`, but is "
+                        f"`{color}`."
+                    )
+            else:
+                extra["color"] = ""
+                extra["color_end"] = ""
+
+            kwargs["extra"] = extra
+            logger.info(msg, *args, **kwargs)
+
+        logger.colored_info = _colored_info
 
         if not len(logger.handlers) > 0:
             ch = TqdmHandler()
             fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
 
-            fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"
-            fh.setFormatter(CopyLineFormatter(False))
-            ch.setFormatter(CopyLineFormatter(True))
+            fh.setFormatter(ColorLineFormatter(False))
+            ch.setFormatter(ColorLineFormatter(True))
 
             logger.addHandler(ch)
             logger.addHandler(fh)
@@ -439,40 +457,55 @@ class log(object):
         return logger
 
 
-class CopyLineFormatter(logging.Formatter):
+BOLD_SEQ = "\033[1m"
+COLOR_SEQ_START = "\033[{}m"
+COLOR_SEQ_END = "\033[0m"
+VALID_COLORS = {
+    0: COLOR_SEQ_START.format(90 + 0),  # Black
+    1: COLOR_SEQ_START.format(90 + 1),  # Red
+    2: COLOR_SEQ_START.format(90 + 2),  # Green
+    3: COLOR_SEQ_START.format(90 + 3),  # Yellow
+    4: COLOR_SEQ_START.format(90 + 4),  # Blue
+    5: COLOR_SEQ_START.format(90 + 5),  # Magenta
+    6: COLOR_SEQ_START.format(90 + 6),  # Cyan
+    7: COLOR_SEQ_START.format(90 + 7),  # White
+}
+
+color_names_short = ["k", "r", "g", "y", "b", "m", "c", "w"]
+color_names_long = [
+    "black",
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "magenta",
+    "cyan",
+    "white",
+]
+
+for i, n in enumerate(color_names_short):
+    VALID_COLORS[n] = VALID_COLORS[i]
+
+for i, n in enumerate(color_names_long):
+    VALID_COLORS[n] = VALID_COLORS[i]
+
+
+class ColorLineFormatter(logging.Formatter):
     def __init__(self, use_color, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.BLACK, self.RED, self.GREEN, self.YELLOW = range(4)
-        self.BLUE, self.MAGENTA, self.CYAN, self.WHITE = range(4, 8)
-
-        # The background is set with 40 plus the number of the color, and the
-        # foreground with 30
-
-        # These are the sequences need to get colored ouput
-        self.RESET_SEQ = "\033[0m"
-        self.COLOR_SEQ = "\033[{}m"
-        self.BOLD_SEQ = "\033[1m"
-
         if use_color:
             self._fmt_str = "{color}[{levelname}] [{name}]: {msg}{color_end}"
         else:
             self._fmt_str = "[{levelname}] [{name}]: {msg}"
 
     def format(self, record):
-
         content = {
-            "color": "",
-            "color_end": "",
+            "color": record.color,
+            "color_end": record.color_end,
             "levelname": record.levelname,
             "name": record.name,
             "msg": record.msg,
         }
-
-        if record.levelno == 22:
-            content["levelname"] = "INFO"
-            content["color"] = self.COLOR_SEQ.format(90 + self.MAGENTA)
-            content["color_end"] = self.RESET_SEQ
 
         formatted = self._fmt_str.format(**content)
 
@@ -493,3 +526,10 @@ def _fix_abseil():
 # backwards compatibility
 LogSingleton = log
 get_logger = log.get_logger
+
+if __name__ == "__main__":
+    l = log._create_logger("name", "/home/jhaux")
+    l.colored_info("msg", color=1)
+    l.colored_info("msg", color="green")
+    l.colored_info("msg", color="y")
+    l.colored_info("msg", color="wrong")
