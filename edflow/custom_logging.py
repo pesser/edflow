@@ -109,6 +109,8 @@ class run(object):
                 cls.resumed = False
                 cls.root = os.path.join(log_dir, name)
             else:
+                if run_dir[-1] == "/":
+                    run_dir = run_dir[:-1]
                 cls.resumed = True
                 cls.root = run_dir
             cls.name = os.path.split(cls.root)[1]
@@ -135,7 +137,7 @@ class run(object):
                         + "| grep {}".format(tty)
                     ],
                     shell=True,
-                    text=True,
+                    universal_newlines=True,
                     stdout=subprocess.PIPE,
                 ).stdout
                 tmux_target = tmux_target.split("\n")[0].split(" ")[0]
@@ -248,7 +250,7 @@ class run(object):
                 shell=True,
                 check=True,
                 stdout=subprocess.PIPE,
-                text=True,
+                universal_newlines=True,
             ).stdout.strip()
         except subprocess.CalledProcessError:
             cls.logger.warning(
@@ -268,7 +270,7 @@ class run(object):
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=True,
+                    universal_newlines=True,
                 ).stdout
                 cls.logger.debug(output)
                 if (
@@ -293,7 +295,7 @@ class run(object):
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=True,
+                    universal_newlines=True,
                 ).stdout
                 cls.logger.debug(output)
             except Exception as e:
@@ -308,7 +310,7 @@ class run(object):
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    text=True,
+                    universal_newlines=True,
                 ).stdout
                 cls.logger.debug(output)
         return tagname
@@ -321,10 +323,6 @@ class run(object):
 class TqdmHandler(logging.StreamHandler):
     """A logging handler compatible with tqdm progress bars.
     """
-
-    def __init__(self, pos=4):
-        logging.StreamHandler.__init__(self)
-        self.tqdm = tqdm(position=pos)
 
     def emit(self, record):
         # check if stderr and stdout are two different ptys.
@@ -339,7 +337,7 @@ class TqdmHandler(logging.StreamHandler):
             file_ = sys.stdout
 
         msg = self.format(record)
-        self.tqdm.write(msg, file=file_)
+        tqdm.write(msg, file=file_)
 
 
 class log(object):
@@ -421,14 +419,14 @@ class log(object):
         cls.get_logger("log").debug("Log level set to {}".format(level))
 
     @staticmethod
-    def _create_logger(name, out_dir, pos=4, level=logging.INFO):
+    def _create_logger(name, out_dir, level=logging.INFO):
         """Creates a logger with tqdm- and file-handler."""
         # init logging
         logger = logging.getLogger(name)
         logger.setLevel(level)
 
         if not len(logger.handlers) > 0:
-            ch = TqdmHandler(pos)
+            ch = TqdmHandler()
             fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
 
             fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"

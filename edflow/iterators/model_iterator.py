@@ -1,4 +1,4 @@
-import signal, sys
+import signal, sys, math
 from tqdm import tqdm, trange
 
 from edflow.custom_logging import get_logger
@@ -21,7 +21,7 @@ class PyHookedModelIterator(object):
         config,
         root,
         model,
-        dataset,
+        datasets,
         hook_freq=100,
         num_epochs=100,
         hooks=[],
@@ -52,10 +52,15 @@ class PyHookedModelIterator(object):
         self.root = root
 
         self.model = model
-        self.dataset = dataset
+        self.datasets = datasets
+        # backwards compatibility
+        self.dataset = datasets["train"]
+        self.validation_dataset = datasets["validation"]
+
         self.num_epochs = num_epochs
 
         self.hooks = hooks
+        self.epoch_hooks = list()
 
         self.hook_freq = hook_freq
 
@@ -67,7 +72,11 @@ class PyHookedModelIterator(object):
         self._global_step = 0
         self._batch_step = 0
         self._epoch_step = 0
-        self._is_validation_batch = False
+        self._split = None
+
+    def get_split(self, *args, **kwargs):
+        """Get the current split that is processed."""
+        return self._split
 
     def get_global_step(self, *args, **kwargs):
         """Get the global step. The global step corresponds to the number of
@@ -96,10 +105,6 @@ class PyHookedModelIterator(object):
             self._global_step += 1
         return self._global_step
 
-    def is_validation_batch(self):
-        """Whether or not current batch is from the validation batch."""
-        return self._is_validation_batch
-
     def make_feeds(self, batch):
         # copy of batches
         feeds = walk(batch, lambda val: val)
@@ -114,7 +119,7 @@ class PyHookedModelIterator(object):
         for hook in self.hooks:
             hook.at_exception(e)
 
-    def iterate(self, batch_iterator, batch_iterator_validation=None):
+    def iterate(self, batches):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
@@ -126,12 +131,12 @@ class PyHookedModelIterator(object):
         """
 
         try:
-            self._iterate(batch_iterator, batch_iterator_validation)
+            self._iterate(batches)
         except Exception as e:
             self._handle_exception(e)
             raise e
 
-    def _iterate(self, batch_iterator, batch_iterator_validation=None):
+    def _iterate(self, batches):
         """Iterates over the data supplied and feeds it to the model.
 
         Parameters
@@ -141,66 +146,137 @@ class PyHookedModelIterator(object):
         """
 
         step_ops = self.step_ops()
+        epoch_hooks_only = self.config.get("test_mode", False)
 
         pos = self.bar_pos
         base = self.desc + " - " if self.desc != "" else ""
-        desc_e = base + "Epoch"
-        desc_b = base + "Batch"
+        desc_epoch = base + "Epoch"
+        desc_batch = base + "Batch"
 
+        # TODO use val freq
         validation_frequency = self.config.get(
             "val_freq", self.config.get("log_freq", -1)
         )
-        for ep in trange(
-            self.num_epochs, desc=desc_e, position=pos, dynamic_ncols=True
+        batches_per_epoch = 0 if epoch_hooks_only else len(batches["train"])
+        if "max_batches_per_epoch" in self.config:
+            batches_per_epoch = min(
+                batches_per_epoch, self.config["max_batches_per_epoch"]
+            )
+        num_epochs = 1 if epoch_hooks_only else self.num_epochs
+        start_epoch = (
+            0 if epoch_hooks_only else (self.get_global_step() // batches_per_epoch)
+        )
+        start_step = (
+            0 if epoch_hooks_only else (self.get_global_step() % batches_per_epoch)
+        )
+        for epoch_step in trange(
+            start_epoch,
+            num_epochs,
+            initial=start_epoch,
+            total=num_epochs,
+            desc=desc_epoch,
+            position=pos,
+            dynamic_ncols=True,
+            leave=False,
         ):
-            self._epoch_step = ep
-            self.run_hooks(ep, before=True)
+            self._epoch_step = epoch_step
 
-            pos = self.bar_pos + 1
-            with tqdm(
-                batch_iterator, desc=desc_b, position=pos, dynamic_ncols=True
-            ) as iterator:
-                for bi, batch in enumerate(iterator):
-                    self._batch_step = bi
+            ############# run one batch on each split until new epoch or max steps
+            batches["train"].reset()
+            self.run_hooks(epoch_step, before=True)
 
-                    if (
-                        batch_iterator_validation is not None
-                        and self.get_global_step() % validation_frequency == 0
-                    ):
-                        self._is_validation_batch = True
-                        validation_batch = next(batch_iterator_validation)
-                        fetches = {
-                            "global_step": self.get_global_step,
-                            "validation_ops": step_ops,
-                        }
-                        feeds = self.make_feeds(validation_batch)
-                        self.run_hooks(
-                            bi, fetches, feeds, validation_batch, before=True
-                        )
-                        results = self.run(fetches, feed_dict=feeds)
-                        self.run_hooks(bi, results=results, before=False)
-                        del results  # make sure resources are freed
-                        self._is_validation_batch = False
+            for batch_step in trange(
+                start_step,
+                batches_per_epoch,
+                initial=start_step,
+                total=batches_per_epoch,
+                desc=desc_batch,
+                position=pos + 1,
+                dynamic_ncols=True,
+                leave=False,
+            ):
+                self._batch_step = batch_step
 
-                    fetches = {
-                        "global_step": self.get_global_step,
-                        "step_ops": step_ops,
+                def lazy_split_op(split):
+                    def split_op():
+                        self._split = split
+                        batch = next(batches[split])
+                        feeds = self.make_feeds(batch)
+                        fetches = step_ops
+                        self.run_hooks(batch_step, fetches, feeds, batch, before=True)
+                        return self.run(fetches, feed_dict=feeds)
+
+                    return split_op
+
+                results = {"global_step": self.get_global_step()}
+                for split in batches:
+                    results[split] = lazy_split_op(split)
+                self.run_hooks(batch_step, results=results, before=False)
+                del results
+
+                self.increment_global_step()
+
+                if self.get_global_step() >= self.config.get("num_steps", float("inf")):
+                    break
+            self.run_hooks(epoch_step, before=False)
+            start_step = 0
+
+            ############# run one epoch on each split
+            # only continue a split as long as someone is retrieving results
+            for split in batches:
+                batches[split].reset()
+                self.run_hooks(epoch_step, before=True, epoch_hooks=True)
+
+                tqdm_iterator = trange(
+                    len(batches[split]),
+                    desc=split,
+                    position=pos + 1,
+                    dynamic_ncols=True,
+                    leave=False,
+                )
+                for batch_step in tqdm_iterator:
+                    self._batch_step = batch_step
+
+                    active = False
+
+                    def lazy_split_op(split):
+                        def split_op():
+                            nonlocal active
+                            active = True
+                            self._split = split
+                            batch = next(batches[split])
+                            feeds = self.make_feeds(batch)
+                            fetches = step_ops
+                            self.run_hooks(
+                                batch_step,
+                                fetches,
+                                feeds,
+                                batch,
+                                before=True,
+                                epoch_hooks=True,
+                            )
+                            return self.run(fetches, feed_dict=feeds)
+
+                        return split_op
+
+                    results = {
+                        "global_step": self.get_global_step(),
+                        split: lazy_split_op(split),
                     }
-                    feeds = self.make_feeds(batch)
-                    self.run_hooks(bi, fetches, feeds, batch, before=True)
-                    results = self.run(fetches, feed_dict=feeds)
-                    self.run_hooks(bi, results=results, before=False)
-                    del results  # make sure resources are freed
+                    self.run_hooks(
+                        batch_step, results=results, before=False, epoch_hooks=True
+                    )
+                    del results
 
-                    self.increment_global_step()
-
-                    if batch_iterator.is_new_epoch or self.get_global_step() >= self.config.get(
-                        "num_steps", float("inf")
-                    ):
-                        self.logger.info("Done with epoch")
-                        batch_iterator.reset()
+                    if batches[split].is_new_epoch or not active:
+                        tqdm_iterator.update()
+                        tqdm_iterator.close()
+                        self.logger.info("Done with {}".format(split))
                         break
-            self.run_hooks(ep, before=False)
+                self.run_hooks(epoch_step, before=False, epoch_hooks=True)
+
+            if self.get_global_step() >= self.config.get("num_steps", float("inf")):
+                break
 
     def run(self, fetches, feed_dict):
         """Runs all fetch ops and stores the results.
@@ -226,7 +302,14 @@ class PyHookedModelIterator(object):
         return results
 
     def run_hooks(
-        self, index, fetches=None, feeds=None, batch=None, results=None, before=True
+        self,
+        index,
+        fetches=None,
+        feeds=None,
+        batch=None,
+        results=None,
+        before=True,
+        epoch_hooks=False,
     ):
         """Run all hooks and manage their stuff. The passed arguments determine
         which method of the hooks is called.
@@ -259,8 +342,9 @@ class PyHookedModelIterator(object):
 
         condition = self._global_step % self.hook_freq == 0 or not is_step
 
+        hooks = self.hooks if not epoch_hooks else self.epoch_hooks
         if condition:
-            for hook in self.hooks:
+            for hook in hooks:
                 if before:
                     if is_step:
                         hook.before_step(index, fetches, feeds, batch)

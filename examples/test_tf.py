@@ -5,9 +5,9 @@ def test_mnist():
     """Just make sure example runs without errors."""
     env = os.environ.copy()
     if not "CUDA_VISIBLE_DEVICES" in env:
-        env["CUDA_VISIBLE_DEVICES"] = "0"
+        env["CUDA_VISIBLE_DEVICES"] = ""
     subprocess.run(
-        "edflow -b mnist_tf/train.yaml -n testrun --num_steps 11 -t",
+        "edflow -b template_tfe/config.yaml -t --max_batcher_per_epoch --num_epochs 1",
         shell=True,
         check=True,
         env=env,

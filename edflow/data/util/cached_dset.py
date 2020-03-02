@@ -46,8 +46,8 @@ def pickle_and_queue(
     ----------
     dataset_factory : chainer.DatasetMixin
         A dataset factory, with methods described in :class:`CachedDataset`.
-    indeces : list
-        List of indeces, used to retrieve samples from dataset.
+    indices : list
+        List of indices, used to retrieve samples from dataset.
     queue : mp.Queue
         Queue to put the samples in.
     naming_template : str
@@ -255,7 +255,7 @@ class CachedDataset(DatasetMixin):
 
     def cache_dataset(self):
         """Checks if a dataset is stored. If not iterates over all possible
-        indeces and stores the examples in a file, as well as the labels."""
+        indices and stores the examples in a file, as well as the labels."""
 
         if not os.path.isfile(self.store_path) or self.force_cache:
             print("Caching {}".format(self.store_path))
@@ -264,22 +264,22 @@ class CachedDataset(DatasetMixin):
             outqueue = manager.get_outqueue()
 
             N_examples = len(self.base_dataset)
-            indeces = np.arange(N_examples)
+            indices = np.arange(N_examples)
             if self.keep_existing and os.path.isfile(self.store_path):
                 with ZipFile(self.store_path, "r") as zip_f:
                     zipfilenames = zip_f.namelist()
                 zipfilenames = set(zipfilenames)
-                indeces = [
+                indices = [
                     i
-                    for i in indeces
+                    for i in indices
                     if not self.naming_template.format(i) in zipfilenames
                 ]
-                print("Keeping {} cached examples.".format(N_examples - len(indeces)))
-                N_examples = len(indeces)
+                print("Keeping {} cached examples.".format(N_examples - len(indices)))
+                N_examples = len(indices)
             print("Caching {} examples.".format(N_examples))
             index_chunks = [
-                indeces[i : i + self.chunk_size]
-                for i in range(0, len(indeces), self.chunk_size)
+                indices[i : i + self.chunk_size]
+                for i in range(0, len(indices), self.chunk_size)
             ]
             for chunk in index_chunks:
                 inqueue.put(chunk)

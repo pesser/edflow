@@ -36,8 +36,8 @@ def create_edflow_project(project_name, replace: bool = False, **kwargs):
     with open(source_config, "r+") as source_config_file:
         source_config_dict = yaml.load(source_config_file, Loader=yaml.FullLoader)
 
-    path_keys = ["model_path", "dataset_path", "iterator_path"]
-    path_defaults = ["model.py", "dataset.py", "iterator.py"]
+    path_keys = ["model_path", "dataset_path", "dataset_path", "iterator_path"]
+    path_defaults = ["model.py", "dataset.py", "dataset.py", "iterator.py"]
 
     destination_training_files = list()
     for key, default in zip(path_keys, path_defaults):
@@ -61,8 +61,10 @@ def create_edflow_project(project_name, replace: bool = False, **kwargs):
         for file, class_name in zip(training_files_to_module, training_classes)
     ]
     training_parameters_dict = dict(
-        zip(["model", "dataset", "iterator"], full_address_to_class)
+        zip(["model", "train_dataset", "validation_dataset", "iterator"], full_address_to_class)
     )
+    source_config_dict["datasets"]["train"] = training_parameters_dict.pop("train_dataset")
+    source_config_dict["datasets"]["validation"] = training_parameters_dict.pop("validation_dataset")
     source_config_dict.update(training_parameters_dict)
 
     with open(destination_config, "w+") as new_config_file:

@@ -114,7 +114,7 @@ import yaml  # metadata
 from PIL import Image
 
 from edflow.data.util import adjust_support
-from edflow.util import walk, retrieve, pop_keypath
+from edflow.util import walk, retrieve, pop_keypath, set_value
 from edflow.data.dataset import DatasetMixin
 from edflow.data.believers.meta import MetaDataset
 from edflow.project_manager import ProjectManager as P
@@ -130,7 +130,7 @@ class EvalHook(Hook):
 
     def __init__(
         self,
-        dataset,
+        datasets,
         sub_dir_keys=[],
         labels_key=None,
         callbacks={},
@@ -145,8 +145,8 @@ class EvalHook(Hook):
 
         Parameters
         ----------
-            dataset : DatasetMixin
-                The Dataset used for creating the new data.
+            datasets : dict(split: DatasetMixin)
+                The Datasets used for creating the new data.
             sub_dir_keys : list(str)
                 Keys found in :attr:`example`, which will
                 be used to make a subdirectory for the stored example.
@@ -189,8 +189,12 @@ class EvalHook(Hook):
         self.logger.info("{}".format(self.cbacks))
 
         self.sdks = sub_dir_keys
-        self.lk = labels_key
-        self.data_in = dataset
+        self.labels_key = labels_key
+        if self.labels_key is None:
+            self.labels_key = os.path.join(keypath, "labels")
+        self.datasets = datasets
+        # TODO fix hardcoded data_in
+        self.data_in = self.datasets["validation"]
 
         self.config = config
 
@@ -216,10 +220,7 @@ class EvalHook(Hook):
 
     def after_step(self, step, last_results):
         """Save examples and store label values."""
-        if self.lk is not None:
-            label_vals = pop_keypath(last_results, self.lk, default={})
-        else:
-            label_vals = {}
+        label_vals = pop_keypath(last_results, self.labels_key, default={})
 
         idxs = self.idxs  # indices collected before_step
 
@@ -276,17 +277,22 @@ class EvalHook(Hook):
         self.save_meta()
 
         data_out = MetaDataset(self.save_root)
+        data_out.expand = True
         data_out.append_labels = True
 
         cb_kwargs = retrieve(self.config, "eval_pipeline/callback_kwargs", default={})
 
+        results = dict()
         for n, cb in self.cbacks.items():
-            cb_name = "CB: {}".format(n)
-            cb_name = "{a}\n{c}\n{a}".format(a="=" * len(cb_name), c=cb_name)
-            self.logger.info(cb_name)
+            self.logger.info(
+                "Running callback '{}' on dataset '{}'".format(
+                    n, type(self.data_in).__name__
+                )
+            )
 
             kwargs = cb_kwargs.get(n, {})
-            cb(self.root, self.data_in, data_out, self.config, **kwargs)
+            results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
+        return results
 
     def save_meta(self):
         """ """
@@ -311,17 +317,22 @@ class EvalHook(Hook):
         self.logger.info(
             "All data has been produced. You can now also run all"
             + " callbacks using the following command:\n"
-            + f"edeval -c {self.save_root} -cb {cbs}"
+            + f"edeval -m {self.save_root} -c {cbs}"
         )
         self.logger.info(
             "To directly reuse the data simply use the following command:\n"
             + "from edflow.data.believers.meta import MetaDataset\n"
-            + f'M = MetaDataset("{os.path.abspath(self.save_root)}"\n)'
+            + f'M = MetaDataset("{os.path.abspath(self.save_root)}")\n'
         )
 
 
 class TemplateEvalHook(EvalHook):
     """EvalHook that disables itself when the eval op returns None."""
+
+    def __init__(self, *args, **kwargs):
+        cb_handler = kwargs.pop("callback_handler", None)
+        super().__init__(*args, **kwargs)
+        self.cb_handler = cb_handler
 
     def before_epoch(self, *args, **kwargs):
         self._active = True
@@ -340,7 +351,13 @@ class TemplateEvalHook(EvalHook):
 
     def after_epoch(self, *args, **kwargs):
         if self._active:
-            super().after_epoch(*args, **kwargs)
+            cb_results = super().after_epoch(*args, **kwargs)
+            if self.cb_handler is not None:
+                results = dict()
+                set_value(results, self.keypath, cb_results)
+                paths = [self.keypath + "/" + cb for cb in self.cb_names]
+                self.cb_handler(results=results, paths=paths)
+            self._active = False
 
     def at_exception(self, *args, **kwargs):
         if self._active:
@@ -698,7 +715,7 @@ def standalone_eval_meta_dset(
         The collected outputs of the callbacks.
     """
 
-    from edflow.main import get_implementations_from_config
+    from edflow.util import get_obj_from_str
     from edflow.config import update_config
     import yaml
 
@@ -709,12 +726,23 @@ def standalone_eval_meta_dset(
         other_config = {}
 
     out_data = MetaDataset(path_to_meta_dir)
+    out_data.expand = True
+    out_data.append_labels = True
 
     config = out_data.meta
 
-    dataset_str = config["dataset"]
-    impl = get_implementations_from_config(config, ["dataset"])
-    in_data = impl["dataset"](config)
+    # backwards compatibility
+    if not "datasets" in config:
+        config["datasets"] = {"train": config["dataset"]}
+        if "validation_dataset" in config:
+            config["datasets"]["validation"] = config["validation_dataset"]
+    datasets = dict(
+        (split, get_obj_from_str(config["datasets"][split]))
+        for split in config["datasets"]
+    )
+    # TODO fix hardcoded dataset
+    in_data = datasets["validation"](config=config)
+    in_data.expand = True
 
     update_config(config, additional_kwargs)
     config.update(other_config)
@@ -726,6 +754,7 @@ def standalone_eval_meta_dset(
 
     root = os.path.dirname(path_to_meta_dir)
 
+    # TODO handle logging of return values
     outputs = apply_callbacks(
         callbacks, root, in_data, out_data, config, callback_kwargs
     )
@@ -786,6 +815,9 @@ def apply_callbacks(callbacks, root, in_data, out_data, config, callback_kwargs=
 
     outputs = {}
     for name, cb in callbacks.items():
+        print(
+            "Running callback '{}' on dataset '{}'".format(name, type(in_data).__name__)
+        )
         kwargs = callback_kwargs.get(name, {})
         outputs[name] = cb(root, in_data, out_data, config, **kwargs)
 

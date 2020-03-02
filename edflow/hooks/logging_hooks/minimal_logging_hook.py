@@ -30,31 +30,64 @@ class LoggingHook(Hook):
             self.logger = get_logger(name)
         else:
             self.logger = get_logger(self)
-        self.handlers = {"images": [self.log_images], "scalars": [self.log_scalars]}
+        self.loggers = dict()
+        for path in self.paths:
+            os.makedirs(os.path.join(self.root, path), exist_ok=True)
+            self.loggers[path] = get_logger(path)
+        self.handlers = {
+            "images": [self.log_images],
+            "scalars": [self.log_scalars],
+            "figures": [self.log_figures],
+        }
+
+    def __call__(self, results, step, paths):
+        for path in paths:
+            for k in self.handlers:
+                handler_results = retrieve(results, path + "/" + k, default=dict())
+                for handler in self.handlers[k]:
+                    handler(handler_results, step, path=path)
 
     def after_step(self, batch_index, last_results):
         if batch_index % self.interval == 0:
             active = False
-            self._step = last_results["global_step"]
+            step = last_results["global_step"]
             for path in self.paths:
                 for k in self.handlers:
                     handler_results = retrieve(
                         last_results, path + "/" + k, default=dict()
                     )
                     if handler_results and not active:
-                        self.logger.info("global_step: {}".format(self._step))
+                        self.logger.info("global_step: {}".format(step))
                         active = True
                     for handler in self.handlers[k]:
-                        handler(handler_results, self._step)
+                        handler(handler_results, step, path=path)
             if active:
                 self.logger.info("logging root: {}".format(self.root))
 
-    def log_scalars(self, results, step):
+    def log_scalars(self, results, step, path):
         for name in sorted(results.keys()):
-            self.logger.info("{}: {}".format(name, results[name]))
+            if not path in self.loggers:
+                self.loggers[path] = get_logger(path)
+            self.loggers[path].info("{}: {}".format(name, results[name]))
 
-    def log_images(self, results, step):
+    def log_figures(self, results, step, path):
+        import matplotlib.pyplot as plt
+
+        for name, figure in results.items():
+            full_name = name + "_{:07}.png".format(step)
+            save_path = os.path.join(self.root, path, full_name)
+            try:
+                plt.savefig(save_path)
+            except FileNotFoundError:
+                os.makedirs(os.path.split(save_path)[0])
+                plt.savefig(save_path)
+
+    def log_images(self, results, step, path):
         for name, image_batch in results.items():
-            full_name = name + "_{:07}.png".format(self._step)
-            save_path = os.path.join(self.root, full_name)
-            plot_batch(image_batch, save_path)
+            full_name = name + "_{:07}.png".format(step)
+            save_path = os.path.join(self.root, path, full_name)
+            try:
+                plot_batch(image_batch, save_path)
+            except FileNotFoundError:
+                os.makedirs(os.path.split(save_path)[0])
+                plot_batch(image_batch, save_path)

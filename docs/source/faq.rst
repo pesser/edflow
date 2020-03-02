@@ -55,3 +55,11 @@ How do I set breakpoints? `import pdb; pdb.set_trace()` is not working.
    Use `import edflow.fpdb as pdb; pdb.set_trace()` instead. `edflow` runs
    trainings and evaluations in their own processes. Hence, `sys.stdin` must be
    set properly to be able to interact with the debugger.
+
+Error when using TFE: `NotImplementedError: object proxy must define reduce_ex()`.
+   This was addressed in this issue : https://github.com/pesser/edflow/issues/240
+   When adding the config to a model that inherits from `tf.keras.Model`, the config cannot be dumped.
+   It looks like keras changes lists within the config to a `ListWrapper` object, which are not reducable by `yaml.dump`
+
+   Workaround 
+      is to simply not do self.config = config and save everything you need in a field in the model.

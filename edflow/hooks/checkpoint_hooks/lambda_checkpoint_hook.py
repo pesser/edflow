@@ -16,6 +16,7 @@ class LambdaCheckpointHook(Hook):
         save,
         restore,
         interval=None,
+        ckpt_zero=False,
         modelname="model",
     ):
         """
@@ -29,10 +30,26 @@ class LambdaCheckpointHook(Hook):
         self._save = save
         self._restore = restore
         self.interval = interval
+        self.ckpt_zero = ckpt_zero
 
         os.makedirs(root_path, exist_ok=True)
         self.savename = os.path.join(root_path, "{}-{{}}.ckpt".format(modelname))
         self._active = False
+
+    def before_epoch(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch :
+
+
+        Returns
+        -------
+
+        """
+        if self.ckpt_zero and self.global_step_getter() == 0:
+            self.save(force_active=True)
 
     def after_epoch(self, epoch):
         """
@@ -46,6 +63,7 @@ class LambdaCheckpointHook(Hook):
         -------
 
         """
+        self._active = True
         if self.interval is None:
             self.save()
 
@@ -63,12 +81,11 @@ class LambdaCheckpointHook(Hook):
         -------
 
         """
+        if step > 0:
+            self._active = True
         step = self.global_step_getter()
         if self.interval is not None and step % self.interval == 0:
-            if self._active:
-                self.save()
-        if not "validation_ops" in last_results:
-            self._active = True
+            self.save()
 
     def at_exception(self, *args, **kwargs):
         """
@@ -86,11 +103,12 @@ class LambdaCheckpointHook(Hook):
         """
         self.save()
 
-    def save(self):
+    def save(self, force_active=False):
         """ """
-        savename = self.savename.format(self.global_step_getter())
-        self._save(savename)
-        self.logger.info("Saved model to {}".format(savename))
+        if self._active or force_active:
+            savename = self.savename.format(self.global_step_getter())
+            self._save(savename)
+            self.logger.info("Saved model to {}".format(savename))
 
     def __call__(self, checkpoint):
         """Load checkpoint and set global step."""

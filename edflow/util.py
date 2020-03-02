@@ -4,7 +4,6 @@ better catorgory than util."""
 import numpy as np
 import os
 import pickle
-from fastnumbers import fast_int
 from typing import *
 import importlib
 
@@ -15,6 +14,10 @@ try:
     __COULD_HAVE_IPYTHON__ = True
 except ImportError:
     __COULD_HAVE_IPYTHON__ = False
+
+
+def get_str_from_obj(obj):
+    return obj.__module__ + "." + obj.__name__
 
 
 def get_obj_from_str(string):
@@ -256,7 +259,7 @@ def retrieve(
                     list_or_dict = list_or_dict[key]
                 else:
                     list_or_dict = list_or_dict[int(key)]
-            except (KeyError, IndexError) as e:
+            except (KeyError, IndexError, ValueError) as e:
                 raise KeyNotFoundError(e, keys=keys, visited=visited)
 
             visited += [key]
@@ -527,7 +530,13 @@ def set_value(list_or_dict, key, val, splitval="/"):
     """
 
     # Split into single keys and convert to int if possible
-    keys = [fast_int(k) for k in key.split(splitval)]
+    keys = []
+    for k in key.split(splitval):
+        try:
+            newkey = int(k)
+        except:
+            newkey = k
+        keys.append(newkey)
     next_keys = keys[1:] + [None]
 
     is_leaf = [False for k in keys]
