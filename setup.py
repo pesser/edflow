@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 
-
 # allows to get version via python setup.py --version
 __version__ = "dev"
 
@@ -37,11 +36,16 @@ install_test = install_full + [  # for running the tests
 ]
 extras_require = {"full": install_full, "docs": install_docs, "test": install_test}
 
+long_description = """Reduce boilerplate code for your ML projects. TensorFlow
+and PyTorch. [Documentation](https://edflow.readthedocs.io/)"""
+
 
 setup(
     name="edflow",
     version=__version__,
     description="Logistics for Deep Learning",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/pesser/edflow",
     author="Mimo Tilbich et al.",
     author_email="patrick.esser@iwr.uni-heidelberg.de, johannes.haux@iwr.uni-heidelberg.de",
