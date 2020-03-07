@@ -50,7 +50,7 @@ class CelebA(edu.DatasetMixin):
             df_eval_partition = pd.read_csv(
                 os.path.join(self.root, "list_eval_partition.txt"),
                 dtype={"image_id": str, "partition": np.int32},
-                )
+            )
             list_eval_partition = np.array(list(df_eval_partition.partition))
             fnames = np.array(list(df_eval_partition.image_id))
 
@@ -68,7 +68,7 @@ class CelebA(edu.DatasetMixin):
                 names=["image_id", "identity"],
                 sep=" ",
                 dtype={"identity": np.int, "image_id": str},
-                )
+            )
             identity_celeba = np.array(list(df_identities.identity))
 
             data = {
@@ -143,6 +143,34 @@ class CelebAVal(CelebA):
 
 
 class CelebATest(CelebA):
+    def _get_split(self):
+        return "test"
+
+
+class CelebAWild(CelebA):
+    NAME = "CelebAWild"
+    URL = "http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html"
+    FILES = [
+        "img_celeba.tgz",
+        "list_eval_partition.txt",
+        "identity_CelebA.txt",
+        "list_attr_celeba.txt",
+    ]
+    DATA_FILE = "data.p"
+    CONTENT_DIR = "img_celeba"
+
+
+class CelebAWildTrain(CelebAWild):
+    def _get_split(self):
+        return "train"
+
+
+class CelebAWildVal(CelebAWild):
+    def _get_split(self):
+        return "val"
+
+
+class CelebAWildTest(CelebAWild):
     def _get_split(self):
         return "test"
 

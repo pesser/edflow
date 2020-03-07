@@ -17,6 +17,9 @@ def unpack(path):
     if path.endswith("tar.gz"):
         with tarfile.open(path, "r:gz") as tar:
             tar.extractall(path=os.path.split(path)[0])
+    if path.endswith(".tgz"):
+        with tarfile.open(path, "r:gz") as tar:
+            tar.extractall(path=os.path.split(path)[0])
     elif path.endswith("tar"):
         with tarfile.open(path, "r:") as tar:
             tar.extractall(path=os.path.split(path)[0])
