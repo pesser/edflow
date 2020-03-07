@@ -30,4 +30,3 @@ class TestCelebaWildDataset:
             ]
         )
         assert len(dset) == 162770
-
