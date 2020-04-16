@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md to document notable changes.
 
 ### Changed
+- Configs are now merged using `edflow.util.merge`, which allows for slimmer config definitions.
 - Changed usage from tensorboardX to tensorboard, due to native intergration in pytorch.
 - EvalPipeline defaults to keypath/labels for finding labels.
 - A `datasets` dict is now preferred over `dataset` and `validation_dataset` (backwards compatible default: `dataset` -> `datasets/train` and `validation_dataset` -> `datasets/validation`).
