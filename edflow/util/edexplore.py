@@ -15,8 +15,8 @@ def isimage(obj):
     Returns
     -------
     bool
-        Returns True for three-dimensional numpy arrays where third dimension is one,
-        three or, four. And for two dimensional arrays if both sides are bigger than 4.
+        Returns True for rank-three numpy arrays where third axis is one,
+        three or, four. And for rank-two arrays if both sides are bigger than 4.
     """
     return isinstance(obj, np.ndarray) and (
         (len(obj.shape) == 3 and obj.shape[2] in [1, 3, 4])
@@ -35,9 +35,29 @@ def isflow(obj):
     Returns
     -------
     bool
-        Returns True for three-dimensional numpy arrays where third dimension is two.
+        Returns True for rank-three numpy arrays where third axis is two.
     """
     return isinstance(obj, np.ndarray) and len(obj.shape) == 3 and obj.shape[2] in [2]
+
+
+def issegmentation(obj):
+    """Heuristic if item could be displayed as a segmentation mask
+
+    Parameters
+    ----------
+    obj : Any
+        item
+
+    Returns
+    -------
+    bool
+        Returns True for rank-three numpy arrays with values boolean or in
+        [0,1]
+    """
+    is_ = isinstance(obj, np.ndarray) and len(obj.shape) == 3
+    is_ = is_ and ((obj.dtype == np.bool) or
+                   (0.0 <= obj.min() and obj.max() <= 1.0))
+    return is_
 
 
 def istext(obj):
