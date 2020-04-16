@@ -5,8 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
 ### Added
 - Added additional and custom visualizations to edexplore
+
+### Changed
+
+### Removed
+
+
+## [0.3.1] - 2020-03-02
+### Added
+- Root parameter for image and numpy loader of the meta dataset. `root` is prepended to the given paths and thus allows for smaller label arrays
+- Category loader allows to convert a given label into a more expressive category, which is specifed in the dataset's `meta.yaml`
 - Debug options: `debug/disable_integrations=True`, `debug/max_examples=5 batches`.
 - Epoch and Batch step are restored.
 - Added option to save checkpoint zero with `--ckpt_zero True`.

@@ -6,7 +6,7 @@ import re
 from edflow.data.dataset_mixin import DatasetMixin
 from edflow.util import retrieve, get_obj_from_str, pp2mkdtable, pop_keypath
 from edflow.util import walk, set_value, edprint
-from edflow.data.believers.meta_loaders import image_loader, numpy_loader
+from edflow.data.believers.meta_loaders import DEFAULT_LOADERS
 
 try:
     from IPython import get_ipython
@@ -15,9 +15,6 @@ try:
     __COULD_HAVE_IPYTHON__ = True
 except ImportError:
     __COULD_HAVE_IPYTHON__ = False
-
-
-DEFAULT_LOADERS = {"image": image_loader, "np": numpy_loader}
 
 
 class MetaDataset(DatasetMixin):
