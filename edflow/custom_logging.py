@@ -425,19 +425,103 @@ class log(object):
         logger = logging.getLogger(name)
         logger.setLevel(level)
 
+        def _colored_log(level, msg, *args, color=None, **kwargs):
+            extra = kwargs.get("extra", {})
+            extra["color"] = color
+
+            kwargs["extra"] = extra
+            logger.log_orig(level, msg, *args, **kwargs)
+
+        logger.log_orig = logger._log
+        logger._log = _colored_log
+
         if not len(logger.handlers) > 0:
             ch = TqdmHandler()
             fh = logging.FileHandler(filename=os.path.join(out_dir, "log.txt"))
 
-            fmt_string = "[%(levelname)s] [%(name)s]: %(message)s"
-            formatter = logging.Formatter(fmt_string)
-            fh.setFormatter(formatter)
-            ch.setFormatter(formatter)
+            fh.setFormatter(ColorLineFormatter(False))
+            ch.setFormatter(ColorLineFormatter(True))
 
             logger.addHandler(ch)
             logger.addHandler(fh)
 
         return logger
+
+
+BOLD_SEQ = "\033[1m"
+COLOR_SEQ_START = "\033[{}m"
+COLOR_SEQ_END = "\033[0m"
+VALID_COLORS = {
+    0: COLOR_SEQ_START.format(90 + 0),  # Black
+    1: COLOR_SEQ_START.format(90 + 1),  # Red
+    2: COLOR_SEQ_START.format(90 + 2),  # Green
+    3: COLOR_SEQ_START.format(90 + 3),  # Yellow
+    4: COLOR_SEQ_START.format(90 + 4),  # Blue
+    5: COLOR_SEQ_START.format(90 + 5),  # Magenta
+    6: COLOR_SEQ_START.format(90 + 6),  # Cyan
+    7: COLOR_SEQ_START.format(90 + 7),  # White
+}
+
+color_names_short = ["k", "r", "g", "y", "b", "m", "c", "w"]
+color_names_long = [
+    "black",
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "magenta",
+    "cyan",
+    "white",
+]
+
+for i, n in enumerate(color_names_short):
+    VALID_COLORS[n] = VALID_COLORS[i]
+
+for i, n in enumerate(color_names_long):
+    VALID_COLORS[n] = VALID_COLORS[i]
+
+
+class ColorLineFormatter(logging.Formatter):
+    def __init__(self, use_color, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if use_color:
+            self._fmt_str = "{color}[{levelname}] [{name}]: {msg}{color_end}"
+        else:
+            self._fmt_str = "[{levelname}] [{name}]: {msg}"
+
+    def format(self, record):
+        if not hasattr(record, "color"):
+            color = ""
+            color_end = ""
+        else:
+            color = record.color
+            if color is None:
+                color = ""
+                color_end = ""
+            else:
+                color_end = COLOR_SEQ_END
+
+        if color != "":
+            if color in VALID_COLORS:
+                color = VALID_COLORS[color]
+            else:
+                raise ValueError(
+                    f"color must be one of "
+                    f"`{list(VALID_COLORS.keys())}`, but is "
+                    f"`{color}`."
+                )
+
+        content = {
+            "color": color,
+            "color_end": color_end,
+            "levelname": record.levelname,
+            "name": record.name,
+            "msg": record.msg,
+        }
+
+        formatted = self._fmt_str.format(**content)
+
+        return formatted
 
 
 def _fix_abseil():
@@ -454,3 +538,9 @@ def _fix_abseil():
 # backwards compatibility
 LogSingleton = log
 get_logger = log.get_logger
+
+if __name__ == "__main__":
+    l = log._create_logger("name", "/home/jhaux")
+    l.colored_info("msg", color=1)
+    l.colored_info("msg", color="green")
+    l.colored_info("msg", color="y")
