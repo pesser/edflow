@@ -55,8 +55,7 @@ def issegmentation(obj):
         [0,1]
     """
     is_ = isinstance(obj, np.ndarray) and len(obj.shape) == 3
-    is_ = is_ and ((obj.dtype == np.bool) or
-                   (0.0 <= obj.min() and obj.max() <= 1.0))
+    is_ = is_ and ((obj.dtype == np.bool) or (0.0 <= obj.min() and obj.max() <= 1.0))
     return is_
 
 

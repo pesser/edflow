@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Support segmentation masks in `edexplore`.
 - Added additional and custom visualizations to edexplore
 
 ### Changed
 
 ### Removed
 
+### Fixed
+- fix ob1 error in dataset length displayed by `edexplore`.
 
 ## [0.3.1] - 2020-03-02
 ### Added
