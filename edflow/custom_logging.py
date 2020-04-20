@@ -27,8 +27,6 @@ class run(object):
 
     Attributes
     ----------
-    exists : bool
-        True if log structure was initialized.
     now : str
         Representing time of initialization.
     postfix : str
@@ -60,6 +58,7 @@ class run(object):
     """
 
     exists = False
+    """True if log structure was initialized."""
 
     @classmethod
     def init(
@@ -348,20 +347,14 @@ class log(object):
     This class is intended to provide logging facilities without the need to
     pass it through. Thus it behaves like a singleton by storing all
     information on the class object itself and not an instance of the class.
-
-    Attributes
-    ----------
-    target : str
-        Current default target to write log file to.
-    level
-        Current default log level for new loggers.
-    loggers
-        List of all loggers.
     """
 
-    target = "root"  # default directory of ProjectManager to log into
+    target = "root"
+    """Current default target to write log file to."""
     level = logging.INFO
+    """Current default log level for new loggers."""
     loggers = []
+    """List of all loggers."""
 
     @classmethod
     def set_log_target(cls, which):

@@ -1,18 +1,6 @@
-==================
-Welcome to EDFlow!
-==================
+.. include:: source/README.rst
 
-
-Introduction
-============
-Here we give a short introduction
-
-Quick and Dirty
-===============
-.. note::
-    example of a standart mnist problem
-
-Contents
+Documentation
 ========
 .. toctree::
    :glob:
@@ -28,7 +16,7 @@ Contents
    source/git
    source/contributions
    source/faq
-   source/source_files/edflow
+   source/source_files/modules
 
 Indices and tables
 ==================
