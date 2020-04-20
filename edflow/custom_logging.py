@@ -418,15 +418,17 @@ class log(object):
         logger = logging.getLogger(name)
         logger.setLevel(level)
 
-        def _colored_log(level, msg, *args, color=None, **kwargs):
-            extra = kwargs.get("extra", {})
-            extra["color"] = color
+        if not hasattr(logger, "log_orig"):
 
-            kwargs["extra"] = extra
-            logger.log_orig(level, msg, *args, **kwargs)
+            def _colored_log(level, msg, *args, color=None, **kwargs):
+                extra = kwargs.get("extra", {})
+                extra["color"] = color
 
-        logger.log_orig = logger._log
-        logger._log = _colored_log
+                kwargs["extra"] = extra
+                logger.log_orig(level, msg, *args, **kwargs)
+
+            logger.log_orig = logger._log
+            logger._log = _colored_log
 
         if not len(logger.handlers) > 0:
             ch = TqdmHandler()

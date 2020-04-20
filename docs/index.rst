@@ -1,7 +1,7 @@
 .. include:: source/README.rst
 
 Documentation
-========
+=============
 .. toctree::
    :glob:
    :maxdepth: 2
@@ -16,7 +16,7 @@ Documentation
    source/git
    source/contributions
    source/faq
-   source/source_files/modules
+   source/source_files/edflow
 
 Indices and tables
 ==================
