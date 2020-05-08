@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `eval_hook/clean_after_callbacks=False` option to remove `model_outputs` after callbacks finished.
 - Support segmentation masks in `edexplore`.
 - Added additional and custom visualizations to edexplore
 

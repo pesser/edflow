@@ -108,7 +108,7 @@ like this:
     mapping between inputs and outputs.
 """
 
-import os
+import os, shutil
 import numpy as np
 import yaml  # metadata
 from PIL import Image
@@ -137,6 +137,7 @@ class EvalHook(Hook):
         config=None,
         step_getter=None,
         keypath="step_ops",
+        clean_after_callbacks=False,
     ):
         """
         .. warning::
@@ -176,6 +177,8 @@ class EvalHook(Hook):
                 Function which returns the global step as ``int``.
             keypath : str
                 Path in result which will be stored.
+            clean_after_callbacks : bool
+                Remove model outputs after all callbacks finished.
         """
         self.logger = get_logger(self)
 
@@ -200,6 +203,7 @@ class EvalHook(Hook):
 
         self.gs = step_getter
         self.keypath = keypath
+        self.clean_after_callbacks = clean_after_callbacks
 
     def before_epoch(self, epoch):
         """
@@ -292,6 +296,10 @@ class EvalHook(Hook):
 
             kwargs = cb_kwargs.get(n, {})
             results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
+        if self.clean_after_callbacks:
+            self.logger.info(
+                "Cleaning up evaluation data at {}".format(self.save_root))
+            shutil.rmtree(self.save_root, ignore_errors=True)
         return results
 
     def save_meta(self):
