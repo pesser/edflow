@@ -7,3 +7,17 @@ batch_size: 4
 num_epochs: 2
 
 n_classes: 10
+
+
+
+integrations:
+  minimal_logging:
+    image_format: png # png or jpg. jpg saves a lot of space
+  tensorboard:
+    active: False
+  wandb:
+    active: False
+
+# run with
+# cd examples
+# edflow -b template_pytorch/config.yaml -t -n template_pytorch
