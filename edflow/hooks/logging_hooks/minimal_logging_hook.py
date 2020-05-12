@@ -9,7 +9,7 @@ class LoggingHook(Hook):
     """Minimal implementation of a logging hook. Can be easily extended by
     adding handlers."""
 
-    def __init__(self, paths, interval, root_path, name=None):
+    def __init__(self, paths, interval, root_path, image_format="png", name=None):
         """
         Parameters
         ----------
@@ -20,6 +20,8 @@ class LoggingHook(Hook):
             Intervall of training steps before logging.
         root_path : str
             Path at which the logs are stored.
+        image_format : str
+            Optional image format to use when saving images as files to disk. Default `png`
         name : str
             Optional name to recognize logging output.
         """
@@ -39,6 +41,7 @@ class LoggingHook(Hook):
             "scalars": [self.log_scalars],
             "figures": [self.log_figures],
         }
+        self.image_format = image_format
 
     def __call__(self, results, step, paths):
         for path in paths:
@@ -74,7 +77,7 @@ class LoggingHook(Hook):
         import matplotlib.pyplot as plt
 
         for name, figure in results.items():
-            full_name = name + "_{:07}.png".format(step)
+            full_name = name + "_{:07}.{}".format(step, self.image_format)
             save_path = os.path.join(self.root, path, full_name)
             try:
                 plt.savefig(save_path)
@@ -84,7 +87,7 @@ class LoggingHook(Hook):
 
     def log_images(self, results, step, path):
         for name, image_batch in results.items():
-            full_name = name + "_{:07}.png".format(step)
+            full_name = name + "_{:07}.{}".format(step, self.image_format)
             save_path = os.path.join(self.root, path, full_name)
             try:
                 plot_batch(image_batch, save_path)
