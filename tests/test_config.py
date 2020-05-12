@@ -50,7 +50,7 @@ def test_basic_parsing():
 
     unknown = parse_unknown_args(unknown)
 
-    assert not "a" in unknown
+    assert "a" not in unknown
     ref = {
         "b": "b",
         "c": 12.5,
@@ -110,3 +110,49 @@ def test_config_format():
     print(config)
     ref = {"a": {"b": 1.0}, "x": 1.0}
     assert config == ref
+
+
+def test_wandb_input():
+    """
+    This test confirms, that a mixture of wandb-type (depth by dot) and
+    edflow-type (depth by slash) arguments are converted to purely edflow-type
+    arguemnts, resulting in a correct config dict.
+    """
+    import argparse
+
+    A = argparse.ArgumentParser()
+
+    A.add_argument("--a", default="a", type=str)
+
+    passed = [
+        "--a",
+        "c",
+        "--l",
+        "abc",
+        "--m",
+        "{'asd': 3.5}",
+        "--abc/def",
+        "1.0",
+        "--abc/def/ghi",
+        "2.0",
+        "--abc.jkl",
+        "3.0",
+        "--xyz.0",
+        "4.0",
+    ]
+
+    print(passed)
+    args, unknown = A.parse_known_args(passed)
+
+    unknown = parse_unknown_args(unknown, is_wandb_sweep=True)
+
+    assert "a" not in unknown
+    ref = {
+        "l": "abc",
+        "m": {"asd": 3.5},
+        "abc/def": 1.0,
+        "abc/def/ghi": 2.0,
+        "abc/jkl": 3.0,
+        "xyz/0": 4.0,
+    }
+    assert ref == unknown
