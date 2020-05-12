@@ -297,8 +297,7 @@ class EvalHook(Hook):
             kwargs = cb_kwargs.get(n, {})
             results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
         if self.clean_after_callbacks:
-            self.logger.info(
-                "Cleaning up evaluation data at {}".format(self.save_root))
+            self.logger.info("Cleaning up evaluation data at {}".format(self.save_root))
             shutil.rmtree(self.save_root, ignore_errors=True)
         return results
 

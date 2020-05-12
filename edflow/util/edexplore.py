@@ -53,6 +53,12 @@ def issegmentation(obj):
     bool
         Returns True for rank-three numpy arrays with values boolean or in
         [0,1]
+
+    Warnings
+    --------
+    This heuristic catches quite a lot of cases, which could include
+    non-segmentation masks. Only use it for interactive display where users
+    can manually select other display types.
     """
     is_ = isinstance(obj, np.ndarray) and len(obj.shape) == 3
     is_ = is_ and ((obj.dtype == np.bool) or (0.0 <= obj.min() and obj.max() <= 1.0))
