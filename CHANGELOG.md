@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added option to switch image format of `hooks.minimal_logging_hook.LoggingHook`.
+    - Default remains `png`.
+    - format can be changed through `integrations/minimal_logging/image_format` field in config.
+    - adds example integration config for `examples/template_pytorch`.
 - Added additional and custom visualizations to edexplore
 
 ### Changed
