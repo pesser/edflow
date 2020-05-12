@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added `get_fixed_examples` to `iterators.template_iterator.TemplateIterator`
 - Added additional and custom visualizations to edexplore
 
 ### Changed
