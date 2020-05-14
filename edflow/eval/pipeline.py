@@ -297,6 +297,11 @@ class EvalHook(Hook):
             kwargs = cb_kwargs.get(n, {})
             results[n] = cb(self.root, self.data_in, data_out, self.config, **kwargs)
         if self.clean_after_callbacks:
+            if not os.path.split(self.save_root)[1] == "model_outputs":
+                raise ValueError(
+                    "Expected a 'model_outputs' directory "
+                    "to clean but found {}.".format(self.save_root)
+                )
             self.logger.info("Cleaning up evaluation data at {}".format(self.save_root))
             shutil.rmtree(self.save_root, ignore_errors=True)
         return results
