@@ -11,6 +11,7 @@ from edflow.util import walk, pp2mkdtable, retrieve, get_leaf_names
 from edflow.util.edexplore import (
     isimage,
     isflow,
+    issegmentation,
     istext,
     display_flow,
     display_flow_on_image,
@@ -30,7 +31,7 @@ def display_default(obj):
     Returns
     -------
     str
-        One of "Image", "Text", "Flow", "None"
+        One of "Image", "Text", "Flow", "Segmentation", "None"
     """
     if isimage(obj):
         return "Image"
@@ -38,6 +39,8 @@ def display_default(obj):
         return "Text"
     elif isflow(obj):
         return "Flow"
+    elif issegmentation(obj):
+        return "Segmentation"
     else:
         return "None"
 
@@ -63,6 +66,11 @@ def display(key, obj):
     elif sel == "Flow":
         display_flow(obj, key)
 
+    elif sel == "Segmentation":
+        idx = st.number_input("Segmentation Index", 0, obj.shape[2] - 1, 0)
+        img = obj[:, :, idx].astype(np.float)
+        st.image(img)
+
 
 def selector(key, obj):
     """Show select box to choose display mode of obj in streamlit
@@ -79,7 +87,7 @@ def selector(key, obj):
     str
         Selected display method for item
     """
-    options = ["Auto", "Text", "Image", "Flow", "None"]
+    options = ["Auto", "Text", "Image", "Flow", "Segmentation", "None"]
     idx = options.index(display_default(obj))
     select = st.selectbox("Display {} as".format(key), options, index=idx)
     return select
@@ -245,9 +253,9 @@ def explore(config, disable_cache=False):
         "Index selection method", ["Slider", "Number input", "Sample"]
     )
     if input_method == "Slider":
-        idx = st.sidebar.slider("Index", 0, len(dset), 0)
+        idx = st.sidebar.slider("Index", 0, len(dset) - 1, 0)
     elif input_method == "Number input":
-        idx = st.sidebar.number_input("Index", 0, len(dset), 0)
+        idx = st.sidebar.number_input("Index", 0, len(dset) - 1, 0)
     elif input_method == "Sample":
         idx = 0
         if st.sidebar.button("Sample"):

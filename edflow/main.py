@@ -61,6 +61,7 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
             max_examples = retrieve(
                 config, "debug/max_examples", default=5 * config["batch_size"]
             )
+            max_examples = min(max_examples, len(datasets[split]))
             if max_examples > 0:
                 logger.info(
                     "Monkey patching {} dataset __len__ to {} examples".format(
@@ -160,6 +161,7 @@ def test(config, root, checkpoint=None, nogpu=False, bar_position=0, debug=False
             max_examples = retrieve(
                 config, "debug/max_examples", default=5 * config["batch_size"]
             )
+            max_examples = min(max_examples, len(datasets[split]))
             if max_examples > 0:
                 logger.info(
                     "Monkey patching {} dataset __len__ to {} examples".format(
