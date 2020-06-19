@@ -187,6 +187,8 @@ class TemplateIterator(PyHookedModelIterator):
             eval_functor = get_obj_from_str(self.config["eval_functor"])(
                 config=self.config
             )
+            if hasattr(eval_functor, "set_iterator"):
+                eval_functor.set_iterator(self)
             self.step_ops = lambda: {"eval_op": eval_functor}
             eval_callbacks = dict()
             if hasattr(eval_functor, "callbacks"):

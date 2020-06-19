@@ -83,6 +83,11 @@ def train(config, root, checkpoint=None, retrain=False, debug=False):
             n_prefetch=n_prefetch,
             error_on_timeout=config.get("error_on_timeout", False),
         )
+    if debug:
+        for k in batches:
+            logger.info("Checking {} batches".format(k))
+            next(batches[k])
+
     main_split = "train"
     try:
         if "num_steps" in config:
