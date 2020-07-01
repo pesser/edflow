@@ -19,7 +19,17 @@ def update_config(config, additional_kwargs):
     walk(config, replace, inplace=True)
 
 
-def parse_unknown_args(unknown):
+def parse_unknown_args(unknown, is_wandb_sweep=False):
+    if is_wandb_sweep:
+        unknown_ = unknown
+        unknown = []
+        for u in unknown_:
+            if "=" in u:
+                key, val = u.split("=")
+                unknown += [key, val]
+            else:
+                unknown += [u]
+
     kwargs = {}
     for i in range(len(unknown)):
         key = unknown[i]
@@ -41,6 +51,9 @@ def parse_unknown_args(unknown):
             # Strip '-' or '--' from key
             while key[0] == "-":
                 key = key[1:]
+
+            if is_wandb_sweep:
+                key = key.replace(".", "/")
 
             # Store key key pairs
             kwargs[key] = value
