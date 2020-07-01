@@ -66,7 +66,7 @@ def MultiJoinedDataset(dataset, keys_src, keys_dst=None, seed=1):
     dataset."""
     keys_dst = keys_src if keys_dst is None else keys_dst
     prng = np.random.RandomState(seed)
-    join_indices = [list(range(len(dataset)))] # example_0 is original example
+    join_indices = [list(range(len(dataset)))]  # example_0 is original example
     for key, key_dst in zip(keys_src, keys_dst):
         labels = np.asarray(retrieve(dataset.labels, key))
         unique_labels = np.unique(labels)
