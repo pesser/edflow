@@ -200,9 +200,9 @@ def show_example(dset, idx, config):
     ex = dset[idx]
 
     # additional visualizations
-    default_additional_visualizations = retrieve(
+    default_additional_visualizations = list(retrieve(
         config, "edexplore/visualizations", default=dict()
-    ).keys()
+    ).keys())
     additional_visualizations = st.sidebar.multiselect(
         "Additional visualizations",
         list(ADDITIONAL_VISUALIZATIONS.keys()),
