@@ -1,26 +1,83 @@
 import numpy as np
 from edflow.data.dataset_mixin import DatasetMixin
+from edflow.data.agnostics.subdataset import SubDataset
 from edflow.util import PRNGMixin
 from edflow.util import retrieve
 from edflow.main import get_obj_from_str
 
 
-def JoinedDataset(dataset, key, n_joins):
+class MultiExampleDataset(DatasetMixin):
+    """
+    Stack examples of multiple datasets of the same length under an "example" key.
+
+    The i-th example returns:
+        :'examples': A list of examples, where the `j-th` element of
+         the list will be the `i-th` example of the `j-th` dataset.
+
+    The dataset's labels are the same as that of the first dataset. Be careful,
+    `examples[j]` of the i-th example does not correspond to the i-th entry of
+    the labels but to the `examples[j]["index_"]`-th entry of the j-th
+    dataset's labels.
+    """
+
+    def __init__(self, *datasets):
+        self.datasets = datasets
+        self._len = len(self.datasets[0])
+        for dataset in self.datasets:
+            assert len(dataset) == self._len
+
+    def __len__(self):
+        return self._len
+
+    @property
+    def labels(self):
+        """Careful this can only give labels of the first item, not the
+        joined ones. Use 'examples[j]["index\_"]' to get the correct label
+        index and query datasets[j].labels."""
+        return self.datasets[0].labels
+
+    def get_example(self, i):
+        return {"examples": [dataset[i] for dataset in self.datasets]}
+
+
+def JoinedDataset(dataset, key, n_joins, seed=1):
     """Concat n_joins random samples based on the condition that
     example_i[key] == example_j[key] for all i,j. Key must be in labels of
     dataset."""
-    labels = np.asarray(dataset.labels[key])
+    labels = np.asarray(retrieve(dataset.labels, key))
     unique_labels = np.unique(labels)
     index_map = dict()
     for value in unique_labels:
         index_map[value] = np.nonzero(labels == value)[0]
     join_indices = [list(range(len(dataset)))]  # example_0 is original example
-    prng = np.random.RandomState(1)
+    prng = np.random.RandomState(seed)
     for k in range(n_joins - 1):
         indices = [prng.choice(index_map[value]) for value in labels]
         join_indices.append(indices)
     datasets = [SubDataset(dataset, indices) for indices in join_indices]
-    dataset = ExampleConcatenatedDataset(*datasets)
+    dataset = MultiExampleDataset(*datasets)
+
+    return dataset
+
+
+def MultiJoinedDataset(dataset, keys_src, keys_dst=None, seed=1):
+    """Concat n_joins random samples based on the condition that
+    example_0[keys_srcj] == example_j[keys_dstj] for all j. Keys must be in labels of
+    dataset."""
+    keys_dst = keys_src if keys_dst is None else keys_dst
+    prng = np.random.RandomState(seed)
+    join_indices = [list(range(len(dataset)))] # example_0 is original example
+    for key, key_dst in zip(keys_src, keys_dst):
+        labels = np.asarray(retrieve(dataset.labels, key))
+        unique_labels = np.unique(labels)
+        labels_dst = np.asarray(retrieve(dataset.labels, key_dst))
+        index_map = dict()
+        for value in unique_labels:
+            index_map[value] = np.nonzero(labels_dst == value)[0]
+            index_map[value] = prng.choice(index_map[value])
+        join_indices.append([index_map[value] for value in labels])
+    datasets = [SubDataset(dataset, indices) for indices in join_indices]
+    dataset = MultiExampleDataset(*datasets)
 
     return dataset
 
