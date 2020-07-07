@@ -21,6 +21,18 @@ def alphapose_callback(root, data_in, data_out, config):
     subprocess.call(alphapose_command)
     results_file = os.path.join(root, outdir, "alphapose-results.json")
     return results_file
+
+
+def alphapose_pck_callback(root, data_in, data_out, config):
+    predicted_poses_file = alphapose_callback(root, data_in, data_out, config)
+
+    callback_config = config.get("alphapose_pck_callback")
+    true_poses_file = callback_config["true_poses_file"]
+    distance_threshold = callback_config["distance_threshold"]
+    pck = pck_from_posefiles(true_poses_file, predicted_poses_file, distance_threshold)
+    return {"pck": pck}
+
+
 def pck_from_posefiles(true_poses_file, predicted_poses, distance_threshold):
     """Calculate PCK from 2 annotation files generated from alpha pose model.
 

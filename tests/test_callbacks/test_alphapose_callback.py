@@ -84,3 +84,67 @@ def test_alphapose_callback(tmpdir):
     )
     assert os.path.isfile(results_file)
 
+
+def test_alphapose_pck_callback(tmpdir):
+    outdir = tmpdir.mkdir("alphapose_outdir")
+    true_poses_file = _make_pose_file(tmpdir, "true_poses")
+    import sys
+
+    python_path = sys.executable
+    config = {
+        "alphapose_callback": {
+            "subprocess_args": [
+                python_path,
+                "tests/test_callbacks/run_alphapose.py",
+                "transfer_image",  # indir
+                str(outdir),  # outdir
+            ],
+            "indir": "transfer_image",
+            "outdir": str(outdir),
+        },
+        "alphapose_pck_callback": {
+            "true_poses_file": true_poses_file,
+            "distance_threshold": 10,
+        },
+    }
+    root = tmpdir
+    data_in = {}
+    data_out = {}
+
+    callback_data = alphapose_callback.alphapose_pck_callback(
+        root, data_in, data_out, config
+    )
+    assert callback_data["pck"] == 1.0
+
+
+def test_alphapose_pck_callback_V2(tmpdir):
+    outdir = tmpdir.mkdir("alphapose_outdir")
+    true_poses_file = _make_pose_file(tmpdir, "true_poses", offset=10)
+    import sys
+
+    python_path = sys.executable
+    config = {
+        "alphapose_callback": {
+            "subprocess_args": [
+                python_path,
+                "tests/test_callbacks/run_alphapose.py",
+                "transfer_image",  # indir
+                str(outdir),  # outdir
+            ],
+            "indir": "transfer_image",
+            "outdir": str(outdir),
+        },
+        "alphapose_pck_callback": {
+            "true_poses_file": true_poses_file,
+            "distance_threshold": 10,
+        },
+    }
+    root = tmpdir
+    data_in = {}
+    data_out = {}
+
+    callback_data = alphapose_callback.alphapose_pck_callback(
+        root, data_in, data_out, config
+    )
+    assert callback_data["pck"] == 0.0
+
