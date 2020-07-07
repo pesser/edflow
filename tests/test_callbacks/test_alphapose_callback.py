@@ -51,3 +51,36 @@ def test_pck_from_posefiles(tmpdir):
         fname_1, fname_3, distance_threshold=10
     )
     assert mean_pck == 0.0
+
+
+def test_alphapose_callback(tmpdir):
+    outdir = tmpdir.mkdir("alphapose_outdir")
+    true_poses_file = os.path.join(tmpdir, "true_poses.json")
+    import sys
+
+    python_path = sys.executable
+    config = {
+        "alphapose_callback": {
+            "subprocess_args": [
+                python_path,
+                "tests/test_callbacks/run_alphapose.py",
+                "transfer_image",  # indir
+                str(outdir),  # outdir
+            ],
+            "indir": "transfer_image",
+            "outdir": str(outdir),
+        },
+        "alphapose_pck_callback": {
+            "true_poses_file": true_poses_file,
+            "distance_threshold": 10,
+        },
+    }
+    root = tmpdir
+    data_in = {}
+    data_out = {}
+
+    results_file = alphapose_callback.alphapose_callback(
+        root, data_in, data_out, config
+    )
+    assert os.path.isfile(results_file)
+

@@ -7,6 +7,20 @@ from edflow import get_logger
 import glob
 
 
+def alphapose_callback(root, data_in, data_out, config):
+    logger = get_logger("Alphapose callback")
+    callback_config = config.get("alphapose_callback")
+
+    alphapose_command = callback_config.get("subprocess_args")
+    indir = callback_config.get("indir")
+    outdir = callback_config.get("outdir")
+
+    # input_files = REGEX
+    import subprocess
+
+    subprocess.call(alphapose_command)
+    results_file = os.path.join(root, outdir, "alphapose-results.json")
+    return results_file
 def pck_from_posefiles(true_poses_file, predicted_poses, distance_threshold):
     """Calculate PCK from 2 annotation files generated from alpha pose model.
 
