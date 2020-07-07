@@ -147,4 +147,3 @@ def test_alphapose_pck_callback_V2(tmpdir):
         root, data_in, data_out, config
     )
     assert callback_data["pck"] == 0.0
-

@@ -104,4 +104,3 @@ def read_posefile(file):
     with open(file, "r") as f:
         data = json.load(f)
     return data
-
