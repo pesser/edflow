@@ -430,6 +430,8 @@ def save_output(root, example, index, sub_dir_keys=[], keypath="step_ops"):
         for n, e in example.items():
             savename = "{}_{:0>6d}.{{}}".format(n, idx)
             path = os.path.join(root, savename)
+            savedir = os.path.split(path)[0]
+            os.makedirs(savedir, exist_ok=True)
 
             path, inferred_loader = save_example(path, e[i])
 

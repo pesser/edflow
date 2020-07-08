@@ -12,8 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added additional and custom visualizations to edexplore
 
 ### Changed
+- specify folder structure in `log_op` and `eval_op` using `directory/prefix` as keys in output dictionary
 
 ### Removed
+- removed `edflow.nn` and `edflow.tf_util`
 
 ### Fixed
 - fix ob1 error in dataset length displayed by `edexplore`.
