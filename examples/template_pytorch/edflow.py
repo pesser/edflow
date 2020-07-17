@@ -57,6 +57,7 @@ class Iterator(TemplateIterator):
         inputs = inputs.permute(0, 3, 1, 2)
         labels = torch.tensor(labels, dtype=torch.long)
 
+        fixed_examples = self.get_fixed_examples()
         # compute loss
         outputs = model(inputs)
         loss = self.criterion(outputs, labels)
