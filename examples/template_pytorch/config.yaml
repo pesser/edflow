@@ -9,4 +9,7 @@ num_epochs: 2
 n_classes: 10
 
 
-fixed_example_indices: [0, 1, 2, 3]
+fixed_example_indices: {
+  "train" : [0, 1, 2, 3],
+  "validation" : [0, 1, 2, 3]
+}
