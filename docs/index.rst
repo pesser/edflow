@@ -1,19 +1,7 @@
-==================
-Welcome to EDFlow!
-==================
+.. include:: source/README.rst
 
-
-Introduction
-============
-Here we give a short introduction
-
-Quick and Dirty
-===============
-.. note::
-    example of a standart mnist problem
-
-Contents
-========
+Documentation
+=============
 .. toctree::
    :glob:
    :maxdepth: 2

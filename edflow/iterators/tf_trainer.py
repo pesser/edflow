@@ -9,12 +9,53 @@ from edflow.hooks.checkpoint_hooks.tf_checkpoint_hook import (
     RetrainHook,
     RestoreTFModelHook,
 )
-from edflow.tf_util import make_linear_var
+
 
 from edflow.project_manager import ProjectManager
 from edflow.hooks.util_hooks import IntervalHook
 
 P = ProjectManager()
+
+
+def make_linear_var(
+    step, start, end, start_value, end_value, clip_min=None, clip_max=None, **kwargs
+):
+    r"""
+    Linear from :math:`(a, \alpha)` to :math:`(b, \beta)`, i.e.
+    :math:`y = (\beta - \alpha)/(b - a) * (x - a) + \alpha`
+
+    Parameters
+    ----------
+    step : tf.Tensor
+        :math:`x`
+    start : int
+        :math:`a`
+    end : int
+        :math:`b`
+    start_value : float
+        :math:`\alpha`
+    end_value : float
+        :math:`\beta`
+    clip_min : int
+        Minimal value returned.
+    clip_max : int
+        Maximum value returned.
+
+    Returns
+    -------
+    :math:`y` : tf.Tensor
+    """
+
+    if clip_min is None:
+        clip_min = min(start_value, end_value)
+    if clip_max is None:
+        clip_max = max(start_value, end_value)
+    delta_value = end_value - start_value
+    delta_step = end - start
+    linear = (
+        delta_value / delta_step * (tf.cast(step, tf.float32) - start) + start_value
+    )
+    return tf.clip_by_value(linear, clip_min, clip_max)
 
 
 class TFBaseTrainer(TFHookedModelIterator):

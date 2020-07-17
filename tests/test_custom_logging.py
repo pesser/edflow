@@ -35,6 +35,9 @@ def test_color_info():
         with pytest.raises(ValueError):
             logger.info("msg", color="wrong")
 
+        logger2 = log._create_logger("test_logger", "./color_logs", logging.DEBUG)
+        logger.info("other")
+
     finally:
         shutil.rmtree("color_logs")
 

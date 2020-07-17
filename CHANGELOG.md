@@ -8,15 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added `get_fixed_examples` to `iterators.template_iterator.TemplateIterator`
+- `eval_hook/clean_after_callbacks=False` option to remove `model_outputs` after callbacks finished.
+- Support segmentation masks in `edexplore`.
 - Added additional and custom visualizations to edexplore
 
 ### Changed
+- specify folder structure in `log_op` and `eval_op` using `directory/prefix` as keys in output dictionary
 
 ### Removed
+- removed `edflow.nn` and `edflow.tf_util`
 
+### Fixed
+- fix ob1 error in dataset length displayed by `edexplore`.
+- fix setting the reduced dataset size to a value bigger than the dataset in debug mode
 
 ## [0.3.1] - 2020-03-02
 ### Added
+- Wandb sweeps! Prepare your sweep with wandb, edprep your sweep file and go sweepin'!
 - Root parameter for image and numpy loader of the meta dataset. `root` is prepended to the given paths and thus allows for smaller label arrays
 - Category loader allows to convert a given label into a more expressive category, which is specifed in the dataset's `meta.yaml`
 - Debug options: `debug/disable_integrations=True`, `debug/max_examples=5 batches`.

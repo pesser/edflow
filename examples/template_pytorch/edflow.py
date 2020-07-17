@@ -87,6 +87,7 @@ class Iterator(TemplateIterator):
         def eval_op():
             return {
                 "outputs": np.array(outputs.detach().numpy()),
+                "images/input_images": inputs.detach().permute(0, 2, 3, 1).numpy(),
                 "labels": {"loss": np.array(loss.detach().numpy())},
             }
 
