@@ -47,8 +47,6 @@ class TemplateIterator(PyHookedModelIterator):
             self.config, "log_ops", ["train/log_op", "validation/log_op"]
         )
         default_minimal_logging = {
-            "active": True,
-            "handlers": ["scalars", "images"],
             "image_format": "png",
         }
         minimal_logging = set_default(
