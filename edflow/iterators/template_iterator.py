@@ -15,6 +15,7 @@ from edflow.util import (
 import numpy as np
 from edflow.iterators.batches import deep_lod2dol
 
+
 class TemplateIterator(PyHookedModelIterator):
     """A specialization of PyHookedModelIterator which adds reasonable default
     behaviour. Subclasses should implement `save`, `restore` and `step_op`."""
@@ -253,16 +254,21 @@ class TemplateIterator(PyHookedModelIterator):
 
             default_value = {
                 "train": fixed_random_indices,
-                "validation": fixed_random_indices
+                "validation": fixed_random_indices,
             }
             fixed_example_indices = set_default(
                 self.config, "fixed_example_indices", default_value
             )
 
-            fixed_examples_train = [self.datasets["train"][i] for i in fixed_example_indices["train"]]
-            fixed_examples_val = [self.datasets["validation"][i] for i in fixed_example_indices["validation"]]
+            fixed_examples_train = [
+                self.datasets["train"][i] for i in fixed_example_indices["train"]
+            ]
+            fixed_examples_val = [
+                self.datasets["validation"][i]
+                for i in fixed_example_indices["validation"]
+            ]
             self.fixed_examples = {
                 "train": deep_lod2dol(fixed_examples_train),
-                "validation" : deep_lod2dol(fixed_examples_val)
+                "validation": deep_lod2dol(fixed_examples_val),
             }
         return self.fixed_examples[which_set]
