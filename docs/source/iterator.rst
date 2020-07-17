@@ -44,3 +44,28 @@ If your specify a number of training steps then ``EDflow`` will run as many
 epochs as possible with the given dataset but not finish an epoch if the desired
 training step is reached.
 ``num_steps`` trumps ``num_epochs``
+
+
+Accessing a Set of Fixed Examples
+---------------------------------
+
+Sometimes it is useful to log the behavior of the model on a fixed batch of examples.
+To do this, one can access a set of fixed examples through ``iterators.template_iterator.TemplateIterator.get_fixed_examples``.
+The indices of the fixed examples are chosen randomly on the length of the dataset by default.
+One can specify a list of fixed indices through the config in the following way.
+
+.. code-block:: yaml
+
+    fixed_example_indices: 
+        train: [0, 1, 2, 3]
+        validation: [0, 1, 2, 3]
+
+From within the iterator, the fixed examples can be access as follows
+
+.. code-block:: python
+
+    def step_op(self, model, **kwargs):
+        def log_op():
+            fixed_examples = self.get_fixed_examples("validation")
+            # Do fancy stuff
+            logs["fixed_metric"] = foo_bar(fixed_examples)
