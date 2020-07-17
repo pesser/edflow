@@ -236,16 +236,6 @@ class TemplateIterator(PyHookedModelIterator):
 
     def get_fixed_examples(self, which_set="train"):
         """collect fixed examples from dataset with names.
-        
-        Examples
-        --------
-
-        If the dataset returns the examples ["image", "stickman"], (as in VUnet),
-        `self.get_fixed_examples(["image", "stickman"])` will return
-        {
-            "image": batch of self.dset[i]["image"] with fixed i,
-            "stickman": batch of self.dset[i]["stickman"] with fixed i
-        }
         """
         if not hasattr(self, "fixed_examples"):
             fixed_random_indices = np.random.RandomState(1).choice(

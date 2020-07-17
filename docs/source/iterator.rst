@@ -54,7 +54,7 @@ To do this, one can access a set of fixed examples through ``iterators.template_
 The indices of the fixed examples are chosen randomly on the length of the dataset by default.
 One can specify a list of fixed indices through the config in the following way.
 
-.. code-block:: json
+.. code-block:: yaml
 
     fixed_example_indices: 
         train: [0, 1, 2, 3]
@@ -63,6 +63,7 @@ One can specify a list of fixed indices through the config in the following way.
 From within the iterator, the fixed examples can be access as follows
 
 .. code-block:: python
+
     def step_op(self, model, **kwargs):
         def log_op():
             fixed_examples = self.get_fixed_examples("validation")
