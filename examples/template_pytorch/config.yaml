@@ -7,3 +7,6 @@ batch_size: 4
 num_epochs: 2
 
 n_classes: 10
+
+
+fixed_example_indices: [0, 1, 2, 3]
