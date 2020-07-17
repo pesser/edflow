@@ -56,23 +56,15 @@ One can specify a list of fixed indices through the config in the following way.
 
 .. code-block:: json
 
-    fixed_example_indices: [0, 1, 2, 3]
+    fixed_example_indices: 
+        train: [0, 1, 2, 3]
+        validation: [0, 1, 2, 3]
 
 From within the iterator, the fixed examples can be access as follows
 
 .. code-block:: python
-
     def step_op(self, model, **kwargs):
         def log_op():
-            fixed_examples = self.get_fixed_examples(["image"])
+            fixed_examples = self.get_fixed_examples("validation")
             # Do fancy stuff
             logs["fixed_metric"] = foo_bar(fixed_examples)
-
-
-If the dataset returns the examples ["image", "stickman"], (as in VUnet),
-`self.get_fixed_examples(["image", "stickman"])` will return
-.. code-block:: python
-    {
-        "image": batch of self.dset[i]["image"] with fixed i,
-        "stickman": batch of self.dset[i]["stickman"] with fixed i
-    }
