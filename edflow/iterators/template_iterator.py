@@ -13,7 +13,7 @@ from edflow.util import (
     get_str_from_obj,
 )
 import numpy as np
-
+from edflow.iterators.batches import deep_lod2dol
 
 class TemplateIterator(PyHookedModelIterator):
     """A specialization of PyHookedModelIterator which adds reasonable default
@@ -229,7 +229,7 @@ class TemplateIterator(PyHookedModelIterator):
         into the project's eval folder to be evaluated with `edeval`."""
         raise NotImplemented()
 
-    def get_fixed_examples(self, names):
+    def get_fixed_examples(self):
         """collect fixed examples from dataset with names.
         
         Examples
@@ -241,9 +241,6 @@ class TemplateIterator(PyHookedModelIterator):
             "image": batch of self.dset[i]["image"] with fixed i,
             "stickman": batch of self.dset[i]["stickman"] with fixed i
         }
-
-        TODO: document usage somewhere
-        TODO: add option to config to automatically run log_op on fixed examples instead of having to do this manually
         """
         if not hasattr(self, "fixed_examples"):
             fixed_random_indices = np.random.RandomState(1).choice(
@@ -252,10 +249,6 @@ class TemplateIterator(PyHookedModelIterator):
             fixed_example_indices = set_default(
                 self.config, "fixed_example_indices", fixed_random_indices
             )
-            fixed_examples = {}
-            for n in names:
-                fixed_examples_n = [self.dataset[i][n] for i in fixed_example_indices]
-                fixed_examples_n = np.stack(fixed_examples_n)
-                fixed_examples[n] = fixed_examples_n
-            self.fixed_examples = fixed_examples
+            fixed_examples_n = [self.dataset[i] for i in fixed_example_indices]
+            self.fixed_examples = deep_lod2dol(fixed_examples_n)
         return self.fixed_examples
