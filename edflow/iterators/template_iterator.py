@@ -233,7 +233,7 @@ class TemplateIterator(PyHookedModelIterator):
         into the project's eval folder to be evaluated with `edeval`."""
         raise NotImplemented()
 
-    def get_fixed_examples(self):
+    def get_fixed_examples(self, which_set="train"):
         """collect fixed examples from dataset with names.
         
         Examples
@@ -250,9 +250,19 @@ class TemplateIterator(PyHookedModelIterator):
             fixed_random_indices = np.random.RandomState(1).choice(
                 len(self.dataset), self.config["batch_size"]
             )
+
+            default_value = {
+                "train": fixed_random_indices,
+                "validation": fixed_random_indices
+            }
             fixed_example_indices = set_default(
-                self.config, "fixed_example_indices", fixed_random_indices
+                self.config, "fixed_example_indices", default_value
             )
-            fixed_examples_n = [self.dataset[i] for i in fixed_example_indices]
-            self.fixed_examples = deep_lod2dol(fixed_examples_n)
-        return self.fixed_examples
+
+            fixed_examples_train = [self.datasets["train"][i] for i in fixed_example_indices["train"]]
+            fixed_examples_val = [self.datasets["validation"][i] for i in fixed_example_indices["validation"]]
+            self.fixed_examples = {
+                "train": deep_lod2dol(fixed_examples_train),
+                "validation" : deep_lod2dol(fixed_examples_val)
+            }
+        return self.fixed_examples[which_set]
