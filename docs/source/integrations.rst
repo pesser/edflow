@@ -41,7 +41,7 @@ minimal_logging
 By default, each image output is logged to a folder in ``./logs/xxx``.
 The image format can be changed by changing the config as follows
 
-.. code-block:: json
+.. code-block:: yaml
 
     integrations:
         minimal_logging:
