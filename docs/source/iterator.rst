@@ -67,3 +67,12 @@ From within the iterator, the fixed examples can be access as follows
             fixed_examples = self.get_fixed_examples(["image"])
             # Do fancy stuff
             logs["fixed_metric"] = foo_bar(fixed_examples)
+
+
+If the dataset returns the examples ["image", "stickman"], (as in VUnet),
+`self.get_fixed_examples(["image", "stickman"])` will return
+.. code-block:: python
+    {
+        "image": batch of self.dset[i]["image"] with fixed i,
+        "stickman": batch of self.dset[i]["stickman"] with fixed i
+    }
