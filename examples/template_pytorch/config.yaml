@@ -21,3 +21,9 @@ integrations:
 # run with
 # cd examples
 # edflow -b template_pytorch/config.yaml -t -n template_pytorch
+
+fixed_example_indices: {
+  "train" : [0, 1, 2, 3],
+  "validation" : [0, 1, 2, 3]
+}
+

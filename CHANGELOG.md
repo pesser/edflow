@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Default remains `png`.
     - format can be changed through `integrations/minimal_logging/image_format` field in config.
     - adds example integration config for `examples/template_pytorch`.
+- Added `get_fixed_examples` to `iterators.template_iterator.TemplateIterator`
 - `eval_hook/clean_after_callbacks=False` option to remove `model_outputs` after callbacks finished.
 - Support segmentation masks in `edexplore`.
 - Added additional and custom visualizations to edexplore
