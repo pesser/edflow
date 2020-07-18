@@ -228,7 +228,7 @@ def show_example(dset, idx, config):
 
 
 def _get_state(config):
-    if contains_key(config, "dataset"):        
+    if contains_key(config, "dataset"):
         Dataset = get_obj_from_str(config["dataset"])
     elif contains_key(config, "datasets/train"):
         module_name = retrieve(config, "datasets/train")
