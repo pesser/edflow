@@ -18,6 +18,7 @@ from edflow.util.edexplore import (
 )
 from edflow import get_obj_from_str
 from edflow.data.dataset_mixin import DatasetMixin
+from edflow.util import contains_key, retrieve
 
 
 def display_default(obj):
@@ -201,8 +202,9 @@ def show_example(dset, idx, config):
 
     # additional visualizations
     default_additional_visualizations = retrieve(
-        config, "edexplore/visualizations", default=dict()
+        config, "edexplore/visualizations", default={}
     ).keys()
+    default_additional_visualizations = list(default_additional_visualizations)
     additional_visualizations = st.sidebar.multiselect(
         "Additional visualizations",
         list(ADDITIONAL_VISUALIZATIONS.keys()),
@@ -226,7 +228,13 @@ def show_example(dset, idx, config):
 
 
 def _get_state(config):
-    Dataset = get_obj_from_str(config["dataset"])
+    if contains_key(config, "dataset"):        
+        Dataset = get_obj_from_str(config["dataset"])
+    elif contains_key(config, "datasets/train"):
+        module_name = retrieve(config, "datasets/train")
+        Dataset = get_obj_from_str(module_name)
+    else:
+        raise KeyError
     dataset = Dataset(config)
     return dataset
 
