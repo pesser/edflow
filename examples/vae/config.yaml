@@ -1,0 +1,15 @@
+datasets:
+  train: vae.datasets.Deepfashion
+  validation: vae.datasets.Deepfashion
+model: vae.edflow.Model
+iterator: vae.edflow.Iterator
+batch_size: 4
+num_epochs: 2
+
+n_classes: 10
+
+
+fixed_example_indices: {
+  "train" : [0, 1, 2, 3],
+  "validation" : [0, 1, 2, 3]
+}
