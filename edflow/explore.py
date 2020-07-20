@@ -22,7 +22,6 @@ from edflow.util import contains_key, retrieve
 from edflow.data.util import adjust_support
 
 
-
 def display_default(obj):
     """Find out how item could be displayed
 
@@ -107,7 +106,16 @@ def selector(key, obj):
     str
         Selected display method for item
     """
-    options = ["Auto", "Text", "Image", "Flow", "Segmentation", "Segmentation Flat", "IUV", "None"]
+    options = [
+        "Auto",
+        "Text",
+        "Image",
+        "Flow",
+        "Segmentation",
+        "Segmentation Flat",
+        "IUV",
+        "None",
+    ]
     idx = options.index(display_default(obj))
     select = st.selectbox("Display {} as".format(key), options, index=idx)
     return select
