@@ -1,12 +1,23 @@
 datasets:
-  train: vae.datasets.Deepfashion
-  validation: vae.datasets.Deepfashion
+  train: vae.datasets.Deepfashion_Img
+  validation: vae.datasets.Deepfashion_Img_Val
 model: vae.edflow.Model
 iterator: vae.edflow.Iterator
-batch_size: 4
+
+
+batch_size: 25
 num_epochs: 2
 
-n_classes: 10
+spatial_size: 256
+in_channels: 3
+latent_dim: 128
+hidden_dims: [32, 64, 64, 128, 256, 256, 512]
+
+
+fid:
+  batch_size: 50
+fid_stats:
+  pre_calc_stat_path: "fid_stats/deepfashion.npz"
 
 
 fixed_example_indices: {
