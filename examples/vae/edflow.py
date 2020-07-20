@@ -294,4 +294,3 @@ class Iterator(TemplateIterator):
         cbs["eval_op"]["fid_reconstruction"] = rec_fid_callback
         cbs["eval_op"]["fid_samples"] = sample_fid_callback
         return cbs
-
