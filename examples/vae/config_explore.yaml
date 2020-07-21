@@ -1,0 +1,3 @@
+datasets:
+  train: vae.datasets.Deepfashion
+  validation: vae.datasets.Deepfashion

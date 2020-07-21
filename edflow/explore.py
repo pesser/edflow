@@ -18,6 +18,8 @@ from edflow.util.edexplore import (
 )
 from edflow import get_obj_from_str
 from edflow.data.dataset_mixin import DatasetMixin
+from edflow.util import contains_key, retrieve
+from edflow.data.util import adjust_support
 
 
 def display_default(obj):
@@ -61,7 +63,11 @@ def display(key, obj):
         st.text(obj)
 
     elif sel == "Image":
-        st.image((obj + 1.0) / 2.0)
+        try:
+            st.image((obj + 1.0) / 2.0)
+        except RuntimeError:
+            obj = adjust_support(obj, "-1->1", "0->255")
+            st.image((obj + 1.0) / 2.0)
 
     elif sel == "Flow":
         display_flow(obj, key)
@@ -70,6 +76,19 @@ def display(key, obj):
         idx = st.number_input("Segmentation Index", 0, obj.shape[2] - 1, 0)
         img = obj[:, :, idx].astype(np.float)
         st.image(img)
+
+    elif sel == "Segmentation Flat":
+        idx = st.number_input("Segmentation Index", 0, 255, 0)
+        img = (obj[:, :].astype(np.int) == idx).astype(np.float)
+        st.image(img)
+
+    elif sel == "IUV":
+        # TODO: implement different visualization
+        try:
+            st.image((obj + 1.0) / 2.0)
+        except RuntimeError:
+            obj = adjust_support(obj, "-1->1", "0->255")
+            st.image((obj + 1.0) / 2.0)
 
 
 def selector(key, obj):
@@ -87,7 +106,16 @@ def selector(key, obj):
     str
         Selected display method for item
     """
-    options = ["Auto", "Text", "Image", "Flow", "Segmentation", "None"]
+    options = [
+        "Auto",
+        "Text",
+        "Image",
+        "Flow",
+        "Segmentation",
+        "Segmentation Flat",
+        "IUV",
+        "None",
+    ]
     idx = options.index(display_default(obj))
     select = st.selectbox("Display {} as".format(key), options, index=idx)
     return select
@@ -201,8 +229,9 @@ def show_example(dset, idx, config):
 
     # additional visualizations
     default_additional_visualizations = retrieve(
-        config, "edexplore/visualizations", default=dict()
+        config, "edexplore/visualizations", default={}
     ).keys()
+    default_additional_visualizations = list(default_additional_visualizations)
     additional_visualizations = st.sidebar.multiselect(
         "Additional visualizations",
         list(ADDITIONAL_VISUALIZATIONS.keys()),
@@ -226,7 +255,13 @@ def show_example(dset, idx, config):
 
 
 def _get_state(config):
-    Dataset = get_obj_from_str(config["dataset"])
+    if contains_key(config, "dataset"):
+        Dataset = get_obj_from_str(config["dataset"])
+    elif contains_key(config, "datasets/train"):
+        module_name = retrieve(config, "datasets/train")
+        Dataset = get_obj_from_str(module_name)
+    else:
+        raise KeyError
     dataset = Dataset(config)
     return dataset
 
