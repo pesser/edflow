@@ -33,3 +33,16 @@ Tensorboard integration can be enabled with the config parameter
 ``--integrations/tensorboard/active True``. By default, this will log the config,
 scalar logging values and images to tensorboard. To disable image logging use
 ``--integrations/tensorboard/handlers '["scalars"]'``.
+
+
+minimal_logging
+---------------
+
+By default, each image output is logged to a folder in ``./logs/xxx``.
+The image format can be changed by changing the config as follows
+
+.. code-block:: yaml
+
+    integrations:
+        minimal_logging:
+            image_format: png # png or jpg. jpg saves a lot of space

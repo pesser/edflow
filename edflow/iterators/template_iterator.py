@@ -48,8 +48,19 @@ class TemplateIterator(PyHookedModelIterator):
         self._log_ops = set_default(
             self.config, "log_ops", ["train/log_op", "validation/log_op"]
         )
+        default_minimal_logging = {
+            "image_format": "png",
+        }
+        minimal_logging = set_default(
+            self.config, "integrations/minimal_logging", default_minimal_logging
+        )
+        # TODO: handle case that minimal logging is turned of
+        # but first figure out a way to write a proper test
         self.loghook = LoggingHook(
-            paths=self._log_ops, root_path=ProjectManager.train, interval=1
+            paths=self._log_ops,
+            root_path=ProjectManager.train,
+            interval=1,
+            image_format=minimal_logging["image_format"],
         )
         self.ihook = IntervalHook(
             [self.loghook],

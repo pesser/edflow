@@ -13,7 +13,7 @@ Documentation
    source/hooks
    source/models
    source/iterator
-   source/git
+   source/integrations
    source/contributions
    source/faq
    source/source_files/edflow
