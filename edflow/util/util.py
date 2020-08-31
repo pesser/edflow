@@ -258,9 +258,9 @@ def retrieve(
             parent = list_or_dict
 
             try:
-                if isinstance(list_or_dict, dict):
+                try:
                     list_or_dict = list_or_dict[key]
-                else:
+                except TypeError:
                     list_or_dict = list_or_dict[int(key)]
             except (KeyError, IndexError, ValueError) as e:
                 raise KeyNotFoundError(e, keys=keys, visited=visited)
